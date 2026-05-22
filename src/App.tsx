@@ -28,7 +28,7 @@ export default function App() {
   // Custom node overrides state loaded from storage
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
   const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
-  const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, any>>>(new Map());
+  const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
 
   // 3. Load settings from storage on startup
   const loadCustomOverrides = async () => {
@@ -79,9 +79,10 @@ export default function App() {
       setStartCoord({ lat: centerLat - 0.003, lng: centerLng - 0.003 });
       setEndCoord({ lat: centerLat + 0.003, lng: centerLng + 0.003 });
       
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
-      alert(`Error fetching map area: ${e.message}. Please check bounding box values.`);
+      const message = e instanceof Error ? e.message : String(e);
+      alert(`Error fetching map area: ${message}. Please check bounding box values.`);
     } finally {
       setIsFetchingOSM(false);
     }

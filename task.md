@@ -26,6 +26,6 @@
   - `[x]` Fix Map startup render race condition (map loads blank on initialization)
   - `[x]` Refactor `routeResult` from state/effect pattern to derived state using `useMemo`
   - `[x]` Resolve hoisting TDZ warning and stale handler closures in `MapView.tsx`
-  - `[ ]` Enable strict TypeScript compiler options (`"strict": true` in tsconfigs)
-  - `[ ]` Clean up all remaining `any` types to enforce full type safety
+  - `[x]` Enable strict TypeScript compiler options (`"strict": true` in tsconfigs)
+  - `[x]` Clean up all remaining `any` types to enforce full type safety
   - `[ ]` Add responsive CSS media queries for mobile viewports

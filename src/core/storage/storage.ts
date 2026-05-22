@@ -9,7 +9,7 @@ export class LocalStorageProvider implements IStorageProvider {
   /**
    * Helper to load the raw JSON object from localStorage.
    */
-  private loadRawData(): Record<string, { delay?: number; notes?: string; turns?: Record<string, any> }> {
+  private loadRawData(): Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }> {
     try {
       const data = localStorage.getItem(this.STORAGE_KEY);
       return data ? JSON.parse(data) : {};
@@ -22,7 +22,7 @@ export class LocalStorageProvider implements IStorageProvider {
   /**
    * Helper to save raw JSON object to localStorage.
    */
-  private saveRawData(data: Record<string, any>): void {
+  private saveRawData(data: Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }>): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -34,7 +34,7 @@ export class LocalStorageProvider implements IStorageProvider {
     const raw = this.loadRawData();
     const nodeDelays = new Map<string, number>();
     const nodeNotes = new Map<string, string>();
-    const nodeTurns = new Map<string, Record<string, any>>();
+    const nodeTurns = new Map<string, Record<string, unknown>>();
 
     Object.entries(raw).forEach(([nodeId, item]) => {
       if (item.delay !== undefined && item.delay !== null) {
