@@ -15,9 +15,9 @@ const router = new DijkstraRouter();
 const storage = new LocalStorageProvider();
 
 export default function App() {
-  // 1. Core Coordinate Defaults (Amsterdam center commute)
-  const [startCoord, setStartCoord] = useState<Coordinate>({ lat: 52.3702, lng: 4.8952 });
-  const [endCoord, setEndCoord] = useState<Coordinate>({ lat: 52.3725, lng: 4.9015 });
+  // 1. Core Coordinate Defaults (Munich center commute)
+  const [startCoord, setStartCoord] = useState<Coordinate>({ lat: 48.13715, lng: 11.5754 });
+  const [endCoord, setEndCoord] = useState<Coordinate>({ lat: 48.1350, lng: 11.5820 });
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);

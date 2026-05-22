@@ -124,13 +124,13 @@ export class OSMGraphParser implements IGraphParser {
   private loadMockGraph(): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
     
-    // Coordinates around Amsterdam center as a mock
+    // Coordinates around Munich center as a mock
     const nodesData: GraphNode[] = [
-      { id: '1', lat: 52.3702, lng: 4.8952, tags: { name: 'Home' } },
-      { id: '2', lat: 52.3715, lng: 4.8970, tags: { highway: 'traffic_signals', name: 'Busy Intersection' } },
-      { id: '3', lat: 52.3730, lng: 4.8990, tags: { name: 'Quiet Street' } },
-      { id: '4', lat: 52.3708, lng: 4.8985, tags: { highway: 'traffic_signals', name: 'Alternative Light' } },
-      { id: '5', lat: 52.3725, lng: 4.9015, tags: { name: 'Office' } },
+      { id: '1', lat: 48.13715, lng: 11.5754, tags: { name: 'Home (Marienplatz)' } },
+      { id: '2', lat: 48.1428, lng: 11.5775, tags: { highway: 'traffic_signals', name: 'Odeonsplatz Intersection' } },
+      { id: '3', lat: 48.1390, lng: 11.5810, tags: { name: 'Maximilianstrasse' } },
+      { id: '4', lat: 48.1351, lng: 11.5760, tags: { highway: 'traffic_signals', name: 'Viktualienmarkt Light' } },
+      { id: '5', lat: 48.1350, lng: 11.5820, tags: { name: 'Office (Isartor)' } },
     ];
 
     nodesData.forEach(n => {
