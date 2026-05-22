@@ -23,9 +23,9 @@
 - `[ ]` Codebase Quality & Robustness Refactoring (Audit Findings)
   - `[x]` Fix OSM node tags parsing & standard traffic signal cost calculations (currently checking edge/way tags)
   - `[x]` Fix "Avoid Stops" cost calculation skew (only penalize actual stops/signals, not all junctions)
-  - `[ ]` Fix Map startup render race condition (map loads blank on initialization)
-  - `[ ]` Refactor `routeResult` from state/effect pattern to derived state using `useMemo`
-  - `[ ]` Resolve hoisting TDZ warning and stale handler closures in `MapView.tsx`
+  - `[x]` Fix Map startup render race condition (map loads blank on initialization)
+  - `[x]` Refactor `routeResult` from state/effect pattern to derived state using `useMemo`
+  - `[x]` Resolve hoisting TDZ warning and stale handler closures in `MapView.tsx`
   - `[ ]` Enable strict TypeScript compiler options (`"strict": true` in tsconfigs)
   - `[ ]` Clean up all remaining `any` types to enforce full type safety
   - `[ ]` Add responsive CSS media queries for mobile viewports

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
@@ -28,6 +28,99 @@ export const MapView: React.FC<MapViewProps> = ({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
+
+  // Keep callback handlers in refs to prevent stale closures in map listeners
+  const onStartDragRef = useRef(onStartDrag);
+  const onEndDragRef = useRef(onEndDrag);
+  const onNodeSelectRef = useRef(onNodeSelect);
+
+  useEffect(() => {
+    onStartDragRef.current = onStartDrag;
+  }, [onStartDrag]);
+
+  useEffect(() => {
+    onEndDragRef.current = onEndDrag;
+  }, [onEndDrag]);
+
+  useEffect(() => {
+    onNodeSelectRef.current = onNodeSelect;
+  }, [onNodeSelect]);
+
+  // Track map loaded state to synchronize layer updates after style initialization
+  const [mapReady, setMapReady] = useState(false);
+
+  // Helper to update graph line and point layers
+  const triggerGraphLayersUpdate = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !graph) return;
+
+    // A. Generate Line features for all street edges
+    const lineFeatures: any[] = [];
+    const lightFeatures: any[] = [];
+
+    graph.nodes.forEach((entry, sourceId) => {
+      const u = entry.node;
+      
+      // Check if it is a traffic light
+      if (
+        u.tags.highway === 'traffic_signals' ||
+        u.tags.crossing === 'traffic_signals'
+      ) {
+        const customDelay = customNodeDelays.get(sourceId);
+        lightFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [u.lng, u.lat],
+          },
+          properties: {
+            id: sourceId,
+            tags: JSON.stringify(u.tags),
+            name: u.tags.name || 'Traffic Signal',
+            customDelay: customDelay || null,
+          },
+        });
+      }
+
+      // Draw edges
+      entry.edges.forEach((edge) => {
+        const vEntry = graph.nodes.get(edge.target);
+        if (!vEntry) return;
+        const v = vEntry.node;
+
+        lineFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [u.lng, u.lat],
+              [v.lng, v.lat],
+            ],
+          },
+          properties: {
+            name: edge.name,
+            highway: edge.tags.highway,
+          },
+        });
+      });
+    });
+
+    const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
+    if (streetSource) {
+      streetSource.setData({
+        type: 'FeatureCollection',
+        features: lineFeatures,
+      });
+    }
+
+    const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
+    if (lightSource) {
+      lightSource.setData({
+        type: 'FeatureCollection',
+        features: lightFeatures,
+      });
+    }
+  }, [graph, customNodeDelays, mapReady]);
 
   // 1. Initialize Map
   useEffect(() => {
@@ -160,7 +253,7 @@ export const MapView: React.FC<MapViewProps> = ({
         const coords = geometry.coordinates;
 
         if (properties && properties.id) {
-          onNodeSelect({
+          onNodeSelectRef.current({
             id: properties.id,
             lat: coords[1],
             lng: coords[0],
@@ -177,8 +270,8 @@ export const MapView: React.FC<MapViewProps> = ({
         map.getCanvas().style.cursor = '';
       });
 
-      // Force state updates to layers
-      triggerGraphLayersUpdate();
+      // Set map ready state, triggering downstream style-dependent operations
+      setMapReady(true);
     });
 
     // Create Draggable Markers
@@ -198,7 +291,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
     startMarker.on('dragend', () => {
       const lngLat = startMarker.getLngLat();
-      onStartDrag({ lat: lngLat.lat, lng: lngLat.lng });
+      onStartDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
     });
     startMarkerRef.current = startMarker;
 
@@ -218,13 +311,14 @@ export const MapView: React.FC<MapViewProps> = ({
 
     endMarker.on('dragend', () => {
       const lngLat = endMarker.getLngLat();
-      onEndDrag({ lat: lngLat.lat, lng: lngLat.lng });
+      onEndDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
     });
     endMarkerRef.current = endMarker;
 
     return () => {
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
   }, []);
 
@@ -241,88 +335,15 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   }, [endCoord]);
 
-  // 3. Helper to update graph line and point layers
-  const triggerGraphLayersUpdate = () => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded() || !graph) return;
-
-    // A. Generate Line features for all street edges
-    const lineFeatures: any[] = [];
-    const lightFeatures: any[] = [];
-
-    graph.nodes.forEach((entry, sourceId) => {
-      const u = entry.node;
-      
-      // Check if it is a traffic light
-      if (
-        u.tags.highway === 'traffic_signals' ||
-        u.tags.crossing === 'traffic_signals'
-      ) {
-        const customDelay = customNodeDelays.get(sourceId);
-        lightFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [u.lng, u.lat],
-          },
-          properties: {
-            id: sourceId,
-            tags: JSON.stringify(u.tags),
-            name: u.tags.name || 'Traffic Signal',
-            customDelay: customDelay || null,
-          },
-        });
-      }
-
-      // Draw edges
-      entry.edges.forEach((edge) => {
-        const vEntry = graph.nodes.get(edge.target);
-        if (!vEntry) return;
-        const v = vEntry.node;
-
-        lineFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [u.lng, u.lat],
-              [v.lng, v.lat],
-            ],
-          },
-          properties: {
-            name: edge.name,
-            highway: edge.tags.highway,
-          },
-        });
-      });
-    });
-
-    const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
-    if (streetSource) {
-      streetSource.setData({
-        type: 'FeatureCollection',
-        features: lineFeatures,
-      });
-    }
-
-    const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-    if (lightSource) {
-      lightSource.setData({
-        type: 'FeatureCollection',
-        features: lightFeatures,
-      });
-    }
-  };
-
-  // 4. Update layers when graph data or custom settings change
+  // 3. Update layers when graph data or custom settings change, or when map style is loaded
   useEffect(() => {
     triggerGraphLayersUpdate();
-  }, [graph, customNodeDelays]);
+  }, [triggerGraphLayersUpdate]);
 
-  // 5. Update computed route layer
+  // 4. Update computed route layer
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !mapReady) return;
 
     const routeSource = map.getSource('route-path') as maplibregl.GeoJSONSource;
     if (!routeSource) return;
@@ -357,7 +378,7 @@ export const MapView: React.FC<MapViewProps> = ({
         features: [],
       });
     }
-  }, [routeResult]);
+  }, [routeResult, mapReady]);
 
   return <div ref={mapContainerRef} className="map-container" />;
 };

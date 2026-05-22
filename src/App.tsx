@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type { Coordinate, StreetGraph, RouteResult, GraphNode, LocalOverrides } from './core/types';
+import type { Coordinate, StreetGraph, GraphNode, LocalOverrides } from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
@@ -21,7 +21,6 @@ export default function App() {
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
-  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const [routingStrategy, setRoutingStrategy] = useState<'standard' | 'avoid-stops' | 'quiet-streets'>('standard');
@@ -100,9 +99,9 @@ export default function App() {
     await loadCustomOverrides(); // Reload active states
   };
 
-  // 6. Reactive Routing Calculation
-  useEffect(() => {
-    if (!graph) return;
+  // 6. Reactive Routing Calculation (Derived State)
+  const routeResult = useMemo(() => {
+    if (!graph) return null;
 
     // Pick active cost function based on strategy selected
     let costFn = standardCost;
@@ -112,15 +111,13 @@ export default function App() {
       costFn = avoidBusyRoadsCost;
     }
 
-    const route = router.findRoute(
+    return router.findRoute(
       graph,
       startCoord,
       endCoord,
       costFn,
       currentOverrides
     );
-
-    setRouteResult(route);
   }, [graph, startCoord, endCoord, routingStrategy, currentOverrides]);
 
   return (
