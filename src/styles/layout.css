@@ -94,3 +94,38 @@
   top: 5px !important;
   right: 5px !important;
 }
+
+/* Responsive / Mobile Layout Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 45vh;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar-header {
+    padding: var(--spacing-md);
+  }
+
+  .sidebar-content {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .sidebar-footer {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .stats-grid {
+    gap: var(--spacing-xs);
+  }
+}
+

@@ -388,7 +388,16 @@ export const MapView: React.FC<MapViewProps> = ({
           (acc, val) => acc.extend(val as [number, number]),
           new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number])
         );
-        map.fitBounds(bounds, { padding: 50, maxZoom: 16 });
+        const isMobile = window.innerWidth <= 768;
+        const padding = isMobile
+          ? {
+              top: 40,
+              bottom: window.innerHeight * 0.45 + 40,
+              left: 20,
+              right: 20,
+            }
+          : 50;
+        map.fitBounds(bounds, { padding, maxZoom: 16 });
       }
     } else {
       routeSource.setData({
