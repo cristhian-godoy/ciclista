@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin, ZoomIn } from 'lucide-react';
+import { MapPin, ZoomIn, Check, X } from 'lucide-react';
 import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
 
 type GeoJSONFeature = 
@@ -29,10 +29,13 @@ interface MapViewProps {
   endCoord: Coordinate;
   routeResult: RouteResult | null;
   customNodeDelays: Map<string, number>;
+  customNodeNotes: Map<string, string>;
   selectedNode: GraphNode | null;
   onStartDrag: (coord: Coordinate) => void;
   onEndDrag: (coord: Coordinate) => void;
   onNodeSelect: (node: GraphNode | null) => void;
+  onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
+  onClearNodeOverride: (nodeId: string) => void;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -42,10 +45,13 @@ export const MapView: React.FC<MapViewProps> = ({
   endCoord,
   routeResult,
   customNodeDelays,
+  customNodeNotes,
   selectedNode,
   onStartDrag,
   onEndDrag,
   onNodeSelect,
+  onSaveNodeOverride,
+  onClearNodeOverride,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -92,6 +98,55 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const [managedClusterId, setManagedClusterId] = useState<string | null>(null);
   const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
+
+  // Node delay/note editing states for map popup editor
+  const [nodeDelay, setNodeDelay] = useState<number>(30);
+  const [nodeNotes, setNodeNotes] = useState<string>('');
+  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Sync node delay/notes and update position projection when selectedNode changes
+  useEffect(() => {
+    if (selectedNode) {
+      setNodeDelay(customNodeDelays.get(selectedNode.id) ?? 15);
+      setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
+    }
+  }, [selectedNode, customNodeDelays, customNodeNotes]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedNode || !mapReady) {
+      setPopupPos(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const pos = map.project([selectedNode.lng, selectedNode.lat]);
+      setPopupPos({ x: pos.x, y: pos.y });
+    };
+
+    updatePosition();
+    map.on('move', updatePosition);
+    map.on('zoom', updatePosition);
+
+    return () => {
+      map.off('move', updatePosition);
+      map.off('zoom', updatePosition);
+    };
+  }, [selectedNode, mapReady]);
+
+  const handleSaveNode = () => {
+    if (selectedNode) {
+      onSaveNodeOverride(selectedNode.id, nodeDelay, nodeNotes);
+      onNodeSelect(null);
+    }
+  };
+
+  const handleResetNode = () => {
+    if (selectedNode) {
+      onClearNodeOverride(selectedNode.id);
+      onNodeSelect(null);
+    }
+  };
 
   // Handle window clicks to close context menu
   useEffect(() => {
@@ -488,6 +543,12 @@ export const MapView: React.FC<MapViewProps> = ({
             lng: coords[0],
             tags: JSON.parse((properties.tags as string) || '{}'),
           });
+
+          // Smoothly pan to center the clicked traffic signal node
+          map.easeTo({
+            center: [coords[0], coords[1]],
+            duration: 400,
+          });
         }
       });
 
@@ -738,6 +799,107 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
       <div ref={mapContainerRef} className="map-container" />
+      
+      {/* Dynamic Glassmorphic Map Popup */}
+      {selectedNode && popupPos && (
+        <div
+          className="map-popup"
+          style={{
+            position: 'absolute',
+            left: `${popupPos.x}px`,
+            top: `${popupPos.y}px`,
+            transform: 'translate(-50%, -100%) translateY(-15px)',
+            zIndex: 10,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Configure Traffic Light</h3>
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+              }}
+              onClick={() => onNodeSelect(null)}
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.4' }}>
+            <strong>ID:</strong> {selectedNode.id}
+            <br />
+            <strong>OSM Name:</strong> {selectedNode.tags.name || 'Unnamed Crossing'}
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '10px' }}>
+            <label className="form-label" style={{ fontSize: '0.65rem' }}>Wait Penalty: {nodeDelay} seconds</label>
+            <div className="slider-container">
+              <input
+                type="range"
+                min="0"
+                max="180"
+                step="5"
+                className="slider"
+                value={nodeDelay}
+                onChange={(e) => setNodeDelay(parseInt(e.target.value))}
+              />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '10px' }}>
+            <label className="form-label" style={{ fontSize: '0.65rem' }}>Custom Notes</label>
+            <input
+              className="input-text"
+              type="text"
+              placeholder="e.g. Constant bus priority request"
+              value={nodeNotes}
+              onChange={(e) => setNodeNotes(e.target.value)}
+              style={{ padding: '6px 8px', fontSize: '0.8rem' }}
+            />
+          </div>
+
+          {/* Collapsible/Scrollable OSM Info Section */}
+          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>OSM Tags</div>
+          <div className="osm-tags-container">
+            {Object.entries(selectedNode.tags).length > 0 ? (
+              Object.entries(selectedNode.tags).map(([key, val]) => (
+                <div key={key} className="osm-tag-row">
+                  <span className="osm-tag-key">{key}</span>
+                  <span className="osm-tag-val">{String(val)}</span>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '6px 8px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                No tags available
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button className="btn btn-primary" style={{ flex: 1, padding: '6px var(--spacing-sm)', fontSize: '0.8rem', height: '32px' }} onClick={handleSaveNode}>
+              <Check size={14} style={{ marginRight: '4px' }} />
+              Save
+            </button>
+            {customNodeDelays.has(selectedNode.id) && (
+              <button
+                className="btn btn-secondary btn-danger"
+                style={{ flex: 0.5, padding: '6px var(--spacing-sm)', fontSize: '0.8rem', height: '32px', color: 'var(--text-primary)', background: 'var(--accent-danger)' }}
+                onClick={handleResetNode}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {contextMenu.visible && (
         <div
           className="map-context-menu"
