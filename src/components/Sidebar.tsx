@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="sidebar">
       <div className="sidebar-header">
         <Navigation size={24} className="color-primary" style={{ color: 'var(--accent-primary)' }} />
-        <h1>Ciclista Route Planner</h1>
+        <h1>Ciclista</h1>
       </div>
 
       <div className="sidebar-content">
