@@ -105,6 +105,7 @@ export default function App() {
     
     // Auto-fetch real Munich network silently on startup
     handleFetchOSM([48.125, 11.555, 48.148, 11.595], true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 5. Save and delete overrides handlers
@@ -173,6 +174,7 @@ export default function App() {
         endCoord={endCoord}
         routeResult={routeResult}
         customNodeDelays={nodeDelays}
+        selectedNode={selectedNode}
         onStartDrag={setStartCoord}
         onEndDrag={setEndCoord}
         onNodeSelect={setSelectedNode}
