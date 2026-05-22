@@ -23,6 +23,7 @@ type GeoJSONFeature =
 
 interface MapViewProps {
   graph: StreetGraph | null;
+  loadedBBox: [number, number, number, number] | null;
   startCoord: Coordinate;
   endCoord: Coordinate;
   routeResult: RouteResult | null;
@@ -34,6 +35,7 @@ interface MapViewProps {
 
 export const MapView: React.FC<MapViewProps> = ({
   graph,
+  loadedBBox,
   startCoord,
   endCoord,
   routeResult,
@@ -198,6 +200,35 @@ export const MapView: React.FC<MapViewProps> = ({
         data: { type: 'FeatureCollection', features: [] },
       });
 
+      map.addSource('loaded-bbox', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      // Layer: Translucent fill for the loaded bounding box
+      map.addLayer({
+        id: 'loaded-bbox-fill-layer',
+        type: 'fill',
+        source: 'loaded-bbox',
+        paint: {
+          'fill-color': '#6366f1',
+          'fill-opacity': 0.03,
+        },
+      });
+
+      // Layer: Dashed outline border for the loaded bounding box
+      map.addLayer({
+        id: 'loaded-bbox-border-layer',
+        type: 'line',
+        source: 'loaded-bbox',
+        paint: {
+          'line-color': '#6366f1',
+          'line-opacity': 0.35,
+          'line-width': 2,
+          'line-dasharray': [4, 4],
+        },
+      });
+
       // Layer: All parsed network streets (cool techy overlay)
       map.addLayer({
         id: 'network-streets-layer',
@@ -293,15 +324,23 @@ export const MapView: React.FC<MapViewProps> = ({
     });
 
     // Create Draggable Markers
-    // Start Pin (Greenish Indigo)
+    // Start Pin (Green Point A)
     const startEl = document.createElement('div');
-    startEl.style.width = '20px';
-    startEl.style.height = '20px';
+    startEl.style.width = '28px';
+    startEl.style.height = '28px';
     startEl.style.borderRadius = '50%';
-    startEl.style.backgroundColor = '#14b8a6';
+    startEl.style.backgroundColor = '#10b981'; // Emerald Green
     startEl.style.border = '3px solid #ffffff';
-    startEl.style.boxShadow = '0 0 10px rgba(20, 184, 166, 0.8)';
+    startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
     startEl.style.cursor = 'grab';
+    startEl.style.display = 'flex';
+    startEl.style.alignItems = 'center';
+    startEl.style.justifyContent = 'center';
+    startEl.style.color = '#ffffff';
+    startEl.style.fontWeight = 'bold';
+    startEl.style.fontSize = '12px';
+    startEl.style.fontFamily = 'inherit';
+    startEl.innerHTML = 'A';
 
     const startMarker = new maplibregl.Marker({ element: startEl, draggable: true })
       .setLngLat([startCoord.lng, startCoord.lat])
@@ -313,15 +352,23 @@ export const MapView: React.FC<MapViewProps> = ({
     });
     startMarkerRef.current = startMarker;
 
-    // End Pin (Neon Pink / Indigo)
+    // End Pin (Red Point B)
     const endEl = document.createElement('div');
-    endEl.style.width = '20px';
-    endEl.style.height = '20px';
+    endEl.style.width = '28px';
+    endEl.style.height = '28px';
     endEl.style.borderRadius = '50%';
-    endEl.style.backgroundColor = '#6366f1';
+    endEl.style.backgroundColor = '#ef4444'; // Red
     endEl.style.border = '3px solid #ffffff';
-    endEl.style.boxShadow = '0 0 10px rgba(99, 102, 241, 0.8)';
+    endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
     endEl.style.cursor = 'grab';
+    endEl.style.display = 'flex';
+    endEl.style.alignItems = 'center';
+    endEl.style.justifyContent = 'center';
+    endEl.style.color = '#ffffff';
+    endEl.style.fontWeight = 'bold';
+    endEl.style.fontSize = '12px';
+    endEl.style.fontFamily = 'inherit';
+    endEl.innerHTML = 'B';
 
     const endMarker = new maplibregl.Marker({ element: endEl, draggable: true })
       .setLngLat([endCoord.lng, endCoord.lat])
@@ -406,6 +453,45 @@ export const MapView: React.FC<MapViewProps> = ({
       });
     }
   }, [routeResult, mapReady]);
+
+  // 5. Update loaded bounding box boundary layer
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    const bboxSource = map.getSource('loaded-bbox') as maplibregl.GeoJSONSource;
+    if (!bboxSource) return;
+
+    if (loadedBBox) {
+      const [minLat, minLng, maxLat, maxLng] = loadedBBox;
+      bboxSource.setData({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [minLng, minLat],
+                  [maxLng, minLat],
+                  [maxLng, maxLat],
+                  [minLng, maxLat],
+                  [minLng, minLat],
+                ]
+              ],
+            },
+            properties: {},
+          },
+        ],
+      });
+    } else {
+      bboxSource.setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
+    }
+  }, [loadedBBox, mapReady]);
 
   return <div ref={mapContainerRef} className="map-container" />;
 };
