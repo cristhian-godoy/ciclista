@@ -31,13 +31,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClearNodeOverride,
   onNodeSelect,
 }) => {
-  // Bounding box inputs (defaulting around Amsterdam center)
+  // Bounding box inputs (defaulting around Munich center)
   const [bboxInput, setBboxInput] = useState({
-    minLat: '52.365',
-    minLng: '4.885',
-    maxLat: '52.378',
-    maxLng: '4.908',
+    minLat: '48.125',
+    minLng: '11.555',
+    maxLat: '48.148',
+    maxLng: '11.595',
   });
+
+  const [selectedPreset, setSelectedPreset] = useState('munich');
+
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedPreset(val);
+    if (val === 'munich') {
+      setBboxInput({
+        minLat: '48.125',
+        minLng: '11.555',
+        maxLat: '48.148',
+        maxLng: '11.595',
+      });
+    } else if (val === 'amsterdam') {
+      setBboxInput({
+        minLat: '52.365',
+        minLng: '4.885',
+        maxLat: '52.378',
+        maxLng: '4.908',
+      });
+    }
+  };
 
   // Node editing state
   const [nodeDelay, setNodeDelay] = useState<number>(30);
@@ -100,6 +122,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
             Set coordinates of your riding area to pull latest OSM road vectors:
           </p>
+          <div className="form-group" style={{ marginBottom: '12px' }}>
+            <label className="form-label">City Preset</label>
+            <select
+              className="input-text"
+              value={selectedPreset}
+              onChange={handlePresetChange}
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '6px',
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="munich">Munich (Marienplatz)</option>
+              <option value="amsterdam">Amsterdam (Center)</option>
+            </select>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <div className="form-group">
               <label className="form-label">Min Lat</label>
