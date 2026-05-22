@@ -48,7 +48,7 @@ export default function App() {
 
     try {
       // Overpass QL query template for bikeable paths (highways) within bounding box
-      const query = `[out:json][timeout:25];(way["highway"](${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]}););out body;>;out skel qt;`;
+      const query = `[out:json][timeout:25];(way["highway"](${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]}););out body;>;out body qt;`;
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
       const response = await fetch(url);
