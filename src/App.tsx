@@ -21,6 +21,7 @@ export default function App() {
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
+  const [loadedBBox, setLoadedBBox] = useState<[number, number, number, number] | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const [routingStrategy, setRoutingStrategy] = useState<'standard' | 'avoid-stops' | 'quiet-streets'>('standard');
@@ -38,25 +39,8 @@ export default function App() {
     setNodeTurns(overrides.nodeTurns);
   };
 
-  useEffect(() => {
-    // Load custom settings
-    loadCustomOverrides();
-    // Load default mock graph initially
-    const mockGraph = parser.parse(null);
-    setGraph(mockGraph);
-  }, []);
-
-  // Pack overrides together for the routing functions
-  const currentOverrides: LocalOverrides = useMemo(() => {
-    return {
-      nodeDelays,
-      nodeNotes,
-      nodeTurns,
-    };
-  }, [nodeDelays, nodeNotes, nodeTurns]);
-
   // 4. Overpass API fetching implementation
-  const handleFetchOSM = async (bbox: [number, number, number, number]) => {
+  const handleFetchOSM = async (bbox: [number, number, number, number], silent = false) => {
     setIsFetchingOSM(true);
     setSelectedNode(null); // Clear selected signal node
     try {
@@ -72,6 +56,7 @@ export default function App() {
       const data = await response.json();
       const parsedGraph = parser.parse(data);
       setGraph(parsedGraph);
+      setLoadedBBox(bbox); // Track loaded bounding box region
 
       // Reset Start & End coords to the center of the bounding box
       const centerLat = (bbox[0] + bbox[2]) / 2;
@@ -81,12 +66,25 @@ export default function App() {
       
     } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
-      const message = e instanceof Error ? e.message : String(e);
-      alert(`Error fetching map area: ${message}. Please check bounding box values.`);
+      if (!silent) {
+        const message = e instanceof Error ? e.message : String(e);
+        alert(`Error fetching map area: ${message}. Please check bounding box values.`);
+      }
     } finally {
       setIsFetchingOSM(false);
     }
   };
+
+  useEffect(() => {
+    // Load custom settings
+    loadCustomOverrides();
+    // Load default mock graph initially
+    const mockGraph = parser.parse(null);
+    setGraph(mockGraph);
+    
+    // Auto-fetch real Munich network silently on startup
+    handleFetchOSM([48.125, 11.555, 48.148, 11.595], true);
+  }, []);
 
   // 5. Save and delete overrides handlers
   const handleSaveNodeOverride = async (nodeId: string, delay: number, notes: string) => {
@@ -99,6 +97,15 @@ export default function App() {
     await storage.clearNodeOverrides(nodeId);
     await loadCustomOverrides(); // Reload active states
   };
+
+  // Pack overrides together for the routing functions
+  const currentOverrides: LocalOverrides = useMemo(() => {
+    return {
+      nodeDelays,
+      nodeNotes,
+      nodeTurns,
+    };
+  }, [nodeDelays, nodeNotes, nodeTurns]);
 
   // 6. Reactive Routing Calculation (Derived State)
   const routeResult = useMemo(() => {
@@ -140,6 +147,7 @@ export default function App() {
       />
       <MapView
         graph={graph}
+        loadedBBox={loadedBBox}
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}

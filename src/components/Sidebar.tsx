@@ -40,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   });
 
   const [selectedPreset, setSelectedPreset] = useState('munich');
+  const [showBBoxCoords, setShowBBoxCoords] = useState(false);
 
   const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -120,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Map Area (Overpass API)
           </h2>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            Set coordinates of your riding area to pull latest OSM road vectors:
+            Choose a city preset to load live street data from the Overpass API:
           </p>
           <div className="form-group" style={{ marginBottom: '12px' }}>
             <label className="form-label">City Preset</label>
@@ -143,44 +144,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <option value="amsterdam">Amsterdam (Center)</option>
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div className="form-group">
-              <label className="form-label">Min Lat</label>
-              <input
-                className="input-text"
-                type="text"
-                value={bboxInput.minLat}
-                onChange={e => setBboxInput({ ...bboxInput, minLat: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Min Lng</label>
-              <input
-                className="input-text"
-                type="text"
-                value={bboxInput.minLng}
-                onChange={e => setBboxInput({ ...bboxInput, minLng: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Max Lat</label>
-              <input
-                className="input-text"
-                type="text"
-                value={bboxInput.maxLat}
-                onChange={e => setBboxInput({ ...bboxInput, maxLat: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Max Lng</label>
-              <input
-                className="input-text"
-                type="text"
-                value={bboxInput.maxLng}
-                onChange={e => setBboxInput({ ...bboxInput, maxLng: e.target.value })}
-              />
-            </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span className="form-label" style={{ marginBottom: 0 }}>Custom Bounds</span>
+            <button
+              type="button"
+              onClick={() => setShowBBoxCoords(!showBBoxCoords)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent-secondary)',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0,
+                fontWeight: 600,
+              }}
+            >
+              {showBBoxCoords ? 'Hide Coordinates' : 'Show Coordinates'}
+            </button>
           </div>
+
+          {showBBoxCoords && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+              <div className="form-group">
+                <label className="form-label">Min Lat</label>
+                <input
+                  className="input-text"
+                  type="text"
+                  value={bboxInput.minLat}
+                  onChange={e => setBboxInput({ ...bboxInput, minLat: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Min Lng</label>
+                <input
+                  className="input-text"
+                  type="text"
+                  value={bboxInput.minLng}
+                  onChange={e => setBboxInput({ ...bboxInput, minLng: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Max Lat</label>
+                <input
+                  className="input-text"
+                  type="text"
+                  value={bboxInput.maxLat}
+                  onChange={e => setBboxInput({ ...bboxInput, maxLat: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Max Lng</label>
+                <input
+                  className="input-text"
+                  type="text"
+                  value={bboxInput.maxLng}
+                  onChange={e => setBboxInput({ ...bboxInput, maxLng: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
           <button className="btn btn-primary" onClick={handleFetch} disabled={isFetchingOSM}>
             <RefreshCw size={14} className={isFetchingOSM ? 'spin' : ''} style={{ marginRight: '6px' }} />
             {isFetchingOSM ? 'Fetching OSM data...' : 'Query & Load Map Area'}
