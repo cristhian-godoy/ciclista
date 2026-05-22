@@ -1,0 +1,141 @@
+/**
+ * Core types and interfaces for the Custom Cycling Route Planner.
+ * Designed to decouple graph representation, routing algorithms, 
+ * data source formats, and storage mechanisms.
+ */
+
+/**
+ * Represents a geographical coordinate.
+ */
+export interface Coordinate {
+  lat: number;
+  lng: number;
+}
+
+/**
+ * Represents a Node in the street network (e.g., intersections, traffic signals, turn points).
+ */
+export interface GraphNode {
+  id: string;
+  lat: number;
+  lng: number;
+  tags: Record<string, string>;
+}
+
+/**
+ * Represents a directed Edge between two nodes in the street network.
+ */
+export interface GraphEdge {
+  /** The target node ID */
+  target: string;
+  /** Physical distance of the edge in meters */
+  distance: number;
+  /** Name of the street/path */
+  name?: string;
+  /** Speed limit of the edge in m/s */
+  speedLimit?: number;
+  /** OSM tags associated with the street segment */
+  tags: Record<string, string>;
+}
+
+/**
+ * Topological representation of the street network as a directed adjacency map.
+ */
+export interface StreetGraph {
+  /** Node ID to Node metadata and directed outgoing edges */
+  nodes: Map<string, {
+    node: GraphNode;
+    edges: GraphEdge[];
+  }>;
+}
+
+/**
+ * Interface for converting raw input data (e.g., Overpass API JSON) 
+ * into a clean, queryable StreetGraph.
+ */
+export interface IGraphParser {
+  /** Parses raw input string or JSON object into a StreetGraph */
+  parse(rawData: any): StreetGraph;
+}
+
+/**
+ * User-defined local overrides for nodes or edges.
+ */
+export interface LocalOverrides {
+  /** Map of Node ID to wait time in seconds (e.g. traffic signal delay) */
+  nodeDelays: Map<string, number>;
+  /** Map of Node ID to custom descriptive notes or attributes */
+  nodeNotes: Map<string, string>;
+  /** Map of Node ID to turn penalty tags (e.g. hard-left settings) */
+  nodeTurns: Map<string, Record<string, any>>;
+}
+
+/**
+ * Interface for reading and writing user preferences and local node/edge overrides.
+ */
+export interface IStorageProvider {
+  /** Retrieves all saved local overrides */
+  getOverrides(): Promise<LocalOverrides>;
+  /** Saves a delay override for a specific node */
+  saveNodeDelay(nodeId: string, delaySeconds: number): Promise<void>;
+  /** Saves notes for a specific node */
+  saveNodeNotes(nodeId: string, notes: string): Promise<void>;
+  /** Clears overrides for a specific node */
+  clearNodeOverrides(nodeId: string): Promise<void>;
+}
+
+/**
+ * Custom weighting function for the routing algorithm.
+ * Computes the "cost" (typically in seconds of travel time) of traversal.
+ * 
+ * @param sourceId The starting node ID of the edge
+ * @param edge The edge properties being traversed
+ * @param targetId The destination node ID of the edge
+ * @param overrides The user's custom node/edge weights
+ */
+export type CostFunction = (
+  sourceId: string,
+  edge: GraphEdge,
+  targetId: string,
+  overrides: LocalOverrides
+) => number;
+
+/**
+ * Result of a routing calculation.
+ */
+export interface RouteResult {
+  /** Array of ordered node IDs forming the path */
+  pathNodeIds: string[];
+  /** Array of coordinates representing the line string */
+  coordinates: Coordinate[];
+  /** Total computed cost (estimated time in seconds) */
+  totalDurationSeconds: number;
+  /** Total length of the route in meters */
+  totalDistanceMeters: number;
+  /** List of street names traversed in order */
+  streets: string[];
+  /** Total number of traffic signals encountered */
+  trafficSignalsCount: number;
+}
+
+/**
+ * Interface for pathfinding algorithms (e.g. Dijkstra, A*).
+ */
+export interface IRouter {
+  /**
+   * Calculates the optimal route between start and end coordinates.
+   * 
+   * @param graph The street network graph
+   * @param start Coords of starting point
+   * @param end Coords of ending point
+   * @param costFn The custom weight cost function
+   * @param overrides User-defined overrides (e.g. traffic light timings)
+   */
+  findRoute(
+    graph: StreetGraph,
+    start: Coordinate,
+    end: Coordinate,
+    costFn: CostFunction,
+    overrides: LocalOverrides
+  ): RouteResult | null;
+}

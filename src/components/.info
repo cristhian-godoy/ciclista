@@ -1,0 +1,7 @@
+Directory: src/components
+Purpose: React presentation components and UI views.
+Responsibility: Renders the user controls, sidebars, settings sliders, node editor popups, and wraps the canvas elements for map rendering.
+Key Files:
+- MapView.tsx: Component holding the MapLibre GL instance, rendering vectors, routes, and points.
+- Sidebar.tsx: Interface listing route analytics, settings, and node customization status.
+- NodeEditor.tsx: Simple form for adding traffic light delays and tags.

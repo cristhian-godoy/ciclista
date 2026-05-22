@@ -1,0 +1,96 @@
+/* Application Layout Grid and Panels */
+
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Full-Screen Map Container */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Floating Sidebar Overlay */
+.sidebar {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  bottom: var(--spacing-md);
+  width: 380px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: var(--transition-normal);
+}
+
+/* Sidebar Sections */
+.sidebar-header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.sidebar-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Interactive Floating Edit Popups */
+.custom-popup .maplibregl-popup-content {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: var(--spacing-md) !important;
+  font-family: inherit;
+}
+
+.custom-popup .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--bg-secondary) !important;
+}
+.custom-popup .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--bg-secondary) !important;
+}
+.custom-popup .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--bg-secondary) !important;
+}
+.custom-popup .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--bg-secondary) !important;
+}
+
+.custom-popup .maplibregl-popup-close-button {
+  color: var(--text-secondary) !important;
+  font-size: 1.2rem !important;
+  top: 5px !important;
+  right: 5px !important;
+}

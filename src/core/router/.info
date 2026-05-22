@@ -1,0 +1,6 @@
+Directory: src/core/router
+Purpose: Houses routing algorithms and custom cost functions.
+Responsibility: Calculates the shortest path between two coordinates using Dijkstra or A*. Allows injecting customizable CostFunctions to adjust travel times based on turn angles, traffic lights, and surface conditions.
+Key Files:
+- router.ts: Dijkstra algorithm implementations of the IRouter interface.
+- cost.ts: Pre-defined cost weighting formulas (e.g., stopping avoidance vs. speed).

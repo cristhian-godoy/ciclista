@@ -1,0 +1,5 @@
+Directory: src/core/graph
+Purpose: Contains the topological graph parser and builder modules.
+Responsibility: Translates raw geographical data (from OpenStreetMap Overpass JSON format) into an in-memory StreetGraph adjacency list. Filters out non-cycling ways, cleans dead ends, and maps intersection coordinates.
+Key Files:
+- parser.ts: Implementations of the IGraphParser interface.

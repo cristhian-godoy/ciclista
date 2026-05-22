@@ -1,0 +1,66 @@
+/* Design System Tokens - Premium Dark / Glassmorphism Theme */
+
+:root {
+  /* Color Palette - Cyberpunk / Sleek Dark HSL */
+  --bg-primary: hsl(220, 25%, 7%);
+  --bg-secondary: hsl(220, 20%, 13%);
+  --bg-tertiary: hsl(220, 15%, 18%);
+  
+  /* Glassmorphism Backgrounds */
+  --glass-bg: rgba(20, 24, 33, 0.7);
+  --glass-bg-hover: rgba(30, 36, 48, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-focus: rgba(99, 102, 241, 0.4);
+  
+  /* Accents - Neon Indigo & Teal */
+  --accent-primary: hsl(235, 86%, 65%);       /* Indigo */
+  --accent-primary-hover: hsl(235, 86%, 70%);
+  --accent-secondary: hsl(172, 80%, 45%);     /* Teal */
+  --accent-secondary-hover: hsl(172, 80%, 55%);
+  --accent-danger: hsl(350, 80%, 55%);        /* Coral Red */
+  
+  /* Typography Colors */
+  --text-primary: hsl(220, 20%, 95%);
+  --text-secondary: hsl(220, 10%, 70%);
+  --text-muted: hsl(220, 10%, 45%);
+  
+  /* Shadows & Blurs */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.3);
+  --blur-radius: 12px;
+  
+  /* Sizing and Spacing */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-round: 50%;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Typography Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
