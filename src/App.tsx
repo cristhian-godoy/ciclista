@@ -25,6 +25,7 @@ export default function App() {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const [routingStrategy, setRoutingStrategy] = useState<'standard' | 'avoid-stops' | 'quiet-streets'>('standard');
+  const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
 
   // Custom node overrides state loaded from storage
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
@@ -37,6 +38,18 @@ export default function App() {
     setNodeDelays(overrides.nodeDelays);
     setNodeNotes(overrides.nodeNotes);
     setNodeTurns(overrides.nodeTurns);
+  };
+
+  // Helper to check if coordinate is inside bounding box
+  const isInsideBBox = (coord: Coordinate, bbox: [number, number, number, number] | null) => {
+    if (!bbox) return false;
+    const [minLat, minLng, maxLat, maxLng] = bbox;
+    return (
+      coord.lat >= minLat &&
+      coord.lat <= maxLat &&
+      coord.lng >= minLng &&
+      coord.lng <= maxLng
+    );
   };
 
   // 4. Overpass API fetching implementation
@@ -60,12 +73,6 @@ export default function App() {
       const parsedGraph = parser.parse(data);
       setGraph(parsedGraph);
       setLoadedBBox(bbox); // Track loaded bounding box region
-
-      // Reset Start & End coords to the center of the bounding box
-      const centerLat = (bbox[0] + bbox[2]) / 2;
-      const centerLng = (bbox[1] + bbox[3]) / 2;
-      setStartCoord({ lat: centerLat - 0.003, lng: centerLng - 0.003 });
-      setEndCoord({ lat: centerLat + 0.003, lng: centerLng + 0.003 });
       
     } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
@@ -99,14 +106,73 @@ export default function App() {
     }
   };
 
+  // Helper to compute a bounding box enclosing two coordinates with padding
+  const calculateBoundingBox = (c1: Coordinate, c2: Coordinate): [number, number, number, number] => {
+    const minLat = Math.min(c1.lat, c2.lat);
+    const maxLat = Math.max(c1.lat, c2.lat);
+    const minLng = Math.min(c1.lng, c2.lng);
+    const maxLng = Math.max(c1.lng, c2.lng);
+
+    const latSpan = maxLat - minLat;
+    const lngSpan = maxLng - minLng;
+
+    // Generous padding: 30% of route span, or at least ~1.5km to allow alternate paths
+    const latMargin = Math.max(latSpan * 0.3, 0.015);
+    const lngMargin = Math.max(lngSpan * 0.3, 0.02);
+
+    return [
+      minLat - latMargin,
+      minLng - lngMargin,
+      maxLat + latMargin,
+      maxLng + lngMargin,
+    ];
+  };
+
   useEffect(() => {
     // Load custom settings
     loadCustomOverrides();
     
-    // Auto-fetch real Munich network silently on startup
-    handleFetchOSM([48.125, 11.555, 48.148, 11.595], true);
+    // Auto-fetch map area matching default start/end pins on startup
+    const initialBBox = calculateBoundingBox(startCoord, endCoord);
+    handleFetchOSM(initialBBox, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Monitor coordinate changes to dynamically expand loaded area
+  useEffect(() => {
+    if (!loadedBBox || isFetchingOSM) return;
+
+    const startInside = isInsideBBox(startCoord, loadedBBox);
+    const endInside = isInsideBBox(endCoord, loadedBBox);
+
+    if (!startInside || !endInside) {
+      const newBBox = calculateBoundingBox(startCoord, endCoord);
+
+      // Limit bounding box size to prevent Overpass query timeouts (max ~35km span)
+      const maxLatSpan = 0.32;
+      const maxLngSpan = 0.42;
+      if (newBBox[2] - newBBox[0] > maxLatSpan || newBBox[3] - newBBox[1] > maxLngSpan) {
+        console.warn('Auto-fetch map bounds exceeded limit parameters. Skipping auto-fetch.');
+        return;
+      }
+
+      console.log('Coordinates changed outside current map bounds. Fetching expanded region:', newBBox);
+      handleFetchOSM(newBBox, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startCoord, endCoord, loadedBBox, isFetchingOSM]);
+
+  // Handler for preset selections (forces coordinates update and downstream auto-fetch)
+  const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
+    setSelectedPreset(preset);
+    if (preset === 'munich') {
+      setStartCoord({ lat: 48.13715, lng: 11.5754 });
+      setEndCoord({ lat: 48.1350, lng: 11.5820 });
+    } else if (preset === 'amsterdam') {
+      setStartCoord({ lat: 52.3725, lng: 4.8900 });
+      setEndCoord({ lat: 52.3700, lng: 4.9000 });
+    }
+  };
 
   // 5. Save and delete overrides handlers
   const handleSaveNodeOverride = async (nodeId: string, delay: number, notes: string) => {
@@ -159,7 +225,8 @@ export default function App() {
         routingStrategy={routingStrategy}
         isFetchingOSM={isFetchingOSM}
         onStrategyChange={setRoutingStrategy}
-        onFetchOSM={handleFetchOSM}
+        selectedPreset={selectedPreset}
+        onPresetChange={handlePresetChange}
       />
       <MapView
         graph={graph}
