@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin } from 'lucide-react';
+import { MapPin, ZoomIn } from 'lucide-react';
 import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
 
 type GeoJSONFeature = 
@@ -29,6 +29,7 @@ interface MapViewProps {
   endCoord: Coordinate;
   routeResult: RouteResult | null;
   customNodeDelays: Map<string, number>;
+  selectedNode: GraphNode | null;
   onStartDrag: (coord: Coordinate) => void;
   onEndDrag: (coord: Coordinate) => void;
   onNodeSelect: (node: GraphNode | null) => void;
@@ -41,6 +42,7 @@ export const MapView: React.FC<MapViewProps> = ({
   endCoord,
   routeResult,
   customNodeDelays,
+  selectedNode,
   onStartDrag,
   onEndDrag,
   onNodeSelect,
@@ -76,7 +78,11 @@ export const MapView: React.FC<MapViewProps> = ({
     y: number;
     lng: number;
     lat: number;
-  }>({ visible: false, x: 0, y: 0, lng: 0, lat: 0 });
+    clusterId: number | null;
+  }>({ visible: false, x: 0, y: 0, lng: 0, lat: 0, clusterId: null });
+
+  const [managedClusterId, setManagedClusterId] = useState<number | null>(null);
+  const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
 
   // Handle window clicks to close context menu
   useEffect(() => {
@@ -186,6 +192,7 @@ export const MapView: React.FC<MapViewProps> = ({
             attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
           },
         },
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         layers: [
           {
             id: 'carto-dark-layer',
@@ -213,17 +220,36 @@ export const MapView: React.FC<MapViewProps> = ({
 
     map.on('contextmenu', (e) => {
       e.originalEvent.preventDefault();
+
+      // Check if right click was on a cluster
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ['traffic-lights-cluster'],
+      });
+      const isCluster = features.length > 0;
+      const clusterId = isCluster && features[0].properties ? (features[0].properties.cluster_id as number) : null;
+
       setContextMenu({
         visible: true,
         x: e.point.x,
         y: e.point.y,
         lng: e.lngLat.lng,
         lat: e.lngLat.lat,
+        clusterId: clusterId,
       });
     });
 
-    map.on('click', () => {
+    map.on('click', (e) => {
       setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+
+      // If clicked on empty space, deselect active node and re-group signals
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ['traffic-lights-cluster', 'traffic-lights-unclustered']
+      });
+      if (features.length === 0) {
+        setManagedClusterId(null);
+        setManagedNodeIds([]);
+        onNodeSelectRef.current(null);
+      }
     });
 
     map.on('dragstart', () => {
@@ -249,6 +275,9 @@ export const MapView: React.FC<MapViewProps> = ({
       map.addSource('traffic-lights', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
+        cluster: true,
+        clusterMaxZoom: 20,
+        clusterRadius: 35,
       });
 
       map.addSource('loaded-bbox', {
@@ -322,11 +351,45 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       }, 'route-path-layer');
 
-      // Layer: Traffic light interactive markers
+      // Layer: Traffic light clusters (grouped crossings)
       map.addLayer({
-        id: 'traffic-lights-layer',
+        id: 'traffic-lights-cluster',
         type: 'circle',
         source: 'traffic-lights',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#f59e0b', // Amber for crossings
+          'circle-radius': 16,        // Standard uniform size representing crossing
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.85,
+        },
+      });
+
+      // Layer: Traffic light cluster count text
+      map.addLayer({
+        id: 'traffic-lights-cluster-count',
+        type: 'symbol',
+        source: 'traffic-lights',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-size': 11,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: {
+          'text-color': '#ffffff',
+        },
+      });
+
+      // Layer: Traffic light individual markers (ungrouped)
+      map.addLayer({
+        id: 'traffic-lights-unclustered',
+        type: 'circle',
+        source: 'traffic-lights',
+        filter: ['all', ['!', ['has', 'point_count']], ['==', 1, 0]], // Start hidden
         paint: {
           'circle-radius': [
             'case',
@@ -344,8 +407,8 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      // Handle clicking on traffic signals
-      map.on('click', 'traffic-lights-layer', (e) => {
+      // Handle clicking on unclustered traffic signals
+      map.on('click', 'traffic-lights-unclustered', (e) => {
         if (!e.features || e.features.length === 0) return;
         const feature = e.features[0];
         const properties = feature.properties;
@@ -362,11 +425,54 @@ export const MapView: React.FC<MapViewProps> = ({
         }
       });
 
-      // Change cursor to pointer over traffic lights
-      map.on('mouseenter', 'traffic-lights-layer', () => {
+      // Handle clicking on clusters to expand them
+      map.on('click', 'traffic-lights-cluster', (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const properties = feature.properties;
+        const geometry = feature.geometry;
+
+        if (geometry && 'coordinates' in geometry && properties && properties.cluster_id) {
+          const clusterId = properties.cluster_id;
+          const coords = (geometry as { coordinates: number[] }).coordinates;
+          const source = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
+
+          if (source && source.getClusterExpansionZoom) {
+            source.getClusterExpansionZoom(clusterId)
+              .then((zoom) => {
+                map.easeTo({
+                  center: [coords[0], coords[1]],
+                  zoom: Math.max(zoom, 16),
+                });
+              })
+              .catch((err) => {
+                console.error('Error expanding cluster:', err);
+                map.easeTo({
+                  center: [coords[0], coords[1]],
+                  zoom: 16,
+                });
+              });
+          } else {
+            map.easeTo({
+              center: [coords[0], coords[1]],
+              zoom: 16,
+            });
+          }
+        }
+      });
+
+      // Change cursor to pointer over traffic lights and clusters
+      map.on('mouseenter', 'traffic-lights-unclustered', () => {
         map.getCanvas().style.cursor = 'pointer';
       });
-      map.on('mouseleave', 'traffic-lights-layer', () => {
+      map.on('mouseleave', 'traffic-lights-unclustered', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('mouseenter', 'traffic-lights-cluster', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'traffic-lights-cluster', () => {
         map.getCanvas().style.cursor = '';
       });
 
@@ -439,6 +545,7 @@ export const MapView: React.FC<MapViewProps> = ({
       mapRef.current = null;
       setMapReady(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 2. Track changes to Start and End coordinates from Sidebar Inputs
@@ -546,6 +653,52 @@ export const MapView: React.FC<MapViewProps> = ({
       });
     }
   }, [loadedBBox, mapReady]);
+  // Synchronize layer filters when managed states update
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (managedClusterId !== null && managedNodeIds.length > 0) {
+      // Hide the managed cluster, keep other clusters visible
+      map.setFilter('traffic-lights-cluster', [
+        'all',
+        ['has', 'point_count'],
+        ['!=', ['id'], managedClusterId]
+      ]);
+      map.setFilter('traffic-lights-cluster-count', [
+        'all',
+        ['has', 'point_count'],
+        ['!=', ['id'], managedClusterId]
+      ]);
+      // Show ONLY the unclustered nodes that belong to the managed cluster
+      map.setFilter('traffic-lights-unclustered', [
+        'all',
+        ['!', ['has', 'point_count']],
+        ['in', ['get', 'id'], ['literal', managedNodeIds]]
+      ]);
+    } else {
+      // Show all clusters
+      map.setFilter('traffic-lights-cluster', ['has', 'point_count']);
+      map.setFilter('traffic-lights-cluster-count', ['has', 'point_count']);
+      // Hide all individual/unclustered nodes
+      map.setFilter('traffic-lights-unclustered', [
+        'all',
+        ['!', ['has', 'point_count']],
+        ['==', 1, 0]
+      ]);
+    }
+  }, [managedClusterId, managedNodeIds, mapReady]);
+
+  // Reset managed cluster state if selectedNode becomes null (drawer is closed/saved)
+  const prevSelectedNodeRef = useRef<GraphNode | null>(null);
+  useEffect(() => {
+    if (prevSelectedNodeRef.current !== null && selectedNode === null) {
+      setManagedClusterId(null);
+      setManagedNodeIds([]);
+    }
+    prevSelectedNodeRef.current = selectedNode;
+  }, [selectedNode]);
+
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -559,6 +712,40 @@ export const MapView: React.FC<MapViewProps> = ({
           }}
           onClick={(e) => e.stopPropagation()} // Prevent closing menu when clicking on it
         >
+          {contextMenu.clusterId !== null && (
+            <button
+              className="map-context-menu-item"
+              onClick={() => {
+                const map = mapRef.current;
+                if (map && contextMenu.clusterId !== null) {
+                  const source = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
+                  if (source && source.getClusterLeaves) {
+                    source.getClusterLeaves(contextMenu.clusterId, 100, 0)
+                      .then((leaves) => {
+                        const nodeIds = leaves
+                          .map((f) => (f.properties ? String(f.properties.id) : ''))
+                          .filter(Boolean);
+                        setManagedClusterId(contextMenu.clusterId);
+                        setManagedNodeIds(nodeIds);
+                      })
+                      .catch((err) => {
+                        console.error('Error fetching cluster leaves:', err);
+                      });
+                  }
+                  
+                  // Zoom in to the cluster location so the user can easily see individual signals
+                  map.easeTo({
+                    center: [contextMenu.lng, contextMenu.lat],
+                    zoom: 17.5,
+                  });
+                }
+                setContextMenu((prev) => ({ ...prev, visible: false }));
+              }}
+            >
+              <ZoomIn size={14} style={{ color: '#f59e0b' }} />
+              <span>Manage Traffic Lights</span>
+            </button>
+          )}
           <button
             className="map-context-menu-item"
             onClick={() => {
