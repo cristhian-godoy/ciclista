@@ -339,7 +339,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="sidebar-footer">
-        <p>Drag teal/indigo pins to route.</p>
+        <p>Drag green/red pins or right-click map to route.</p>
         <p style={{ marginTop: '4px' }}>Click red nodes to time stoplights.</p>
       </div>
     </aside>

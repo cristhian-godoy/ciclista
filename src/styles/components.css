@@ -226,3 +226,61 @@ h2 {
   color: var(--accent-secondary);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
+
+/* Custom Map Context Menu */
+.map-context-menu {
+  position: absolute;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  min-width: 140px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.map-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+  width: 100%;
+}
+
+.map-context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-secondary);
+}
+
+.map-context-menu-item svg {
+  color: var(--text-muted);
+}
+
+.map-context-menu-item:hover svg {
+  color: var(--accent-secondary);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
