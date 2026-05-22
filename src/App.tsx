@@ -156,16 +156,10 @@ export default function App() {
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
-        selectedNode={selectedNode}
-        customNodeDelays={nodeDelays}
-        customNodeNotes={nodeNotes}
         routingStrategy={routingStrategy}
         isFetchingOSM={isFetchingOSM}
         onStrategyChange={setRoutingStrategy}
         onFetchOSM={handleFetchOSM}
-        onSaveNodeOverride={handleSaveNodeOverride}
-        onClearNodeOverride={handleClearNodeOverride}
-        onNodeSelect={setSelectedNode}
       />
       <MapView
         graph={graph}
@@ -174,10 +168,13 @@ export default function App() {
         endCoord={endCoord}
         routeResult={routeResult}
         customNodeDelays={nodeDelays}
+        customNodeNotes={nodeNotes}
         selectedNode={selectedNode}
         onStartDrag={setStartCoord}
         onEndDrag={setEndCoord}
         onNodeSelect={setSelectedNode}
+        onSaveNodeOverride={handleSaveNodeOverride}
+        onClearNodeOverride={handleClearNodeOverride}
       />
     </div>
   );

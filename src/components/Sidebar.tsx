@@ -1,35 +1,23 @@
 import React, { useState } from 'react';
-import type { Coordinate, RouteResult, GraphNode } from '../core/types';
-import { Navigation, RefreshCw, Layers, Check } from 'lucide-react';
+import type { Coordinate, RouteResult } from '../core/types';
+import { Navigation, RefreshCw, Layers } from 'lucide-react';
 
 interface SidebarProps {
   startCoord: Coordinate;
   endCoord: Coordinate;
   routeResult: RouteResult | null;
-  selectedNode: GraphNode | null;
-  customNodeDelays: Map<string, number>;
-  customNodeNotes: Map<string, string>;
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   onFetchOSM: (bbox: [number, number, number, number]) => void;
-  onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
-  onClearNodeOverride: (nodeId: string) => void;
-  onNodeSelect: (node: GraphNode | null) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   routeResult,
-  selectedNode,
-  customNodeDelays,
-  customNodeNotes,
   routingStrategy,
   isFetchingOSM,
   onStrategyChange,
   onFetchOSM,
-  onSaveNodeOverride,
-  onClearNodeOverride,
-  onNodeSelect,
 }) => {
   // Bounding box inputs (defaulting around Munich center)
   const [bboxInput, setBboxInput] = useState({
@@ -62,18 +50,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  // Node editing state
-  const [nodeDelay, setNodeDelay] = useState<number>(30);
-  const [nodeNotes, setNodeNotes] = useState<string>('');
-
-  // Sync node delay/notes when a node is selected from the map
-  React.useEffect(() => {
-    if (selectedNode) {
-      setNodeDelay(customNodeDelays.get(selectedNode.id) ?? 15);
-      setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
-    }
-  }, [selectedNode, customNodeDelays, customNodeNotes]);
-
   const handleFetch = () => {
     const minLat = parseFloat(bboxInput.minLat);
     const minLng = parseFloat(bboxInput.minLng);
@@ -84,13 +60,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onFetchOSM([minLat, minLng, maxLat, maxLng]);
     } else {
       alert('Please enter valid numerical coordinates.');
-    }
-  };
-
-  const handleSaveNode = () => {
-    if (selectedNode) {
-      onSaveNodeOverride(selectedNode.id, nodeDelay, nodeNotes);
-      onNodeSelect(null); // Close drawer after saving
     }
   };
 
@@ -272,70 +241,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </section>
 
-        {/* Section 4: Floating Interactive Node Overrides Editor */}
-        {selectedNode && (
-          <section className="route-card" style={{ border: '1px solid var(--accent-primary)' }}>
-            <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Edit Stop Light</span>
-              <button
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                onClick={() => onNodeSelect(null)}
-              >
-                ✕
-              </button>
-            </h2>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              Node ID: {selectedNode.id}
-              <br />
-              OSM Name: {selectedNode.tags.name || 'Unnamed Crossing'}
-            </div>
 
-            <div className="form-group" style={{ marginBottom: '12px' }}>
-              <label className="form-label">Wait Penalty: {nodeDelay} seconds</label>
-              <div className="slider-container">
-                <input
-                  type="range"
-                  min="0"
-                  max="180"
-                  step="5"
-                  className="slider"
-                  value={nodeDelay}
-                  onChange={e => setNodeDelay(parseInt(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '12px' }}>
-              <label className="form-label">Custom Notes</label>
-              <input
-                className="input-text"
-                type="text"
-                placeholder="e.g. Constant bus priority request"
-                value={nodeNotes}
-                onChange={e => setNodeNotes(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveNode}>
-                <Check size={14} style={{ marginRight: '4px' }} />
-                Save Limit
-              </button>
-              {customNodeDelays.has(selectedNode.id) && (
-                <button
-                  className="btn btn-secondary btn-danger"
-                  style={{ flex: 0.5, color: 'var(--text-primary)', background: 'var(--accent-danger)' }}
-                  onClick={() => {
-                    onClearNodeOverride(selectedNode.id);
-                    onNodeSelect(null);
-                  }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-          </section>
-        )}
       </div>
 
       <div className="sidebar-footer">
