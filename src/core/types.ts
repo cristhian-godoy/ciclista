@@ -97,7 +97,8 @@ export type CostFunction = (
   sourceId: string,
   edge: GraphEdge,
   targetId: string,
-  overrides: LocalOverrides
+  overrides: LocalOverrides,
+  graph: StreetGraph
 ) => number;
 
 /**

@@ -1,4 +1,4 @@
-import type { CostFunction, GraphEdge, LocalOverrides } from '../types';
+import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph } from '../types';
 
 /**
  * Helper to estimate average speed on a street segment based on type and tags.
@@ -35,7 +35,8 @@ export const standardCost: CostFunction = (
   _sourceId: string,
   edge: GraphEdge,
   targetId: string,
-  overrides: LocalOverrides
+  overrides: LocalOverrides,
+  graph: StreetGraph
 ): number => {
   const speed = getBaseSpeed(edge);
   let cost = edge.distance / speed; // Travel time in seconds
@@ -46,8 +47,13 @@ export const standardCost: CostFunction = (
     cost += customDelay;
   } else {
     // Fallback: Default penalty for untimed OSM traffic signals
-    const targetNodeTags = edge.tags; // Simplified check or lookup
-    if (targetNodeTags && targetNodeTags.highway === 'traffic_signals') {
+    const targetNode = graph.nodes.get(targetId)?.node;
+    const tags = targetNode?.tags || {};
+    if (
+      tags.highway === 'traffic_signals' ||
+      tags.crossing === 'traffic_signals' ||
+      tags.crossing === 'controlled'
+    ) {
       cost += 15; // 15-second default signal stop
     }
   }
@@ -63,7 +69,8 @@ export const avoidStoppingCost: CostFunction = (
   _sourceId: string,
   edge: GraphEdge,
   targetId: string,
-  overrides: LocalOverrides
+  overrides: LocalOverrides,
+  graph: StreetGraph
 ): number => {
   const speed = getBaseSpeed(edge);
   let cost = edge.distance / speed;
@@ -73,10 +80,17 @@ export const avoidStoppingCost: CostFunction = (
     // If timed, use actual delay + additional penalty for the physical act of stopping (braking/acceleration)
     cost += customDelay + 10; // Extra 10s penalty for stopping fatigue
   } else {
-    // If not explicitly timed but marked as a signal/crossing, add a heavy penalty
-    // Check edge target tags (implied if edge target is known to be a signal)
-    // We assume the caller checks nodes, but we can also check tags in edge or overrides
-    cost += 45; // Heavy 45s default penalty to route away from signals
+    // If not explicitly timed but marked as a signal/crossing/stop, add a heavy penalty
+    const targetNode = graph.nodes.get(targetId)?.node;
+    const tags = targetNode?.tags || {};
+    if (
+      tags.highway === 'traffic_signals' ||
+      tags.crossing === 'traffic_signals' ||
+      tags.crossing === 'controlled' ||
+      tags.highway === 'stop'
+    ) {
+      cost += 45; // Heavy 45s default penalty to route away from signals/stops
+    }
   }
 
   return cost;
@@ -90,9 +104,10 @@ export const avoidBusyRoadsCost: CostFunction = (
   sourceId: string,
   edge: GraphEdge,
   targetId: string,
-  overrides: LocalOverrides
+  overrides: LocalOverrides,
+  graph: StreetGraph
 ): number => {
-  const baseCost = standardCost(sourceId, edge, targetId, overrides);
+  const baseCost = standardCost(sourceId, edge, targetId, overrides, graph);
   const highway = edge.tags.highway;
   const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
 

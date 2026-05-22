@@ -160,7 +160,7 @@ export class DijkstraRouter implements IRouter {
         if (visited.has(neighborId)) continue;
 
         // Calculate dynamic edge cost using injected cost function
-        const edgeCost = costFn(currentId, edge, neighborId, overrides);
+        const edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
         const altDist = currentDist + edgeCost;
 
         if (altDist < (distances.get(neighborId) || Infinity)) {
