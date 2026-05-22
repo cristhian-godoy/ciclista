@@ -1,0 +1,31 @@
+# Task List: Custom Cycling Route Planner Skeleton
+
+- `[x]` Project Initialization
+  - `[x]` Create Vite React + TypeScript project
+  - `[x]` Configure package.json & TypeScript config
+  - `[x]` Install dependencies (MapLibre GL, Lucide Icons, etc.)
+  - `[x]` Add project layout and directory descriptions (`.info` files)
+- `[x]` Define Modular Core Interfaces
+  - `[x]` Define `Graph` & `Parser` interfaces (decoupling data fetching from routing)
+  - `[x]` Define `Router` interface (decoupling shortest-path algorithms from graph storage)
+  - `[x]` Define `Storage` interface (decoupling configuration storage from React components)
+- `[x]` Implement Baseline Modules (Stubs & Mocks)
+  - `[x]` Implement local storage manager mock
+  - `[x]` Implement mock graph loader for testing
+  - `[x]` Implement basic router stub
+- `[x]` UI Layout Skeleton
+  - `[x]` Setup basic CSS structure (premium dark/glassmorphic design system)
+  - `[x]` Setup Map component container
+  - `[x]` Setup Sidebar layout
+- `[x]` Verification
+  - `[x]` Run build to verify TypeScript compilation
+  - `[x]` Test run the local dev server
+- `[ ]` Codebase Quality & Robustness Refactoring (Audit Findings)
+  - `[ ]` Fix OSM node tags parsing & standard traffic signal cost calculations (currently checking edge/way tags)
+  - `[ ]` Fix "Avoid Stops" cost calculation skew (only penalize actual stops/signals, not all junctions)
+  - `[ ]` Fix Map startup render race condition (map loads blank on initialization)
+  - `[ ]` Refactor `routeResult` from state/effect pattern to derived state using `useMemo`
+  - `[ ]` Resolve hoisting TDZ warning and stale handler closures in `MapView.tsx`
+  - `[ ]` Enable strict TypeScript compiler options (`"strict": true` in tsconfigs)
+  - `[ ]` Clean up all remaining `any` types to enforce full type safety
+  - `[ ]` Add responsive CSS media queries for mobile viewports
