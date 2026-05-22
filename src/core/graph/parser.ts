@@ -18,11 +18,31 @@ export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2
   return R * c;
 }
 
-export class OSMGraphParser implements IGraphParser {
-  parse(rawData: any): StreetGraph {
-    const graph: StreetGraph = { nodes: new Map() };
+/**
+ * Interface representing a raw OSM node or way element from Overpass API.
+ */
+interface OSMElement {
+  type: 'node' | 'way';
+  id: number;
+  lat?: number;
+  lon?: number;
+  tags?: Record<string, string>;
+  nodes?: number[];
+}
 
-    if (!rawData || !rawData.elements || rawData.elements.length === 0) {
+/**
+ * Interface representing raw Overpass API response JSON.
+ */
+interface OSMRawData {
+  elements?: OSMElement[];
+}
+
+export class OSMGraphParser implements IGraphParser {
+  parse(rawData: unknown): StreetGraph {
+    const graph: StreetGraph = { nodes: new Map() };
+    const data = rawData as OSMRawData | null | undefined;
+
+    if (!data || !data.elements || data.elements.length === 0) {
       console.warn('Empty or invalid OSM raw data. Loading mock graph instead.');
       return this.loadMockGraph();
     }
@@ -30,19 +50,19 @@ export class OSMGraphParser implements IGraphParser {
     const tempNodes = new Map<string, GraphNode>();
 
     // 1. First pass: Collect all node coordinates and tags
-    for (const el of rawData.elements) {
+    for (const el of data.elements) {
       if (el.type === 'node') {
         tempNodes.set(el.id.toString(), {
           id: el.id.toString(),
-          lat: el.lat,
-          lng: el.lon,
+          lat: el.lat || 0,
+          lng: el.lon || 0,
           tags: el.tags || {},
         });
       }
     }
 
     // 2. Second pass: Process ways and construct edges
-    for (const el of rawData.elements) {
+    for (const el of data.elements) {
       if (el.type === 'way') {
         const wayTags = el.tags || {};
         const highway = wayTags.highway;

@@ -3,6 +3,24 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
 
+type GeoJSONFeature = 
+  | {
+      type: 'Feature';
+      geometry: {
+        type: 'Point';
+        coordinates: number[];
+      };
+      properties: Record<string, unknown>;
+    }
+  | {
+      type: 'Feature';
+      geometry: {
+        type: 'LineString';
+        coordinates: number[][];
+      };
+      properties: Record<string, unknown>;
+    };
+
 interface MapViewProps {
   graph: StreetGraph | null;
   startCoord: Coordinate;
@@ -55,8 +73,8 @@ export const MapView: React.FC<MapViewProps> = ({
     if (!map || !mapReady || !graph) return;
 
     // A. Generate Line features for all street edges
-    const lineFeatures: any[] = [];
-    const lightFeatures: any[] = [];
+    const lineFeatures: GeoJSONFeature[] = [];
+    const lightFeatures: GeoJSONFeature[] = [];
 
     graph.nodes.forEach((entry, sourceId) => {
       const u = entry.node;
@@ -249,15 +267,15 @@ export const MapView: React.FC<MapViewProps> = ({
         if (!e.features || e.features.length === 0) return;
         const feature = e.features[0];
         const properties = feature.properties;
-        const geometry = feature.geometry as any;
-        const coords = geometry.coordinates;
+        const geometry = feature.geometry;
 
-        if (properties && properties.id) {
+        if (geometry && 'coordinates' in geometry && properties && properties.id) {
+          const coords = (geometry as { coordinates: number[] }).coordinates;
           onNodeSelectRef.current({
             id: properties.id,
             lat: coords[1],
             lng: coords[0],
-            tags: JSON.parse(properties.tags || '{}'),
+            tags: JSON.parse((properties.tags as string) || '{}'),
           });
         }
       });

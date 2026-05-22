@@ -55,7 +55,7 @@ export interface StreetGraph {
  */
 export interface IGraphParser {
   /** Parses raw input string or JSON object into a StreetGraph */
-  parse(rawData: any): StreetGraph;
+  parse(rawData: unknown): StreetGraph;
 }
 
 /**
@@ -67,7 +67,7 @@ export interface LocalOverrides {
   /** Map of Node ID to custom descriptive notes or attributes */
   nodeNotes: Map<string, string>;
   /** Map of Node ID to turn penalty tags (e.g. hard-left settings) */
-  nodeTurns: Map<string, Record<string, any>>;
+  nodeTurns: Map<string, Record<string, unknown>>;
 }
 
 /**
