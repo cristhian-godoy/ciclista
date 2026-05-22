@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Coordinate, RouteResult } from '../core/types';
 import { Navigation, RefreshCw, Layers } from 'lucide-react';
 
@@ -9,7 +9,8 @@ interface SidebarProps {
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  onFetchOSM: (bbox: [number, number, number, number]) => void;
+  selectedPreset: 'munich' | 'amsterdam';
+  onPresetChange: (presetName: 'munich' | 'amsterdam') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -17,52 +18,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   routingStrategy,
   isFetchingOSM,
   onStrategyChange,
-  onFetchOSM,
+  selectedPreset,
+  onPresetChange,
 }) => {
-  // Bounding box inputs (defaulting around Munich center)
-  const [bboxInput, setBboxInput] = useState({
-    minLat: '48.125',
-    minLng: '11.555',
-    maxLat: '48.148',
-    maxLng: '11.595',
-  });
-
-  const [selectedPreset, setSelectedPreset] = useState('munich');
-  const [showBBoxCoords, setShowBBoxCoords] = useState(false);
-
-  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedPreset(val);
-    if (val === 'munich') {
-      setBboxInput({
-        minLat: '48.125',
-        minLng: '11.555',
-        maxLat: '48.148',
-        maxLng: '11.595',
-      });
-    } else if (val === 'amsterdam') {
-      setBboxInput({
-        minLat: '52.365',
-        minLng: '4.885',
-        maxLat: '52.378',
-        maxLng: '4.908',
-      });
-    }
-  };
-
-  const handleFetch = () => {
-    const minLat = parseFloat(bboxInput.minLat);
-    const minLng = parseFloat(bboxInput.minLng);
-    const maxLat = parseFloat(bboxInput.maxLat);
-    const maxLng = parseFloat(bboxInput.maxLng);
-
-    if (!isNaN(minLat) && !isNaN(minLng) && !isNaN(maxLat) && !isNaN(maxLng)) {
-      onFetchOSM([minLat, minLng, maxLat, maxLng]);
-    } else {
-      alert('Please enter valid numerical coordinates.');
-    }
-  };
-
   // Formatting helpers
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -83,21 +41,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="sidebar-content">
-        {/* Section 1: Fetch OSM Bounding Box */}
+        {/* Section 1: Dynamic Presets & Auto-Fetch Info */}
         <section className="route-card">
           <h2>
             <Layers size={16} style={{ verticalAlign: 'middle', marginRight: '8px', color: 'var(--accent-secondary)' }} />
-            Map Area (Overpass API)
+            Map Area Presets
           </h2>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            Choose a city preset to load live street data from the Overpass API:
+            Choose a preset city. The map area will automatically expand and fetch OSM data as you drag or position the pins.
           </p>
           <div className="form-group" style={{ marginBottom: '12px' }}>
             <label className="form-label">City Preset</label>
             <select
               className="input-text"
               value={selectedPreset}
-              onChange={handlePresetChange}
+              onChange={(e) => onPresetChange(e.target.value as 'munich' | 'amsterdam')}
               style={{
                 width: '100%',
                 padding: '8px',
@@ -113,71 +71,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <option value="amsterdam">Amsterdam (Center)</option>
             </select>
           </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span className="form-label" style={{ marginBottom: 0 }}>Custom Bounds</span>
-            <button
-              type="button"
-              onClick={() => setShowBBoxCoords(!showBBoxCoords)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--accent-secondary)',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: 0,
-                fontWeight: 600,
-              }}
-            >
-              {showBBoxCoords ? 'Hide Coordinates' : 'Show Coordinates'}
-            </button>
-          </div>
-
-          {showBBoxCoords && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-              <div className="form-group">
-                <label className="form-label">Min Lat</label>
-                <input
-                  className="input-text"
-                  type="text"
-                  value={bboxInput.minLat}
-                  onChange={e => setBboxInput({ ...bboxInput, minLat: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Min Lng</label>
-                <input
-                  className="input-text"
-                  type="text"
-                  value={bboxInput.minLng}
-                  onChange={e => setBboxInput({ ...bboxInput, minLng: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Max Lat</label>
-                <input
-                  className="input-text"
-                  type="text"
-                  value={bboxInput.maxLat}
-                  onChange={e => setBboxInput({ ...bboxInput, maxLat: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Max Lng</label>
-                <input
-                  className="input-text"
-                  type="text"
-                  value={bboxInput.maxLng}
-                  onChange={e => setBboxInput({ ...bboxInput, maxLng: e.target.value })}
-                />
-              </div>
+          {isFetchingOSM && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: 'var(--accent-secondary)', marginTop: '8px' }}>
+              <RefreshCw size={12} className="spin" />
+              <span>Fetching street network from Overpass...</span>
             </div>
           )}
-          <button className="btn btn-primary" onClick={handleFetch} disabled={isFetchingOSM}>
-            <RefreshCw size={14} className={isFetchingOSM ? 'spin' : ''} style={{ marginRight: '6px' }} />
-            {isFetchingOSM ? 'Fetching OSM data...' : 'Query & Load Map Area'}
-          </button>
         </section>
 
         {/* Section 2: Strategy Selector */}
