@@ -166,13 +166,13 @@ export class OSMGraphParser implements IGraphParser {
     };
 
     // Route A (Via Intersections with lights)
-    addBiEdge('1', '2', 'Damrak Street', 180, { highway: 'tertiary' });
-    addBiEdge('2', '3', 'Oudezijds Voorburgwal', 220, { highway: 'residential', cycleway: 'track' });
-    addBiEdge('3', '5', 'Geldersekade Street', 250, { highway: 'tertiary' });
+    addBiEdge('1', '2', 'Theatinerstraße', 180, { highway: 'tertiary' });
+    addBiEdge('2', '3', 'Residenzstraße', 220, { highway: 'residential', cycleway: 'track' });
+    addBiEdge('3', '5', 'Maximilianstraße', 250, { highway: 'tertiary' });
 
     // Route B (Via quieter side paths / alternative lights)
-    addBiEdge('1', '4', 'Nes Alley', 150, { highway: 'residential', cycleway: 'lane' });
-    addBiEdge('4', '5', 'Kloveniersburgwal', 350, { highway: 'service' });
+    addBiEdge('1', '4', 'Sendlinger Straße', 150, { highway: 'residential', cycleway: 'lane' });
+    addBiEdge('4', '5', 'Tal', 350, { highway: 'service' });
 
     return graph;
   }

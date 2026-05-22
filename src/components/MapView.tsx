@@ -72,58 +72,60 @@ export const MapView: React.FC<MapViewProps> = ({
   // Helper to update graph line and point layers
   const triggerGraphLayersUpdate = useCallback(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || !graph) return;
+    if (!map || !mapReady) return;
 
     // A. Generate Line features for all street edges
     const lineFeatures: GeoJSONFeature[] = [];
     const lightFeatures: GeoJSONFeature[] = [];
 
-    graph.nodes.forEach((entry, sourceId) => {
-      const u = entry.node;
-      
-      // Check if it is a traffic light
-      if (
-        u.tags.highway === 'traffic_signals' ||
-        u.tags.crossing === 'traffic_signals'
-      ) {
-        const customDelay = customNodeDelays.get(sourceId);
-        lightFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [u.lng, u.lat],
-          },
-          properties: {
-            id: sourceId,
-            tags: JSON.stringify(u.tags),
-            name: u.tags.name || 'Traffic Signal',
-            customDelay: customDelay || null,
-          },
-        });
-      }
+    if (graph) {
+      graph.nodes.forEach((entry, sourceId) => {
+        const u = entry.node;
+        
+        // Check if it is a traffic light
+        if (
+          u.tags.highway === 'traffic_signals' ||
+          u.tags.crossing === 'traffic_signals'
+        ) {
+          const customDelay = customNodeDelays.get(sourceId);
+          lightFeatures.push({
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [u.lng, u.lat],
+            },
+            properties: {
+              id: sourceId,
+              tags: JSON.stringify(u.tags),
+              name: u.tags.name || 'Traffic Signal',
+              customDelay: customDelay || null,
+            },
+          });
+        }
 
-      // Draw edges
-      entry.edges.forEach((edge) => {
-        const vEntry = graph.nodes.get(edge.target);
-        if (!vEntry) return;
-        const v = vEntry.node;
+        // Draw edges
+        entry.edges.forEach((edge) => {
+          const vEntry = graph.nodes.get(edge.target);
+          if (!vEntry) return;
+          const v = vEntry.node;
 
-        lineFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [u.lng, u.lat],
-              [v.lng, v.lat],
-            ],
-          },
-          properties: {
-            name: edge.name,
-            highway: edge.tags.highway,
-          },
+          lineFeatures.push({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [u.lng, u.lat],
+                [v.lng, v.lat],
+              ],
+            },
+            properties: {
+              name: edge.name,
+              highway: edge.tags.highway,
+            },
+          });
         });
       });
-    });
+    }
 
     const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
     if (streetSource) {

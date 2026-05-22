@@ -43,6 +43,9 @@ export default function App() {
   const handleFetchOSM = async (bbox: [number, number, number, number], silent = false) => {
     setIsFetchingOSM(true);
     setSelectedNode(null); // Clear selected signal node
+    setGraph(null); // Clear previous graph during load to prevent "phantom roads" from another city/preset
+    setLoadedBBox(null);
+
     try {
       // Overpass QL query template for bikeable paths (highways) within bounding box
       const query = `[out:json][timeout:25];(way["highway"](${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]}););out body;>;out skel qt;`;
@@ -66,9 +69,30 @@ export default function App() {
       
     } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
+      
+      if (graph === null) {
+        console.warn('Using mock fallback graph due to initial fetch failure.');
+        const mockGraph = parser.parse(null);
+        setGraph(mockGraph);
+        setLoadedBBox([48.134, 11.574, 48.144, 11.583]);
+        // Restoring default mock coords
+        setStartCoord({ lat: 48.13715, lng: 11.5754 });
+        setEndCoord({ lat: 48.1350, lng: 11.5820 });
+      } else {
+        // Restore the previous valid graph and bounding box
+        setGraph(graph);
+        setLoadedBBox(loadedBBox);
+      }
+
       if (!silent) {
         const message = e instanceof Error ? e.message : String(e);
-        alert(`Error fetching map area: ${message}. Please check bounding box values.`);
+        alert(
+          `Error fetching map area: ${message}. ${
+            graph === null
+              ? 'Using fallback offline demo map.'
+              : 'Restoring previously loaded map area.'
+          }`
+        );
       }
     } finally {
       setIsFetchingOSM(false);
@@ -78,9 +102,6 @@ export default function App() {
   useEffect(() => {
     // Load custom settings
     loadCustomOverrides();
-    // Load default mock graph initially
-    const mockGraph = parser.parse(null);
-    setGraph(mockGraph);
     
     // Auto-fetch real Munich network silently on startup
     handleFetchOSM([48.125, 11.555, 48.148, 11.595], true);
