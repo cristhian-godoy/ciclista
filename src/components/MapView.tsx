@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { MapPin } from 'lucide-react';
 import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
 
 type GeoJSONFeature = 
@@ -68,6 +69,25 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // Track map loaded state to synchronize layer updates after style initialization
   const [mapReady, setMapReady] = useState(false);
+
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    lng: number;
+    lat: number;
+  }>({ visible: false, x: 0, y: 0, lng: 0, lat: 0 });
+
+  // Handle window clicks to close context menu
+  useEffect(() => {
+    const handleWindowClick = () => {
+      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    };
+    window.addEventListener('click', handleWindowClick);
+    return () => {
+      window.removeEventListener('click', handleWindowClick);
+    };
+  }, []);
 
   // Helper to update graph line and point layers
   const triggerGraphLayersUpdate = useCallback(() => {
@@ -184,6 +204,35 @@ export const MapView: React.FC<MapViewProps> = ({
 
     // Add navigation controls
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    const container = mapContainerRef.current;
+    const preventDefaultContextMenu = (e: MouseEvent) => e.preventDefault();
+    if (container) {
+      container.addEventListener('contextmenu', preventDefaultContextMenu);
+    }
+
+    map.on('contextmenu', (e) => {
+      e.originalEvent.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: e.point.x,
+        y: e.point.y,
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+      });
+    });
+
+    map.on('click', () => {
+      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    });
+
+    map.on('dragstart', () => {
+      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    });
+
+    map.on('zoomstart', () => {
+      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    });
 
     map.on('load', () => {
       // Initialize sources
@@ -383,6 +432,9 @@ export const MapView: React.FC<MapViewProps> = ({
     endMarkerRef.current = endMarker;
 
     return () => {
+      if (container) {
+        container.removeEventListener('contextmenu', preventDefaultContextMenu);
+      }
       map.remove();
       mapRef.current = null;
       setMapReady(false);
@@ -495,5 +547,40 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   }, [loadedBBox, mapReady]);
 
-  return <div ref={mapContainerRef} className="map-container" />;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div ref={mapContainerRef} className="map-container" />
+      {contextMenu.visible && (
+        <div
+          className="map-context-menu"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()} // Prevent closing menu when clicking on it
+        >
+          <button
+            className="map-context-menu-item"
+            onClick={() => {
+              onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <MapPin size={14} style={{ color: '#10b981' }} />
+            <span>Start Route Here</span>
+          </button>
+          <button
+            className="map-context-menu-item"
+            onClick={() => {
+              onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <MapPin size={14} style={{ color: '#ef4444' }} />
+            <span>End Route Here</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
