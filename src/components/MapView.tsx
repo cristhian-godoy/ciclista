@@ -78,10 +78,19 @@ export const MapView: React.FC<MapViewProps> = ({
     y: number;
     lng: number;
     lat: number;
-    clusterId: number | null;
-  }>({ visible: false, x: 0, y: 0, lng: 0, lat: 0, clusterId: null });
+    crossingId: string | null;
+    nodeIds: string | null;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    lng: 0,
+    lat: 0,
+    crossingId: null,
+    nodeIds: null,
+  });
 
-  const [managedClusterId, setManagedClusterId] = useState<number | null>(null);
+  const [managedClusterId, setManagedClusterId] = useState<string | null>(null);
   const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
 
   // Handle window clicks to close context menu
@@ -105,31 +114,106 @@ export const MapView: React.FC<MapViewProps> = ({
     const lightFeatures: GeoJSONFeature[] = [];
 
     if (graph) {
+      // Find all traffic light nodes
+      const trafficNodes: { id: string; lat: number; lng: number; tags: Record<string, string>; customDelay: number | null }[] = [];
       graph.nodes.forEach((entry, sourceId) => {
         const u = entry.node;
-        
-        // Check if it is a traffic light
         if (
           u.tags.highway === 'traffic_signals' ||
           u.tags.crossing === 'traffic_signals'
         ) {
-          const customDelay = customNodeDelays.get(sourceId);
-          lightFeatures.push({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [u.lng, u.lat],
-            },
-            properties: {
-              id: sourceId,
-              tags: JSON.stringify(u.tags),
-              name: u.tags.name || 'Traffic Signal',
-              customDelay: customDelay || null,
-            },
+          trafficNodes.push({
+            id: sourceId,
+            lat: u.lat,
+            lng: u.lng,
+            tags: u.tags,
+            customDelay: customNodeDelays.get(sourceId) || null,
           });
         }
+      });
 
-        // Draw edges
+      // Simple Euclidean distance function (in meters)
+      const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+        const dLat = lat1 - lat2;
+        const dLng = lng1 - lng2;
+        const cosLat = 0.67; // cos of average Munich latitude (~48 deg)
+        return Math.sqrt(dLat * dLat + (dLng * cosLat) * (dLng * cosLat)) * 111000;
+      };
+
+      // Cluster them (BFS grouping within 35 meters)
+      const visited = new Set<string>();
+      const crossings: { id: string; lat: number; lng: number; nodeIds: string[] }[] = [];
+
+      for (const node of trafficNodes) {
+        if (visited.has(node.id)) continue;
+
+        const clusterNodes = [node];
+        visited.add(node.id);
+
+        const queue = [node];
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          for (const other of trafficNodes) {
+            if (visited.has(other.id)) continue;
+            if (getDistance(current.lat, current.lng, other.lat, other.lng) <= 35) {
+              visited.add(other.id);
+              clusterNodes.push(other);
+              queue.push(other);
+            }
+          }
+        }
+
+        const avgLat = clusterNodes.reduce((sum, n) => sum + n.lat, 0) / clusterNodes.length;
+        const avgLng = clusterNodes.reduce((sum, n) => sum + n.lng, 0) / clusterNodes.length;
+        const crossingId = `crossing-${node.id}`;
+
+        crossings.push({
+          id: crossingId,
+          lat: avgLat,
+          lng: avgLng,
+          nodeIds: clusterNodes.map((n) => n.id),
+        });
+      }
+
+      // Add crossing features
+      crossings.forEach((crossing) => {
+        lightFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [crossing.lng, crossing.lat],
+          },
+          properties: {
+            type: 'crossing',
+            crossingId: crossing.id,
+            nodeIds: JSON.stringify(crossing.nodeIds),
+          },
+        });
+      });
+
+      // Add individual signal features
+      trafficNodes.forEach((node) => {
+        const parentCrossing = crossings.find((c) => c.nodeIds.includes(node.id));
+        lightFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [node.lng, node.lat],
+          },
+          properties: {
+            type: 'signal',
+            id: node.id,
+            parentCrossingId: parentCrossing ? parentCrossing.id : '',
+            tags: JSON.stringify(node.tags),
+            name: node.tags.name || 'Traffic Signal',
+            ...(node.customDelay !== null ? { customDelay: node.customDelay } : {}),
+          },
+        });
+      });
+
+      // Draw edges
+      graph.nodes.forEach((entry) => {
+        const u = entry.node;
         entry.edges.forEach((edge) => {
           const vEntry = graph.nodes.get(edge.target);
           if (!vEntry) return;
@@ -221,12 +305,13 @@ export const MapView: React.FC<MapViewProps> = ({
     map.on('contextmenu', (e) => {
       e.originalEvent.preventDefault();
 
-      // Check if right click was on a cluster
+      // Check if right click was on a crossing cluster
       const features = map.queryRenderedFeatures(e.point, {
         layers: ['traffic-lights-cluster'],
       });
-      const isCluster = features.length > 0;
-      const clusterId = isCluster && features[0].properties ? (features[0].properties.cluster_id as number) : null;
+      const isCrossing = features.length > 0;
+      const crossingId = isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
+      const nodeIds = isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
 
       setContextMenu({
         visible: true,
@@ -234,7 +319,8 @@ export const MapView: React.FC<MapViewProps> = ({
         y: e.point.y,
         lng: e.lngLat.lng,
         lat: e.lngLat.lat,
-        clusterId: clusterId,
+        crossingId,
+        nodeIds,
       });
     });
 
@@ -275,9 +361,7 @@ export const MapView: React.FC<MapViewProps> = ({
       map.addSource('traffic-lights', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
-        cluster: true,
-        clusterMaxZoom: 20,
-        clusterRadius: 35,
+        cluster: false,
       });
 
       map.addSource('loaded-bbox', {
@@ -356,7 +440,7 @@ export const MapView: React.FC<MapViewProps> = ({
         id: 'traffic-lights-cluster',
         type: 'circle',
         source: 'traffic-lights',
-        filter: ['has', 'point_count'],
+        filter: ['==', ['get', 'type'], 'crossing'],
         paint: {
           'circle-color': '#f59e0b', // Amber for crossings
           'circle-radius': 16,        // Standard uniform size representing crossing
@@ -366,30 +450,12 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      // Layer: Traffic light cluster count text
-      map.addLayer({
-        id: 'traffic-lights-cluster-count',
-        type: 'symbol',
-        source: 'traffic-lights',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-          'text-size': 11,
-          'text-allow-overlap': true,
-          'text-ignore-placement': true,
-        },
-        paint: {
-          'text-color': '#ffffff',
-        },
-      });
-
       // Layer: Traffic light individual markers (ungrouped)
       map.addLayer({
         id: 'traffic-lights-unclustered',
         type: 'circle',
         source: 'traffic-lights',
-        filter: ['all', ['!', ['has', 'point_count']], ['==', 1, 0]], // Start hidden
+        filter: ['==', ['get', 'type'], 'signal-hidden'], // Start hidden
         paint: {
           'circle-radius': [
             'case',
@@ -425,39 +491,18 @@ export const MapView: React.FC<MapViewProps> = ({
         }
       });
 
-      // Handle clicking on clusters to expand them
+      // Handle clicking on crossing clusters to zoom in
       map.on('click', 'traffic-lights-cluster', (e) => {
         if (!e.features || e.features.length === 0) return;
         const feature = e.features[0];
-        const properties = feature.properties;
         const geometry = feature.geometry;
 
-        if (geometry && 'coordinates' in geometry && properties && properties.cluster_id) {
-          const clusterId = properties.cluster_id;
+        if (geometry && 'coordinates' in geometry) {
           const coords = (geometry as { coordinates: number[] }).coordinates;
-          const source = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-
-          if (source && source.getClusterExpansionZoom) {
-            source.getClusterExpansionZoom(clusterId)
-              .then((zoom) => {
-                map.easeTo({
-                  center: [coords[0], coords[1]],
-                  zoom: Math.max(zoom, 16),
-                });
-              })
-              .catch((err) => {
-                console.error('Error expanding cluster:', err);
-                map.easeTo({
-                  center: [coords[0], coords[1]],
-                  zoom: 16,
-                });
-              });
-          } else {
-            map.easeTo({
-              center: [coords[0], coords[1]],
-              zoom: 16,
-            });
-          }
+          map.easeTo({
+            center: [coords[0], coords[1]],
+            zoom: 16.5,
+          });
         }
       });
 
@@ -659,33 +704,23 @@ export const MapView: React.FC<MapViewProps> = ({
     if (!map || !mapReady) return;
 
     if (managedClusterId !== null && managedNodeIds.length > 0) {
-      // Hide the managed cluster, keep other clusters visible
+      // Hide the managed crossing cluster, keep other crossing clusters visible
       map.setFilter('traffic-lights-cluster', [
         'all',
-        ['has', 'point_count'],
-        ['!=', ['id'], managedClusterId]
+        ['==', ['get', 'type'], 'crossing'],
+        ['!=', ['get', 'crossingId'], managedClusterId]
       ]);
-      map.setFilter('traffic-lights-cluster-count', [
-        'all',
-        ['has', 'point_count'],
-        ['!=', ['id'], managedClusterId]
-      ]);
-      // Show ONLY the unclustered nodes that belong to the managed cluster
+      // Show ONLY the individual signals belonging to the managed crossing
       map.setFilter('traffic-lights-unclustered', [
         'all',
-        ['!', ['has', 'point_count']],
-        ['in', ['get', 'id'], ['literal', managedNodeIds]]
+        ['==', ['get', 'type'], 'signal'],
+        ['==', ['get', 'parentCrossingId'], managedClusterId]
       ]);
     } else {
-      // Show all clusters
-      map.setFilter('traffic-lights-cluster', ['has', 'point_count']);
-      map.setFilter('traffic-lights-cluster-count', ['has', 'point_count']);
-      // Hide all individual/unclustered nodes
-      map.setFilter('traffic-lights-unclustered', [
-        'all',
-        ['!', ['has', 'point_count']],
-        ['==', 1, 0]
-      ]);
+      // Show all crossings
+      map.setFilter('traffic-lights-cluster', ['==', ['get', 'type'], 'crossing']);
+      // Hide all individual signals
+      map.setFilter('traffic-lights-unclustered', ['==', ['get', 'type'], 'signal-hidden']);
     }
   }, [managedClusterId, managedNodeIds, mapReady]);
 
@@ -712,26 +747,15 @@ export const MapView: React.FC<MapViewProps> = ({
           }}
           onClick={(e) => e.stopPropagation()} // Prevent closing menu when clicking on it
         >
-          {contextMenu.clusterId !== null && (
+          {contextMenu.crossingId !== null && (
             <button
               className="map-context-menu-item"
               onClick={() => {
                 const map = mapRef.current;
-                if (map && contextMenu.clusterId !== null) {
-                  const source = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-                  if (source && source.getClusterLeaves) {
-                    source.getClusterLeaves(contextMenu.clusterId, 100, 0)
-                      .then((leaves) => {
-                        const nodeIds = leaves
-                          .map((f) => (f.properties ? String(f.properties.id) : ''))
-                          .filter(Boolean);
-                        setManagedClusterId(contextMenu.clusterId);
-                        setManagedNodeIds(nodeIds);
-                      })
-                      .catch((err) => {
-                        console.error('Error fetching cluster leaves:', err);
-                      });
-                  }
+                if (map && contextMenu.crossingId !== null) {
+                  const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
+                  setManagedClusterId(contextMenu.crossingId);
+                  setManagedNodeIds(nodeIds);
                   
                   // Zoom in to the cluster location so the user can easily see individual signals
                   map.easeTo({
