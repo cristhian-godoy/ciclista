@@ -126,7 +126,7 @@ function calculateEdgeCost(
 ## 5. Step-by-Step Implementation Plan
 
 ### Phase 1: Bootstrap React + MapLibre App
-* [x] Create a React + TS project using Vite in `/workspace/ciclista`.
+* [x] Create a React + TS project using Vite.
 * [x] Setup MapLibre GL JS and set up a beautiful base map (CartoDB Dark Matter for a premium dark mode UI).
 * [x] Implement bounding-box selection: Let the user drag a box over their city or insert coordinates to define their riding area.
 
