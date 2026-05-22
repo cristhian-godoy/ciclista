@@ -33,6 +33,8 @@ h2 {
 }
 
 .input-text {
+  width: 100%;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
