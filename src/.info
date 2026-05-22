@@ -1,0 +1,14 @@
+App.tsx
+	Main React controller managing coordinate states and routing triggers.
+assets
+	Static graphics and media files.
+components
+	React UI widgets (Sidebar panels and Map canvas).
+core
+	Pure TypeScript modules (routing algorithms, parsers, and storage).
+index.css
+	Tailored CSS imports orchestrator.
+main.tsx
+	React document bootstrapper.
+styles
+	Theme variables, widgets, and absolute layouts.

@@ -1,0 +1,22 @@
+README.md
+	Project documentation, design decisions, and setup instructions.
+eslint.config.js
+	Linter configurations.
+index.html
+	Vite template entry HTML, updated with custom typography.
+package.json
+	Manifest containing scripts and pnpm dependencies.
+pnpm-lock.yaml
+	pnpm package dependency lockfile.
+public
+	Static assets served directly (favicon, svg symbols).
+src
+	Application source code.
+tsconfig.app.json
+	TypeScript configuration for the React application.
+tsconfig.json
+	TypeScript configurations.
+tsconfig.node.json
+	TypeScript configuration for the Vite/Node environment.
+vite.config.ts
+	Vite environment and build configurations.

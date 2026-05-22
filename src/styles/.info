@@ -1,7 +1,6 @@
-Directory: src/styles
-Purpose: Centralized styling files and CSS layout definitions.
-Responsibility: Houses modular Vanilla CSS styles for widgets, widgets layouts, map controls, and dark/glassmorphism design systems.
-Key Files:
-- variables.css: Semantic theme colors (hsl based), border radii, blur parameters, and sizing tokens.
-- layout.css: Grid and Flex layouts for sidebars, map containers, and absolute UI overlays.
-- components.css: Card, input, button, slider, and custom popup styles.
+components.css
+	UI details for form inputs, range sliders, badges, and overlays.
+layout.css
+	Full-viewport grid and flex layouts containing floating sidebar overlays.
+variables.css
+	Global CSS style values, cyberpunk dark hues, blurs, and typography.

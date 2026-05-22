@@ -1,5 +1,2 @@
-Directory: src/core/storage
-Purpose: Manages persistence of custom node delays and travel configurations.
-Responsibility: Saves and loads user customizations (traffic signal average wait times, turn difficulties, notes) to browser localStorage/IndexedDB or to an external JSON storage endpoint.
-Key Files:
-- storage.ts: Web-storage provider implementation of IStorageProvider.
+storage.ts
+	Web-storage adapter implementing browser localStorage persistence.
