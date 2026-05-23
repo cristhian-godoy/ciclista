@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Coordinate, RouteResult, RulesConfiguration, BikeProfile, RouteAlternative } from '../core/types';
 import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { RulesConfigPanel } from './RulesConfigPanel';
+import { RouteComparePanel } from './RouteComparePanel';
 
 interface SidebarProps {
   startCoord: Coordinate | null;
@@ -208,41 +209,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Section 3: Road Rules Configuration */}
         <RulesConfigPanel config={rulesConfig} onChange={onRulesChange} />
 
-        {/* Section 4: Travel Analytics */}
-        <section className="route-card">
-          <h2>Route Analytics</h2>
-          {routeResult ? (
-            <div>
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <span className="stat-val">{formatTime(routeResult.totalDurationSeconds)}</span>
-                  <span className="stat-lbl">Time Cost</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-val">{formatDistance(routeResult.totalDistanceMeters)}</span>
-                  <span className="stat-lbl">Distance</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-val">{routeResult.trafficSignalsCount}</span>
-                  <span className="stat-lbl">Signals</span>
-                </div>
-              </div>
-
-              {routeResult.streets.length > 0 && (
-                <div style={{ marginTop: '12px' }}>
-                  <span className="form-label" style={{ display: 'block', marginBottom: '4px' }}>Streets Traversed</span>
-                  <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    {routeResult.streets.join(' → ')}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
-              No route found. Drag map pins to trigger routing calculations.
-            </p>
-          )}
-        </section>
+        {/* Section 4: Route Comparison Panel */}
+        <RouteComparePanel
+          routeAlternatives={routeAlternatives}
+          activeAlternativeLabel={routingStrategy}
+          onSelectAlternative={onStrategyChange}
+        />
 
         {/* Section 4: Debug Route Details */}
         {routeResult && routeResult.edges && (
