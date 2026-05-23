@@ -203,6 +203,8 @@ export const RoadType = {
 } as const;
 export type RoadType = typeof RoadType[keyof typeof RoadType];
 
+export type ComfortLevel = 'very_low' | 'low' | 'neutral' | 'high' | 'very_high';
+
 /**
  * Configuration for a traffic sign rule.
  */
@@ -214,8 +216,8 @@ export interface SignRuleConfig {
   baseSpeedKmh: number;
   speedType?: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
   flatPenaltySeconds: number;
+  comfort?: ComfortLevel;
 }
-
 
 /**
  * Configuration for a road type rule.
@@ -226,6 +228,7 @@ export interface RoadRuleConfig {
   baseSpeedKmh: number;
   speedType?: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
   flatPenaltySeconds: number;
+  comfort?: ComfortLevel;
 }
 
 /**

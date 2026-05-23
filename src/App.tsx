@@ -50,10 +50,31 @@ export default function App() {
   const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(() => {
     const saved = storage.loadRulesConfig();
     if (!saved) return DEFAULT_RULES_CONFIG;
-    // Merge with defaults to gracefully handle schema migrations (new fields).
+
+    // Deep merge signs and roads to gracefully handle schema upgrades (e.g. comfort field).
+    const mergedSigns = { ...DEFAULT_RULES_CONFIG.signs };
+    if (saved.signs) {
+      for (const k of Object.keys(saved.signs) as Array<keyof typeof saved.signs>) {
+        if (mergedSigns[k]) {
+          mergedSigns[k] = { ...mergedSigns[k], ...saved.signs[k] };
+        }
+      }
+    }
+
+    const mergedRoads = { ...DEFAULT_RULES_CONFIG.roads };
+    if (saved.roads) {
+      for (const k of Object.keys(saved.roads) as Array<keyof typeof saved.roads>) {
+        if (mergedRoads[k]) {
+          mergedRoads[k] = { ...mergedRoads[k], ...saved.roads[k] };
+        }
+      }
+    }
+
     return {
       ...DEFAULT_RULES_CONFIG,
       ...saved,
+      signs: mergedSigns,
+      roads: mergedRoads,
       nodeDelays: { ...DEFAULT_RULES_CONFIG.nodeDelays, ...(saved.nodeDelays ?? {}) },
     };
   });

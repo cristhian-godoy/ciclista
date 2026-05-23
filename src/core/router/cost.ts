@@ -1,4 +1,4 @@
-import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../types';
+import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig, NodeDelayConfig, ComfortLevel } from '../types';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
@@ -244,17 +244,49 @@ export const avoidBusyRoadsCost: CostFunction = (
   const highway = edge.tags.highway || '';
   const isCycleway = hasCycleway(edge.tags);
 
-  let multiplier = 1.0;
-  if (['primary', 'primary_link'].includes(highway)) {
-    multiplier = isCycleway ? 1.5 : 4.0;
-  } else if (['secondary', 'secondary_link'].includes(highway)) {
-    multiplier = isCycleway ? 1.2 : 2.5;
-  } else if (['tertiary', 'tertiary_link'].includes(highway)) {
-    multiplier = isCycleway ? 1.1 : 1.8;
-  } else if (highway === 'cycleway') {
-    multiplier = 0.8;
+  let comfort: ComfortLevel = 'neutral';
+
+  const rules = overrides.rulesConfig;
+  if (rules) {
+    const { sign, road } = mapOSMToSignAndRoad(highway, edge.tags);
+    if (sign && rules.signs[sign]) {
+      comfort = rules.signs[sign].comfort || 'neutral';
+    } else if (rules.roads[road]) {
+      comfort = rules.roads[road].comfort || 'neutral';
+    }
+  } else {
+    // Hardcoded fallback logic
+    if (highway === 'cycleway') {
+      comfort = 'very_high';
+    } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
+      comfort = 'high';
+    } else if (['primary', 'primary_link'].includes(highway)) {
+      comfort = isCycleway ? 'neutral' : 'very_low';
+    } else if (['secondary', 'secondary_link'].includes(highway)) {
+      comfort = isCycleway ? 'neutral' : 'low';
+    } else if (['tertiary', 'tertiary_link'].includes(highway)) {
+      comfort = isCycleway ? 'high' : 'low';
+    } else if (highway === 'residential' || highway === 'living_street') {
+      comfort = 'high';
+    }
   }
 
+  // Override: If a major road has a cycleway, treat its comfort as 'high' by default
+  // because cycling lanes on asphalt are fine for comfort.
+  if (isCycleway && ['very_low', 'low', 'neutral'].includes(comfort)) {
+    comfort = 'high';
+  }
+
+  // Map ComfortLevel to cost multipliers
+  const COMFORT_MULTIPLIERS: Record<ComfortLevel, number> = {
+    very_low:  4.0,
+    low:       2.0,
+    neutral:   1.0,
+    high:      0.8,
+    very_high: 0.6,
+  };
+
+  const multiplier = COMFORT_MULTIPLIERS[comfort] ?? 1.0;
   return baseCost * multiplier;
 };
 
