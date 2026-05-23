@@ -125,10 +125,79 @@ export const MapView: React.FC<MapViewProps> = ({
   const [nodeNotes, setNodeNotes] = useState<string>('');
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
 
+  const getDefaultBaseDelay = (tags: Record<string, string>): number => {
+    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
+      return 15;
+    }
+    if (tags.highway === 'give_way') {
+      return 5;
+    }
+    if (tags.highway === 'stop') {
+      return 8;
+    }
+    if (tags.highway === 'crossing' || tags.crossing) {
+      return 5;
+    }
+    return 0;
+  };
+
+  const getControlType = (tags: Record<string, string>): 'signal' | 'yield' | 'stop' | 'crossing' => {
+    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
+      return 'signal';
+    }
+    if (tags.highway === 'give_way') {
+      return 'yield';
+    }
+    if (tags.highway === 'stop') {
+      return 'stop';
+    }
+    return 'crossing';
+  };
+
+  const getControlTypeLabel = (tags: Record<string, string>) => {
+    const type = getControlType(tags);
+    switch (type) {
+      case 'signal': return '🚦 Traffic Signal';
+      case 'yield': return '⚠️ Yield Sign (Give Way)';
+      case 'stop': return '🛑 Stop Sign';
+      case 'crossing': return '🚶 Pedestrian Crossing';
+    }
+  };
+
+  const getPresets = (type: 'signal' | 'yield' | 'stop' | 'crossing'): { label: string; value: number }[] => {
+    switch (type) {
+      case 'signal':
+        return [
+          { label: 'Always Green', value: 0 },
+          { label: 'Standard (15s)', value: 15 },
+          { label: 'Slow (30s)', value: 30 },
+          { label: 'Major (60s)', value: 60 },
+        ];
+      case 'yield':
+        return [
+          { label: 'Clear', value: 0 },
+          { label: 'Standard (5s)', value: 5 },
+          { label: 'Heavy (15s)', value: 15 },
+        ];
+      case 'stop':
+        return [
+          { label: 'Rolling (2s)', value: 2 },
+          { label: 'Standard (8s)', value: 8 },
+          { label: 'Busy (20s)', value: 20 },
+        ];
+      case 'crossing':
+        return [
+          { label: 'Clear', value: 0 },
+          { label: 'Standard (5s)', value: 5 },
+          { label: 'Busy (15s)', value: 15 },
+        ];
+    }
+  };
+
   // Sync node delay/notes and update position projection when selectedNode changes
   useEffect(() => {
     if (selectedNode) {
-      setNodeDelay(customNodeDelays.get(selectedNode.id) ?? 15);
+      setNodeDelay(customNodeDelays.get(selectedNode.id) ?? getDefaultBaseDelay(selectedNode.tags));
       setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
     }
   }, [selectedNode, customNodeDelays, customNodeNotes]);
@@ -190,20 +259,39 @@ export const MapView: React.FC<MapViewProps> = ({
     const lightFeatures: GeoJSONFeature[] = [];
 
     if (graph) {
-      // Find all traffic light nodes
-      const trafficNodes: { id: string; lat: number; lng: number; tags: Record<string, string>; customDelay: number | null }[] = [];
+      // Find all control nodes (traffic lights, yield signs, stop signs, pedestrian crossings)
+      const controlNodes: {
+        id: string;
+        lat: number;
+        lng: number;
+        tags: Record<string, string>;
+        customDelay: number | null;
+        controlType: 'signal' | 'yield' | 'stop' | 'crossing';
+      }[] = [];
+
       graph.nodes.forEach((entry, sourceId) => {
         const u = entry.node;
-        if (
-          u.tags.highway === 'traffic_signals' ||
-          u.tags.crossing === 'traffic_signals'
-        ) {
-          trafficNodes.push({
+        const tags = u.tags || {};
+        let controlType: 'signal' | 'yield' | 'stop' | 'crossing' | null = null;
+
+        if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
+          controlType = 'signal';
+        } else if (tags.highway === 'give_way') {
+          controlType = 'yield';
+        } else if (tags.highway === 'stop') {
+          controlType = 'stop';
+        } else if (tags.highway === 'crossing' || tags.crossing) {
+          controlType = 'crossing';
+        }
+
+        if (controlType) {
+          controlNodes.push({
             id: sourceId,
             lat: u.lat,
             lng: u.lng,
             tags: u.tags,
-            customDelay: customNodeDelays.get(sourceId) || null,
+            customDelay: customNodeDelays.get(sourceId) ?? null,
+            controlType,
           });
         }
       });
@@ -218,9 +306,16 @@ export const MapView: React.FC<MapViewProps> = ({
 
       // Cluster them (BFS grouping within 35 meters)
       const visited = new Set<string>();
-      const crossings: { id: string; lat: number; lng: number; nodeIds: string[] }[] = [];
+      const crossings: {
+        id: string;
+        lat: number;
+        lng: number;
+        nodeIds: string[];
+        controlType: 'signal' | 'yield' | 'stop' | 'crossing';
+        hasCustomDelay: boolean;
+      }[] = [];
 
-      for (const node of trafficNodes) {
+      for (const node of controlNodes) {
         if (visited.has(node.id)) continue;
 
         const clusterNodes = [node];
@@ -229,7 +324,7 @@ export const MapView: React.FC<MapViewProps> = ({
         const queue = [node];
         while (queue.length > 0) {
           const current = queue.shift()!;
-          for (const other of trafficNodes) {
+          for (const other of controlNodes) {
             if (visited.has(other.id)) continue;
             if (getDistance(current.lat, current.lng, other.lat, other.lng) <= 35) {
               visited.add(other.id);
@@ -243,11 +338,26 @@ export const MapView: React.FC<MapViewProps> = ({
         const avgLng = clusterNodes.reduce((sum, n) => sum + n.lng, 0) / clusterNodes.length;
         const crossingId = `crossing-${node.id}`;
 
+        // Determine dominant controlType for this cluster: signal > stop > yield > crossing
+        let clusterControlType: 'signal' | 'yield' | 'stop' | 'crossing' = 'crossing';
+        const types = clusterNodes.map((n) => n.controlType);
+        if (types.includes('signal')) {
+          clusterControlType = 'signal';
+        } else if (types.includes('stop')) {
+          clusterControlType = 'stop';
+        } else if (types.includes('yield')) {
+          clusterControlType = 'yield';
+        }
+
+        const hasCustomDelay = clusterNodes.some((n) => n.customDelay !== null);
+
         crossings.push({
           id: crossingId,
           lat: avgLat,
           lng: avgLng,
           nodeIds: clusterNodes.map((n) => n.id),
+          controlType: clusterControlType,
+          hasCustomDelay,
         });
       }
 
@@ -263,12 +373,14 @@ export const MapView: React.FC<MapViewProps> = ({
             type: 'crossing',
             crossingId: crossing.id,
             nodeIds: JSON.stringify(crossing.nodeIds),
+            controlType: crossing.controlType,
+            hasCustomDelay: crossing.hasCustomDelay ? 'true' : 'false',
           },
         });
       });
 
       // Add individual signal features
-      trafficNodes.forEach((node) => {
+      controlNodes.forEach((node) => {
         const parentCrossing = crossings.find((c) => c.nodeIds.includes(node.id));
         lightFeatures.push({
           type: 'Feature',
@@ -277,11 +389,16 @@ export const MapView: React.FC<MapViewProps> = ({
             coordinates: [node.lng, node.lat],
           },
           properties: {
-            type: 'signal',
+            type: 'signal', // Keep 'signal' type to match the unclustered layer filter type check
+            controlType: node.controlType,
             id: node.id,
             parentCrossingId: parentCrossing ? parentCrossing.id : '',
             tags: JSON.stringify(node.tags),
-            name: node.tags.name || 'Traffic Signal',
+            name: node.tags.name || (
+              node.controlType === 'signal' ? 'Traffic Signal' :
+              node.controlType === 'yield' ? 'Yield Sign' :
+              node.controlType === 'stop' ? 'Stop Sign' : 'Pedestrian Crossing'
+            ),
             ...(node.customDelay !== null ? { customDelay: node.customDelay } : {}),
           },
         });
@@ -520,7 +637,15 @@ export const MapView: React.FC<MapViewProps> = ({
         source: 'traffic-lights',
         filter: ['==', ['get', 'type'], 'crossing'],
         paint: {
-          'circle-color': '#f59e0b', // Amber for crossings
+          'circle-color': [
+            'match',
+            ['get', 'controlType'],
+            'signal', '#ef4444',     // Red for signals
+            'stop', '#ea580c',       // Orange-Red for stop signs
+            'yield', '#f59e0b',      // Amber/Yellow for yield signs
+            'crossing', '#3b82f6',   // Blue for pedestrian crossings
+            '#9ca3af'                // Grey fallback
+          ],
           'circle-radius': [
             'interpolate',
             ['linear'],
@@ -529,15 +654,31 @@ export const MapView: React.FC<MapViewProps> = ({
             14, 8,
             17, 16
           ],
+          'circle-stroke-color': [
+            'case',
+            ['==', ['get', 'hasCustomDelay'], 'true'], '#14b8a6', // Teal halo for custom delays
+            '#ffffff' // White otherwise
+          ],
           'circle-stroke-width': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            12, 0.5,
-            14, 1.5,
-            17, 2
+            12, [
+              'case',
+              ['==', ['get', 'hasCustomDelay'], 'true'], 1.5,
+              0.5
+            ],
+            14, [
+              'case',
+              ['==', ['get', 'hasCustomDelay'], 'true'], 3.0,
+              1.5
+            ],
+            17, [
+              'case',
+              ['==', ['get', 'hasCustomDelay'], 'true'], 4.0,
+              2.0
+            ]
           ],
-          'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.85,
         },
       });
@@ -551,15 +692,27 @@ export const MapView: React.FC<MapViewProps> = ({
         paint: {
           'circle-radius': [
             'case',
-            ['has', 'customDelay'], 7,
-            5
+            ['has', 'customDelay'], 8,
+            6
           ],
           'circle-color': [
             'case',
             ['has', 'customDelay'], '#14b8a6',  // Custom delay timed nodes (Teal)
-            '#ef4444'                           // Default OSM traffic signals (Red)
+            [
+              'match',
+              ['get', 'controlType'],
+              'signal', '#ef4444',
+              'stop', '#ea580c',
+              'yield', '#f59e0b',
+              'crossing', '#3b82f6',
+              '#9ca3af'
+            ]
           ],
-          'circle-stroke-width': 1.5,
+          'circle-stroke-width': [
+            'case',
+            ['has', 'customDelay'], 2.5,
+            1.5
+          ],
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.85,
         },
@@ -908,7 +1061,7 @@ export const MapView: React.FC<MapViewProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Configure Traffic Light</h3>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Configure Control Point</h3>
             <button
               style={{
                 background: 'none',
@@ -928,6 +1081,8 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.4' }}>
+            <strong>Type:</strong> {getControlTypeLabel(selectedNode.tags)}
+            <br />
             <strong>ID:</strong> {selectedNode.id}
             <br />
             <strong>OSM Name:</strong> {selectedNode.tags.name || 'Unnamed Crossing'}
@@ -945,6 +1100,28 @@ export const MapView: React.FC<MapViewProps> = ({
                 value={nodeDelay}
                 onChange={(e) => setNodeDelay(parseInt(e.target.value))}
               />
+            </div>
+            {/* Presets buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+              {getPresets(getControlType(selectedNode.tags)).map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  style={{
+                    background: nodeDelay === preset.value ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)',
+                    color: nodeDelay === preset.value ? '#000000' : 'var(--text-primary)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '2px 6px',
+                    fontSize: '0.62rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onClick={() => setNodeDelay(preset.value)}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
           </div>
 
