@@ -56,5 +56,26 @@ The compiled assets will be built in the `dist/` directory.
 
 ---
 
+## Routing Optimization & Heuristics (Commuter Safeguards)
+
+To ensure the router suggests realistic, street-legal, and safe commuting routes rather than mathematically short but impractical paths, the costing engine implements the following rules:
+
+1. **Sidewalk & Footway Penalties**:
+   - Generic sidewalks and pedestrian paths (`highway: footway`, `highway: pedestrian`, `highway: path`) are heavily penalized (**60-second flat penalty** + **4.0x time multiplier** + speed reduced to walking speed `1.2 m/s`) unless they explicitly allow bicycles (`bicycle: yes` or `bicycle: designated`). This stops the router from suggesting sidewalks parallel to regular streets.
+   - Physical stairs/steps (`highway: steps`) and ways with explicit restrictions (`bicycle: no`, `access: no`) are completely ignored by the graph parser.
+
+2. **Intersection Turn Penalties**:
+   - To prevent the router from doing tricky detours to bypass traffic lights:
+     - **U-Turns & Sharp Turns** (angles $> 135^\circ$) have a **30-second penalty**.
+     - **Normal turns** (left/right, $45^\circ$ to $135^\circ$) have a **3-second penalty** (representing deceleration and yielding).
+   - This ensures the router prefers waiting at a traffic signal rather than performing dangerous turn detours on side paths.
+
+3. **Service Road & Parking Aisle Restrictions**:
+   - Driveways and parking lot aisles (`highway: service` with `service: parking_aisle` or `service: driveway`) are slow and dangerous for fast commuting. They have a **30-second flat penalty** + **2.5x multiplier** + speed restricted to `1.5 m/s` to prevent the router from using them as shortcuts.
+   - General service roads have a **5-second penalty** + **1.2x multiplier**.
+
+---
+
 ## Data Customization & Storage
 All traffic light timings and notes are stored directly in your browser's `localStorage` under the key `ciclista_custom_nodes`, ensuring your custom route weights are preserved across reloads.
+
