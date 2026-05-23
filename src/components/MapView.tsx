@@ -37,8 +37,8 @@ interface MapViewProps {
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
   selectedNode: GraphNode | null;
-  onStartDrag: (coord: Coordinate) => void;
-  onEndDrag: (coord: Coordinate) => void;
+  onStartDrag: (coord: Coordinate | null) => void;
+  onEndDrag: (coord: Coordinate | null) => void;
   onNodeSelect: (node: GraphNode | null) => void;
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
   onClearNodeOverride: (nodeId: string) => void;
@@ -390,14 +390,15 @@ export const MapView: React.FC<MapViewProps> = ({
         setManagedNodeIds([]);
         onNodeSelectRef.current(null);
 
-        // UX: Clicking on map adds start pin, or end pin if start is set, unless both are set
+        // UX: Clicking on map adds start pin, or end pin if start is set. If both are set, restart pin placement.
         const sCoord = startCoordRef.current;
         const eCoord = endCoordRef.current;
         const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
 
-        if (!sCoord) {
+        if (!sCoord || (sCoord && eCoord)) {
           onStartDragRef.current(clickedCoord);
-        } else if (!eCoord) {
+          onEndDragRef.current(null);
+        } else {
           onEndDragRef.current(clickedCoord);
         }
       }
