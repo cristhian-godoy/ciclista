@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite E.1 — Comparison table component
+## Current Focus: Completed!
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -31,5 +31,5 @@
   - [x] Add alternative selector cards to `src/components/Sidebar.tsx` to switch the active selection.
 
 ## Phase E: Analytics Comparison Panel
-- [ ] **Bite E.1: Comparison table component**
-  - [ ] Create `src/components/RouteComparePanel.tsx` to show a side-by-side comparison of the routes (Time, Distance, Control points, Road mix).
+- [x] **Bite E.1: Comparison table component**
+  - [x] Create `src/components/RouteComparePanel.tsx` to show a side-by-side comparison of the routes (Time, Distance, Control points, Road mix).
