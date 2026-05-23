@@ -134,6 +134,181 @@ h2 {
   filter: brightness(1.1);
 }
 
+/* ─── Road Rules Config Panel ──────────────────────────────────────── */
+
+.rules-panel {
+  gap: var(--spacing-xs);
+}
+
+.rules-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.rules-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.rules-reset-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rules-section {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.rules-section-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+}
+
+.rules-section-toggle:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+}
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rules-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.rules-item-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+}
+
+.rules-item-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--accent-secondary);
+}
+
+.rules-item-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.rules-item-name {
+  flex: 1;
+}
+
+.rules-item-body {
+  padding: 8px 10px 10px;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-item-desc {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rules-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rules-field label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.rules-field label strong {
+  color: var(--accent-secondary);
+}
+
+.rules-field--toggle {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rules-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bg-tertiary);
+  outline: none;
+  cursor: pointer;
+}
+
+.rules-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.rules-slider::-webkit-slider-thumb:hover {
+  background: var(--accent-primary-hover);
+  transform: scale(1.2);
+  box-shadow: var(--shadow-glow);
+}
+
+.rules-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
 /* Route Info Card */
 .route-card {
   background: rgba(255, 255, 255, 0.03);
