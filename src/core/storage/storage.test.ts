@@ -32,7 +32,7 @@ describe('LocalStorageProvider', () => {
   it('clears node overrides correctly', async () => {
     await provider.saveNodeDelay('node_3', 15);
     await provider.saveNodeNotes('node_3', 'Some note');
-    
+
     let overrides = await provider.getOverrides();
     expect(overrides.nodeDelays.get('node_3')).toBe(15);
 
@@ -46,7 +46,7 @@ describe('LocalStorageProvider', () => {
     // Manually pollute in-memory storage with invalid JSON (simulated corrupt data)
     // We access the private item writer/reader or just verify default return values
     const corruptProvider = new LocalStorageProvider();
-    
+
     // We verify standard load returns empty defaults on empty storage
     const overrides = await corruptProvider.getOverrides();
     expect(overrides.nodeDelays.size).toBe(0);
@@ -57,7 +57,7 @@ describe('LocalStorageProvider', () => {
   it('correctly saves and loads rules configuration', () => {
     const mockConfig = {
       signs: {
-        'Vz_240': {
+        Vz_240: {
           signId: 'Vz_240' as GermanSign,
           name: 'Shared Path',
           description: 'Desc',
@@ -66,7 +66,7 @@ describe('LocalStorageProvider', () => {
           speedType: 'slow' as const,
           flatPenaltySeconds: 2,
           comfort: 'high' as const,
-        }
+        },
       },
       roads: {},
       nodeDelays: {
@@ -74,7 +74,7 @@ describe('LocalStorageProvider', () => {
         yieldSeconds: 3,
         stopSeconds: 8,
         crossingSeconds: 3,
-      }
+      },
     } as unknown as RulesConfiguration;
 
     provider.saveRulesConfig(mockConfig);

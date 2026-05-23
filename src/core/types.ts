@@ -1,6 +1,6 @@
 /**
  * Core types and interfaces for the Custom Cycling Route Planner.
- * Designed to decouple graph representation, routing algorithms, 
+ * Designed to decouple graph representation, routing algorithms,
  * data source formats, and storage mechanisms.
  */
 
@@ -43,14 +43,17 @@ export interface GraphEdge {
  */
 export interface StreetGraph {
   /** Node ID to Node metadata and directed outgoing edges */
-  nodes: Map<string, {
-    node: GraphNode;
-    edges: GraphEdge[];
-  }>;
+  nodes: Map<
+    string,
+    {
+      node: GraphNode;
+      edges: GraphEdge[];
+    }
+  >;
 }
 
 /**
- * Interface for converting raw input data (e.g., Overpass API JSON) 
+ * Interface for converting raw input data (e.g., Overpass API JSON)
  * into a clean, queryable StreetGraph.
  */
 export interface IGraphParser {
@@ -97,7 +100,7 @@ export interface IStorageProvider {
 /**
  * Custom weighting function for the routing algorithm.
  * Computes the "cost" (typically in seconds of travel time) of traversal.
- * 
+ *
  * @param sourceId The starting node ID of the edge
  * @param edge The edge properties being traversed
  * @param targetId The destination node ID of the edge
@@ -108,7 +111,7 @@ export type CostFunction = (
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
-  graph: StreetGraph
+  graph: StreetGraph,
 ) => number;
 
 /**
@@ -165,7 +168,7 @@ export interface RouteAlternative {
 export interface IRouter {
   /**
    * Calculates the optimal route between start and end coordinates.
-   * 
+   *
    * @param graph The street network graph
    * @param start Coords of starting point
    * @param end Coords of ending point
@@ -177,19 +180,19 @@ export interface IRouter {
     start: Coordinate,
     end: Coordinate,
     costFn: CostFunction,
-    overrides: LocalOverrides
+    overrides: LocalOverrides,
   ): RouteResult | null;
 }
 
 export const GermanSign = {
   VZ_242_1: 'Vz_242.1', // Fußgängerzone (Pedestrian Zone)
-  VZ_239: 'Vz_239',     // Gehweg (Sidewalk/Footway)
-  VZ_240: 'Vz_240',     // Gemeinsamer Geh- und Radweg (Shared path)
-  VZ_241: 'Vz_241',     // Getrennter Geh- und Radweg (Segregated path)
+  VZ_239: 'Vz_239', // Gehweg (Sidewalk/Footway)
+  VZ_240: 'Vz_240', // Gemeinsamer Geh- und Radweg (Shared path)
+  VZ_241: 'Vz_241', // Getrennter Geh- und Radweg (Segregated path)
   VZ_325_1: 'Vz_325.1', // Verkehrsberuhigter Bereich (Living Street)
   VZ_244_1: 'Vz_244.1', // Fahrradstraße (Bicycle Street)
 } as const;
-export type GermanSign = typeof GermanSign[keyof typeof GermanSign];
+export type GermanSign = (typeof GermanSign)[keyof typeof GermanSign];
 
 /**
  * Standard OSM road classifications used for base speed estimation.
@@ -201,7 +204,7 @@ export const RoadType = {
   SERVICE: 'service',
   PATH_DEFAULT: 'path_default',
 } as const;
-export type RoadType = typeof RoadType[keyof typeof RoadType];
+export type RoadType = (typeof RoadType)[keyof typeof RoadType];
 
 export type ComfortLevel = 'very_low' | 'low' | 'neutral' | 'high' | 'very_high';
 

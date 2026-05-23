@@ -36,9 +36,9 @@ describe('OSMGraphParser', () => {
           type: 'way',
           id: 100,
           nodes: [10, 20],
-          tags: { highway: 'residential', name: 'Test Street' }
-        }
-      ]
+          tags: { highway: 'residential', name: 'Test Street' },
+        },
+      ],
     };
 
     const graph = parser.parse(validData);
@@ -64,8 +64,8 @@ describe('OSMGraphParser', () => {
         { type: 'node', id: 1, lat: 48.1, lon: 11.1 },
         { type: 'node', id: 2, lat: 48.2, lon: 11.2 },
         { type: 'way', id: 101, nodes: [1, 2], tags: { highway: 'motorway' } },
-        { type: 'way', id: 102, nodes: [1, 2], tags: { highway: 'steps' } }
-      ]
+        { type: 'way', id: 102, nodes: [1, 2], tags: { highway: 'steps' } },
+      ],
     };
     const graph = parser.parse(data);
     expect(graph.nodes.size).toBe(0); // no valid ways processed
@@ -76,8 +76,8 @@ describe('OSMGraphParser', () => {
       elements: [
         { type: 'node', id: 1, lat: 48.1, lon: 11.1 },
         { type: 'node', id: 2, lat: 48.2, lon: 11.2 },
-        { type: 'way', id: 101, nodes: [1, 2], tags: { highway: 'residential', bicycle: 'no' } }
-      ]
+        { type: 'way', id: 101, nodes: [1, 2], tags: { highway: 'residential', bicycle: 'no' } },
+      ],
     };
     const graph = parser.parse(data);
     expect(graph.nodes.size).toBe(0);
@@ -95,9 +95,9 @@ describe('OSMGraphParser', () => {
           type: 'way',
           id: 101,
           nodes: [1, 2],
-          tags: null // null tags
-        }
-      ]
+          tags: null, // null tags
+        },
+      ],
     };
 
     // Should process without throwing, defaulting lat/lon to 0 and ignoring ways with invalid nodes

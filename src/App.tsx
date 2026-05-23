@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration, BikeProfile, RouteAlternative } from './core/types';
+import type {
+  Coordinate,
+  StreetGraph,
+  GraphNode,
+  LocalOverrides,
+  RulesConfiguration,
+  BikeProfile,
+  RouteAlternative,
+} from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
@@ -20,8 +28,8 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
   g2.nodes.forEach((val, key) => {
     if (merged.nodes.has(key)) {
       const existing = merged.nodes.get(key)!;
-      const targets = new Set(existing.edges.map(e => e.target));
-      const newEdges = val.edges.filter(e => !targets.has(e.target));
+      const targets = new Set(existing.edges.map((e) => e.target));
+      const newEdges = val.edges.filter((e) => !targets.has(e.target));
       existing.edges.push(...newEdges);
     } else {
       merged.nodes.set(key, val);
@@ -33,14 +41,16 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
 export default function App() {
   // 1. Core Coordinate Defaults (initialized to Munich center defaults for immediate routing)
   const [startCoord, setStartCoord] = useState<Coordinate | null>({ lat: 48.13715, lng: 11.5754 });
-  const [endCoord, setEndCoord] = useState<Coordinate | null>({ lat: 48.1350, lng: 11.5820 });
+  const [endCoord, setEndCoord] = useState<Coordinate | null>({ lat: 48.135, lng: 11.582 });
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
-  const [routingStrategy, setRoutingStrategy] = useState<'standard' | 'avoid-stops' | 'quiet-streets'>('standard');
+  const [routingStrategy, setRoutingStrategy] = useState<
+    'standard' | 'avoid-stops' | 'quiet-streets'
+  >('standard');
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
 
   // Custom node overrides state loaded from storage
@@ -95,82 +105,88 @@ export default function App() {
 
   // Helper to check if coordinate is inside any loaded bounding boxes
   const isInsideLoadedArea = (coord: Coordinate) => {
-    return loadedBBoxes.some(bbox => {
+    return loadedBBoxes.some((bbox) => {
       const [minLat, minLng, maxLat, maxLng] = bbox;
       return (
-        coord.lat >= minLat &&
-        coord.lat <= maxLat &&
-        coord.lng >= minLng &&
-        coord.lng <= maxLng
+        coord.lat >= minLat && coord.lat <= maxLat && coord.lng >= minLng && coord.lng <= maxLng
       );
     });
   };
 
-const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.osm.ch/api/interpreter',
-];
+  const OVERPASS_MIRRORS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://z.overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.osm.ch/api/interpreter',
+  ];
 
-const CACHE_NAME = 'overpass-cache-v1';
+  const CACHE_NAME = 'overpass-cache-v1';
 
-async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
-  const cacheKey = new Request(`https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}`);
+  async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
+    const cacheKey = new Request(
+      `https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}`,
+    );
 
-  // Try loading from client-side CacheStorage
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    const cachedResponse = await cache.match(cacheKey);
-    if (cachedResponse) {
-      console.log('Serving Overpass query from client-side CacheStorage.');
-      return await cachedResponse.json();
-    }
-  } catch (e) {
-    console.warn('CacheStorage not available or query matching failed:', e);
-  }
-
-  // Iterate over available public mirrors to fetch the data
-  let lastError: Error | null = null;
-  for (const baseUrl of OVERPASS_MIRRORS) {
+    // Try loading from client-side CacheStorage
     try {
-      const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
-      console.log(`Fetching Overpass query from mirror: ${baseUrl}`);
-      const response = await fetch(url);
-      
-      if (response.status === 429) {
-        throw new Error(`Mirror ${baseUrl} returned HTTP 429 Too Many Requests (Rate Limited).`);
+      const cache = await caches.open(CACHE_NAME);
+      const cachedResponse = await cache.match(cacheKey);
+      if (cachedResponse) {
+        console.log('Serving Overpass query from client-side CacheStorage.');
+        return await cachedResponse.json();
       }
-      if (!response.ok) {
-        throw new Error(`Mirror ${baseUrl} returned error status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Put successful response into client-side CacheStorage
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(cacheKey, new Response(JSON.stringify(data), {
-          headers: { 'Content-Type': 'application/json' },
-        }));
-      } catch (cacheErr) {
-        console.warn('Failed to cache successful Overpass response:', cacheErr);
-      }
-
-      return data;
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);
-      lastError = err instanceof Error ? err : new Error(errorMsg);
+    } catch (e) {
+      console.warn('CacheStorage not available or query matching failed:', e);
     }
-  }
 
-  throw lastError || new Error('All Overpass mirrors failed or returned rate limits.');
-}
+    // Iterate over available public mirrors to fetch the data
+    let lastError: Error | null = null;
+    for (const baseUrl of OVERPASS_MIRRORS) {
+      try {
+        const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
+        console.log(`Fetching Overpass query from mirror: ${baseUrl}`);
+        const response = await fetch(url);
+
+        if (response.status === 429) {
+          throw new Error(`Mirror ${baseUrl} returned HTTP 429 Too Many Requests (Rate Limited).`);
+        }
+        if (!response.ok) {
+          throw new Error(`Mirror ${baseUrl} returned error status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Put successful response into client-side CacheStorage
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(
+            cacheKey,
+            new Response(JSON.stringify(data), {
+              headers: { 'Content-Type': 'application/json' },
+            }),
+          );
+        } catch (cacheErr) {
+          console.warn('Failed to cache successful Overpass response:', cacheErr);
+        }
+
+        return data;
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);
+        lastError = err instanceof Error ? err : new Error(errorMsg);
+      }
+    }
+
+    throw lastError || new Error('All Overpass mirrors failed or returned rate limits.');
+  }
 
   // 4. Overpass API fetching implementation
-  const handleFetchOSM = async (bbox: [number, number, number, number], merge = false, silent = false) => {
+  const handleFetchOSM = async (
+    bbox: [number, number, number, number],
+    merge = false,
+    silent = false,
+  ) => {
     setIsFetchingOSM(true);
     if (!merge) {
       setSelectedNode(null); // Clear selected signal node
@@ -181,20 +197,19 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
     try {
       // Overpass QL query template for bikeable paths (highways) within bounding box
       const query = `[out:json][timeout:25];(way["highway"](${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]}););out body;>;out body qt;`;
-      
+
       const data = await fetchWithCacheAndFallback(query);
       const parsedGraph = parser.parse(data);
       if (merge) {
-        setGraph(prev => prev ? mergeGraphs(prev, parsedGraph) : parsedGraph);
-        setLoadedBBoxes(prev => [...prev, bbox]);
+        setGraph((prev) => (prev ? mergeGraphs(prev, parsedGraph) : parsedGraph));
+        setLoadedBBoxes((prev) => [...prev, bbox]);
       } else {
         setGraph(parsedGraph);
         setLoadedBBoxes([bbox]);
       }
-      
     } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
-      
+
       if (graph === null && !merge) {
         console.warn('Using mock fallback graph due to initial fetch failure.');
         const mockGraph = parser.parse(null);
@@ -202,7 +217,7 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
         setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
         // Restoring default mock coords
         setStartCoord({ lat: 48.13715, lng: 11.5754 });
-        setEndCoord({ lat: 48.1350, lng: 11.5820 });
+        setEndCoord({ lat: 48.135, lng: 11.582 });
       } else {
         // Restore the previous valid graph and bounding box
         setGraph(graph);
@@ -216,7 +231,7 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
             graph === null
               ? 'Using fallback offline demo map.'
               : 'Restoring previously loaded map area.'
-          }`
+          }`,
         );
       }
     } finally {
@@ -225,7 +240,10 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   };
 
   // Helper to compute a bounding box enclosing two coordinates with padding
-  const calculateBoundingBox = (c1: Coordinate | null, c2: Coordinate | null): [number, number, number, number] => {
+  const calculateBoundingBox = (
+    c1: Coordinate | null,
+    c2: Coordinate | null,
+  ): [number, number, number, number] => {
     if (!c1 || !c2) {
       // Default bounding box for Munich center
       const center = { lat: 48.13715, lng: 11.5754 };
@@ -251,21 +269,18 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
     const latMargin = Math.max(latSpan * 0.3, 0.015);
     const lngMargin = Math.max(lngSpan * 0.3, 0.02);
 
-    return [
-      minLat - latMargin,
-      minLng - lngMargin,
-      maxLat + latMargin,
-      maxLng + lngMargin,
-    ];
+    return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
   };
 
   useEffect(() => {
-    // Load custom settings
-    loadCustomOverrides();
-    
-    // Auto-fetch map area matching default start/end pins on startup
-    const initialBBox = calculateBoundingBox(startCoord, endCoord);
-    handleFetchOSM(initialBBox, false, true);
+    setTimeout(() => {
+      // Load custom settings
+      loadCustomOverrides();
+
+      // Auto-fetch map area matching default start/end pins on startup
+      const initialBBox = calculateBoundingBox(startCoord, endCoord);
+      handleFetchOSM(initialBBox, false, true);
+    }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -288,8 +303,13 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
         return;
       }
 
-      console.log('Coordinates changed outside current map bounds. Fetching expanded region:', newBBox);
-      handleFetchOSM(newBBox, true, false);
+      console.log(
+        'Coordinates changed outside current map bounds. Fetching expanded region:',
+        newBBox,
+      );
+      setTimeout(() => {
+        handleFetchOSM(newBBox, true, false);
+      }, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCoord, endCoord, loadedBBoxes, isFetchingOSM]);
@@ -299,14 +319,15 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
     setSelectedPreset(preset);
     if (preset === 'munich') {
       setStartCoord({ lat: 48.13715, lng: 11.5754 });
-      setEndCoord({ lat: 48.1350, lng: 11.5820 });
+      setEndCoord({ lat: 48.135, lng: 11.582 });
     } else {
-      setStartCoord({ lat: 52.3725, lng: 4.8900 });
-      setEndCoord({ lat: 52.3667, lng: 4.9000 });
+      setStartCoord({ lat: 52.3725, lng: 4.89 });
+      setEndCoord({ lat: 52.3667, lng: 4.9 });
     }
 
     // Fetch fresh non-merged area for the new preset city center
-    const center = preset === 'munich' ? { lat: 48.13715, lng: 11.5754 } : { lat: 52.3725, lng: 4.8900 };
+    const center =
+      preset === 'munich' ? { lat: 48.13715, lng: 11.5754 } : { lat: 52.3725, lng: 4.89 };
     const latMargin = 0.015;
     const lngMargin = 0.02;
     const newBBox: [number, number, number, number] = [
@@ -323,7 +344,7 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
     if (zoom < 13 || isFetchingOSM) return;
 
     // Check if the current viewport is fully contained within our already loaded bounds
-    const isContained = loadedBBoxes.some(bbox => {
+    const isContained = loadedBBoxes.some((bbox) => {
       return (
         viewportBBox[0] >= bbox[0] &&
         viewportBBox[1] >= bbox[1] &&
@@ -395,9 +416,27 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   const routeAlternatives = useMemo<RouteAlternative[]>(() => {
     if (!graph || !startCoord || !endCoord) return [];
 
-    const standardResult = router.findRoute(graph, startCoord, endCoord, standardCost, currentOverrides);
-    const avoidStopsResult = router.findRoute(graph, startCoord, endCoord, avoidStoppingCost, currentOverrides);
-    const quietResult = router.findRoute(graph, startCoord, endCoord, avoidBusyRoadsCost, currentOverrides);
+    const standardResult = router.findRoute(
+      graph,
+      startCoord,
+      endCoord,
+      standardCost,
+      currentOverrides,
+    );
+    const avoidStopsResult = router.findRoute(
+      graph,
+      startCoord,
+      endCoord,
+      avoidStoppingCost,
+      currentOverrides,
+    );
+    const quietResult = router.findRoute(
+      graph,
+      startCoord,
+      endCoord,
+      avoidBusyRoadsCost,
+      currentOverrides,
+    );
 
     const alts: RouteAlternative[] = [];
     if (standardResult) {
@@ -413,7 +452,7 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   }, [graph, startCoord, endCoord, currentOverrides]);
 
   const routeResult = useMemo(() => {
-    const active = routeAlternatives.find(alt => alt.label === routingStrategy);
+    const active = routeAlternatives.find((alt) => alt.label === routingStrategy);
     return active ? active.result : null;
   }, [routeAlternatives, routingStrategy]);
 

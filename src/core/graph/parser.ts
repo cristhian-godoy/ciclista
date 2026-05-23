@@ -40,7 +40,7 @@ interface OSMRawData {
 export class OSMGraphParser implements IGraphParser {
   parse(rawData: unknown): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
-    const data = (rawData && typeof rawData === 'object') ? (rawData as OSMRawData) : null;
+    const data = rawData && typeof rawData === 'object' ? (rawData as OSMRawData) : null;
 
     if (!data || !Array.isArray(data.elements) || data.elements.length === 0) {
       console.warn('Empty or invalid OSM raw data. Loading mock graph instead.');
@@ -51,7 +51,13 @@ export class OSMGraphParser implements IGraphParser {
 
     // 1. First pass: Collect all node coordinates and tags
     for (const el of data.elements) {
-      if (el && typeof el === 'object' && el.type === 'node' && el.id !== undefined && el.id !== null) {
+      if (
+        el &&
+        typeof el === 'object' &&
+        el.type === 'node' &&
+        el.id !== undefined &&
+        el.id !== null
+      ) {
         const idStr = el.id.toString();
         tempNodes.set(idStr, {
           id: idStr,
@@ -69,7 +75,10 @@ export class OSMGraphParser implements IGraphParser {
         const highway = wayTags.highway;
 
         // Skip non-bikeable major roads (motorways) and irrelevant features
-        if (!highway || ['motorway', 'motorway_link', 'proposed', 'construction', 'abandoned'].includes(highway)) {
+        if (
+          !highway ||
+          ['motorway', 'motorway_link', 'proposed', 'construction', 'abandoned'].includes(highway)
+        ) {
           continue;
         }
 
@@ -99,12 +108,19 @@ export class OSMGraphParser implements IGraphParser {
         // Determine if it is one-way for cyclists
         // In OSM, cycleways are often double-way even on one-way streets, unless tagged otherwise
         const oneway = wayTags.oneway === 'yes';
-        const onewayBicycle = wayTags['oneway:bicycle'] === 'yes' || (wayTags['oneway:bicycle'] === undefined && oneway);
+        const onewayBicycle =
+          wayTags['oneway:bicycle'] === 'yes' ||
+          (wayTags['oneway:bicycle'] === undefined && oneway);
 
         for (let i = 0; i < nodesList.length - 1; i++) {
           const uNodeVal = nodesList[i];
           const vNodeVal = nodesList[i + 1];
-          if (uNodeVal === undefined || uNodeVal === null || vNodeVal === undefined || vNodeVal === null) {
+          if (
+            uNodeVal === undefined ||
+            uNodeVal === null ||
+            vNodeVal === undefined ||
+            vNodeVal === null
+          ) {
             continue;
           }
           const uId = uNodeVal.toString();
@@ -163,26 +179,57 @@ export class OSMGraphParser implements IGraphParser {
    */
   private loadMockGraph(): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
-    
+
     // Coordinates around Munich center as a mock
     const nodesData: GraphNode[] = [
       { id: '1', lat: 48.13715, lng: 11.5754, tags: { name: 'Home (Marienplatz)' } },
-      { id: '2', lat: 48.1428, lng: 11.5775, tags: { highway: 'traffic_signals', name: 'Odeonsplatz Intersection' } },
-      { id: '3', lat: 48.1390, lng: 11.5810, tags: { highway: 'give_way', name: 'Maximilianstrasse Yield' } },
-      { id: '4', lat: 48.1351, lng: 11.5760, tags: { highway: 'traffic_signals', name: 'Viktualienmarkt Light' } },
-      { id: '5', lat: 48.1350, lng: 11.5820, tags: { name: 'Office (Isartor)' } },
-      { id: '6', lat: 48.1380, lng: 11.5780, tags: { highway: 'stop', name: 'Residenzstrasse Stop Sign' } },
-      { id: '7', lat: 48.1405, lng: 11.5795, tags: { highway: 'crossing', crossing: 'controlled', name: 'Pedestrian Crossing' } },
+      {
+        id: '2',
+        lat: 48.1428,
+        lng: 11.5775,
+        tags: { highway: 'traffic_signals', name: 'Odeonsplatz Intersection' },
+      },
+      {
+        id: '3',
+        lat: 48.139,
+        lng: 11.581,
+        tags: { highway: 'give_way', name: 'Maximilianstrasse Yield' },
+      },
+      {
+        id: '4',
+        lat: 48.1351,
+        lng: 11.576,
+        tags: { highway: 'traffic_signals', name: 'Viktualienmarkt Light' },
+      },
+      { id: '5', lat: 48.135, lng: 11.582, tags: { name: 'Office (Isartor)' } },
+      {
+        id: '6',
+        lat: 48.138,
+        lng: 11.578,
+        tags: { highway: 'stop', name: 'Residenzstrasse Stop Sign' },
+      },
+      {
+        id: '7',
+        lat: 48.1405,
+        lng: 11.5795,
+        tags: { highway: 'crossing', crossing: 'controlled', name: 'Pedestrian Crossing' },
+      },
     ];
 
-    nodesData.forEach(n => {
+    nodesData.forEach((n) => {
       graph.nodes.set(n.id, { node: n, edges: [] });
     });
 
-    const addBiEdge = (uId: string, vId: string, name: string, distance: number, tags: Record<string, string> = {}) => {
+    const addBiEdge = (
+      uId: string,
+      vId: string,
+      name: string,
+      distance: number,
+      tags: Record<string, string> = {},
+    ) => {
       const u = graph.nodes.get(uId)!;
       const v = graph.nodes.get(vId)!;
-      
+
       u.edges.push({ target: vId, distance, name, tags, speedLimit: 5 });
       v.edges.push({ target: uId, distance, name, tags, speedLimit: 5 });
     };
@@ -194,8 +241,14 @@ export class OSMGraphParser implements IGraphParser {
     addBiEdge('3', '5', 'Maximilianstraße', 250, { highway: 'tertiary' });
 
     // Route B (Via stop sign and alternative lights)
-    addBiEdge('1', '6', 'Sendlinger Straße North', 75, { highway: 'residential', cycleway: 'lane' });
-    addBiEdge('6', '4', 'Sendlinger Straße South', 75, { highway: 'residential', cycleway: 'lane' });
+    addBiEdge('1', '6', 'Sendlinger Straße North', 75, {
+      highway: 'residential',
+      cycleway: 'lane',
+    });
+    addBiEdge('6', '4', 'Sendlinger Straße South', 75, {
+      highway: 'residential',
+      cycleway: 'lane',
+    });
     addBiEdge('4', '5', 'Tal', 350, { highway: 'service' });
 
     return graph;

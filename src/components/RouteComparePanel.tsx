@@ -31,10 +31,14 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
   const getStrategyLabel = (label: string) => {
     switch (label) {
-      case 'standard': return '⚡ Speed';
-      case 'avoid-stops': return '🛑 Stops';
-      case 'quiet-streets': return '🌳 Quiet';
-      default: return label;
+      case 'standard':
+        return '⚡ Speed';
+      case 'avoid-stops':
+        return '🛑 Stops';
+      case 'quiet-streets':
+        return '🌳 Quiet';
+      default:
+        return label;
     }
   };
 
@@ -51,18 +55,31 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
   return (
     <section className="route-card" style={{ padding: '14px 12px' }}>
-      <h2 style={{ marginBottom: '12px', fontSize: '0.95rem', fontWeight: '700' }}>Route Comparison</h2>
+      <h2 style={{ marginBottom: '12px', fontSize: '0.95rem', fontWeight: '700' }}>
+        Route Comparison
+      </h2>
       <div style={{ overflowX: 'auto', margin: '0 -4px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '0.75rem',
+            textAlign: 'left',
+          }}
+        >
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '6px 4px', color: 'var(--text-secondary)', fontWeight: '600' }}>Metric</th>
+              <th style={{ padding: '6px 4px', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                Metric
+              </th>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <th
                     key={alt.label}
-                    onClick={() => onSelectAlternative(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')}
+                    onClick={() =>
+                      onSelectAlternative(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')
+                    }
                     style={{
                       padding: '8px 4px',
                       cursor: 'pointer',
@@ -85,7 +102,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
           <tbody>
             {/* Time prediction */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>Time Predict</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Time Predict
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -107,7 +126,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Distance */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>Distance</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Distance
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -128,7 +149,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Signals */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>Traffic Lights</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Traffic Lights
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -149,7 +172,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Yields */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>Yield Signs</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Yield Signs
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -170,7 +195,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Crossing */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>Crossings</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Crossings
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -191,7 +218,11 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Road mix: Cycleway */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-secondary)' }}>🚲 % Cycleway</td>
+              <td
+                style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-secondary)' }}
+              >
+                🚲 % Cycleway
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.cycleway || 0;
@@ -214,7 +245,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Road mix: Residential */}
             <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>🏠 % Resident</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                🏠 % Resident
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.residential || 0;
@@ -236,7 +269,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
             {/* Road mix: Primary */}
             <tr style={{ borderBottom: 'none' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-danger)' }}>🚗 % Primary</td>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-danger)' }}>
+                🚗 % Primary
+              </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.primary || 0;

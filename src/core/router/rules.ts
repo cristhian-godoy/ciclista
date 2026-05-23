@@ -28,23 +28,13 @@ export interface OSMRuleMatch {
  *   6. Footway / sidewalk → VZ 239
  *   7. Road classifications (primary, secondary, residential, service, default)
  */
-export function mapOSMToSignAndRoad(
-  highway: string,
-  tags: Record<string, string>
-): OSMRuleMatch {
+export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string>): OSMRuleMatch {
   const bicycle = tags.bicycle;
   const foot = tags.foot;
-  const bicycleFrei =
-    bicycle === 'yes' ||
-    bicycle === 'designated' ||
-    bicycle === 'permissive';
+  const bicycleFrei = bicycle === 'yes' || bicycle === 'designated' || bicycle === 'permissive';
 
   // ── 1. Bicycle street (Fahrradstraße) ──────────────────────────────────────
-  if (
-    tags.bicycle_road === 'yes' ||
-    tags.cyclestreet === 'yes' ||
-    highway === 'bicycle_road'
-  ) {
+  if (tags.bicycle_road === 'yes' || tags.cyclestreet === 'yes' || highway === 'bicycle_road') {
     return { sign: GermanSign.VZ_244_1, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
   }
 
@@ -118,7 +108,7 @@ export function mapOSMToSignAndRoad(
  * Classifies an OSM node's tags into a traffic control type.
  */
 export function mapOSMNodeToControl(
-  tags: Record<string, string>
+  tags: Record<string, string>,
 ): 'signal' | 'yield' | 'stop' | 'crossing' | null {
   if (
     tags.highway === 'traffic_signals' ||
@@ -133,10 +123,7 @@ export function mapOSMNodeToControl(
   if (tags.highway === 'stop') {
     return 'stop';
   }
-  if (
-    tags.crossing === 'zebra' ||
-    tags.crossing === 'marked'
-  ) {
+  if (tags.crossing === 'zebra' || tags.crossing === 'marked') {
     return 'crossing';
   }
   return null;
@@ -157,6 +144,5 @@ export function hasCycleway(tags: Record<string, string>): boolean {
     tags['cycleway:right'],
     tags['cycleway:both'],
   ];
-  return candidates.some(v => v !== undefined && !CYCLEWAY_NEGATIVE.has(v));
+  return candidates.some((v) => v !== undefined && !CYCLEWAY_NEGATIVE.has(v));
 }
-
