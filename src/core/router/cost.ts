@@ -1,48 +1,76 @@
 import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph } from '../types';
+import { mapOSMToSignAndRoad } from './rules';
+
+// ─── Speed helpers ────────────────────────────────────────────────────────────
 
 /**
- * Helper to estimate average speed on a street segment based on type and tags.
+ * Converts km/h to m/s.
  */
-function getBaseSpeed(edge: GraphEdge): number {
-  const highway = edge.tags.highway;
+function kmhToMs(kmh: number): number {
+  return kmh / 3.6;
+}
+
+/**
+ * Resolves the effective cycling speed (m/s) and flat penalty (s) for an edge,
+ * using the active RulesConfiguration when available, falling back to hardcoded defaults.
+ */
+function resolveSpeedAndPenalty(
+  edge: GraphEdge,
+  overrides: LocalOverrides
+): { speed: number; flatPenalty: number; bicycleFrei: boolean } {
+  const highway = edge.tags.highway || '';
+  const { sign, road, bicycleFrei } = mapOSMToSignAndRoad(highway, edge.tags);
+  const rules = overrides.rulesConfig;
+
+  if (rules) {
+    // Sign config takes priority over road config when a sign is matched
+    if (sign && rules.signs[sign]) {
+      const cfg = rules.signs[sign];
+      return {
+        speed: kmhToMs(cfg.baseSpeedKmh),
+        flatPenalty: cfg.flatPenaltySeconds,
+        bicycleFrei,
+      };
+    }
+    // Fall back to road classification config
+    if (rules.roads[road]) {
+      const cfg = rules.roads[road];
+      return {
+        speed: kmhToMs(cfg.baseSpeedKmh),
+        flatPenalty: cfg.flatPenaltySeconds,
+        bicycleFrei,
+      };
+    }
+  }
+
+  // ── Hardcoded fallback (no rulesConfig present) ────────────────────────────
   const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
-
-  // Base speed in m/s (5.0 m/s = 18 km/h)
-  let speed = 5.0;
-
+  let speed = 5.0; // 18 km/h default
   if (cycleway) {
-    speed = 5.5; // Slightly faster on dedicated bike infrastructure
+    speed = 5.5;
   } else if (highway === 'cycleway') {
-    speed = 6.0; // Fast dedicated paths
-  } else if (['footway', 'pedestrian', 'path'].includes(highway || '')) {
-    const bicycle = edge.tags.bicycle;
-    if (bicycle === 'yes' || bicycle === 'designated') {
-      speed = 4.5;
-    } else {
-      speed = 1.2; // Walk speed (~4.3 km/h) when walking bike
-    }
+    speed = 6.0;
+  } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
+    speed = bicycleFrei ? 4.5 : 1.2;
   } else if (highway === 'service') {
-    if (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') {
-      speed = 1.5; // Slow down for reversing cars and pedestrians
-    } else {
-      speed = 3.0; // Alleys / basic service paths
-    }
+    speed = (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') ? 1.5 : 3.0;
   } else if (highway === 'primary') {
-    speed = 4.0; // Slower due to congestion / traffic interaction
+    speed = 4.0;
   } else if (highway === 'secondary') {
     speed = 4.5;
   } else if (highway === 'residential') {
     speed = 4.8;
   } else if (highway === 'living_street') {
-    speed = 4.0; // Slow due to pedestrians
+    speed = 4.0;
   }
-
-  return speed;
+  return { speed, flatPenalty: 0, bicycleFrei };
 }
 
+// ─── Cost functions ───────────────────────────────────────────────────────────
+
 /**
- * Standard routing cost: Time = Distance / Speed.
- * Adds default penalties for physical traffic signals.
+ * Standard routing cost: Time = Distance / Speed + flat penalties.
+ * Uses rulesConfig when available for dynamic speed and penalty resolution.
  */
 export const standardCost: CostFunction = (
   _sourceId: string,
@@ -51,36 +79,33 @@ export const standardCost: CostFunction = (
   overrides: LocalOverrides,
   graph: StreetGraph
 ): number => {
-  const speed = getBaseSpeed(edge);
-  let cost = edge.distance / speed; // Travel time in seconds
+  const { speed, flatPenalty, bicycleFrei } = resolveSpeedAndPenalty(edge, overrides);
+  const highway = edge.tags.highway || '';
 
-  // Heavy penalty for generic footways / sidewalks / pedestrian paths that don't explicitly allow bicycles
-  const highway = edge.tags.highway;
-  if (['footway', 'pedestrian', 'path'].includes(highway || '')) {
-    const bicycle = edge.tags.bicycle;
-    if (bicycle !== 'yes' && bicycle !== 'designated') {
-      cost += 60; // 60 seconds penalty
-      cost *= 4.0; // 4x multiplier
-    }
+  let cost = edge.distance / speed + flatPenalty;
+
+  // Heavy penalty for paths that don't allow bicycles (overrides cannot override physics)
+  if (['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei) {
+    cost += 60;
+    cost *= 4.0;
   }
 
-  // Heavy penalty for service roads and parking aisles to avoid utilizing them as intersection detours
+  // Service road penalties
   if (highway === 'service') {
     if (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') {
-      cost += 30;  // 30 seconds flat penalty
-      cost *= 2.5; // 2.5x multiplier
+      cost += 30;
+      cost *= 2.5;
     } else {
-      cost += 5;   // 5 seconds flat penalty
-      cost *= 1.2; // 1.2x multiplier
+      cost += 5;
+      cost *= 1.2;
     }
   }
 
-  // Add custom delays if user timed it
+  // Custom node delay or default signal penalty
   const customDelay = overrides.nodeDelays.get(targetId);
   if (customDelay !== undefined) {
     cost += customDelay;
   } else {
-    // Fallback: Default penalty for untimed OSM traffic signals
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
     if (
@@ -88,7 +113,7 @@ export const standardCost: CostFunction = (
       tags.crossing === 'traffic_signals' ||
       tags.crossing === 'controlled'
     ) {
-      cost += 15; // 15-second default signal stop
+      cost += 15;
     }
   }
 
@@ -96,8 +121,8 @@ export const standardCost: CostFunction = (
 };
 
 /**
- * Stop-avoidance routing cost:
- * Puts very high penalties on stops (traffic lights and crossings) to maximize rolling continuity.
+ * Stop-avoidance routing cost.
+ * Uses rulesConfig for speeds; adds heavy stop penalties.
  */
 export const avoidStoppingCost: CostFunction = (
   _sourceId: string,
@@ -106,15 +131,20 @@ export const avoidStoppingCost: CostFunction = (
   overrides: LocalOverrides,
   graph: StreetGraph
 ): number => {
-  const speed = getBaseSpeed(edge);
-  let cost = edge.distance / speed;
+  const { speed, flatPenalty, bicycleFrei } = resolveSpeedAndPenalty(edge, overrides);
+  const highway = edge.tags.highway || '';
+
+  let cost = edge.distance / speed + flatPenalty;
+
+  if (['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei) {
+    cost += 60;
+    cost *= 4.0;
+  }
 
   const customDelay = overrides.nodeDelays.get(targetId);
   if (customDelay !== undefined) {
-    // If timed, use actual delay + additional penalty for the physical act of stopping (braking/acceleration)
-    cost += customDelay + 10; // Extra 10s penalty for stopping fatigue
+    cost += customDelay + 10; // Extra stopping fatigue penalty
   } else {
-    // If not explicitly timed but marked as a signal/crossing/stop, add a heavy penalty
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
     if (
@@ -123,7 +153,7 @@ export const avoidStoppingCost: CostFunction = (
       tags.crossing === 'controlled' ||
       tags.highway === 'stop'
     ) {
-      cost += 45; // Heavy 45s default penalty to route away from signals/stops
+      cost += 45;
     }
   }
 
@@ -131,8 +161,8 @@ export const avoidStoppingCost: CostFunction = (
 };
 
 /**
- * Quiet/Convenient routing cost:
- * Strongly avoids primary and secondary roads, prioritizing cycling tracks and residential streets.
+ * Quiet/convenient routing cost.
+ * Uses rulesConfig for base costs; multiplies busy roads.
  */
 export const avoidBusyRoadsCost: CostFunction = (
   sourceId: string,
@@ -142,17 +172,16 @@ export const avoidBusyRoadsCost: CostFunction = (
   graph: StreetGraph
 ): number => {
   const baseCost = standardCost(sourceId, edge, targetId, overrides, graph);
-  const highway = edge.tags.highway;
+  const highway = edge.tags.highway || '';
   const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
 
   let multiplier = 1.0;
-
-  if (['primary', 'primary_link'].includes(highway || '')) {
-    multiplier = cycleway ? 1.5 : 3.0; // Avoid primary streets (3x penalty unless there is a cycle track)
-  } else if (['secondary', 'secondary_link'].includes(highway || '')) {
+  if (['primary', 'primary_link'].includes(highway)) {
+    multiplier = cycleway ? 1.5 : 3.0;
+  } else if (['secondary', 'secondary_link'].includes(highway)) {
     multiplier = cycleway ? 1.2 : 2.0;
   } else if (highway === 'cycleway') {
-    multiplier = 0.8; // Favor dedicated cycling paths (20% discount)
+    multiplier = 0.8;
   }
 
   return baseCost * multiplier;
