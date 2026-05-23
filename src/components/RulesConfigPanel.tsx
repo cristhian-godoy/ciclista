@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
-import type { RulesConfiguration, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../core/types';
+import type { RulesConfiguration, SignRuleConfig, RoadRuleConfig, NodeDelayConfig, ComfortLevel } from '../core/types';
 import { GermanSign, RoadType } from '../core/types';
 
 // ─── Default rule configurations ────────────────────────────────────────────
@@ -16,6 +16,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 30,
+      comfort: 'low',
     },
     [GermanSign.VZ_239]: {
       signId: GermanSign.VZ_239,
@@ -25,6 +26,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 20,
+      comfort: 'low',
     },
     [GermanSign.VZ_240]: {
       signId: GermanSign.VZ_240,
@@ -34,6 +36,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 15,
       speedType: 'slow',
       flatPenaltySeconds: 0,
+      comfort: 'high',
     },
     [GermanSign.VZ_241]: {
       signId: GermanSign.VZ_241,
@@ -43,6 +46,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 18,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'very_high',
     },
     [GermanSign.VZ_325_1]: {
       signId: GermanSign.VZ_325_1,
@@ -52,6 +56,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 7,
       speedType: 'relative',
       flatPenaltySeconds: 5,
+      comfort: 'high',
     },
     [GermanSign.VZ_244_1]: {
       signId: GermanSign.VZ_244_1,
@@ -61,6 +66,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 20,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'very_high',
     },
   },
   roads: {
@@ -70,6 +76,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 14,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'very_low',
     },
     [RoadType.SECONDARY]: {
       roadId: RoadType.SECONDARY,
@@ -77,6 +84,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 16,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'low',
     },
     [RoadType.RESIDENTIAL]: {
       roadId: RoadType.RESIDENTIAL,
@@ -84,6 +92,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 17,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'high',
     },
     [RoadType.SERVICE]: {
       roadId: RoadType.SERVICE,
@@ -91,6 +100,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 11,
       speedType: 'relative',
       flatPenaltySeconds: 5,
+      comfort: 'neutral',
     },
     [RoadType.PATH_DEFAULT]: {
       roadId: RoadType.PATH_DEFAULT,
@@ -98,6 +108,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 18,
       speedType: 'relative',
       flatPenaltySeconds: 0,
+      comfort: 'high',
     },
   },
   nodeDelays: {
@@ -260,6 +271,47 @@ const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({ value, disabled, 
   );
 };
 
+interface ComfortSelectorProps {
+  value: ComfortLevel;
+  onChange: (val: ComfortLevel) => void;
+}
+
+const ComfortSelector: React.FC<ComfortSelectorProps> = ({ value, onChange }) => {
+  const [hoveredValue, setHoveredValue] = useState<string | null>(null);
+
+  const OPTIONS = [
+    { key: 'very_low',  label: 'Very Low',  desc: 'Avoid strongly in quiet routes' },
+    { key: 'low',       label: 'Low',       desc: 'Avoid in quiet routes' },
+    { key: 'neutral',   label: 'Neutral',   desc: 'Standard routing weight' },
+    { key: 'high',      label: 'High',      desc: 'Prefer in quiet routes' },
+    { key: 'very_high', label: 'Very High', desc: 'Prefer strongly in quiet routes' },
+  ] as const;
+
+  const activeOption = OPTIONS.find(o => o.key === (hoveredValue || value));
+
+  return (
+    <div className="speed-selector-container">
+      <div className="speed-selector-buttons">
+        {OPTIONS.map(opt => (
+          <button
+            key={opt.key}
+            type="button"
+            className={`speed-selector-btn ${value === opt.key ? 'active' : ''}`}
+            onClick={() => onChange(opt.key)}
+            onMouseEnter={() => setHoveredValue(opt.key)}
+            onMouseLeave={() => setHoveredValue(null)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div className="speed-selector-info">
+        {activeOption ? activeOption.desc : ''}
+      </div>
+    </div>
+  );
+};
+
 interface SignRowProps {
   config: SignRuleConfig;
   onChange: (updated: SignRuleConfig) => void;
@@ -340,6 +392,14 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
               className="rules-slider"
             />
           </div>
+
+          <div className="rules-field">
+            <label>Comfort level</label>
+            <ComfortSelector
+              value={config.comfort || 'neutral'}
+              onChange={val => onChange({ ...config, comfort: val })}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -405,6 +465,14 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
               value={config.flatPenaltySeconds}
               onChange={e => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
               className="rules-slider"
+            />
+          </div>
+
+          <div className="rules-field">
+            <label>Comfort level</label>
+            <ComfortSelector
+              value={config.comfort || 'neutral'}
+              onChange={val => onChange({ ...config, comfort: val })}
             />
           </div>
         </div>

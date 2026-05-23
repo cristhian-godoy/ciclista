@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDisplayCost, standardCost, getDefaultNodeDelay, resolveRuleSpeed } from './cost';
+import { calculateDisplayCost, standardCost, getDefaultNodeDelay, resolveRuleSpeed, avoidBusyRoadsCost } from './cost';
 import { DijkstraRouter, calculateTurnPenalty } from './router';
-import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig, RoadRuleConfig } from '../types';
+import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../types';
 import { GermanSign, RoadType } from '../types';
 
 describe('resolveRuleSpeed', () => {
@@ -334,5 +334,94 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     expect(result!.roadTypeTotals.primary || 0).toBe(0);
   });
 });
+
+describe('avoidBusyRoadsCost', () => {
+  const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
+  const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
+  const graph: StreetGraph = {
+    nodes: new Map([
+      ['A', { node: nodeA, edges: [] }],
+      ['B', { node: nodeB, edges: [] }],
+    ]),
+  };
+
+  it('applies default fallback comfort multipliers when rules are absent', () => {
+    // Primary road with no cycleway has comfort 'very_low' -> multiplier 4.0
+    const edgePrimary: GraphEdge = { target: 'B', distance: 100, name: 'Primary', tags: { highway: 'primary' } };
+    const overrides: LocalOverrides = {
+      nodeDelays: new Map(),
+      nodeNotes: new Map(),
+      nodeTurns: new Map(),
+    };
+    
+    const cost = avoidBusyRoadsCost('A', edgePrimary, 'B', overrides, graph);
+    // Base time on primary (speed = 4.0 m/s): 100 / 4 = 25s
+    // Multiplied by 4.0 comfort penalty: 25 * 4 = 100s
+    expect(cost).toBeCloseTo(100, 1);
+  });
+
+  it('respects custom rulesConfig comfort levels', () => {
+    const edgePrimary: GraphEdge = { target: 'B', distance: 100, name: 'Primary', tags: { highway: 'primary' } };
+    const overrides: LocalOverrides = {
+      nodeDelays: new Map(),
+      nodeNotes: new Map(),
+      nodeTurns: new Map(),
+      rulesConfig: {
+        signs: {} as Record<GermanSign, SignRuleConfig>,
+        roads: {
+          [RoadType.PRIMARY]: {
+            roadId: RoadType.PRIMARY,
+            name: 'Primary',
+            baseSpeedKmh: 14.4, // 4.0 m/s
+            speedType: 'custom',
+            flatPenaltySeconds: 0,
+            comfort: 'high', // Should map to 0.8 multiplier
+          },
+        } as unknown as Record<RoadType, RoadRuleConfig>,
+        nodeDelays: {} as NodeDelayConfig,
+      },
+    };
+
+    const cost = avoidBusyRoadsCost('A', edgePrimary, 'B', overrides, graph);
+    // Base time: 100 / 4 = 25s
+    // Multiplied by 0.8: 25 * 0.8 = 20s
+    expect(cost).toBeCloseTo(20, 1);
+  });
+
+  it('overrides low/very_low comfort to high for roads with cycleways', () => {
+    // Primary road WITH cycleway tags
+    const edgePrimaryCycleway: GraphEdge = { 
+      target: 'B', 
+      distance: 100, 
+      name: 'Primary', 
+      tags: { highway: 'primary', 'cycleway:left': 'track' } 
+    };
+    const overrides: LocalOverrides = {
+      nodeDelays: new Map(),
+      nodeNotes: new Map(),
+      nodeTurns: new Map(),
+      rulesConfig: {
+        signs: {} as Record<GermanSign, SignRuleConfig>,
+        roads: {
+          [RoadType.PRIMARY]: {
+            roadId: RoadType.PRIMARY,
+            name: 'Primary',
+            baseSpeedKmh: 14.4, // 4.0 m/s
+            speedType: 'custom',
+            flatPenaltySeconds: 0,
+            comfort: 'very_low', // normally 4.0, but overridden to 'high' (0.8) due to cycleway
+          },
+        } as unknown as Record<RoadType, RoadRuleConfig>,
+        nodeDelays: {} as NodeDelayConfig,
+      },
+    };
+
+    const cost = avoidBusyRoadsCost('A', edgePrimaryCycleway, 'B', overrides, graph);
+    // Base time: 100 / 4 = 25s
+    // Multiplied by 0.8: 25 * 0.8 = 20s
+    expect(cost).toBeCloseTo(20, 1);
+  });
+});
+
 
 
