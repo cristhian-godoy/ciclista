@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite B.1 — Centralize Node Control Classifier
+## Current Focus: Bite B.2 — Count Controls in RouteResult
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -9,9 +9,9 @@
   - [x] Update Dijkstra search in `src/core/router/router.ts` to track and return the total accumulated `displayCost` (travel time in seconds) on the resulting path, while still using the preference-weighted `routingCost` for pathfinding.
 
 ## Phase B: Yield / Crossing Detection
-- [ ] **Bite B.1: Centralize node control classifier**
-  - [ ] Implement a unified node classification function `mapOSMNodeToControl(tags)` in `src/core/router/rules.ts` to classify nodes as `signal`, `yield`, `stop`, or `crossing`.
-- [ ] **Bite B.2: Count controls in RouteResult**
+- [x] **Bite B.1: Centralize node control classifier**
+  - [x] Implement a unified node classification function `mapOSMNodeToControl(tags)` in `src/core/router/rules.ts` to classify nodes as `signal`, `yield`, `stop`, or `crossing`.
+- [/] **Bite B.2: Count controls in RouteResult**
   - [ ] Add `yieldCount: number`, `signalCount: number`, and `crossingCount: number` to `RouteResult` in `src/core/types.ts`.
   - [ ] Populate these counters in the path reconstruction loop in `src/core/router/router.ts`.
 

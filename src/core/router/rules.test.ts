@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapOSMToSignAndRoad } from './rules';
+import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 import { GermanSign, RoadType } from '../types';
 
 describe('mapOSMToSignAndRoad', () => {
@@ -127,3 +127,33 @@ describe('mapOSMToSignAndRoad', () => {
     expect(r.road).toBe(RoadType.PATH_DEFAULT);
   });
 });
+
+describe('mapOSMNodeToControl', () => {
+  it('classifies traffic signals', () => {
+    expect(mapOSMNodeToControl({ highway: 'traffic_signals' })).toBe('signal');
+    expect(mapOSMNodeToControl({ crossing: 'traffic_signals' })).toBe('signal');
+    expect(mapOSMNodeToControl({ crossing: 'controlled' })).toBe('signal');
+  });
+
+  it('classifies give way signs as yield', () => {
+    expect(mapOSMNodeToControl({ highway: 'give_way' })).toBe('yield');
+  });
+
+  it('classifies stop signs as stop', () => {
+    expect(mapOSMNodeToControl({ highway: 'stop' })).toBe('stop');
+  });
+
+  it('classifies crossings', () => {
+    expect(mapOSMNodeToControl({ highway: 'crossing' })).toBe('crossing');
+    expect(mapOSMNodeToControl({ crossing: 'uncontrolled' })).toBe('crossing');
+    expect(mapOSMNodeToControl({ crossing: 'zebra' })).toBe('crossing');
+  });
+
+  it('returns null for non-control nodes', () => {
+    expect(mapOSMNodeToControl({})).toBeNull();
+    expect(mapOSMNodeToControl({ highway: 'residential' })).toBeNull();
+    expect(mapOSMNodeToControl({ crossing: 'no' })).toBeNull();
+    expect(mapOSMNodeToControl({ crossing: 'none' })).toBeNull();
+  });
+});
+
