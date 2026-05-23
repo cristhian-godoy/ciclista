@@ -25,9 +25,10 @@ type GeoJSONFeature =
 interface MapViewProps {
   graph: StreetGraph | null;
   loadedBBoxes: [number, number, number, number][];
-  startCoord: Coordinate;
-  endCoord: Coordinate;
+  startCoord: Coordinate | null;
+  endCoord: Coordinate | null;
   routeResult: RouteResult | null;
+  selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
   selectedNode: GraphNode | null;
@@ -45,6 +46,7 @@ export const MapView: React.FC<MapViewProps> = ({
   startCoord,
   endCoord,
   routeResult,
+  selectedPreset,
   customNodeDelays,
   customNodeNotes,
   selectedNode,
@@ -82,6 +84,17 @@ export const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     onMapBoundsChangeRef.current = onMapBoundsChange;
   }, [onMapBoundsChange]);
+
+  const startCoordRef = useRef(startCoord);
+  const endCoordRef = useRef(endCoord);
+
+  useEffect(() => {
+    startCoordRef.current = startCoord;
+  }, [startCoord]);
+
+  useEffect(() => {
+    endCoordRef.current = endCoord;
+  }, [endCoord]);
 
   // Track map loaded state to synchronize layer updates after style initialization
   const [mapReady, setMapReady] = useState(false);
@@ -350,7 +363,7 @@ export const MapView: React.FC<MapViewProps> = ({
           },
         ],
       },
-      center: [startCoord.lng, startCoord.lat],
+      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.8900, 52.3725],
       zoom: 14.5,
     });
 
@@ -398,6 +411,17 @@ export const MapView: React.FC<MapViewProps> = ({
         setManagedClusterId(null);
         setManagedNodeIds([]);
         onNodeSelectRef.current(null);
+
+        // UX: Clicking on map adds start pin, or end pin if start is set, unless both are set
+        const sCoord = startCoordRef.current;
+        const eCoord = endCoordRef.current;
+        const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+
+        if (!sCoord) {
+          onStartDragRef.current(clickedCoord);
+        } else if (!eCoord) {
+          onEndDragRef.current(clickedCoord);
+        }
       }
     });
 
@@ -565,17 +589,24 @@ export const MapView: React.FC<MapViewProps> = ({
         }
       });
 
-      // Handle clicking on crossing clusters to zoom in
+      // Handle clicking on crossing clusters to zoom in and manage traffic lights
       map.on('click', 'traffic-lights-cluster', (e) => {
         if (!e.features || e.features.length === 0) return;
         const feature = e.features[0];
         const geometry = feature.geometry;
+        const properties = feature.properties;
 
-        if (geometry && 'coordinates' in geometry) {
+        if (geometry && 'coordinates' in geometry && properties) {
           const coords = (geometry as { coordinates: number[] }).coordinates;
+          const crossingId = properties.crossingId as string;
+          const nodeIds = JSON.parse((properties.nodeIds as string) || '[]');
+
+          setManagedClusterId(crossingId);
+          setManagedNodeIds(nodeIds);
+
           map.easeTo({
             center: [coords[0], coords[1]],
-            zoom: 16.5,
+            zoom: 17.5,
           });
         }
       });
@@ -599,63 +630,6 @@ export const MapView: React.FC<MapViewProps> = ({
       setMapReady(true);
     });
 
-    // Create Draggable Markers
-    // Start Pin (Green Point A)
-    const startEl = document.createElement('div');
-    startEl.style.width = '28px';
-    startEl.style.height = '28px';
-    startEl.style.borderRadius = '50%';
-    startEl.style.backgroundColor = '#10b981'; // Emerald Green
-    startEl.style.border = '3px solid #ffffff';
-    startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
-    startEl.style.cursor = 'grab';
-    startEl.style.display = 'flex';
-    startEl.style.alignItems = 'center';
-    startEl.style.justifyContent = 'center';
-    startEl.style.color = '#ffffff';
-    startEl.style.fontWeight = 'bold';
-    startEl.style.fontSize = '12px';
-    startEl.style.fontFamily = 'inherit';
-    startEl.innerHTML = 'A';
-
-    const startMarker = new maplibregl.Marker({ element: startEl, draggable: true })
-      .setLngLat([startCoord.lng, startCoord.lat])
-      .addTo(map);
-
-    startMarker.on('dragend', () => {
-      const lngLat = startMarker.getLngLat();
-      onStartDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
-    });
-    startMarkerRef.current = startMarker;
-
-    // End Pin (Red Point B)
-    const endEl = document.createElement('div');
-    endEl.style.width = '28px';
-    endEl.style.height = '28px';
-    endEl.style.borderRadius = '50%';
-    endEl.style.backgroundColor = '#ef4444'; // Red
-    endEl.style.border = '3px solid #ffffff';
-    endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
-    endEl.style.cursor = 'grab';
-    endEl.style.display = 'flex';
-    endEl.style.alignItems = 'center';
-    endEl.style.justifyContent = 'center';
-    endEl.style.color = '#ffffff';
-    endEl.style.fontWeight = 'bold';
-    endEl.style.fontSize = '12px';
-    endEl.style.fontFamily = 'inherit';
-    endEl.innerHTML = 'B';
-
-    const endMarker = new maplibregl.Marker({ element: endEl, draggable: true })
-      .setLngLat([endCoord.lng, endCoord.lat])
-      .addTo(map);
-
-    endMarker.on('dragend', () => {
-      const lngLat = endMarker.getLngLat();
-      onEndDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
-    });
-    endMarkerRef.current = endMarker;
-
     return () => {
       if (container) {
         container.removeEventListener('contextmenu', preventDefaultContextMenu);
@@ -667,30 +641,123 @@ export const MapView: React.FC<MapViewProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Track changes to Start and End coordinates from Sidebar Inputs
+  // Fly/ease to preset centers when selectedPreset changes
   useEffect(() => {
-    if (startMarkerRef.current) {
-      const currentMarkerLngLat = startMarkerRef.current.getLngLat();
-      const diffLat = Math.abs(startCoord.lat - currentMarkerLngLat.lat);
-      const diffLng = Math.abs(startCoord.lng - currentMarkerLngLat.lng);
-      startMarkerRef.current.setLngLat([startCoord.lng, startCoord.lat]);
-      if (diffLat > 0.0001 || diffLng > 0.0001) {
-        shouldFitBoundsRef.current = true;
-      }
-    }
-  }, [startCoord]);
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
 
+    const centers = {
+      munich: [11.5754, 48.13715] as [number, number],
+      amsterdam: [4.8900, 52.3725] as [number, number],
+    };
+    map.easeTo({
+      center: centers[selectedPreset],
+      zoom: 14.5,
+      duration: 800,
+    });
+  }, [selectedPreset, mapReady]);
+
+  // 2. Dynamically create/update/remove Start Marker
   useEffect(() => {
-    if (endMarkerRef.current) {
-      const currentMarkerLngLat = endMarkerRef.current.getLngLat();
-      const diffLat = Math.abs(endCoord.lat - currentMarkerLngLat.lat);
-      const diffLng = Math.abs(endCoord.lng - currentMarkerLngLat.lng);
-      endMarkerRef.current.setLngLat([endCoord.lng, endCoord.lat]);
-      if (diffLat > 0.0001 || diffLng > 0.0001) {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (startCoord) {
+      if (!startMarkerRef.current) {
+        const startEl = document.createElement('div');
+        startEl.style.width = '28px';
+        startEl.style.height = '28px';
+        startEl.style.borderRadius = '50%';
+        startEl.style.backgroundColor = '#10b981'; // Emerald Green
+        startEl.style.border = '3px solid #ffffff';
+        startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
+        startEl.style.cursor = 'grab';
+        startEl.style.display = 'flex';
+        startEl.style.alignItems = 'center';
+        startEl.style.justifyContent = 'center';
+        startEl.style.color = '#ffffff';
+        startEl.style.fontWeight = 'bold';
+        startEl.style.fontSize = '12px';
+        startEl.style.fontFamily = 'inherit';
+        startEl.innerHTML = 'A';
+
+        const startMarker = new maplibregl.Marker({ element: startEl, draggable: true })
+          .setLngLat([startCoord.lng, startCoord.lat])
+          .addTo(map);
+
+        startMarker.on('dragend', () => {
+          const lngLat = startMarker.getLngLat();
+          onStartDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
+        });
+        startMarkerRef.current = startMarker;
         shouldFitBoundsRef.current = true;
+      } else {
+        const currentMarkerLngLat = startMarkerRef.current.getLngLat();
+        const diffLat = Math.abs(startCoord.lat - currentMarkerLngLat.lat);
+        const diffLng = Math.abs(startCoord.lng - currentMarkerLngLat.lng);
+        startMarkerRef.current.setLngLat([startCoord.lng, startCoord.lat]);
+        if (diffLat > 0.0001 || diffLng > 0.0001) {
+          shouldFitBoundsRef.current = true;
+        }
+      }
+    } else {
+      if (startMarkerRef.current) {
+        startMarkerRef.current.remove();
+        startMarkerRef.current = null;
       }
     }
-  }, [endCoord]);
+  }, [startCoord, mapReady]);
+
+  // 3. Dynamically create/update/remove End Marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (endCoord) {
+      if (!endMarkerRef.current) {
+        const endEl = document.createElement('div');
+        endEl.style.width = '28px';
+        endEl.style.height = '28px';
+        endEl.style.borderRadius = '50%';
+        endEl.style.backgroundColor = '#ef4444'; // Red
+        endEl.style.border = '3px solid #ffffff';
+        endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
+        endEl.style.cursor = 'grab';
+        endEl.style.display = 'flex';
+        endEl.style.alignItems = 'center';
+        endEl.style.justifyContent = 'center';
+        endEl.style.color = '#ffffff';
+        endEl.style.fontWeight = 'bold';
+        endEl.style.fontSize = '12px';
+        endEl.style.fontFamily = 'inherit';
+        endEl.innerHTML = 'B';
+
+        const endMarker = new maplibregl.Marker({ element: endEl, draggable: true })
+          .setLngLat([endCoord.lng, endCoord.lat])
+          .addTo(map);
+
+        endMarker.on('dragend', () => {
+          const lngLat = endMarker.getLngLat();
+          onEndDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
+        });
+        endMarkerRef.current = endMarker;
+        shouldFitBoundsRef.current = true;
+      } else {
+        const currentMarkerLngLat = endMarkerRef.current.getLngLat();
+        const diffLat = Math.abs(endCoord.lat - currentMarkerLngLat.lat);
+        const diffLng = Math.abs(endCoord.lng - currentMarkerLngLat.lng);
+        endMarkerRef.current.setLngLat([endCoord.lng, endCoord.lat]);
+        if (diffLat > 0.0001 || diffLng > 0.0001) {
+          shouldFitBoundsRef.current = true;
+        }
+      }
+    } else {
+      if (endMarkerRef.current) {
+        endMarkerRef.current.remove();
+        endMarkerRef.current = null;
+      }
+    }
+  }, [endCoord, mapReady]);
 
   // 3. Update layers when graph data or custom settings change, or when map style is loaded
   useEffect(() => {
