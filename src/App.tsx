@@ -376,12 +376,12 @@ export default function App() {
     return coord;
   };
 
-  const handleStartDrag = (coord: Coordinate) => {
-    setStartCoord(snapCoordinateToEdge(coord));
+  const handleStartDrag = (coord: Coordinate | null) => {
+    setStartCoord(coord ? snapCoordinateToEdge(coord) : null);
   };
 
-  const handleEndDrag = (coord: Coordinate) => {
-    setEndCoord(snapCoordinateToEdge(coord));
+  const handleEndDrag = (coord: Coordinate | null) => {
+    setEndCoord(coord ? snapCoordinateToEdge(coord) : null);
   };
 
   // 5. Save and delete overrides handlers
