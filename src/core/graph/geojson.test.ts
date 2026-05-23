@@ -26,9 +26,9 @@ describe('convertGraphToGeoJSON', () => {
           type: 'way',
           id: 100,
           nodes: [1, 2, 3],
-          tags: { highway: 'residential', name: 'Test Blvd' }
-        }
-      ]
+          tags: { highway: 'residential', name: 'Test Blvd' },
+        },
+      ],
     };
 
     const graph = parser.parse(rawData);
@@ -47,18 +47,18 @@ describe('convertGraphToGeoJSON', () => {
     // Total: 5 features
     expect(result.controls.length).toBe(5);
 
-    const crossings = result.controls.filter(f => f.properties.type === 'crossing');
+    const crossings = result.controls.filter((f) => f.properties.type === 'crossing');
     expect(crossings.length).toBe(2);
 
     // Verify the clustered crossing has both node ids in properties.nodeIds
-    const clusterCrossing = crossings.find(c => {
+    const clusterCrossing = crossings.find((c) => {
       const ids = JSON.parse(c.properties.nodeIds as string);
       return ids.includes('1') && ids.includes('2');
     });
     expect(clusterCrossing).toBeDefined();
     expect(clusterCrossing?.properties.controlType).toBe('signal'); // dominant type
 
-    const singleCrossing = crossings.find(c => {
+    const singleCrossing = crossings.find((c) => {
       const ids = JSON.parse(c.properties.nodeIds as string);
       return ids.includes('3');
     });
@@ -70,15 +70,15 @@ describe('convertGraphToGeoJSON', () => {
     const rawData = {
       elements: [
         { type: 'node', id: 1, lat: 48.137, lon: 11.575, tags: { highway: 'traffic_signals' } }, // signal
-        { type: 'node', id: 2, lat: 48.138, lon: 11.576, tags: { highway: 'give_way' } },        // minor (yield)
-        { type: 'node', id: 3, lat: 48.139, lon: 11.577, tags: { highway: 'stop' } },            // minor (stop) with override
+        { type: 'node', id: 2, lat: 48.138, lon: 11.576, tags: { highway: 'give_way' } }, // minor (yield)
+        { type: 'node', id: 3, lat: 48.139, lon: 11.577, tags: { highway: 'stop' } }, // minor (stop) with override
         {
           type: 'way',
           id: 100,
           nodes: [1, 2, 3],
-          tags: { highway: 'residential' }
-        }
-      ]
+          tags: { highway: 'residential' },
+        },
+      ],
     };
 
     const graph = parser.parse(rawData);
@@ -93,8 +93,8 @@ describe('convertGraphToGeoJSON', () => {
     // So 2 individual features and 2 crossings = 4 controls
     expect(result.controls.length).toBe(4);
 
-    const individualSignals = result.controls.filter(f => f.properties.type === 'signal');
-    const ids = individualSignals.map(s => s.properties.id);
+    const individualSignals = result.controls.filter((f) => f.properties.type === 'signal');
+    const ids = individualSignals.map((s) => s.properties.id);
     expect(ids).toContain('1');
     expect(ids).toContain('3');
     expect(ids).not.toContain('2');

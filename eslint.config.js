@@ -4,6 +4,8 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import eslintConfigPrettier from 'eslint-config-prettier'
+import eslintPluginPrettier from 'eslint-plugin-prettier'
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -18,9 +20,14 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    plugins: {
+      prettier: eslintPluginPrettier,
+    },
     rules: {
-      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/set-state-in-effect': 'error',
+      'prettier/prettier': 'error',
     },
   },
+  eslintConfigPrettier,
 ])
 

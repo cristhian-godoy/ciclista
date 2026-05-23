@@ -11,7 +11,9 @@ export class LocalStorageProvider implements IStorageProvider {
 
   private isLocalStorageAvailable(): boolean {
     try {
-      return typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null;
+      return (
+        typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null
+      );
     } catch {
       return false;
     }
@@ -39,12 +41,15 @@ export class LocalStorageProvider implements IStorageProvider {
   /**
    * Helper to load the raw JSON object from localStorage.
    */
-  private loadRawData(): Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }> {
+  private loadRawData(): Record<
+    string,
+    { delay?: number; notes?: string; turns?: Record<string, unknown> }
+  > {
     try {
       const data = this.getItem(this.STORAGE_KEY);
       if (!data) return {};
       const parsed = JSON.parse(data);
-      return (parsed && typeof parsed === 'object') ? parsed : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
     } catch (e) {
       console.error('Failed to load overrides from localStorage:', e);
       return {};
@@ -54,7 +59,9 @@ export class LocalStorageProvider implements IStorageProvider {
   /**
    * Helper to save raw JSON object to localStorage.
    */
-  private saveRawData(data: Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }>): void {
+  private saveRawData(
+    data: Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }>,
+  ): void {
     try {
       this.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -133,7 +140,7 @@ export class LocalStorageProvider implements IStorageProvider {
       const data = this.getItem(this.RULES_KEY);
       if (!data) return null;
       const parsed = JSON.parse(data);
-      return (parsed && typeof parsed === 'object') ? (parsed as RulesConfiguration) : null;
+      return parsed && typeof parsed === 'object' ? (parsed as RulesConfiguration) : null;
     } catch (e) {
       console.error('Failed to load rules config from localStorage:', e);
       return null;

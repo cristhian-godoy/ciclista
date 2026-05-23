@@ -3,7 +3,6 @@ import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 import { GermanSign, RoadType } from '../types';
 
 describe('mapOSMToSignAndRoad', () => {
-
   // ── Fahrradstraße ─────────────────────────────────────────────────────────
   it('maps bicycle_road=yes to VZ_244_1', () => {
     const r = mapOSMToSignAndRoad('residential', { bicycle_road: 'yes' });
@@ -87,10 +86,13 @@ describe('mapOSMToSignAndRoad', () => {
     const shared = mapOSMToSignAndRoad('footway', { bicycle: 'designated', foot: 'designated' });
     expect(shared.sign).toBe(GermanSign.VZ_240);
 
-    const segregated = mapOSMToSignAndRoad('footway', { bicycle: 'designated', foot: 'designated', segregated: 'yes' });
+    const segregated = mapOSMToSignAndRoad('footway', {
+      bicycle: 'designated',
+      foot: 'designated',
+      segregated: 'yes',
+    });
     expect(segregated.sign).toBe(GermanSign.VZ_241);
   });
-
 
   // ── Road classifications ──────────────────────────────────────────────────
   it('maps primary to RoadType.PRIMARY with no sign', () => {
@@ -166,4 +168,3 @@ describe('mapOSMNodeToControl', () => {
     expect(mapOSMNodeToControl({ crossing: 'none' })).toBeNull();
   });
 });
-

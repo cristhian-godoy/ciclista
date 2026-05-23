@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
-import type { Coordinate, RouteResult, RulesConfiguration, BikeProfile, RouteAlternative } from '../core/types';
-import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import type {
+  Coordinate,
+  RouteResult,
+  RulesConfiguration,
+  BikeProfile,
+  RouteAlternative,
+} from '../core/types';
+import {
+  Navigation,
+  RefreshCw,
+  Layers,
+  Bug,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { RulesConfigPanel } from './RulesConfigPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 
@@ -39,19 +54,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleCopyDebug = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!routeResult || !routeResult.edges) return;
-    
-    const debugText = JSON.stringify({
-      totalDurationSeconds: routeResult.totalDurationSeconds,
-      totalDistanceMeters: routeResult.totalDistanceMeters,
-      trafficSignalsCount: routeResult.trafficSignalsCount,
-      edges: routeResult.edges.map(edge => ({
-        name: edge.name,
-        highway: edge.highway,
-        distance: edge.distance,
-        cost: edge.cost,
-        tags: edge.tags
-      }))
-    }, null, 2);
+
+    const debugText = JSON.stringify(
+      {
+        totalDurationSeconds: routeResult.totalDurationSeconds,
+        totalDistanceMeters: routeResult.totalDistanceMeters,
+        trafficSignalsCount: routeResult.trafficSignalsCount,
+        edges: routeResult.edges.map((edge) => ({
+          name: edge.name,
+          highway: edge.highway,
+          distance: edge.distance,
+          cost: edge.cost,
+          tags: edge.tags,
+        })),
+      },
+      null,
+      2,
+    );
 
     navigator.clipboard.writeText(debugText).then(() => {
       setCopied(true);
@@ -73,7 +92,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <Navigation size={24} className="color-primary" style={{ color: 'var(--accent-primary)' }} />
+        <Navigation
+          size={24}
+          className="color-primary"
+          style={{ color: 'var(--accent-primary)' }}
+        />
         <h1>Ciclista</h1>
       </div>
 
@@ -81,11 +104,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Section 1: Dynamic Presets & Auto-Fetch Info */}
         <section className="route-card">
           <h2>
-            <Layers size={16} style={{ verticalAlign: 'middle', marginRight: '8px', color: 'var(--accent-secondary)' }} />
+            <Layers
+              size={16}
+              style={{
+                verticalAlign: 'middle',
+                marginRight: '8px',
+                color: 'var(--accent-secondary)',
+              }}
+            />
             Map Area Presets
           </h2>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            Choose a preset city. The map area will automatically expand and fetch OSM data as you drag or position the pins.
+            Choose a preset city. The map area will automatically expand and fetch OSM data as you
+            drag or position the pins.
           </p>
           <div className="form-group" style={{ marginBottom: '12px' }}>
             <label className="form-label">City Preset</label>
@@ -109,7 +140,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </select>
           </div>
           {isFetchingOSM && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: 'var(--accent-secondary)', marginTop: '8px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.75rem',
+                color: 'var(--accent-secondary)',
+                marginTop: '8px',
+              }}
+            >
               <RefreshCw size={12} className="spin" />
               <span>Fetching street network from Overpass...</span>
             </div>
@@ -128,10 +168,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               const getStrategyLabel = (label: string) => {
                 switch (label) {
-                  case 'standard': return '⚡ Speed';
-                  case 'avoid-stops': return '🛑 Avoid Stops';
-                  case 'quiet-streets': return '🌳 Quiet Paths';
-                  default: return label;
+                  case 'standard':
+                    return '⚡ Speed';
+                  case 'avoid-stops':
+                    return '🛑 Avoid Stops';
+                  case 'quiet-streets':
+                    return '🌳 Quiet Paths';
+                  default:
+                    return label;
                 }
               };
 
@@ -139,7 +183,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div
                   key={alt.label}
                   className={`alternative-card ${isActive ? 'active' : ''}`}
-                  onClick={() => onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')}
+                  onClick={() =>
+                    onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')
+                  }
                   style={{
                     padding: '10px 12px',
                     borderRadius: '8px',
@@ -162,24 +208,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: '600', fontSize: '0.85rem', color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: '600',
+                        fontSize: '0.85rem',
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      }}
+                    >
                       {getStrategyLabel(alt.label)}
                     </span>
                     {isActive && (
-                      <span style={{
-                        fontSize: '0.65rem',
-                        background: 'var(--accent-primary)',
-                        color: 'var(--text-primary)',
-                        padding: '1px 6px',
-                        borderRadius: '10px',
-                        fontWeight: '600'
-                      }}>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          background: 'var(--accent-primary)',
+                          color: 'var(--text-primary)',
+                          padding: '1px 6px',
+                          borderRadius: '10px',
+                          fontWeight: '600',
+                        }}
+                      >
                         Active
                       </span>
                     )}
                   </div>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '12px',
+                      fontSize: '0.75rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
                     <span>⏱️ {formatTime(duration)}</span>
                     <span>📏 {formatDistance(distance)}</span>
                     <span>🚦 {signals} signals</span>
@@ -219,9 +287,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Section 4: Debug Route Details */}
         {routeResult && routeResult.edges && (
           <section className="route-card">
-            <h2 
-              onClick={() => setShowDebug(!showDebug)} 
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}
+            <h2
+              onClick={() => setShowDebug(!showDebug)}
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                margin: 0,
+              }}
             >
               <span style={{ display: 'flex', alignItems: 'center' }}>
                 <Bug size={16} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
@@ -261,42 +335,101 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </h2>
             {showDebug && (
-              <div style={{ marginTop: '12px', maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div
+                style={{
+                  marginTop: '12px',
+                  maxHeight: '220px',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
                 {routeResult.edges.map((edge, index) => (
-                  <div 
-                    key={index} 
-                    style={{ 
-                      padding: '8px', 
+                  <div
+                    key={index}
+                    style={{
+                      padding: '8px',
                       background: 'rgba(255, 255, 255, 0.02)',
                       borderRadius: '6px',
                       border: '1px solid var(--border-color)',
                       fontSize: '0.75rem',
-                      lineHeight: '1.4'
+                      lineHeight: '1.4',
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span>{index + 1}. {edge.name}</span>
+                    <div
+                      style={{
+                        fontWeight: 'bold',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <span>
+                        {index + 1}. {edge.name}
+                      </span>
                       {edge.matchedSign && (
-                        <code style={{ fontSize: '0.62rem', background: 'rgba(139,92,246,0.15)', color: 'hsl(265,80%,72%)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '3px', padding: '1px 5px' }}>
+                        <code
+                          style={{
+                            fontSize: '0.62rem',
+                            background: 'rgba(139,92,246,0.15)',
+                            color: 'hsl(265,80%,72%)',
+                            border: '1px solid rgba(139,92,246,0.3)',
+                            borderRadius: '3px',
+                            padding: '1px 5px',
+                          }}
+                        >
                           {edge.matchedSign}
                         </code>
                       )}
                       {!edge.matchedSign && edge.matchedRoad && (
-                        <code style={{ fontSize: '0.62rem', background: 'rgba(14,165,233,0.12)', color: 'hsl(200,80%,65%)', border: '1px solid rgba(14,165,233,0.25)', borderRadius: '3px', padding: '1px 5px' }}>
+                        <code
+                          style={{
+                            fontSize: '0.62rem',
+                            background: 'rgba(14,165,233,0.12)',
+                            color: 'hsl(200,80%,65%)',
+                            border: '1px solid rgba(14,165,233,0.25)',
+                            borderRadius: '3px',
+                            padding: '1px 5px',
+                          }}
+                        >
                           {edge.matchedRoad}
                         </code>
                       )}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      <span>Type: <code style={{ color: 'var(--accent-secondary)' }}>{edge.highway}</code></span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        color: 'var(--text-secondary)',
+                        marginTop: '2px',
+                      }}
+                    >
+                      <span>
+                        Type:{' '}
+                        <code style={{ color: 'var(--accent-secondary)' }}>{edge.highway}</code>
+                      </span>
                       <span>{Math.round(edge.distance)}m</span>
                       <span>Cost: {Math.round(edge.cost)}s</span>
                     </div>
                     {Object.entries(edge.tags).length > 0 && (
-                      <div style={{ marginTop: '4px', padding: '4px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                      <div
+                        style={{
+                          marginTop: '4px',
+                          padding: '4px 6px',
+                          background: 'rgba(0,0,0,0.2)',
+                          borderRadius: '4px',
+                        }}
+                      >
                         {Object.entries(edge.tags).map(([key, val]) => (
-                          <div key={key} style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                            <strong style={{ color: 'var(--text-secondary)' }}>{key}:</strong> {String(val)}
+                          <div
+                            key={key}
+                            style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}
+                          >
+                            <strong style={{ color: 'var(--text-secondary)' }}>{key}:</strong>{' '}
+                            {String(val)}
                           </div>
                         ))}
                       </div>
@@ -307,8 +440,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </section>
         )}
-
-
       </div>
 
       <div className="sidebar-footer">

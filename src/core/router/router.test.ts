@@ -18,7 +18,7 @@ describe('DijkstraRouter', () => {
 
   it('calculates optimal path between two points in mock graph', () => {
     const start: Coordinate = { lat: 48.13715, lng: 11.5754 }; // Home (Marienplatz)
-    const end: Coordinate = { lat: 48.1350, lng: 11.5820 };   // Office (Isartor)
+    const end: Coordinate = { lat: 48.135, lng: 11.582 }; // Office (Isartor)
 
     const result = router.findRoute(graph, start, end, standardCost, defaultOverrides);
 
@@ -95,7 +95,6 @@ describe('DijkstraRouter', () => {
 
     const start: Coordinate = { lat: 48.1, lng: 11.1 };
     const end: Coordinate = { lat: 48.11, lng: 11.11 };
-
 
     // Since B is missing, it should fall back to node snapping/fallback route method or return null/fallback
     // Here both findNearestEdge will fail to lookup B (or findNearestNode snaps A)

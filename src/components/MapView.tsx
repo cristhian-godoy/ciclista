@@ -5,7 +5,7 @@ import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown } from 'lucide-react';
 import type { Coordinate, StreetGraph, GraphNode, RouteAlternative } from '../core/types';
 import { convertGraphToGeoJSON } from '../core/graph/geojson';
 
-type GeoJSONFeature = 
+type GeoJSONFeature =
   | {
       type: 'Feature';
       geometry: {
@@ -150,7 +150,9 @@ export const MapView: React.FC<MapViewProps> = ({
     return 0;
   };
 
-  const getControlType = (tags: Record<string, string>): 'signal' | 'yield' | 'stop' | 'crossing' => {
+  const getControlType = (
+    tags: Record<string, string>,
+  ): 'signal' | 'yield' | 'stop' | 'crossing' => {
     if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
       return 'signal';
     }
@@ -166,14 +168,20 @@ export const MapView: React.FC<MapViewProps> = ({
   const getControlTypeLabel = (tags: Record<string, string>) => {
     const type = getControlType(tags);
     switch (type) {
-      case 'signal': return '🚦 Traffic Signal';
-      case 'yield': return '⚠️ Yield Sign (Give Way)';
-      case 'stop': return '🛑 Stop Sign';
-      case 'crossing': return '🚶 Pedestrian Crossing';
+      case 'signal':
+        return '🚦 Traffic Signal';
+      case 'yield':
+        return '⚠️ Yield Sign (Give Way)';
+      case 'stop':
+        return '🛑 Stop Sign';
+      case 'crossing':
+        return '🚶 Pedestrian Crossing';
     }
   };
 
-  const getPresets = (type: 'signal' | 'yield' | 'stop' | 'crossing'): { label: string; value: number }[] => {
+  const getPresets = (
+    type: 'signal' | 'yield' | 'stop' | 'crossing',
+  ): { label: string; value: number }[] => {
     switch (type) {
       case 'signal':
         return [
@@ -206,10 +214,14 @@ export const MapView: React.FC<MapViewProps> = ({
   // Sync node delay/notes and update position projection when selectedNode changes
   useEffect(() => {
     if (selectedNode) {
-      setNodeDelay(customNodeDelays.get(selectedNode.id) ?? getDefaultBaseDelay(selectedNode.tags));
-      setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
-      // Auto-collapse bottom controls dock to prevent overlap when node configurator is open
-      setDockExpanded(false);
+      setTimeout(() => {
+        setNodeDelay(
+          customNodeDelays.get(selectedNode.id) ?? getDefaultBaseDelay(selectedNode.tags),
+        );
+        setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
+        // Auto-collapse bottom controls dock to prevent overlap when node configurator is open
+        setDockExpanded(false);
+      }, 0);
     }
   }, [selectedNode, customNodeDelays, customNodeNotes]);
 
@@ -310,7 +322,8 @@ export const MapView: React.FC<MapViewProps> = ({
               'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
             ],
             tileSize: 256,
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
+            attribution:
+              '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
           },
         },
         glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
@@ -324,7 +337,7 @@ export const MapView: React.FC<MapViewProps> = ({
           },
         ],
       },
-      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.8900, 52.3725],
+      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725],
       zoom: 14.5,
     });
 
@@ -347,8 +360,10 @@ export const MapView: React.FC<MapViewProps> = ({
         layers: ['traffic-lights-cluster'],
       });
       const isCrossing = features.length > 0;
-      const crossingId = isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
-      const nodeIds = isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
+      const crossingId =
+        isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
+      const nodeIds =
+        isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
 
       setContextMenu({
         visible: true,
@@ -366,7 +381,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
       // If clicked on empty space, deselect active node and re-group signals
       const features = map.queryRenderedFeatures(e.point, {
-        layers: ['traffic-lights-cluster', 'traffic-lights-unclustered']
+        layers: ['traffic-lights-cluster', 'traffic-lights-unclustered'],
       });
       if (features.length === 0) {
         setManagedClusterId(null);
@@ -444,7 +459,6 @@ export const MapView: React.FC<MapViewProps> = ({
         data: { type: 'FeatureCollection', features: [] },
       });
 
-
       // Layer: All parsed network streets (cool techy overlay)
       map.addLayer({
         id: 'network-streets-layer',
@@ -471,20 +485,23 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      map.addLayer({
-        id: 'route-path-glow-standard',
-        type: 'line',
-        source: 'route-path-standard',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
+      map.addLayer(
+        {
+          id: 'route-path-glow-standard',
+          type: 'line',
+          source: 'route-path-standard',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#6366f1',
+            'line-width': 9,
+            'line-opacity': 0.3,
+          },
         },
-        paint: {
-          'line-color': '#6366f1',
-          'line-width': 9,
-          'line-opacity': 0.3,
-        },
-      }, 'route-path-layer-standard');
+        'route-path-layer-standard',
+      );
 
       // Layer: Glowing Computed Route Path (Avoid Stops - Rose)
       map.addLayer({
@@ -501,20 +518,23 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      map.addLayer({
-        id: 'route-path-glow-avoid-stops',
-        type: 'line',
-        source: 'route-path-avoid-stops',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
+      map.addLayer(
+        {
+          id: 'route-path-glow-avoid-stops',
+          type: 'line',
+          source: 'route-path-avoid-stops',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#f43f5e',
+            'line-width': 9,
+            'line-opacity': 0.3,
+          },
         },
-        paint: {
-          'line-color': '#f43f5e',
-          'line-width': 9,
-          'line-opacity': 0.3,
-        },
-      }, 'route-path-layer-avoid-stops');
+        'route-path-layer-avoid-stops',
+      );
 
       // Layer: Glowing Computed Route Path (Quiet Streets - Teal)
       map.addLayer({
@@ -531,20 +551,23 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      map.addLayer({
-        id: 'route-path-glow-quiet-streets',
-        type: 'line',
-        source: 'route-path-quiet-streets',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
+      map.addLayer(
+        {
+          id: 'route-path-glow-quiet-streets',
+          type: 'line',
+          source: 'route-path-quiet-streets',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#14b8a6',
+            'line-width': 9,
+            'line-opacity': 0.3,
+          },
         },
-        paint: {
-          'line-color': '#14b8a6',
-          'line-width': 9,
-          'line-opacity': 0.3,
-        },
-      }, 'route-path-layer-quiet-streets');
+        'route-path-layer-quiet-streets',
+      );
 
       // Click and hover interaction handlers for route selection
       map.on('click', 'route-path-layer-standard', () => {
@@ -557,8 +580,12 @@ export const MapView: React.FC<MapViewProps> = ({
         onSelectAlternative('quiet-streets');
       });
 
-      const setPointerCursor = () => { map.getCanvas().style.cursor = 'pointer'; };
-      const resetCursor = () => { map.getCanvas().style.cursor = ''; };
+      const setPointerCursor = () => {
+        map.getCanvas().style.cursor = 'pointer';
+      };
+      const resetCursor = () => {
+        map.getCanvas().style.cursor = '';
+      };
 
       map.on('mouseenter', 'route-path-layer-standard', setPointerCursor);
       map.on('mouseleave', 'route-path-layer-standard', resetCursor);
@@ -577,68 +604,67 @@ export const MapView: React.FC<MapViewProps> = ({
           'circle-color': [
             'match',
             ['get', 'controlType'],
-            'signal', '#ef4444',     // Red for signals
-            'stop', '#ea580c',       // Orange-Red for stop signs
-            'yield', '#f59e0b',      // Amber/Yellow for yield signs
-            'crossing', '#3b82f6',   // Blue for pedestrian crossings
-            '#9ca3af'                // Grey fallback
+            'signal',
+            '#ef4444', // Red for signals
+            'stop',
+            '#ea580c', // Orange-Red for stop signs
+            'yield',
+            '#f59e0b', // Amber/Yellow for yield signs
+            'crossing',
+            '#3b82f6', // Blue for pedestrian crossings
+            '#9ca3af', // Grey fallback
           ],
           'circle-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            12, [
+            12,
+            [
               'match',
               ['get', 'controlType'],
-              'signal', 3,
-              'stop', 3,
-              'yield', 1.8,
-              'crossing', 1.8,
-              3
+              'signal',
+              3,
+              'stop',
+              3,
+              'yield',
+              1.8,
+              'crossing',
+              1.8,
+              3,
             ],
-            14, [
+            14,
+            ['match', ['get', 'controlType'], 'signal', 8, 'stop', 8, 'yield', 5, 'crossing', 5, 8],
+            17,
+            [
               'match',
               ['get', 'controlType'],
-              'signal', 8,
-              'stop', 8,
-              'yield', 5,
-              'crossing', 5,
-              8
+              'signal',
+              16,
+              'stop',
+              16,
+              'yield',
+              10,
+              'crossing',
+              10,
+              16,
             ],
-            17, [
-              'match',
-              ['get', 'controlType'],
-              'signal', 16,
-              'stop', 16,
-              'yield', 10,
-              'crossing', 10,
-              16
-            ]
           ],
           'circle-stroke-color': [
             'case',
-            ['==', ['get', 'hasCustomDelay'], 'true'], '#14b8a6', // Teal halo for custom delays
-            '#ffffff' // White otherwise
+            ['==', ['get', 'hasCustomDelay'], 'true'],
+            '#14b8a6', // Teal halo for custom delays
+            '#ffffff', // White otherwise
           ],
           'circle-stroke-width': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            12, [
-              'case',
-              ['==', ['get', 'hasCustomDelay'], 'true'], 1.5,
-              0.5
-            ],
-            14, [
-              'case',
-              ['==', ['get', 'hasCustomDelay'], 'true'], 3.0,
-              1.5
-            ],
-            17, [
-              'case',
-              ['==', ['get', 'hasCustomDelay'], 'true'], 4.0,
-              2.0
-            ]
+            12,
+            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 1.5, 0.5],
+            14,
+            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 3.0, 1.5],
+            17,
+            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 4.0, 2.0],
           ],
           'circle-opacity': 0.85,
         },
@@ -653,35 +679,29 @@ export const MapView: React.FC<MapViewProps> = ({
         paint: {
           'circle-radius': [
             'case',
-            ['has', 'customDelay'], 8,
-            [
-              'match',
-              ['get', 'controlType'],
-              'signal', 6,
-              'stop', 6,
-              'yield', 4,
-              'crossing', 4,
-              6
-            ]
+            ['has', 'customDelay'],
+            8,
+            ['match', ['get', 'controlType'], 'signal', 6, 'stop', 6, 'yield', 4, 'crossing', 4, 6],
           ],
           'circle-color': [
             'case',
-            ['has', 'customDelay'], '#14b8a6',  // Custom delay timed nodes (Teal)
+            ['has', 'customDelay'],
+            '#14b8a6', // Custom delay timed nodes (Teal)
             [
               'match',
               ['get', 'controlType'],
-              'signal', '#ef4444',
-              'stop', '#ea580c',
-              'yield', '#f59e0b',
-              'crossing', '#3b82f6',
-              '#9ca3af'
-            ]
+              'signal',
+              '#ef4444',
+              'stop',
+              '#ea580c',
+              'yield',
+              '#f59e0b',
+              'crossing',
+              '#3b82f6',
+              '#9ca3af',
+            ],
           ],
-          'circle-stroke-width': [
-            'case',
-            ['has', 'customDelay'], 2.5,
-            1.5
-          ],
+          'circle-stroke-width': ['case', ['has', 'customDelay'], 2.5, 1.5],
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.85,
         },
@@ -770,7 +790,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
     const centers = {
       munich: [11.5754, 48.13715] as [number, number],
-      amsterdam: [4.8900, 52.3725] as [number, number],
+      amsterdam: [4.89, 52.3725] as [number, number],
     };
     map.easeTo({
       center: centers[selectedPreset],
@@ -891,16 +911,20 @@ export const MapView: React.FC<MapViewProps> = ({
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    const strategies: ('standard' | 'avoid-stops' | 'quiet-streets')[] = ['standard', 'avoid-stops', 'quiet-streets'];
+    const strategies: ('standard' | 'avoid-stops' | 'quiet-streets')[] = [
+      'standard',
+      'avoid-stops',
+      'quiet-streets',
+    ];
 
     // Update each source's data and layer styles
-    strategies.forEach(strategy => {
+    strategies.forEach((strategy) => {
       const source = map.getSource(`route-path-${strategy}`) as maplibregl.GeoJSONSource;
       if (!source) return;
 
-      const alt = routeAlternatives.find(a => a.label === strategy);
+      const alt = routeAlternatives.find((a) => a.label === strategy);
       if (alt && alt.result && alt.result.coordinates.length > 0) {
-        const coords = alt.result.coordinates.map(c => [c.lng, c.lat]);
+        const coords = alt.result.coordinates.map((c) => [c.lng, c.lat]);
         source.setData({
           type: 'FeatureCollection',
           features: [
@@ -939,13 +963,13 @@ export const MapView: React.FC<MapViewProps> = ({
     });
 
     // Fit map bounds to show full route path smoothly (using active selection coordinates)
-    const activeRoute = routeAlternatives.find(a => a.label === activeAlternativeLabel);
+    const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
     if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
-      const coords = activeRoute.result.coordinates.map(c => [c.lng, c.lat]);
+      const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
       if (shouldFitBoundsRef.current && coords.length > 1) {
         const bounds = coords.reduce(
           (acc, val) => acc.extend(val as [number, number]),
-          new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number])
+          new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number]),
         );
         const isMobile = window.innerWidth <= 768;
         const padding = isMobile
@@ -984,7 +1008,7 @@ export const MapView: React.FC<MapViewProps> = ({
                 [maxLng, maxLat],
                 [minLng, maxLat],
                 [minLng, minLat],
-              ]
+              ],
             ],
           },
           properties: {},
@@ -1011,13 +1035,13 @@ export const MapView: React.FC<MapViewProps> = ({
       map.setFilter('traffic-lights-cluster', [
         'all',
         ['==', ['get', 'type'], 'crossing'],
-        ['!=', ['get', 'crossingId'], managedClusterId]
+        ['!=', ['get', 'crossingId'], managedClusterId],
       ]);
       // Show ONLY the individual signals belonging to the managed crossing
       map.setFilter('traffic-lights-unclustered', [
         'all',
         ['==', ['get', 'type'], 'signal'],
-        ['==', ['get', 'parentCrossingId'], managedClusterId]
+        ['==', ['get', 'parentCrossingId'], managedClusterId],
       ]);
     } else {
       // Show all crossings
@@ -1036,7 +1060,6 @@ export const MapView: React.FC<MapViewProps> = ({
     }
     prevSelectedNodeRef.current = selectedNode;
   }, [selectedNode]);
-
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -1067,15 +1090,27 @@ export const MapView: React.FC<MapViewProps> = ({
               backdropFilter: 'blur(12px)',
             }}
           >
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
               Map Layers
             </span>
-            
-            <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)' }} />
+
+            <div
+              style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)' }}
+            />
 
             <button
               style={{
-                background: showMinorControls ? 'var(--accent-secondary)' : 'rgba(255, 255, 255, 0.08)',
+                background: showMinorControls
+                  ? 'var(--accent-secondary)'
+                  : 'rgba(255, 255, 255, 0.08)',
                 color: showMinorControls ? '#000000' : 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '8px',
@@ -1136,7 +1171,7 @@ export const MapView: React.FC<MapViewProps> = ({
           </button>
         )}
       </div>
-      
+
       {/* Dynamic Glassmorphic Map Popup */}
       {selectedNode && popupPos && (
         <div
@@ -1150,8 +1185,24 @@ export const MapView: React.FC<MapViewProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Configure Control Point</h3>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+              }}
+            >
+              Configure Control Point
+            </h3>
             <button
               style={{
                 background: 'none',
@@ -1170,7 +1221,14 @@ export const MapView: React.FC<MapViewProps> = ({
             </button>
           </div>
 
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.4' }}>
+          <div
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-secondary)',
+              marginBottom: '8px',
+              lineHeight: '1.4',
+            }}
+          >
             <strong>Type:</strong> {getControlTypeLabel(selectedNode.tags)}
             <br />
             <strong>ID:</strong> {selectedNode.id}
@@ -1179,7 +1237,9 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           <div className="form-group" style={{ marginBottom: '10px' }}>
-            <label className="form-label" style={{ fontSize: '0.65rem' }}>Wait Penalty: {nodeDelay} seconds</label>
+            <label className="form-label" style={{ fontSize: '0.65rem' }}>
+              Wait Penalty: {nodeDelay} seconds
+            </label>
             <div className="slider-container">
               <input
                 type="range"
@@ -1198,7 +1258,10 @@ export const MapView: React.FC<MapViewProps> = ({
                   key={preset.label}
                   type="button"
                   style={{
-                    background: nodeDelay === preset.value ? 'var(--accent-secondary)' : 'rgba(255, 255, 255, 0.08)',
+                    background:
+                      nodeDelay === preset.value
+                        ? 'var(--accent-secondary)'
+                        : 'rgba(255, 255, 255, 0.08)',
                     color: nodeDelay === preset.value ? '#000000' : 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '4px',
@@ -1216,7 +1279,9 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           <div className="form-group" style={{ marginBottom: '10px' }}>
-            <label className="form-label" style={{ fontSize: '0.65rem' }}>Custom Notes</label>
+            <label className="form-label" style={{ fontSize: '0.65rem' }}>
+              Custom Notes
+            </label>
             <input
               className="input-text"
               type="text"
@@ -1228,7 +1293,9 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           {/* Collapsible/Scrollable OSM Info Section */}
-          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>OSM Tags</div>
+          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>
+            OSM Tags
+          </div>
           <div className="osm-tags-container">
             {Object.entries(selectedNode.tags).length > 0 ? (
               Object.entries(selectedNode.tags).map(([key, val]) => (
@@ -1245,14 +1312,30 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button className="btn btn-primary" style={{ flex: 1, padding: '6px var(--spacing-sm)', fontSize: '0.8rem', height: '32px' }} onClick={handleSaveNode}>
+            <button
+              className="btn btn-primary"
+              style={{
+                flex: 1,
+                padding: '6px var(--spacing-sm)',
+                fontSize: '0.8rem',
+                height: '32px',
+              }}
+              onClick={handleSaveNode}
+            >
               <Check size={14} style={{ marginRight: '4px' }} />
               Save
             </button>
             {customNodeDelays.has(selectedNode.id) && (
               <button
                 className="btn btn-secondary btn-danger"
-                style={{ flex: 0.5, padding: '6px var(--spacing-sm)', fontSize: '0.8rem', height: '32px', color: 'var(--text-primary)', background: 'var(--accent-danger)' }}
+                style={{
+                  flex: 0.5,
+                  padding: '6px var(--spacing-sm)',
+                  fontSize: '0.8rem',
+                  height: '32px',
+                  color: 'var(--text-primary)',
+                  background: 'var(--accent-danger)',
+                }}
                 onClick={handleResetNode}
               >
                 Reset
@@ -1279,7 +1362,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
                   setManagedClusterId(contextMenu.crossingId);
                   setManagedNodeIds(nodeIds);
-                  
+
                   // Zoom in to the cluster location so the user can easily see individual signals
                   map.easeTo({
                     center: [contextMenu.lng, contextMenu.lat],

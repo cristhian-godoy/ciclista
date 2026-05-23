@@ -22,7 +22,7 @@ function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): nu
   const dLat = lat1 - lat2;
   const dLng = lng1 - lng2;
   const cosLat = 0.67;
-  return Math.sqrt(dLat * dLat + (dLng * cosLat) * (dLng * cosLat)) * 111000;
+  return Math.sqrt(dLat * dLat + dLng * cosLat * (dLng * cosLat)) * 111000;
 }
 
 /**
@@ -32,7 +32,7 @@ function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): nu
 export function convertGraphToGeoJSON(
   graph: StreetGraph,
   customNodeDelays: Map<string, number>,
-  showMinorControls: boolean
+  showMinorControls: boolean,
 ): GraphGeoJSON {
   const lineFeatures: GeoJSONFeature[] = [];
   const lightFeatures: GeoJSONFeature[] = [];
@@ -170,11 +170,15 @@ export function convertGraphToGeoJSON(
         id: node.id,
         parentCrossingId: parentCrossing ? parentCrossing.id : '',
         tags: JSON.stringify(node.tags),
-        name: node.tags.name || (
-          node.controlType === 'signal' ? 'Traffic Signal' :
-          node.controlType === 'yield' ? 'Yield Sign' :
-          node.controlType === 'stop' ? 'Stop Sign' : 'Pedestrian Crossing'
-        ),
+        name:
+          node.tags.name ||
+          (node.controlType === 'signal'
+            ? 'Traffic Signal'
+            : node.controlType === 'yield'
+              ? 'Yield Sign'
+              : node.controlType === 'stop'
+                ? 'Stop Sign'
+                : 'Pedestrian Crossing'),
         ...(node.customDelay !== null ? { customDelay: node.customDelay } : {}),
       },
     });

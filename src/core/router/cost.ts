@@ -1,4 +1,14 @@
-import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig, NodeDelayConfig, ComfortLevel } from '../types';
+import type {
+  CostFunction,
+  GraphEdge,
+  LocalOverrides,
+  StreetGraph,
+  BikeProfile,
+  SignRuleConfig,
+  RoadRuleConfig,
+  NodeDelayConfig,
+  ComfortLevel,
+} from '../types';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
@@ -15,9 +25,9 @@ function kmhToMs(kmh: number): number {
  * slow  = 15 km/h, normal = 18 km/h, ebike = 25 km/h.
  */
 const PROFILE_MULTIPLIER: Record<string, number> = {
-  slow:   15 / 18,  // ~0.833
+  slow: 15 / 18, // ~0.833
   normal: 1.0,
-  ebike:  25 / 18,  // ~1.389
+  ebike: 25 / 18, // ~1.389
 };
 
 /**
@@ -26,7 +36,7 @@ const PROFILE_MULTIPLIER: Record<string, number> = {
  */
 export function resolveRuleSpeed(
   cfg: SignRuleConfig | RoadRuleConfig,
-  profile: BikeProfile
+  profile: BikeProfile,
 ): number {
   let speedType = cfg.speedType;
   if (!speedType) {
@@ -61,14 +71,13 @@ export function resolveRuleSpeed(
   }
 }
 
-
 /**
  * Resolves the effective cycling speed (m/s) and flat penalty (s) for an edge,
  * using the active RulesConfiguration when available, falling back to hardcoded defaults.
  */
 function resolveSpeedAndPenalty(
   edge: GraphEdge,
-  overrides: LocalOverrides
+  overrides: LocalOverrides,
 ): { speed: number; flatPenalty: number; bicycleFrei: boolean } {
   const highway = edge.tags.highway || '';
   const { sign, road, bicycleFrei } = mapOSMToSignAndRoad(highway, edge.tags);
@@ -106,7 +115,7 @@ function resolveSpeedAndPenalty(
     } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
       speed = bicycleFrei ? 4.5 : 1.2;
     } else if (highway === 'service') {
-      speed = (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') ? 1.5 : 3.0;
+      speed = edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway' ? 1.5 : 3.0;
     } else if (highway === 'primary') {
       speed = 4.0;
     } else if (highway === 'secondary') {
@@ -130,14 +139,11 @@ function resolveSpeedAndPenalty(
  * Returns the default wait penalty (seconds) for a node, based on its OSM control type.
  * Respects configured delays from rulesConfig when provided.
  */
-export function getDefaultNodeDelay(
-  tags: Record<string, string>,
-  cfg?: NodeDelayConfig
-): number {
+export function getDefaultNodeDelay(tags: Record<string, string>, cfg?: NodeDelayConfig): number {
   const controlType = mapOSMNodeToControl(tags);
-  if (controlType === 'signal')   return cfg?.signalSeconds   ?? 15;
-  if (controlType === 'yield')    return cfg?.yieldSeconds    ?? 3;
-  if (controlType === 'stop')     return cfg?.stopSeconds     ?? 8;
+  if (controlType === 'signal') return cfg?.signalSeconds ?? 15;
+  if (controlType === 'yield') return cfg?.yieldSeconds ?? 3;
+  if (controlType === 'stop') return cfg?.stopSeconds ?? 8;
   if (controlType === 'crossing') return cfg?.crossingSeconds ?? 3;
   return 0;
 }
@@ -153,7 +159,7 @@ export const standardCost: CostFunction = (
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
-  graph: StreetGraph
+  graph: StreetGraph,
 ): number => {
   const { speed, flatPenalty, bicycleFrei } = resolveSpeedAndPenalty(edge, overrides);
   const highway = edge.tags.highway || '';
@@ -199,7 +205,7 @@ export const avoidStoppingCost: CostFunction = (
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
-  graph: StreetGraph
+  graph: StreetGraph,
 ): number => {
   const { speed, flatPenalty, bicycleFrei } = resolveSpeedAndPenalty(edge, overrides);
   const highway = edge.tags.highway || '';
@@ -221,7 +227,7 @@ export const avoidStoppingCost: CostFunction = (
     if (defaultDelay > 0) {
       // Scale standard delay and add heavy stop avoidance penalty (45s base for signals/stops, 25s for yields/crossings)
       const controlType = mapOSMNodeToControl(tags);
-      const baseStopPenalty = (controlType === 'signal' || controlType === 'stop') ? 45 : 25;
+      const baseStopPenalty = controlType === 'signal' || controlType === 'stop' ? 45 : 25;
       cost += defaultDelay + baseStopPenalty;
     }
   }
@@ -238,7 +244,7 @@ export const avoidBusyRoadsCost: CostFunction = (
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
-  graph: StreetGraph
+  graph: StreetGraph,
 ): number => {
   const baseCost = standardCost(sourceId, edge, targetId, overrides, graph);
   const highway = edge.tags.highway || '';
@@ -279,10 +285,10 @@ export const avoidBusyRoadsCost: CostFunction = (
 
   // Map ComfortLevel to cost multipliers
   const COMFORT_MULTIPLIERS: Record<ComfortLevel, number> = {
-    very_low:  4.0,
-    low:       2.0,
-    neutral:   1.0,
-    high:      0.8,
+    very_low: 4.0,
+    low: 2.0,
+    neutral: 1.0,
+    high: 0.8,
     very_high: 0.6,
   };
 
@@ -300,10 +306,10 @@ export function calculateDisplayCost(
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
-  graph: StreetGraph
+  graph: StreetGraph,
 ): number {
   const { speed, flatPenalty } = resolveSpeedAndPenalty(edge, overrides);
-  
+
   let cost = edge.distance / speed + flatPenalty;
 
   // Add node delay

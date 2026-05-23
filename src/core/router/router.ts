@@ -1,4 +1,13 @@
-import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
+import type {
+  IRouter,
+  StreetGraph,
+  Coordinate,
+  CostFunction,
+  LocalOverrides,
+  RouteResult,
+  GraphEdge,
+  GraphNode,
+} from '../types';
 import { haversineDistance } from '../graph/parser';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 import { calculateDisplayCost } from './cost';
@@ -7,7 +16,7 @@ import { calculateDisplayCost } from './cost';
  * Calculates the turn penalty (in seconds) between three points: p -> c -> n.
  */
 export function calculateTurnPenalty(p: Coordinate, c: Coordinate, n: Coordinate): number {
-  const cosLat = Math.cos(c.lat * Math.PI / 180);
+  const cosLat = Math.cos((c.lat * Math.PI) / 180);
   const v1x = (c.lng - p.lng) * cosLat;
   const v1y = c.lat - p.lat;
   const v2x = (n.lng - c.lng) * cosLat;
@@ -37,7 +46,7 @@ export function calculateTurnPenalty(p: Coordinate, c: Coordinate, n: Coordinate
  */
 export function getRoadTypeCategory(
   highway: string,
-  tags: Record<string, string>
+  tags: Record<string, string>,
 ): 'cycleway' | 'residential' | 'primary' | 'other' {
   const hasCyclewayTag = hasCycleway(tags);
   const hasBicycleDesignated = tags.bicycle === 'designated' || tags.bicycle === 'yes';
@@ -52,8 +61,12 @@ export function getRoadTypeCategory(
     return 'cycleway';
   }
 
-  if (['residential', 'living_street', 'tertiary', 'tertiary_link', 'unclassified'].includes(highway)) return 'residential';
-  if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(highway)) return 'primary';
+  if (
+    ['residential', 'living_street', 'tertiary', 'tertiary_link', 'unclassified'].includes(highway)
+  )
+    return 'residential';
+  if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(highway))
+    return 'primary';
   return 'other';
 }
 
@@ -80,19 +93,19 @@ export function findNearestNode(graph: StreetGraph, coord: Coordinate): string |
  * Returns the projected coordinate, clamped to the segment.
  */
 export function projectPointOnSegment(p: Coordinate, a: Coordinate, b: Coordinate): Coordinate {
-  const cosLat = Math.cos(a.lat * Math.PI / 180);
+  const cosLat = Math.cos((a.lat * Math.PI) / 180);
   const abx = (b.lng - a.lng) * cosLat;
   const aby = b.lat - a.lat;
-  
+
   const apx = (p.lng - a.lng) * cosLat;
   const apy = p.lat - a.lat;
-  
+
   const abLen2 = abx * abx + aby * aby;
   if (abLen2 < 1e-14) return { lat: a.lat, lng: a.lng };
-  
+
   let t = (apx * abx + apy * aby) / abLen2;
   t = Math.max(0, Math.min(1, t));
-  
+
   return {
     lat: a.lat + t * (b.lat - a.lat),
     lng: a.lng + t * (b.lng - a.lng),
@@ -103,16 +116,16 @@ export function projectPointOnSegment(p: Coordinate, a: Coordinate, b: Coordinat
  * Calculates the projection factor t of point p onto line segment a-b.
  */
 export function getProjectionT(p: Coordinate, a: Coordinate, b: Coordinate): number {
-  const cosLat = Math.cos(a.lat * Math.PI / 180);
+  const cosLat = Math.cos((a.lat * Math.PI) / 180);
   const abx = (b.lng - a.lng) * cosLat;
   const aby = b.lat - a.lat;
-  
+
   const apx = (p.lng - a.lng) * cosLat;
   const apy = p.lat - a.lat;
-  
+
   const abLen2 = abx * abx + aby * aby;
   if (abLen2 < 1e-14) return 0;
-  
+
   const t = (apx * abx + apy * aby) / abLen2;
   return Math.max(0, Math.min(1, t));
 }
@@ -139,7 +152,7 @@ export function findNearestEdge(graph: StreetGraph, coord: Coordinate): EdgeRef 
 
       // Project coord onto segment u -> v
       const proj = projectPointOnSegment(coord, u, v);
-      
+
       // Calculate physical distance from coord to projected point
       const dist = haversineDistance(coord.lat, coord.lng, proj.lat, proj.lng);
       if (dist < minDistance) {
@@ -235,7 +248,7 @@ export class DijkstraRouter implements IRouter {
     start: Coordinate,
     end: Coordinate,
     costFn: CostFunction,
-    overrides: LocalOverrides
+    overrides: LocalOverrides,
   ): RouteResult | null {
     const startEdgeRef = findNearestEdge(graph, start);
     const endEdgeRef = findNearestEdge(graph, end);
@@ -302,8 +315,18 @@ export class DijkstraRouter implements IRouter {
       graph.nodes.set(END_VNODE_ID, { node: virtualEndNode, edges: [] });
 
       // 2. Add outgoing edges from virtual-start
-      const distToVs = haversineDistance(startProj.lat, startProj.lng, startVNode.lat, startVNode.lng);
-      const distToUs = haversineDistance(startProj.lat, startProj.lng, startUNode.lat, startUNode.lng);
+      const distToVs = haversineDistance(
+        startProj.lat,
+        startProj.lng,
+        startVNode.lat,
+        startVNode.lng,
+      );
+      const distToUs = haversineDistance(
+        startProj.lat,
+        startProj.lng,
+        startUNode.lat,
+        startUNode.lng,
+      );
 
       // Edge UV_S (virtual-start -> V_s)
       graph.nodes.get(START_VNODE_ID)!.edges.push({
@@ -315,7 +338,7 @@ export class DijkstraRouter implements IRouter {
       });
 
       // Edge VU_S (virtual-start -> U_s if bidirectional)
-      const startEdgeVU = graph.nodes.get(startVId)?.edges.find(e => e.target === startUId);
+      const startEdgeVU = graph.nodes.get(startVId)?.edges.find((e) => e.target === startUId);
       if (startEdgeVU) {
         graph.nodes.get(START_VNODE_ID)!.edges.push({
           target: startUId,
@@ -339,7 +362,7 @@ export class DijkstraRouter implements IRouter {
         tags: endEdge.tags,
       });
 
-      const endEdgeVU = graph.nodes.get(endVId)?.edges.find(e => e.target === endUId);
+      const endEdgeVU = graph.nodes.get(endVId)?.edges.find((e) => e.target === endUId);
       if (endEdgeVU) {
         backupNodeEdges(endVId);
         graph.nodes.get(endVId)!.edges.push({
@@ -352,7 +375,9 @@ export class DijkstraRouter implements IRouter {
       }
 
       // 4. Handle same-edge direct routing
-      const sameEdge = (startUId === endUId && startVId === endVId) || (startUId === endVId && startVId === endUId);
+      const sameEdge =
+        (startUId === endUId && startVId === endVId) ||
+        (startUId === endVId && startVId === endUId);
       if (sameEdge) {
         const ts = getProjectionT(start, startUNode, startVNode);
         const te = getProjectionT(end, startUNode, startVNode);
@@ -426,9 +451,13 @@ export class DijkstraRouter implements IRouter {
           if (parentId) {
             const parentEntry = graph.nodes.get(parentId);
             const neighborEntry = graph.nodes.get(neighborId);
-             if (parentEntry && neighborEntry) {
-               edgeCost += calculateTurnPenalty(parentEntry.node, currentEntry.node, neighborEntry.node);
-             }
+            if (parentEntry && neighborEntry) {
+              edgeCost += calculateTurnPenalty(
+                parentEntry.node,
+                currentEntry.node,
+                neighborEntry.node,
+              );
+            }
           }
 
           const altDist = currentDist + edgeCost;
@@ -493,7 +522,7 @@ export class DijkstraRouter implements IRouter {
         // Add edge distance and street names
         if (i < pathNodeIds.length - 1) {
           const nextNodeId = pathNodeIds[i + 1];
-          const edge = entry.edges.find(e => e.target === nextNodeId);
+          const edge = entry.edges.find((e) => e.target === nextNodeId);
           if (edge) {
             totalDistanceMeters += edge.distance;
             if (edge.name) {
@@ -516,7 +545,10 @@ export class DijkstraRouter implements IRouter {
             const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
             roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
 
-            const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
+            const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
+              edge.tags.highway || '',
+              edge.tags,
+            );
             edgesDetails.push({
               sourceId: nodeId,
               targetId: nextNodeId,
@@ -570,7 +602,6 @@ export class DijkstraRouter implements IRouter {
         roadTypeTotals,
         edges: edgesDetails,
       };
-
     } finally {
       // 8. Restore the graph to pristine state
       for (const [nodeId, originalEdges] of backupNodes.entries()) {
@@ -589,7 +620,7 @@ export class DijkstraRouter implements IRouter {
     start: Coordinate,
     end: Coordinate,
     costFn: CostFunction,
-    overrides: LocalOverrides
+    overrides: LocalOverrides,
   ): RouteResult | null {
     // 1. Snap start/end coords to nearest nodes
     const startNodeId = findNearestNode(graph, start);
@@ -672,7 +703,11 @@ export class DijkstraRouter implements IRouter {
           const parentEntry = graph.nodes.get(parentId);
           const neighborEntry = graph.nodes.get(neighborId);
           if (parentEntry && neighborEntry) {
-            edgeCost += calculateTurnPenalty(parentEntry.node, currentEntry.node, neighborEntry.node);
+            edgeCost += calculateTurnPenalty(
+              parentEntry.node,
+              currentEntry.node,
+              neighborEntry.node,
+            );
           }
         }
 
@@ -737,7 +772,7 @@ export class DijkstraRouter implements IRouter {
       // Add edge distance and street names
       if (i < pathNodeIds.length - 1) {
         const nextNodeId = pathNodeIds[i + 1];
-        const edge = entry.edges.find(e => e.target === nextNodeId);
+        const edge = entry.edges.find((e) => e.target === nextNodeId);
         if (edge) {
           totalDistanceMeters += edge.distance;
           if (edge.name) {
@@ -760,7 +795,10 @@ export class DijkstraRouter implements IRouter {
           const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
           roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
 
-          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
+          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
+            edge.tags.highway || '',
+            edge.tags,
+          );
           edgesDetails.push({
             sourceId: nodeId,
             targetId: nextNodeId,
@@ -824,5 +862,3 @@ export class DijkstraRouter implements IRouter {
     };
   }
 }
-
-

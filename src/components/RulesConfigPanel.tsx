@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
-import type { RulesConfiguration, SignRuleConfig, RoadRuleConfig, NodeDelayConfig, ComfortLevel } from '../core/types';
+import type {
+  RulesConfiguration,
+  SignRuleConfig,
+  RoadRuleConfig,
+  NodeDelayConfig,
+  ComfortLevel,
+} from '../core/types';
 import { GermanSign, RoadType } from '../core/types';
 
 // ─── Default rule configurations ────────────────────────────────────────────
@@ -11,7 +17,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     [GermanSign.VZ_242_1]: {
       signId: GermanSign.VZ_242_1,
       name: 'Pedestrian Zone',
-      description: 'Vz 242.1 – Fußgängerzone. Cyclists must dismount unless "Fahrräder frei" is posted.',
+      description:
+        'Vz 242.1 – Fußgängerzone. Cyclists must dismount unless "Fahrräder frei" is posted.',
       iconCode: '🚶',
       baseSpeedKmh: 4,
       speedType: 'dismount',
@@ -21,7 +28,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     [GermanSign.VZ_239]: {
       signId: GermanSign.VZ_239,
       name: 'Sidewalk / Footway',
-      description: 'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
+      description:
+        'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
       iconCode: '🦶',
       baseSpeedKmh: 4,
       speedType: 'dismount',
@@ -31,7 +39,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     [GermanSign.VZ_240]: {
       signId: GermanSign.VZ_240,
       name: 'Shared Path',
-      description: 'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
+      description:
+        'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
       iconCode: '🚶‍♂️🚲',
       baseSpeedKmh: 15,
       speedType: 'slow',
@@ -41,7 +50,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     [GermanSign.VZ_241]: {
       signId: GermanSign.VZ_241,
       name: 'Segregated Path',
-      description: 'Vz 241 – Getrennter Geh- und Radweg. Separate tracks for pedestrians and cyclists.',
+      description:
+        'Vz 241 – Getrennter Geh- und Radweg. Separate tracks for pedestrians and cyclists.',
       iconCode: '🚲',
       baseSpeedKmh: 18,
       speedType: 'relative',
@@ -51,7 +61,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     [GermanSign.VZ_325_1]: {
       signId: GermanSign.VZ_325_1,
       name: 'Living Street',
-      description: 'Vz 325.1 – Verkehrsberuhigter Bereich. Pedestrians have priority, walking speed.',
+      description:
+        'Vz 325.1 – Verkehrsberuhigter Bereich. Pedestrians have priority, walking speed.',
       iconCode: '🏘️',
       baseSpeedKmh: 7,
       speedType: 'relative',
@@ -142,7 +153,7 @@ const IntersectionRow: React.FC<IntersectionRowProps> = ({
     <div className="rules-item">
       <button
         className="rules-item-header"
-        onClick={() => setExpanded(v => !v)}
+        onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
         <span className="rules-item-icon">{icon}</span>
@@ -153,14 +164,16 @@ const IntersectionRow: React.FC<IntersectionRowProps> = ({
         <div className="rules-item-body">
           <p className="rules-item-desc">{description}</p>
           <div className="rules-field">
-            <label>Wait time: <strong>{value}s</strong></label>
+            <label>
+              Wait time: <strong>{value}s</strong>
+            </label>
             <input
               type="range"
               min={0}
               max={max}
               step={1}
               value={value}
-              onChange={e => onChange(Number(e.target.value))}
+              onChange={(e) => onChange(Number(e.target.value))}
               className="rules-slider"
             />
           </div>
@@ -212,7 +225,10 @@ const DELAY_FIELDS: {
   },
 ];
 
-const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({ config, onChange }) => (
+const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({
+  config,
+  onChange,
+}) => (
   <div className="rules-list">
     {DELAY_FIELDS.map(({ key, label, icon, max, description }) => (
       <IntersectionRow
@@ -222,7 +238,7 @@ const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({ con
         value={config[key]}
         max={max}
         description={description}
-        onChange={newValue => onChange({ ...config, [key]: newValue })}
+        onChange={(newValue) => onChange({ ...config, [key]: newValue })}
       />
     ))}
   </div>
@@ -239,18 +255,18 @@ const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({ value, disabled, 
 
   const OPTIONS = [
     { key: 'relative', label: 'Relative', speed: '100% (Bike Speed)' },
-    { key: 'slow',     label: 'Slow',     speed: '15 km/h' },
-    { key: 'slower',   label: 'Slower',   speed: '10 km/h' },
+    { key: 'slow', label: 'Slow', speed: '15 km/h' },
+    { key: 'slower', label: 'Slower', speed: '10 km/h' },
     { key: 'dismount', label: 'Dismount', speed: '4 km/h' },
-    { key: 'custom',   label: 'Custom',   speed: 'Custom slider speed' },
+    { key: 'custom', label: 'Custom', speed: 'Custom slider speed' },
   ] as const;
 
-  const activeOption = OPTIONS.find(o => o.key === (hoveredValue || value));
+  const activeOption = OPTIONS.find((o) => o.key === (hoveredValue || value));
 
   return (
     <div className="speed-selector-container">
       <div className="speed-selector-buttons">
-        {OPTIONS.map(opt => (
+        {OPTIONS.map((opt) => (
           <button
             key={opt.key}
             type="button"
@@ -264,9 +280,7 @@ const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({ value, disabled, 
           </button>
         ))}
       </div>
-      <div className="speed-selector-info">
-        {activeOption ? activeOption.speed : ''}
-      </div>
+      <div className="speed-selector-info">{activeOption ? activeOption.speed : ''}</div>
     </div>
   );
 };
@@ -280,19 +294,19 @@ const ComfortSelector: React.FC<ComfortSelectorProps> = ({ value, onChange }) =>
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
 
   const OPTIONS = [
-    { key: 'very_low',  label: 'Very Low',  desc: 'Avoid strongly in quiet routes' },
-    { key: 'low',       label: 'Low',       desc: 'Avoid in quiet routes' },
-    { key: 'neutral',   label: 'Neutral',   desc: 'Standard routing weight' },
-    { key: 'high',      label: 'High',      desc: 'Prefer in quiet routes' },
+    { key: 'very_low', label: 'Very Low', desc: 'Avoid strongly in quiet routes' },
+    { key: 'low', label: 'Low', desc: 'Avoid in quiet routes' },
+    { key: 'neutral', label: 'Neutral', desc: 'Standard routing weight' },
+    { key: 'high', label: 'High', desc: 'Prefer in quiet routes' },
     { key: 'very_high', label: 'Very High', desc: 'Prefer strongly in quiet routes' },
   ] as const;
 
-  const activeOption = OPTIONS.find(o => o.key === (hoveredValue || value));
+  const activeOption = OPTIONS.find((o) => o.key === (hoveredValue || value));
 
   return (
     <div className="speed-selector-container">
       <div className="speed-selector-buttons">
-        {OPTIONS.map(opt => (
+        {OPTIONS.map((opt) => (
           <button
             key={opt.key}
             type="button"
@@ -305,9 +319,7 @@ const ComfortSelector: React.FC<ComfortSelectorProps> = ({ value, onChange }) =>
           </button>
         ))}
       </div>
-      <div className="speed-selector-info">
-        {activeOption ? activeOption.desc : ''}
-      </div>
+      <div className="speed-selector-info">{activeOption ? activeOption.desc : ''}</div>
     </div>
   );
 };
@@ -320,10 +332,16 @@ interface SignRowProps {
 const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const getEffectiveSpeedType = (cfg: SignRuleConfig): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
+  const getEffectiveSpeedType = (
+    cfg: SignRuleConfig,
+  ): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
     if (cfg.speedType) return cfg.speedType;
     const signId = cfg.signId;
-    if (signId === GermanSign.VZ_241 || signId === GermanSign.VZ_244_1 || signId === GermanSign.VZ_325_1) {
+    if (
+      signId === GermanSign.VZ_241 ||
+      signId === GermanSign.VZ_244_1 ||
+      signId === GermanSign.VZ_325_1
+    ) {
       return 'relative';
     }
     if (signId === GermanSign.VZ_242_1 || signId === GermanSign.VZ_239) {
@@ -338,7 +356,7 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
     <div className="rules-item">
       <button
         className="rules-item-header"
-        onClick={() => setExpanded(v => !v)}
+        onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
         <span className="rules-item-icon">{config.iconCode}</span>
@@ -353,27 +371,32 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
             <label>Speed type</label>
             <SpeedTypeSelector
               value={speedType}
-              onChange={val => onChange({ ...config, speedType: val })}
+              onChange={(val) => onChange({ ...config, speedType: val })}
             />
           </div>
 
           {speedType === 'dismount' ? (
             <div className="rules-field" style={{ marginTop: '4px' }}>
-              <span className="rules-speed-info" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <span
+                className="rules-speed-info"
+                style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+              >
                 Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
           ) : (
             speedType === 'custom' && (
               <div className="rules-field">
-                <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
+                <label>
+                  Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
+                </label>
                 <input
                   type="range"
                   min={1}
                   max={30}
                   step={1}
                   value={config.baseSpeedKmh}
-                  onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
+                  onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
                   className="rules-slider"
                 />
               </div>
@@ -381,14 +404,16 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
           )}
 
           <div className="rules-field">
-            <label>Flat penalty: <strong>{config.flatPenaltySeconds}s</strong></label>
+            <label>
+              Flat penalty: <strong>{config.flatPenaltySeconds}s</strong>
+            </label>
             <input
               type="range"
               min={0}
               max={300}
               step={5}
               value={config.flatPenaltySeconds}
-              onChange={e => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
+              onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
               className="rules-slider"
             />
           </div>
@@ -397,7 +422,7 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}
-              onChange={val => onChange({ ...config, comfort: val })}
+              onChange={(val) => onChange({ ...config, comfort: val })}
             />
           </div>
         </div>
@@ -414,7 +439,9 @@ interface RoadRowProps {
 const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const getEffectiveSpeedType = (cfg: RoadRuleConfig): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
+  const getEffectiveSpeedType = (
+    cfg: RoadRuleConfig,
+  ): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
     return cfg.speedType || 'relative';
   };
 
@@ -424,7 +451,7 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
     <div className="rules-item">
       <button
         className="rules-item-header"
-        onClick={() => setExpanded(v => !v)}
+        onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
         <span className="rules-item-name">{config.name}</span>
@@ -436,34 +463,38 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
             <label>Speed type</label>
             <SpeedTypeSelector
               value={speedType}
-              onChange={val => onChange({ ...config, speedType: val })}
+              onChange={(val) => onChange({ ...config, speedType: val })}
             />
           </div>
 
           {speedType === 'custom' && (
             <div className="rules-field">
-              <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
+              <label>
+                Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
+              </label>
               <input
                 type="range"
                 min={1}
                 max={35}
                 step={1}
                 value={config.baseSpeedKmh}
-                onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
+                onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
                 className="rules-slider"
               />
             </div>
           )}
 
           <div className="rules-field">
-            <label>Flat penalty: <strong>{config.flatPenaltySeconds}s</strong></label>
+            <label>
+              Flat penalty: <strong>{config.flatPenaltySeconds}s</strong>
+            </label>
             <input
               type="range"
               min={0}
               max={120}
               step={5}
               value={config.flatPenaltySeconds}
-              onChange={e => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
+              onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
               className="rules-slider"
             />
           </div>
@@ -472,7 +503,7 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}
-              onChange={val => onChange({ ...config, comfort: val })}
+              onChange={(val) => onChange({ ...config, comfort: val })}
             />
           </div>
         </div>
@@ -524,11 +555,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
           <Settings size={15} style={{ color: 'var(--accent-primary)' }} />
           <h2 style={{ margin: 0 }}>Road Rules</h2>
         </span>
-        <button
-          onClick={handleReset}
-          title="Reset to defaults"
-          className="rules-reset-btn"
-        >
+        <button onClick={handleReset} title="Reset to defaults" className="rules-reset-btn">
           <RotateCcw size={11} />
           Reset
         </button>
@@ -538,7 +565,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
       <div className="rules-section">
         <button
           className="rules-section-toggle"
-          onClick={() => setSignsOpen(v => !v)}
+          onClick={() => setSignsOpen((v) => !v)}
           aria-expanded={signsOpen}
         >
           <span>🚦 Traffic Signs</span>
@@ -546,11 +573,11 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
         </button>
         {signsOpen && (
           <div className="rules-list">
-            {Object.values(config.signs).map(sign => (
+            {Object.values(config.signs).map((sign) => (
               <SignRow
                 key={sign.signId}
                 config={sign}
-                onChange={updated => updateSign(sign.signId, updated)}
+                onChange={(updated) => updateSign(sign.signId, updated)}
               />
             ))}
           </div>
@@ -561,7 +588,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
       <div className="rules-section">
         <button
           className="rules-section-toggle"
-          onClick={() => setRoadsOpen(v => !v)}
+          onClick={() => setRoadsOpen((v) => !v)}
           aria-expanded={roadsOpen}
         >
           <span>🛣️ Road Classes</span>
@@ -569,11 +596,11 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
         </button>
         {roadsOpen && (
           <div className="rules-list">
-            {Object.values(config.roads).map(road => (
+            {Object.values(config.roads).map((road) => (
               <RoadRow
                 key={road.roadId}
                 config={road}
-                onChange={updated => updateRoad(road.roadId, updated)}
+                onChange={(updated) => updateRoad(road.roadId, updated)}
               />
             ))}
           </div>
@@ -584,17 +611,14 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
       <div className="rules-section">
         <button
           className="rules-section-toggle"
-          onClick={() => setIntersectionsOpen(v => !v)}
+          onClick={() => setIntersectionsOpen((v) => !v)}
           aria-expanded={intersectionsOpen}
         >
           <span>⏱️ Intersections</span>
           {intersectionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {intersectionsOpen && (
-          <IntersectionDelaySection
-            config={config.nodeDelays}
-            onChange={updateNodeDelays}
-          />
+          <IntersectionDelaySection config={config.nodeDelays} onChange={updateNodeDelays} />
         )}
       </div>
     </section>

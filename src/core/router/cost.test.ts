@@ -1,7 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDisplayCost, standardCost, getDefaultNodeDelay, resolveRuleSpeed, avoidBusyRoadsCost } from './cost';
+import {
+  calculateDisplayCost,
+  standardCost,
+  getDefaultNodeDelay,
+  resolveRuleSpeed,
+  avoidBusyRoadsCost,
+} from './cost';
 import { DijkstraRouter, calculateTurnPenalty } from './router';
-import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../types';
+import type {
+  GraphNode,
+  GraphEdge,
+  StreetGraph,
+  LocalOverrides,
+  SignRuleConfig,
+  RoadRuleConfig,
+  NodeDelayConfig,
+} from '../types';
 import { GermanSign, RoadType } from '../types';
 
 describe('resolveRuleSpeed', () => {
@@ -115,10 +129,25 @@ describe('getDefaultNodeDelay', () => {
 describe('calculateDisplayCost', () => {
   const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
   const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
-  const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: { highway: 'traffic_signals' } };
+  const nodeC: GraphNode = {
+    id: 'C',
+    lat: 48.139,
+    lng: 11.577,
+    tags: { highway: 'traffic_signals' },
+  };
 
-  const edgeAB: GraphEdge = { target: 'B', distance: 120, name: 'Street AB', tags: { highway: 'cycleway' } };
-  const edgeBC: GraphEdge = { target: 'C', distance: 180, name: 'Street BC', tags: { highway: 'primary' } };
+  const edgeAB: GraphEdge = {
+    target: 'B',
+    distance: 120,
+    name: 'Street AB',
+    tags: { highway: 'cycleway' },
+  };
+  const edgeBC: GraphEdge = {
+    target: 'C',
+    distance: 180,
+    name: 'Street BC',
+    tags: { highway: 'primary' },
+  };
 
   const graph: StreetGraph = {
     nodes: new Map([
@@ -200,12 +229,42 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
     const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: {} };
 
-    const edgeAB: GraphEdge = { target: 'B', distance: 180, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBA: GraphEdge = { target: 'A', distance: 180, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBC: GraphEdge = { target: 'C', distance: 180, name: 'Street BC', tags: { highway: 'cycleway' } };
-    const edgeCB: GraphEdge = { target: 'B', distance: 180, name: 'Street BC', tags: { highway: 'cycleway' } };
-    const edgeAC: GraphEdge = { target: 'C', distance: 100, name: 'Street AC', tags: { highway: 'pedestrian' } };
-    const edgeCA: GraphEdge = { target: 'A', distance: 100, name: 'Street AC', tags: { highway: 'pedestrian' } };
+    const edgeAB: GraphEdge = {
+      target: 'B',
+      distance: 180,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBA: GraphEdge = {
+      target: 'A',
+      distance: 180,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBC: GraphEdge = {
+      target: 'C',
+      distance: 180,
+      name: 'Street BC',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeCB: GraphEdge = {
+      target: 'B',
+      distance: 180,
+      name: 'Street BC',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeAC: GraphEdge = {
+      target: 'C',
+      distance: 100,
+      name: 'Street AC',
+      tags: { highway: 'pedestrian' },
+    };
+    const edgeCA: GraphEdge = {
+      target: 'A',
+      distance: 100,
+      name: 'Street AC',
+      tags: { highway: 'pedestrian' },
+    };
 
     const graph: StreetGraph = {
       nodes: new Map([
@@ -221,7 +280,7 @@ describe('DijkstraRouter separate routing weight from display time', () => {
       { lat: nodeA.lat, lng: nodeA.lng },
       { lat: nodeC.lat, lng: nodeC.lng },
       standardCost,
-      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() },
     );
 
     expect(result).not.toBeNull();
@@ -235,16 +294,56 @@ describe('DijkstraRouter separate routing weight from display time', () => {
 
   it('correctly counts signals, yields, and crossings along the route', () => {
     const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
-    const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: { highway: 'traffic_signals' } };
+    const nodeB: GraphNode = {
+      id: 'B',
+      lat: 48.138,
+      lng: 11.576,
+      tags: { highway: 'traffic_signals' },
+    };
     const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: { highway: 'give_way' } };
-    const nodeD: GraphNode = { id: 'D', lat: 48.140, lng: 11.578, tags: { highway: 'crossing', crossing: 'zebra' } };
+    const nodeD: GraphNode = {
+      id: 'D',
+      lat: 48.14,
+      lng: 11.578,
+      tags: { highway: 'crossing', crossing: 'zebra' },
+    };
 
-    const edgeAB: GraphEdge = { target: 'B', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBA: GraphEdge = { target: 'A', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBC: GraphEdge = { target: 'C', distance: 100, name: 'Street BC', tags: { highway: 'cycleway' } };
-    const edgeCB: GraphEdge = { target: 'B', distance: 100, name: 'Street BC', tags: { highway: 'cycleway' } };
-    const edgeCD: GraphEdge = { target: 'D', distance: 100, name: 'Street CD', tags: { highway: 'cycleway' } };
-    const edgeDC: GraphEdge = { target: 'C', distance: 100, name: 'Street CD', tags: { highway: 'cycleway' } };
+    const edgeAB: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBA: GraphEdge = {
+      target: 'A',
+      distance: 100,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBC: GraphEdge = {
+      target: 'C',
+      distance: 100,
+      name: 'Street BC',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeCB: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      name: 'Street BC',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeCD: GraphEdge = {
+      target: 'D',
+      distance: 100,
+      name: 'Street CD',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeDC: GraphEdge = {
+      target: 'C',
+      distance: 100,
+      name: 'Street CD',
+      tags: { highway: 'cycleway' },
+    };
 
     const graph: StreetGraph = {
       nodes: new Map([
@@ -261,7 +360,7 @@ describe('DijkstraRouter separate routing weight from display time', () => {
       { lat: nodeA.lat, lng: nodeA.lng },
       { lat: nodeD.lat, lng: nodeD.lng },
       standardCost,
-      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() },
     );
 
     expect(result).not.toBeNull();
@@ -275,10 +374,30 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
     const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: {} };
 
-    const edgeAB: GraphEdge = { target: 'B', distance: 150, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBA: GraphEdge = { target: 'A', distance: 150, name: 'Street AB', tags: { highway: 'cycleway' } };
-    const edgeBC: GraphEdge = { target: 'C', distance: 250, name: 'Street BC', tags: { highway: 'primary' } };
-    const edgeCB: GraphEdge = { target: 'B', distance: 250, name: 'Street BC', tags: { highway: 'primary' } };
+    const edgeAB: GraphEdge = {
+      target: 'B',
+      distance: 150,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBA: GraphEdge = {
+      target: 'A',
+      distance: 150,
+      name: 'Street AB',
+      tags: { highway: 'cycleway' },
+    };
+    const edgeBC: GraphEdge = {
+      target: 'C',
+      distance: 250,
+      name: 'Street BC',
+      tags: { highway: 'primary' },
+    };
+    const edgeCB: GraphEdge = {
+      target: 'B',
+      distance: 250,
+      name: 'Street BC',
+      tags: { highway: 'primary' },
+    };
 
     const graph: StreetGraph = {
       nodes: new Map([
@@ -294,7 +413,7 @@ describe('DijkstraRouter separate routing weight from display time', () => {
       { lat: nodeA.lat, lng: nodeA.lng },
       { lat: nodeC.lat, lng: nodeC.lng },
       standardCost,
-      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() },
     );
 
     expect(result).not.toBeNull();
@@ -308,10 +427,30 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
     const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: {} };
 
-    const edgeAB: GraphEdge = { target: 'B', distance: 150, name: 'Street AB', tags: { highway: 'primary', 'cycleway:left': 'track' } };
-    const edgeBA: GraphEdge = { target: 'A', distance: 150, name: 'Street AB', tags: { highway: 'primary', 'cycleway:left': 'track' } };
-    const edgeBC: GraphEdge = { target: 'C', distance: 250, name: 'Street BC', tags: { highway: 'path', bicycle: 'designated' } };
-    const edgeCB: GraphEdge = { target: 'B', distance: 250, name: 'Street BC', tags: { highway: 'path', bicycle: 'designated' } };
+    const edgeAB: GraphEdge = {
+      target: 'B',
+      distance: 150,
+      name: 'Street AB',
+      tags: { highway: 'primary', 'cycleway:left': 'track' },
+    };
+    const edgeBA: GraphEdge = {
+      target: 'A',
+      distance: 150,
+      name: 'Street AB',
+      tags: { highway: 'primary', 'cycleway:left': 'track' },
+    };
+    const edgeBC: GraphEdge = {
+      target: 'C',
+      distance: 250,
+      name: 'Street BC',
+      tags: { highway: 'path', bicycle: 'designated' },
+    };
+    const edgeCB: GraphEdge = {
+      target: 'B',
+      distance: 250,
+      name: 'Street BC',
+      tags: { highway: 'path', bicycle: 'designated' },
+    };
 
     const graph: StreetGraph = {
       nodes: new Map([
@@ -327,7 +466,7 @@ describe('DijkstraRouter separate routing weight from display time', () => {
       { lat: nodeA.lat, lng: nodeA.lng },
       { lat: nodeC.lat, lng: nodeC.lng },
       standardCost,
-      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() },
     );
 
     expect(result).not.toBeNull();
@@ -349,13 +488,18 @@ describe('avoidBusyRoadsCost', () => {
 
   it('applies default fallback comfort multipliers when rules are absent', () => {
     // Primary road with no cycleway has comfort 'very_low' -> multiplier 4.0
-    const edgePrimary: GraphEdge = { target: 'B', distance: 100, name: 'Primary', tags: { highway: 'primary' } };
+    const edgePrimary: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      name: 'Primary',
+      tags: { highway: 'primary' },
+    };
     const overrides: LocalOverrides = {
       nodeDelays: new Map(),
       nodeNotes: new Map(),
       nodeTurns: new Map(),
     };
-    
+
     const cost = avoidBusyRoadsCost('A', edgePrimary, 'B', overrides, graph);
     // Base time on primary (speed = 4.0 m/s): 100 / 4 = 25s
     // Multiplied by 4.0 comfort penalty: 25 * 4 = 100s
@@ -363,7 +507,12 @@ describe('avoidBusyRoadsCost', () => {
   });
 
   it('respects custom rulesConfig comfort levels', () => {
-    const edgePrimary: GraphEdge = { target: 'B', distance: 100, name: 'Primary', tags: { highway: 'primary' } };
+    const edgePrimary: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      name: 'Primary',
+      tags: { highway: 'primary' },
+    };
     const overrides: LocalOverrides = {
       nodeDelays: new Map(),
       nodeNotes: new Map(),
@@ -392,11 +541,11 @@ describe('avoidBusyRoadsCost', () => {
 
   it('overrides low/very_low comfort to high for roads with cycleways', () => {
     // Primary road WITH cycleway tags
-    const edgePrimaryCycleway: GraphEdge = { 
-      target: 'B', 
-      distance: 100, 
-      name: 'Primary', 
-      tags: { highway: 'primary', 'cycleway:left': 'track' } 
+    const edgePrimaryCycleway: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      name: 'Primary',
+      tags: { highway: 'primary', 'cycleway:left': 'track' },
     };
     const overrides: LocalOverrides = {
       nodeDelays: new Map(),
@@ -424,6 +573,3 @@ describe('avoidBusyRoadsCost', () => {
     expect(cost).toBeCloseTo(20, 1);
   });
 });
-
-
-
