@@ -120,6 +120,9 @@ export const MapView: React.FC<MapViewProps> = ({
   const [managedClusterId, setManagedClusterId] = useState<string | null>(null);
   const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
 
+  // Toggle minor control points visibility (yield, stop, crossing)
+  const [showMinorControls, setShowMinorControls] = useState(false);
+
   // Node delay/note editing states for map popup editor
   const [nodeDelay, setNodeDelay] = useState<number>(30);
   const [nodeNotes, setNodeNotes] = useState<string>('');
@@ -285,6 +288,12 @@ export const MapView: React.FC<MapViewProps> = ({
         }
 
         if (controlType) {
+          const hasOverride = customNodeDelays.has(sourceId);
+          // Hide minor controls (yield, stop, crossing) by default unless showMinorControls is checked OR they have custom overrides
+          if (controlType !== 'signal' && !showMinorControls && !hasOverride) {
+            return;
+          }
+
           controlNodes.push({
             id: sourceId,
             lat: u.lat,
@@ -445,7 +454,7 @@ export const MapView: React.FC<MapViewProps> = ({
         features: lightFeatures,
       });
     }
-  }, [graph, customNodeDelays, mapReady]);
+  }, [graph, customNodeDelays, mapReady, showMinorControls]);
 
   // 1. Initialize Map
   useEffect(() => {
@@ -1078,6 +1087,34 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
       <div ref={mapContainerRef} className="map-container" />
+
+      {/* Floating Toggle for Minor Controls */}
+      <button
+        style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          zIndex: 5,
+          background: showMinorControls ? 'var(--accent)' : 'rgba(15, 23, 42, 0.85)',
+          color: showMinorControls ? '#000000' : 'var(--text-primary)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          fontSize: '0.75rem',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+          backdropFilter: 'blur(8px)',
+          transition: 'all 0.2s ease',
+        }}
+        onClick={() => setShowMinorControls((v) => !v)}
+      >
+        <span style={{ fontSize: '0.9rem' }}>🚦</span>
+        <span>{showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}</span>
+      </button>
       
       {/* Dynamic Glassmorphic Map Popup */}
       {selectedNode && popupPos && (
