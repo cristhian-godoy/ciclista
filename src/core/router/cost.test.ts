@@ -135,4 +135,42 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     // totalDurationSeconds should be the display cost (~52.3s), not the routing cost
     expect(result!.totalDurationSeconds).toBeCloseTo(52.3, 1);
   });
+
+  it('correctly counts signals, yields, and crossings along the route', () => {
+    const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
+    const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: { highway: 'traffic_signals' } };
+    const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: { highway: 'give_way' } };
+    const nodeD: GraphNode = { id: 'D', lat: 48.140, lng: 11.578, tags: { highway: 'crossing' } };
+
+    const edgeAB: GraphEdge = { target: 'B', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
+    const edgeBA: GraphEdge = { target: 'A', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
+    const edgeBC: GraphEdge = { target: 'C', distance: 100, name: 'Street BC', tags: { highway: 'cycleway' } };
+    const edgeCB: GraphEdge = { target: 'B', distance: 100, name: 'Street BC', tags: { highway: 'cycleway' } };
+    const edgeCD: GraphEdge = { target: 'D', distance: 100, name: 'Street CD', tags: { highway: 'cycleway' } };
+    const edgeDC: GraphEdge = { target: 'C', distance: 100, name: 'Street CD', tags: { highway: 'cycleway' } };
+
+    const graph: StreetGraph = {
+      nodes: new Map([
+        ['A', { node: nodeA, edges: [edgeAB] }],
+        ['B', { node: nodeB, edges: [edgeBC, edgeBA] }],
+        ['C', { node: nodeC, edges: [edgeCD, edgeCB] }],
+        ['D', { node: nodeD, edges: [edgeDC] }],
+      ]),
+    };
+
+    const router = new DijkstraRouter();
+    const result = router.findRoute(
+      graph,
+      { lat: nodeA.lat, lng: nodeA.lng },
+      { lat: nodeD.lat, lng: nodeD.lng },
+      standardCost,
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.signalCount).toBe(1);
+    expect(result!.yieldCount).toBe(1);
+    expect(result!.crossingCount).toBe(1);
+  });
 });
+

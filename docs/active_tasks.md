@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite B.2 — Count Controls in RouteResult
+## Current Focus: Bite C.1 — Accumulate road-type distance per edge
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -11,9 +11,9 @@
 ## Phase B: Yield / Crossing Detection
 - [x] **Bite B.1: Centralize node control classifier**
   - [x] Implement a unified node classification function `mapOSMNodeToControl(tags)` in `src/core/router/rules.ts` to classify nodes as `signal`, `yield`, `stop`, or `crossing`.
-- [/] **Bite B.2: Count controls in RouteResult**
-  - [ ] Add `yieldCount: number`, `signalCount: number`, and `crossingCount: number` to `RouteResult` in `src/core/types.ts`.
-  - [ ] Populate these counters in the path reconstruction loop in `src/core/router/router.ts`.
+- [x] **Bite B.2: Count controls in RouteResult**
+  - [x] Add `yieldCount: number`, `signalCount: number`, and `crossingCount: number` to `RouteResult` in `src/core/types.ts`.
+  - [x] Populate these counters in the path reconstruction loop in `src/core/router/router.ts`.
 
 ## Phase C: Road-type Mix
 - [ ] **Bite C.1: Accumulate road-type distance per edge**

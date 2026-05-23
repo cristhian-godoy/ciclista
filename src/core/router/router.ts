@@ -1,6 +1,6 @@
 import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
 import { haversineDistance } from '../graph/parser';
-import { mapOSMToSignAndRoad } from './rules';
+import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 import { calculateDisplayCost } from './cost';
 
 /**
@@ -419,6 +419,9 @@ export class DijkstraRouter implements IRouter {
       const coordinates: Coordinate[] = [];
       let totalDistanceMeters = 0;
       let trafficSignalsCount = 0;
+      let signalCount = 0;
+      let yieldCount = 0;
+      let crossingCount = 0;
       const streetsSet = new Set<string>();
       const edgesDetails: NonNullable<RouteResult['edges']> = [];
 
@@ -429,14 +432,16 @@ export class DijkstraRouter implements IRouter {
         const entry = graph.nodes.get(nodeId)!;
         coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
 
-        // Count traffic signals (nodes with specific highway/crossing tags)
+        // Count control points using centralized node classifier
         const tags = entry.node.tags || {};
-        if (
-          tags.highway === 'traffic_signals' ||
-          tags.crossing === 'traffic_signals' ||
-          tags.crossing === 'controlled'
-        ) {
+        const controlType = mapOSMNodeToControl(tags);
+        if (controlType === 'signal') {
           trafficSignalsCount++;
+          signalCount++;
+        } else if (controlType === 'yield') {
+          yieldCount++;
+        } else if (controlType === 'crossing') {
+          crossingCount++;
         }
 
         // Add edge distance and street names
@@ -531,6 +536,9 @@ export class DijkstraRouter implements IRouter {
         totalDistanceMeters,
         streets: Array.from(streetsSet),
         trafficSignalsCount,
+        signalCount,
+        yieldCount,
+        crossingCount,
         edges: edgesDetails,
       };
 
@@ -680,6 +688,9 @@ export class DijkstraRouter implements IRouter {
     const coordinates: Coordinate[] = [];
     let totalDistanceMeters = 0;
     let trafficSignalsCount = 0;
+    let signalCount = 0;
+    let yieldCount = 0;
+    let crossingCount = 0;
     const streetsSet = new Set<string>();
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
@@ -689,14 +700,16 @@ export class DijkstraRouter implements IRouter {
       const entry = graph.nodes.get(nodeId)!;
       coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
 
-      // Count traffic signals (nodes with specific highway/crossing tags)
+      // Count control points using centralized node classifier
       const tags = entry.node.tags || {};
-      if (
-        tags.highway === 'traffic_signals' ||
-        tags.crossing === 'traffic_signals' ||
-        tags.crossing === 'controlled'
-      ) {
+      const controlType = mapOSMNodeToControl(tags);
+      if (controlType === 'signal') {
         trafficSignalsCount++;
+        signalCount++;
+      } else if (controlType === 'yield') {
+        yieldCount++;
+      } else if (controlType === 'crossing') {
+        crossingCount++;
       }
 
       // Add edge distance and street names
@@ -799,6 +812,9 @@ export class DijkstraRouter implements IRouter {
       totalDistanceMeters,
       streets: Array.from(streetsSet),
       trafficSignalsCount,
+      signalCount,
+      yieldCount,
+      crossingCount,
       edges: edgesDetails,
     };
   }
