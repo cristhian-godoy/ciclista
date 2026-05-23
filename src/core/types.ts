@@ -152,6 +152,14 @@ export interface RouteResult {
 }
 
 /**
+ * Represents a route option/alternative with a descriptive label.
+ */
+export interface RouteAlternative {
+  label: string;
+  result: RouteResult;
+}
+
+/**
  * Interface for pathfinding algorithms (e.g. Dijkstra, A*).
  */
 export interface IRouter {
