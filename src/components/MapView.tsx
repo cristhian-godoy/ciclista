@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
-import type { Coordinate, StreetGraph, RouteResult, GraphNode } from '../core/types';
+import type { Coordinate, StreetGraph, RouteResult, GraphNode, RouteAlternative } from '../core/types';
 
 type GeoJSONFeature = 
   | {
@@ -28,6 +28,9 @@ interface MapViewProps {
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
   routeResult: RouteResult | null;
+  routeAlternatives: RouteAlternative[];
+  activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
+  onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
@@ -46,6 +49,9 @@ export const MapView: React.FC<MapViewProps> = ({
   startCoord,
   endCoord,
   routeResult,
+  routeAlternatives,
+  activeAlternativeLabel,
+  onSelectAlternative,
   selectedPreset,
   customNodeDelays,
   customNodeNotes,
@@ -587,7 +593,16 @@ export const MapView: React.FC<MapViewProps> = ({
         data: { type: 'FeatureCollection', features: [] },
       });
 
-      map.addSource('route-path', {
+      // 3 Sources for alternatives
+      map.addSource('route-path-standard', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      map.addSource('route-path-avoid-stops', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      map.addSource('route-path-quiet-streets', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
@@ -615,11 +630,11 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      // Layer: Glowing Computed Route Path
+      // Layer: Glowing Computed Route Path (Standard - Indigo)
       map.addLayer({
-        id: 'route-path-layer',
+        id: 'route-path-layer-standard',
         type: 'line',
-        source: 'route-path',
+        source: 'route-path-standard',
         layout: {
           'line-join': 'round',
           'line-cap': 'round',
@@ -630,11 +645,70 @@ export const MapView: React.FC<MapViewProps> = ({
         },
       });
 
-      // Layer: Glow outline for route
       map.addLayer({
-        id: 'route-path-glow',
+        id: 'route-path-glow-standard',
         type: 'line',
-        source: 'route-path',
+        source: 'route-path-standard',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#6366f1',
+          'line-width': 9,
+          'line-opacity': 0.3,
+        },
+      }, 'route-path-layer-standard');
+
+      // Layer: Glowing Computed Route Path (Avoid Stops - Rose)
+      map.addLayer({
+        id: 'route-path-layer-avoid-stops',
+        type: 'line',
+        source: 'route-path-avoid-stops',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#f43f5e',
+          'line-width': 5,
+        },
+      });
+
+      map.addLayer({
+        id: 'route-path-glow-avoid-stops',
+        type: 'line',
+        source: 'route-path-avoid-stops',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#f43f5e',
+          'line-width': 9,
+          'line-opacity': 0.3,
+        },
+      }, 'route-path-layer-avoid-stops');
+
+      // Layer: Glowing Computed Route Path (Quiet Streets - Teal)
+      map.addLayer({
+        id: 'route-path-layer-quiet-streets',
+        type: 'line',
+        source: 'route-path-quiet-streets',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#14b8a6',
+          'line-width': 5,
+        },
+      });
+
+      map.addLayer({
+        id: 'route-path-glow-quiet-streets',
+        type: 'line',
+        source: 'route-path-quiet-streets',
         layout: {
           'line-join': 'round',
           'line-cap': 'round',
@@ -644,7 +718,28 @@ export const MapView: React.FC<MapViewProps> = ({
           'line-width': 9,
           'line-opacity': 0.3,
         },
-      }, 'route-path-layer');
+      }, 'route-path-layer-quiet-streets');
+
+      // Click and hover interaction handlers for route selection
+      map.on('click', 'route-path-layer-standard', () => {
+        onSelectAlternative('standard');
+      });
+      map.on('click', 'route-path-layer-avoid-stops', () => {
+        onSelectAlternative('avoid-stops');
+      });
+      map.on('click', 'route-path-layer-quiet-streets', () => {
+        onSelectAlternative('quiet-streets');
+      });
+
+      const setPointerCursor = () => { map.getCanvas().style.cursor = 'pointer'; };
+      const resetCursor = () => { map.getCanvas().style.cursor = ''; };
+
+      map.on('mouseenter', 'route-path-layer-standard', setPointerCursor);
+      map.on('mouseleave', 'route-path-layer-standard', resetCursor);
+      map.on('mouseenter', 'route-path-layer-avoid-stops', setPointerCursor);
+      map.on('mouseleave', 'route-path-layer-avoid-stops', resetCursor);
+      map.on('mouseenter', 'route-path-layer-quiet-streets', setPointerCursor);
+      map.on('mouseleave', 'route-path-layer-quiet-streets', resetCursor);
 
       // Layer: Traffic light clusters (grouped crossings)
       map.addLayer({
@@ -965,31 +1060,62 @@ export const MapView: React.FC<MapViewProps> = ({
     triggerGraphLayersUpdate();
   }, [triggerGraphLayersUpdate]);
 
-  // 4. Update computed route layer
+  // 4. Update computed route layers for alternatives
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    const routeSource = map.getSource('route-path') as maplibregl.GeoJSONSource;
-    if (!routeSource) return;
+    const strategies: ('standard' | 'avoid-stops' | 'quiet-streets')[] = ['standard', 'avoid-stops', 'quiet-streets'];
 
-    if (routeResult && routeResult.coordinates.length > 0) {
-      const coords = routeResult.coordinates.map((c) => [c.lng, c.lat]);
-      routeSource.setData({
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: coords,
+    // Update each source's data and layer styles
+    strategies.forEach(strategy => {
+      const source = map.getSource(`route-path-${strategy}`) as maplibregl.GeoJSONSource;
+      if (!source) return;
+
+      const alt = routeAlternatives.find(a => a.label === strategy);
+      if (alt && alt.result && alt.result.coordinates.length > 0) {
+        const coords = alt.result.coordinates.map(c => [c.lng, c.lat]);
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: coords,
+              },
+              properties: {},
             },
-            properties: {},
-          },
-        ],
-      });
+          ],
+        });
+      } else {
+        source.setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+      }
 
-      // Fit map bounds to show full route path smoothly
+      // Update styling dynamically based on active selection
+      const isActive = activeAlternativeLabel === strategy;
+      map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', isActive ? 1.0 : 0.4);
+      map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', isActive ? 0.3 : 0.0);
+      map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', isActive ? 6 : 4);
+
+      // Bring active layer to front
+      if (isActive) {
+        if (map.getLayer(`route-path-glow-${strategy}`)) {
+          map.moveLayer(`route-path-glow-${strategy}`, 'traffic-lights-cluster');
+        }
+        if (map.getLayer(`route-path-layer-${strategy}`)) {
+          map.moveLayer(`route-path-layer-${strategy}`, 'traffic-lights-cluster');
+        }
+      }
+    });
+
+    // Fit map bounds to show full route path smoothly (using active selection coordinates)
+    const activeRoute = routeAlternatives.find(a => a.label === activeAlternativeLabel);
+    if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
+      const coords = activeRoute.result.coordinates.map(c => [c.lng, c.lat]);
       if (shouldFitBoundsRef.current && coords.length > 1) {
         const bounds = coords.reduce(
           (acc, val) => acc.extend(val as [number, number]),
@@ -1005,15 +1131,10 @@ export const MapView: React.FC<MapViewProps> = ({
             }
           : 50;
         map.fitBounds(bounds, { padding, maxZoom: 16 });
-        shouldFitBoundsRef.current = false; // Reset so that subsequent panned fetches don't trigger refit
+        shouldFitBoundsRef.current = false;
       }
-    } else {
-      routeSource.setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
     }
-  }, [routeResult, mapReady]);
+  }, [routeAlternatives, activeAlternativeLabel, mapReady]);
 
   // 5. Update loaded bounding box boundary layer
   useEffect(() => {

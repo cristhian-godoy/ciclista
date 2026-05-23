@@ -349,6 +349,9 @@ export default function App() {
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
+        routeAlternatives={routeAlternatives}
+        activeAlternativeLabel={routingStrategy}
+        onSelectAlternative={setRoutingStrategy}
         selectedPreset={selectedPreset}
         customNodeDelays={nodeDelays}
         customNodeNotes={nodeNotes}
