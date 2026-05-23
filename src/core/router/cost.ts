@@ -14,6 +14,13 @@ function getBaseSpeed(edge: GraphEdge): number {
     speed = 5.5; // Slightly faster on dedicated bike infrastructure
   } else if (highway === 'cycleway') {
     speed = 6.0; // Fast dedicated paths
+  } else if (['footway', 'pedestrian', 'path'].includes(highway || '')) {
+    const bicycle = edge.tags.bicycle;
+    if (bicycle === 'yes' || bicycle === 'designated') {
+      speed = 4.5;
+    } else {
+      speed = 1.2; // Walk speed (~4.3 km/h) when walking bike
+    }
   } else if (highway === 'primary') {
     speed = 4.0; // Slower due to congestion / traffic interaction
   } else if (highway === 'secondary') {
@@ -40,6 +47,16 @@ export const standardCost: CostFunction = (
 ): number => {
   const speed = getBaseSpeed(edge);
   let cost = edge.distance / speed; // Travel time in seconds
+
+  // Heavy penalty for generic footways / sidewalks / pedestrian paths that don't explicitly allow bicycles
+  const highway = edge.tags.highway;
+  if (['footway', 'pedestrian', 'path'].includes(highway || '')) {
+    const bicycle = edge.tags.bicycle;
+    if (bicycle !== 'yes' && bicycle !== 'designated') {
+      cost += 60; // 60 seconds penalty
+      cost *= 4.0; // 4x multiplier
+    }
+  }
 
   // Add custom delays if user timed it
   const customDelay = overrides.nodeDelays.get(targetId);

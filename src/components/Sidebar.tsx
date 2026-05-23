@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Coordinate, RouteResult } from '../core/types';
-import { Navigation, RefreshCw, Layers } from 'lucide-react';
+import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SidebarProps {
   startCoord: Coordinate;
@@ -21,6 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedPreset,
   onPresetChange,
 }) => {
+  const [showDebug, setShowDebug] = useState(false);
   // Formatting helpers
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -139,6 +140,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </p>
           )}
         </section>
+
+        {/* Section 4: Debug Route Details */}
+        {routeResult && routeResult.edges && (
+          <section className="route-card">
+            <h2 
+              onClick={() => setShowDebug(!showDebug)} 
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                <Bug size={16} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
+                Debug Route Edges
+              </span>
+              {showDebug ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </h2>
+            {showDebug && (
+              <div style={{ marginTop: '12px', maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {routeResult.edges.map((edge, index) => (
+                  <div 
+                    key={index} 
+                    style={{ 
+                      padding: '8px', 
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-color)',
+                      fontSize: '0.75rem',
+                      lineHeight: '1.4'
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                      {index + 1}. {edge.name}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      <span>Type: <code style={{ color: 'var(--accent-secondary)' }}>{edge.highway}</code></span>
+                      <span>{Math.round(edge.distance)}m</span>
+                      <span>Cost: {Math.round(edge.cost)}s</span>
+                    </div>
+                    {Object.entries(edge.tags).length > 0 && (
+                      <div style={{ marginTop: '4px', padding: '4px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                        {Object.entries(edge.tags).map(([key, val]) => (
+                          <div key={key} style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                            <strong style={{ color: 'var(--text-secondary)' }}>{key}:</strong> {String(val)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
 
       </div>

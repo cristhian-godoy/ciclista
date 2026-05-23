@@ -72,6 +72,16 @@ export class OSMGraphParser implements IGraphParser {
           continue;
         }
 
+        // Skip explicitly non-bikeable paths/roads
+        if (wayTags.bicycle === 'no' || wayTags.access === 'no') {
+          continue;
+        }
+
+        // Skip physical steps (stairs)
+        if (highway === 'steps') {
+          continue;
+        }
+
         const nodesList: number[] = el.nodes || [];
         if (nodesList.length < 2) continue;
 
