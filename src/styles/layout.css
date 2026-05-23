@@ -50,10 +50,36 @@
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+/* Custom scrollbars matching glassmorphism and dark mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .sidebar-footer {
