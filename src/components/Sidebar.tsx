@@ -231,8 +231,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       lineHeight: '1.4'
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                      {index + 1}. {edge.name}
+                    <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span>{index + 1}. {edge.name}</span>
+                      {edge.matchedSign && (
+                        <code style={{ fontSize: '0.62rem', background: 'rgba(139,92,246,0.15)', color: 'hsl(265,80%,72%)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '3px', padding: '1px 5px' }}>
+                          {edge.matchedSign}
+                        </code>
+                      )}
+                      {!edge.matchedSign && edge.matchedRoad && (
+                        <code style={{ fontSize: '0.62rem', background: 'rgba(14,165,233,0.12)', color: 'hsl(200,80%,65%)', border: '1px solid rgba(14,165,233,0.25)', borderRadius: '3px', padding: '1px 5px' }}>
+                          {edge.matchedRoad}
+                        </code>
+                      )}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', marginTop: '2px' }}>
                       <span>Type: <code style={{ color: 'var(--accent-secondary)' }}>{edge.highway}</code></span>

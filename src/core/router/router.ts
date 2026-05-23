@@ -1,5 +1,6 @@
 import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
 import { haversineDistance } from '../graph/parser';
+import { mapOSMToSignAndRoad } from './rules';
 
 /**
  * Snaps a raw lat/lng coordinate to the nearest topological node in the graph.
@@ -477,6 +478,7 @@ export class DijkstraRouter implements IRouter {
               }
             }
 
+            const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
             edgesDetails.push({
               sourceId: nodeId,
               targetId: nextNodeId,
@@ -485,6 +487,8 @@ export class DijkstraRouter implements IRouter {
               highway: edge.tags.highway || 'unknown',
               tags: edge.tags,
               cost: edgeCost + turnPenalty,
+              matchedSign,
+              matchedRoad,
             });
           }
         }
@@ -731,6 +735,7 @@ export class DijkstraRouter implements IRouter {
             }
           }
 
+          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
           edgesDetails.push({
             sourceId: nodeId,
             targetId: nextNodeId,
@@ -739,6 +744,8 @@ export class DijkstraRouter implements IRouter {
             highway: edge.tags.highway || 'unknown',
             tags: edge.tags,
             cost: edgeCost + turnPenalty,
+            matchedSign,
+            matchedRoad,
           });
         }
       }
