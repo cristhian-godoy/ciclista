@@ -74,8 +74,13 @@ To ensure the router suggests realistic, street-legal, and safe commuting routes
    - Driveways and parking lot aisles (`highway: service` with `service: parking_aisle` or `service: driveway`) are slow and dangerous for fast commuting. They have a **30-second flat penalty** + **2.5x multiplier** + speed restricted to `1.5 m/s` to prevent the router from using them as shortcuts.
    - General service roads have a **5-second penalty** + **1.2x multiplier**.
 
+4. **Edge Snapping & Virtual Nodes**:
+   - Instead of snapping start/end coordinates to the nearest graph node (which often snaps to dense backyard footways or far-away intersections), the router finds the nearest street segment (edge) and projects the pin coordinates onto it.
+   - During pathfinding, the router dynamically injects temporary `virtual-start` and `virtual-end` nodes at the projected points along with corresponding partial-segment edges (with proportional travel distances/costs).
+   - If the pin coordinates are within a **3-meter** threshold of the street segment (e.g., dragging the pin close to a street), the pin coordinate itself snaps to the street segment to help center it. Otherwise (e.g., pinned at a house), the router draws a straight connection line from the pin to the projected street point and includes the walking connection time in the route statistics.
+   - All injected virtual entities are safely removed and the graph is restored to its original state once pathfinding completes.
+
 ---
 
 ## Data Customization & Storage
 All traffic light timings and notes are stored directly in your browser's `localStorage` under the key `ciclista_custom_nodes`, ensuring your custom route weights are preserved across reloads.
-

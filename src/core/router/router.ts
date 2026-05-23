@@ -1,4 +1,4 @@
-import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult } from '../types';
+import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
 import { haversineDistance } from '../graph/parser';
 
 /**
@@ -41,6 +41,65 @@ export function projectPointOnSegment(p: Coordinate, a: Coordinate, b: Coordinat
     lat: a.lat + t * (b.lat - a.lat),
     lng: a.lng + t * (b.lng - a.lng),
   };
+}
+
+/**
+ * Calculates the projection factor t of point p onto line segment a-b.
+ */
+export function getProjectionT(p: Coordinate, a: Coordinate, b: Coordinate): number {
+  const cosLat = Math.cos(a.lat * Math.PI / 180);
+  const abx = (b.lng - a.lng) * cosLat;
+  const aby = b.lat - a.lat;
+  
+  const apx = (p.lng - a.lng) * cosLat;
+  const apy = p.lat - a.lat;
+  
+  const abLen2 = abx * abx + aby * aby;
+  if (abLen2 < 1e-14) return 0;
+  
+  const t = (apx * abx + apy * aby) / abLen2;
+  return Math.max(0, Math.min(1, t));
+}
+
+interface EdgeRef {
+  uId: string;
+  vId: string;
+  distance: number;
+  projected: Coordinate;
+  edge: GraphEdge;
+}
+
+export function findNearestEdge(graph: StreetGraph, coord: Coordinate): EdgeRef | null {
+  let minDistance = Infinity;
+  let bestEdge: EdgeRef | null = null;
+
+  for (const [uId, entry] of graph.nodes.entries()) {
+    const u = entry.node;
+    for (const edge of entry.edges) {
+      const vId = edge.target;
+      const vEntry = graph.nodes.get(vId);
+      if (!vEntry) continue;
+      const v = vEntry.node;
+
+      // Project coord onto segment u -> v
+      const proj = projectPointOnSegment(coord, u, v);
+      
+      // Calculate physical distance from coord to projected point
+      const dist = haversineDistance(coord.lat, coord.lng, proj.lat, proj.lng);
+      if (dist < minDistance) {
+        minDistance = dist;
+        bestEdge = {
+          uId,
+          vId,
+          distance: dist,
+          projected: proj,
+          edge,
+        };
+      }
+    }
+  }
+
+  return bestEdge;
 }
 
 /**
@@ -116,6 +175,370 @@ class MinHeap<T> {
 
 export class DijkstraRouter implements IRouter {
   findRoute(
+    graph: StreetGraph,
+    start: Coordinate,
+    end: Coordinate,
+    costFn: CostFunction,
+    overrides: LocalOverrides
+  ): RouteResult | null {
+    const startEdgeRef = findNearestEdge(graph, start);
+    const endEdgeRef = findNearestEdge(graph, end);
+
+    // If we can't find nearest edges (e.g. empty/invalid graph), fall back to node snapping
+    if (!startEdgeRef || !endEdgeRef) {
+      return this.findRouteNodeFallback(graph, start, end, costFn, overrides);
+    }
+
+    const startProj = startEdgeRef.projected;
+    const startUId = startEdgeRef.uId;
+    const startVId = startEdgeRef.vId;
+    const startEdge = startEdgeRef.edge;
+
+    const endProj = endEdgeRef.projected;
+    const endUId = endEdgeRef.uId;
+    const endVId = endEdgeRef.vId;
+    const endEdge = endEdgeRef.edge;
+
+    const startUNode = graph.nodes.get(startUId)!.node;
+    const startVNode = graph.nodes.get(startVId)!.node;
+    const endUNode = graph.nodes.get(endUId)!.node;
+    const endVNode = graph.nodes.get(endVId)!.node;
+
+    const START_VNODE_ID = 'virtual-start';
+    const END_VNODE_ID = 'virtual-end';
+
+    const virtualStartNode: GraphNode = {
+      id: START_VNODE_ID,
+      lat: startProj.lat,
+      lng: startProj.lng,
+      tags: {},
+    };
+
+    const virtualEndNode: GraphNode = {
+      id: END_VNODE_ID,
+      lat: endProj.lat,
+      lng: endProj.lng,
+      tags: {},
+    };
+
+    const backupNodes = new Map<string, GraphEdge[]>();
+    const backupNodeEdges = (nodeId: string) => {
+      if (backupNodes.has(nodeId)) return;
+      const entry = graph.nodes.get(nodeId);
+      if (entry) {
+        backupNodes.set(nodeId, [...entry.edges]);
+      }
+    };
+
+    try {
+      // 1. Inject virtual start/end nodes
+      graph.nodes.set(START_VNODE_ID, { node: virtualStartNode, edges: [] });
+      graph.nodes.set(END_VNODE_ID, { node: virtualEndNode, edges: [] });
+
+      // 2. Add outgoing edges from virtual-start
+      const distToVs = haversineDistance(startProj.lat, startProj.lng, startVNode.lat, startVNode.lng);
+      const distToUs = haversineDistance(startProj.lat, startProj.lng, startUNode.lat, startUNode.lng);
+
+      // Edge UV_S (virtual-start -> V_s)
+      graph.nodes.get(START_VNODE_ID)!.edges.push({
+        target: startVId,
+        distance: distToVs,
+        name: startEdge.name,
+        speedLimit: startEdge.speedLimit,
+        tags: startEdge.tags,
+      });
+
+      // Edge VU_S (virtual-start -> U_s if bidirectional)
+      const startEdgeVU = graph.nodes.get(startVId)?.edges.find(e => e.target === startUId);
+      if (startEdgeVU) {
+        graph.nodes.get(START_VNODE_ID)!.edges.push({
+          target: startUId,
+          distance: distToUs,
+          name: startEdgeVU.name,
+          speedLimit: startEdgeVU.speedLimit,
+          tags: startEdgeVU.tags,
+        });
+      }
+
+      // 3. Add incoming edges to virtual-end
+      const distUToE = haversineDistance(endUNode.lat, endUNode.lng, endProj.lat, endProj.lng);
+      const distVToE = haversineDistance(endVNode.lat, endVNode.lng, endProj.lat, endProj.lng);
+
+      backupNodeEdges(endUId);
+      graph.nodes.get(endUId)!.edges.push({
+        target: END_VNODE_ID,
+        distance: distUToE,
+        name: endEdge.name,
+        speedLimit: endEdge.speedLimit,
+        tags: endEdge.tags,
+      });
+
+      const endEdgeVU = graph.nodes.get(endVId)?.edges.find(e => e.target === endUId);
+      if (endEdgeVU) {
+        backupNodeEdges(endVId);
+        graph.nodes.get(endVId)!.edges.push({
+          target: END_VNODE_ID,
+          distance: distVToE,
+          name: endEdgeVU.name,
+          speedLimit: endEdgeVU.speedLimit,
+          tags: endEdgeVU.tags,
+        });
+      }
+
+      // 4. Handle same-edge direct routing
+      const sameEdge = (startUId === endUId && startVId === endVId) || (startUId === endVId && startVId === endUId);
+      if (sameEdge) {
+        const ts = getProjectionT(start, startUNode, startVNode);
+        const te = getProjectionT(end, startUNode, startVNode);
+
+        if (ts <= te) {
+          graph.nodes.get(START_VNODE_ID)!.edges.push({
+            target: END_VNODE_ID,
+            distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
+            name: startEdge.name,
+            speedLimit: startEdge.speedLimit,
+            tags: startEdge.tags,
+          });
+        }
+
+        if (ts >= te && startEdgeVU) {
+          graph.nodes.get(START_VNODE_ID)!.edges.push({
+            target: END_VNODE_ID,
+            distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
+            name: startEdgeVU.name,
+            speedLimit: startEdgeVU.speedLimit,
+            tags: startEdgeVU.tags,
+          });
+        }
+      }
+
+      // 5. Setup Dijkstra data structures
+      const distances = new Map<string, number>();
+      const previous = new Map<string, string>();
+      const visited = new Set<string>();
+      const heap = new MinHeap<string>();
+
+      distances.set(START_VNODE_ID, 0);
+      heap.push(START_VNODE_ID, 0);
+
+      // Initialize all other node distances to Infinity
+      for (const nodeId of graph.nodes.keys()) {
+        if (nodeId !== START_VNODE_ID) {
+          distances.set(nodeId, Infinity);
+        }
+      }
+
+      let destReached = false;
+
+      // 6. Main Dijkstra search loop
+      while (!heap.isEmpty()) {
+        const currentId = heap.pop();
+        if (!currentId) break;
+
+        if (currentId === END_VNODE_ID) {
+          destReached = true;
+          break;
+        }
+
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+
+        const currentEntry = graph.nodes.get(currentId);
+        if (!currentEntry) continue;
+
+        const currentDist = distances.get(currentId) || 0;
+
+        for (const edge of currentEntry.edges) {
+          const neighborId = edge.target;
+          if (visited.has(neighborId)) continue;
+
+          // Calculate dynamic edge cost using injected cost function
+          let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
+
+          // Apply turn penalty (avoiding U-turns and sharp turns on routing)
+          const parentId = previous.get(currentId);
+          if (parentId) {
+            const parentEntry = graph.nodes.get(parentId);
+            const neighborEntry = graph.nodes.get(neighborId);
+            if (parentEntry && neighborEntry) {
+              const p = parentEntry.node;
+              const c = currentEntry.node;
+              const n = neighborEntry.node;
+
+              const cosLat = Math.cos(c.lat * Math.PI / 180);
+              const v1x = (c.lng - p.lng) * cosLat;
+              const v1y = c.lat - p.lat;
+              const v2x = (n.lng - c.lng) * cosLat;
+              const v2y = n.lat - c.lat;
+
+              const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+              const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+              if (len1 > 1e-7 && len2 > 1e-7) {
+                const dot = v1x * v2x + v1y * v2y;
+                const cosTheta = dot / (len1 * len2);
+
+                // U-turn or very sharp turn (angle > 135 deg)
+                if (cosTheta < -0.7) {
+                  edgeCost += 30; // 30s penalty
+                }
+                // Normal turn (angle between 45 and 135 deg)
+                else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
+                  edgeCost += 3; // 3s penalty
+                }
+              }
+            }
+          }
+
+          const altDist = currentDist + edgeCost;
+
+          if (altDist < (distances.get(neighborId) || Infinity)) {
+            distances.set(neighborId, altDist);
+            previous.set(neighborId, currentId);
+            heap.push(neighborId, altDist);
+          }
+        }
+      }
+
+      if (!destReached) {
+        console.warn('Destination node is unreachable from source node');
+        return null;
+      }
+
+      // 7. Reconstruct the path and calculate statistics
+      const pathNodeIds: string[] = [];
+      let current = END_VNODE_ID;
+      while (current) {
+        pathNodeIds.unshift(current);
+        current = previous.get(current) || '';
+      }
+
+      // Build statistics
+      const coordinates: Coordinate[] = [];
+      let totalDistanceMeters = 0;
+      let trafficSignalsCount = 0;
+      const streetsSet = new Set<string>();
+      const edgesDetails: NonNullable<RouteResult['edges']> = [];
+
+      for (let i = 0; i < pathNodeIds.length; i++) {
+        const nodeId = pathNodeIds[i];
+        const entry = graph.nodes.get(nodeId)!;
+        coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
+
+        // Count traffic signals (nodes with specific highway/crossing tags)
+        const tags = entry.node.tags || {};
+        if (
+          tags.highway === 'traffic_signals' ||
+          tags.crossing === 'traffic_signals' ||
+          tags.crossing === 'controlled'
+        ) {
+          trafficSignalsCount++;
+        }
+
+        // Add edge distance and street names
+        if (i < pathNodeIds.length - 1) {
+          const nextNodeId = pathNodeIds[i + 1];
+          const edge = entry.edges.find(e => e.target === nextNodeId);
+          if (edge) {
+            totalDistanceMeters += edge.distance;
+            if (edge.name) {
+              streetsSet.add(edge.name);
+            }
+            const edgeCost = costFn(nodeId, edge, nextNodeId, overrides, graph);
+
+            let turnPenalty = 0;
+            if (i > 0) {
+              const parentId = pathNodeIds[i - 1];
+              const parentEntry = graph.nodes.get(parentId);
+              const nextEntry = graph.nodes.get(nextNodeId);
+              if (parentEntry && nextEntry) {
+                const p = parentEntry.node;
+                const c = entry.node;
+                const n = nextEntry.node;
+
+                const cosLat = Math.cos(c.lat * Math.PI / 180);
+                const v1x = (c.lng - p.lng) * cosLat;
+                const v1y = c.lat - p.lat;
+                const v2x = (n.lng - c.lng) * cosLat;
+                const v2y = n.lat - c.lat;
+
+                const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+                const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+                if (len1 > 1e-7 && len2 > 1e-7) {
+                  const dot = v1x * v2x + v1y * v2y;
+                  const cosTheta = dot / (len1 * len2);
+                  if (cosTheta < -0.7) {
+                    turnPenalty = 30; // 30s U-turn penalty
+                  } else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
+                    turnPenalty = 3;  // 3s normal turn penalty
+                  }
+                }
+              }
+            }
+
+            edgesDetails.push({
+              sourceId: nodeId,
+              targetId: nextNodeId,
+              name: edge.name || 'Unnamed Street',
+              distance: edge.distance,
+              highway: edge.tags.highway || 'unknown',
+              tags: edge.tags,
+              cost: edgeCost + turnPenalty,
+            });
+          }
+        }
+      }
+
+      // Add start/end coordinates to the path with duplicate cleaning
+      const rawCoords: Coordinate[] = [start, ...coordinates, end];
+      const finalCoords: Coordinate[] = [];
+      for (const c of rawCoords) {
+        if (finalCoords.length === 0) {
+          finalCoords.push(c);
+        } else {
+          const last = finalCoords[finalCoords.length - 1];
+          const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
+          if (dist2 > 1e-14) {
+            finalCoords.push(c);
+          }
+        }
+      }
+
+      // Add out-of-network interpolation segments to stats
+      const startInterpDist = haversineDistance(start.lat, start.lng, startProj.lat, startProj.lng);
+      const endInterpDist = haversineDistance(end.lat, end.lng, endProj.lat, endProj.lng);
+
+      totalDistanceMeters += startInterpDist + endInterpDist;
+
+      const startInterpDuration = startInterpDist / 1.5;
+      const endInterpDuration = endInterpDist / 1.5;
+      const totalDurationSeconds = (distances.get(END_VNODE_ID) || 0) + startInterpDuration + endInterpDuration;
+
+      return {
+        pathNodeIds,
+        coordinates: finalCoords,
+        totalDurationSeconds,
+        totalDistanceMeters,
+        streets: Array.from(streetsSet),
+        trafficSignalsCount,
+        edges: edgesDetails,
+      };
+
+    } finally {
+      // 8. Restore the graph to pristine state
+      for (const [nodeId, originalEdges] of backupNodes.entries()) {
+        const entry = graph.nodes.get(nodeId);
+        if (entry) {
+          entry.edges = originalEdges;
+        }
+      }
+      graph.nodes.delete(START_VNODE_ID);
+      graph.nodes.delete(END_VNODE_ID);
+    }
+  }
+
+  private findRouteNodeFallback(
     graph: StreetGraph,
     start: Coordinate,
     end: Coordinate,
@@ -357,12 +780,12 @@ export class DijkstraRouter implements IRouter {
     return {
       pathNodeIds,
       coordinates: finalCoords,
-      // Total duration represents the shortest cost found by Dijkstra (in seconds)
       totalDurationSeconds: distances.get(endNodeId) || 0,
       totalDistanceMeters,
       streets: Array.from(streetsSet),
       trafficSignalsCount,
-      edges: edgesDetails,
     };
   }
 }
+
+
