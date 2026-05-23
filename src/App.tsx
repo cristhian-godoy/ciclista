@@ -47,9 +47,16 @@ export default function App() {
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
   const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
   const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
-  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(
-    () => storage.loadRulesConfig() ?? DEFAULT_RULES_CONFIG
-  );
+  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(() => {
+    const saved = storage.loadRulesConfig();
+    if (!saved) return DEFAULT_RULES_CONFIG;
+    // Merge with defaults to gracefully handle schema migrations (new fields).
+    return {
+      ...DEFAULT_RULES_CONFIG,
+      ...saved,
+      nodeDelays: { ...DEFAULT_RULES_CONFIG.nodeDelays, ...(saved.nodeDelays ?? {}) },
+    };
+  });
   const [bikeProfile, setBikeProfile] = useState<BikeProfile>('normal');
 
   // 3. Load settings from storage on startup
