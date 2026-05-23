@@ -83,6 +83,15 @@ describe('mapOSMToSignAndRoad', () => {
     expect(r.bicycleFrei).toBe(true);
   });
 
+  it('maps footway with both bicycle and foot designated to VZ_240/VZ_241', () => {
+    const shared = mapOSMToSignAndRoad('footway', { bicycle: 'designated', foot: 'designated' });
+    expect(shared.sign).toBe(GermanSign.VZ_240);
+
+    const segregated = mapOSMToSignAndRoad('footway', { bicycle: 'designated', foot: 'designated', segregated: 'yes' });
+    expect(segregated.sign).toBe(GermanSign.VZ_241);
+  });
+
+
   // ── Road classifications ──────────────────────────────────────────────────
   it('maps primary to RoadType.PRIMARY with no sign', () => {
     const r = mapOSMToSignAndRoad('primary', {});
