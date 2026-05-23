@@ -80,13 +80,13 @@ function resolveSpeedAndPenalty(
   let flatPenalty: number;
 
   if (rules) {
-    if (sign && rules.signs[sign]) {
+    if (sign && rules.signs && rules.signs[sign]) {
       const cfg = rules.signs[sign];
       const speedKmh = resolveRuleSpeed(cfg, profile);
       speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
       return { speed, flatPenalty, bicycleFrei };
-    } else if (rules.roads[road]) {
+    } else if (rules.roads && rules.roads[road]) {
       const cfg = rules.roads[road];
       const speedKmh = resolveRuleSpeed(cfg, profile);
       speed = kmhToMs(speedKmh);
@@ -249,9 +249,9 @@ export const avoidBusyRoadsCost: CostFunction = (
   const rules = overrides.rulesConfig;
   if (rules) {
     const { sign, road } = mapOSMToSignAndRoad(highway, edge.tags);
-    if (sign && rules.signs[sign]) {
+    if (sign && rules.signs && rules.signs[sign]) {
       comfort = rules.signs[sign].comfort || 'neutral';
-    } else if (rules.roads[road]) {
+    } else if (rules.roads && rules.roads[road]) {
       comfort = rules.roads[road].comfort || 'neutral';
     }
   } else {
