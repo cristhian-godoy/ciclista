@@ -1,98 +1,78 @@
-# German Traffic Signs & Rules Integration
+# German Traffic Signs & Rules - Incremental Roadmap
 
-Align the route planner costing algorithm with German traffic signs and rules (e.g., pedestrian zones, shared sidewalks, living streets, bicycle streets). Introduce a transparent mapping layer between raw OpenStreetMap (OSM) tags and German road signs, along with a configuration interface in the UI.
-
-## User Review Required
-
-> [!IMPORTANT]
-> **Configurable Rules & Defaults**:
-> We propose mapping OSM segments to specific German traffic signs and allowing the user to customize the speeds and penalties for each sign in a new settings panel. 
-> Here are the proposed signs and their default configurations:
-> - **Sign 242.1 (Pedestrian Zone)**:
->   - *No supplementary sign*: Dismount required. Speed: `4 km/h`. Penalty: `120s`.
->   - *With "Fahrräder frei"*: Allowed to ride. Speed: `8 km/h` (Schrittgeschwindigkeit). Penalty: `30s`.
-> - **Sign 239 (Sidewalk/Gehweg)**:
->   - *No supplementary sign*: Dismount required. Speed: `4 km/h`. Penalty: `120s`.
->   - *With "Fahrräder frei"*: Allowed to ride. Speed: `8 km/h`. Penalty: `20s`.
-> - **Sign 240 (Shared Pedestrian & Cycle Path)**:
->   - Allowed to ride. Speed: `14 km/h`. Penalty: `5s` (due to potential yield conflicts).
-> - **Sign 241 (Segregated Pedestrian & Cycle Path)**:
->   - Allowed to ride. Speed: `18 km/h`. Penalty: `0s`.
-> - **Sign 325.1 (Living Street / Verkehrsberuhigter Bereich)**:
->   - Allowed to ride. Speed: `10 km/h` (Schrittgeschwindigkeit). Penalty: `5s`.
-> - **Sign 244.1 (Bicycle Street / Fahrradstraße)**:
->   - Bicycles have priority. Speed: `22 km/h`. Penalty: `-10s` (bonus to prefer bicycle streets).
-
-Please review the proposed sign rules and speed values. Let us know if we should adjust these defaults or include other traffic rules.
+This plan breaks down the integration of German road rules, signs, and classifications into small, testable, and reversible bites. We implement the UI configuration panel first, followed by the local state management and persistence, then the mapping layer, and finally the routing cost engine integration.
 
 ---
 
 ## Proposed Changes
 
-### Logic & Routing (`src/core/`)
+### Phase 1: UI & Configuration State (Small Bites)
 
-#### [NEW] [rules.ts](file:///home/cgodoy/work/ciclista/src/core/router/rules.ts)
-Create a rules representation system.
-- Define a `GermanSign` enum representing the traffic signs.
-- Define `SignConfiguration` type:
-  ```typescript
-  export interface SignConfiguration {
-    signId: string;
-    name: string;
-    description: string;
-    iconCode: string; // e.g. "Vz242.1"
-    dismountRequired: boolean;
-    baseSpeedKmh: number;
-    flatPenaltySeconds: number;
-  }
-  ```
-- Implement `mapOSMToSign(highway: string, tags: Record<string, string>): { sign: GermanSign; hasFahrraederFrei: boolean }` function.
-  - Check `highway === 'pedestrian'` -> `Sign 242.1`. If `bicycle === 'yes' | 'designated'`, set `hasFahrraederFrei = true`.
-  - Check `highway === 'footway'` and `footway === 'sidewalk'` -> `Sign 239`.
-  - Check `highway === 'path'` or `highway === 'cycleway'`:
-    - If `segregated === 'yes'` -> `Sign 241`.
-    - If `segregated === 'no'` -> `Sign 240`.
-  - Check `highway === 'living_street'` -> `Sign 325.1`.
-  - Check `bicycle_road === 'yes'` or `highway === 'bicycle_road'` -> `Sign 244.1`.
-- Implement a parser that calculates speed and penalty dynamically using user configurations.
+#### Bite 1.1: Core Types definition in [types.ts](file:///home/cgodoy/work/ciclista/src/core/types.ts)
+Define the configurations for traffic signs and road classifications:
+- Define `GermanSign` enum representing signs: Vz 242.1 (Pedestrian Zone), Vz 239 (Sidewalk), Vz 240 (Shared Path), Vz 241 (Segregated Path), Vz 325.1 (Living Street), Vz 244.1 (Bicycle Street).
+- Define `RoadType` enum representing classifications: Primary, Secondary, Residential, Service, Path (Default).
+- Define `SignRuleConfig` and `RoadRuleConfig` structures (speed limit km/h, flat penalty seconds, and dismount required).
+- Define the global `RulesConfiguration` structure.
 
-#### [MODIFY] [cost.ts](file:///home/cgodoy/work/ciclista/src/core/router/cost.ts)
-Refactor the speed and penalty calculation to use the rules engine:
-- Read active rule configurations from user overrides (saved in state/storage).
-- Replace hardcoded sidewalk and service road penalties with rule-based evaluations.
-- Add explanation metadata to `edges` details so the UI can display which traffic sign applied to each segment.
+#### Bite 1.2: Settings Panel UI [RulesConfigPanel.tsx](file:///home/cgodoy/work/ciclista/src/components/RulesConfigPanel.tsx) [NEW]
+Create a custom React settings component:
+- Render input ranges (sliders) for base speeds and flat penalties.
+- Add checkbox toggles for dismount requirements.
+- Divide configurations into two clean collapsible sections: "German Traffic Signs" and "Road Classifications".
 
-#### [MODIFY] [types.ts](file:///home/cgodoy/work/ciclista/src/core/types.ts)
-Extend configuration types and structures:
-- Add rules configuration object to `LocalOverrides`.
-- Add traffic sign name and rules metadata to edge debug output.
+#### Bite 1.3: Sidebar & Main App Integration
+- Add collapsible container for the rules configuration inside [Sidebar.tsx](file:///home/cgodoy/work/ciclista/src/components/Sidebar.tsx).
+- Manage the configuration state using standard React `useState` in [App.tsx](file:///home/cgodoy/work/ciclista/src/App.tsx) and pass state and updates down.
+
+#### Bite 1.4: Persistence in Storage [storage.ts](file:///home/cgodoy/work/ciclista/src/core/storage/storage.ts)
+- Extend `LocalStorageProvider` to save and load `RulesConfiguration` state from browser localStorage.
 
 ---
 
-### UI & Configuration (`src/components/`)
+### Phase 2: Rules Mapping Engine (Small Bites)
 
-#### [NEW] [RulesConfigPanel.tsx](file:///home/cgodoy/work/ciclista/src/components/RulesConfigPanel.tsx)
-Create a new settings card/drawer in the sidebar:
-- Lists all mapped German traffic signs with their icons.
-- Provides numeric sliders to tweak the `baseSpeedKmh` and `flatPenaltySeconds`.
-- Toggle switch for `dismountRequired`.
-- Changes instantly trigger path recalculation.
+#### Bite 2.1: Mapping logic in [rules.ts](file:///home/cgodoy/work/ciclista/src/core/router/rules.ts) [NEW]
+Implement the tag parser matching OSM attributes to signs or road types:
+- Implement `mapOSMToSignAndRoad(highway: string, tags: Record<string, string>)`.
+- Detect "Fahrräder frei" supplementary signs based on `bicycle=yes` or `bicycle=designated` tags on footways/pedestrian segments.
 
-#### [MODIFY] [Sidebar.tsx](file:///home/cgodoy/work/ciclista/src/components/Sidebar.tsx)
-- Integrate the `RulesConfigPanel` under a new collapsible "German Road Rules & Signs" section.
-- Display sign configurations in the "Debug Route Edges" item details so the user sees exactly why a segment was slow.
+#### Bite 2.2: Unit tests in `src/core/router/rules.test.ts` [NEW]
+- Create unit tests verifying various OSM way tag combinations map to the correct German traffic sign or road classification.
+
+---
+
+### Phase 3: Cost Engine Integration (Small Bites)
+
+#### Bite 3.1: Pass configuration to Routing Engine
+- Update `CostFunction` signature to accept `rulesConfig: RulesConfiguration`.
+- Adjust Dijkstra router's call references to pass the configuration during route traversal.
+
+#### Bite 3.2: Refactor Costing Calculation in [cost.ts](file:///home/cgodoy/work/ciclista/src/core/router/cost.ts)
+- Replace hardcoded speed estimation (`getBaseSpeed`) and flat penalties in `standardCost` with calculations resolved dynamically through the mapped `GermanSign` or `RoadType` configurations.
+- Include supplementary sign multipliers (e.g. Schrittgeschwindigkeit speed caps).
+
+#### Bite 3.3: Refactor alternate routing cost functions
+- Update `avoidStoppingCost` and `avoidBusyRoadsCost` strategies to integrate dynamically with the rules configuration.
+
+---
+
+### Phase 4: Debug Visibility & Verification (Small Bites)
+
+#### Bite 4.1: Edge Details Debug View
+- Extend the route result data structure to store matched signs/rules per traversed edge.
+- Display the matched German road sign code (e.g. "[Vz 242.1]") or road type in the "Debug Route Edges" list item view in [Sidebar.tsx](file:///home/cgodoy/work/ciclista/src/components/Sidebar.tsx).
+
+#### Bite 4.2: End-to-End manual testing
+- Tweak rules settings (e.g., set Pedestrian Zone flat penalty to `500s`) and verify that routing updates dynamically and recalculates in < 15ms.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-We will add unit tests under `src/core/router/rules.test.ts` to verify:
-- Tag combinations map to the correct traffic sign.
-- Speed and penalty calculations correctly respect supplementary signs (like "Fahrräder frei").
+- Run `npm run lint` and `npm run build` to verify compile clean state.
+- Add and run vitest unit tests for the mapping rules.
 
 ### Manual Verification
-- Compile the app using `pnpm run build`.
-- Load Munich city center preset.
-- Place start and end pins such that a pedestrian zone lies between them.
-- Toggle "Fahrräder frei" values or change speed configurations in the UI settings and verify the route shifts onto cycleways or around pedestrian zones dynamically.
+- Render the local server, verify that the configuration panel is fully interactive, values persist on reload, and map pathing updates dynamically upon slider adjustments.
