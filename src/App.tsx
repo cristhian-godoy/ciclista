@@ -349,7 +349,6 @@ export default function App() {
         loadedBBoxes={loadedBBoxes}
         startCoord={startCoord}
         endCoord={endCoord}
-        routeResult={routeResult}
         routeAlternatives={routeAlternatives}
         activeAlternativeLabel={routingStrategy}
         onSelectAlternative={setRoutingStrategy}
