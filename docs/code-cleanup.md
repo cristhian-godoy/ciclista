@@ -27,9 +27,9 @@ _Goal: Prevent `types.ts` from becoming a monolithic bottleneck by co-locating t
 
 _Goal: Break down the largest React components to follow the Single Responsibility Principle._
 
-- [ ] Analyze `src/App.tsx` and extract layout/scaffolding into smaller wrapper components if necessary.
-- [ ] Break down `src/components/RulesConfigPanel.tsx` into smaller chunks (e.g., individual rule toggle components, slider sections).
-- [ ] Break down `src/components/Sidebar.tsx` by extracting the routing input fields and the stats panel into separate files.
+- [x] Analyze `src/App.tsx` and extract layout/scaffolding into smaller wrapper components if necessary.
+- [x] Break down `src/components/RulesConfigPanel.tsx` into smaller chunks (e.g., individual rule toggle components, slider sections).
+- [x] Break down `src/components/Sidebar.tsx` by extracting the routing input fields and the stats panel into separate files.
 
 ## Phase 4: UI Component De-structuring (Part 2 - MapView)
 
