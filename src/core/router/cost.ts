@@ -1,5 +1,5 @@
 import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig } from '../types';
-import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
+import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -103,8 +103,7 @@ function resolveSpeedAndPenalty(
     }
   } else {
     // ── Hardcoded fallback ───────────────────────────────────────────────────
-    const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
-    if (cycleway) {
+    if (hasCycleway(edge.tags)) {
       speed = 5.5;
     } else if (highway === 'cycleway') {
       speed = 6.0;
@@ -248,13 +247,13 @@ export const avoidBusyRoadsCost: CostFunction = (
 ): number => {
   const baseCost = standardCost(sourceId, edge, targetId, overrides, graph);
   const highway = edge.tags.highway || '';
-  const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
+  const isCycleway = hasCycleway(edge.tags);
 
   let multiplier = 1.0;
   if (['primary', 'primary_link'].includes(highway)) {
-    multiplier = cycleway ? 1.5 : 3.0;
+    multiplier = isCycleway ? 1.5 : 3.0;
   } else if (['secondary', 'secondary_link'].includes(highway)) {
-    multiplier = cycleway ? 1.2 : 2.0;
+    multiplier = isCycleway ? 1.2 : 2.0;
   } else if (highway === 'cycleway') {
     multiplier = 0.8;
   }

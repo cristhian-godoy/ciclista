@@ -1,6 +1,6 @@
 import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
 import { haversineDistance } from '../graph/parser';
-import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
+import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 import { calculateDisplayCost } from './cost';
 
 /**
@@ -39,12 +39,12 @@ export function getRoadTypeCategory(
   highway: string,
   tags: Record<string, string>
 ): 'cycleway' | 'residential' | 'primary' | 'other' {
-  const hasCyclewayTag = tags.cycleway || tags['cycleway:left'] || tags['cycleway:right'] || tags['cycleway:both'];
+  const hasCyclewayTag = hasCycleway(tags);
   const hasBicycleDesignated = tags.bicycle === 'designated' || tags.bicycle === 'yes';
 
   if (
     highway === 'cycleway' ||
-    !!hasCyclewayTag ||
+    hasCyclewayTag ||
     hasBicycleDesignated ||
     tags.bicycle_road === 'yes' ||
     tags.cyclestreet === 'yes'
