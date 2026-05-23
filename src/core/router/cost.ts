@@ -85,13 +85,13 @@ export function getDefaultNodeDelay(tags: Record<string, string>): number {
     return 15; // default traffic light wait
   }
   if (tags.highway === 'give_way') {
-    return 5;  // default yield delay
+    return 3;  // default yield delay
   }
   if (tags.highway === 'stop') {
     return 8;  // default stop delay
   }
   if (tags.highway === 'crossing' || tags.crossing === 'uncontrolled') {
-    return 5;  // default pedestrian crossing delay
+    return 3;  // default pedestrian crossing delay
   }
   return 0;
 }

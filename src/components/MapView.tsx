@@ -130,13 +130,13 @@ export const MapView: React.FC<MapViewProps> = ({
       return 15;
     }
     if (tags.highway === 'give_way') {
-      return 5;
+      return 3;
     }
     if (tags.highway === 'stop') {
       return 8;
     }
     if (tags.highway === 'crossing' || tags.crossing) {
-      return 5;
+      return 3;
     }
     return 0;
   };
@@ -176,7 +176,7 @@ export const MapView: React.FC<MapViewProps> = ({
       case 'yield':
         return [
           { label: 'Clear', value: 0 },
-          { label: 'Standard (5s)', value: 5 },
+          { label: 'Standard (3s)', value: 3 },
           { label: 'Heavy (15s)', value: 15 },
         ];
       case 'stop':
@@ -188,7 +188,7 @@ export const MapView: React.FC<MapViewProps> = ({
       case 'crossing':
         return [
           { label: 'Clear', value: 0 },
-          { label: 'Standard (5s)', value: 5 },
+          { label: 'Standard (3s)', value: 3 },
           { label: 'Busy (15s)', value: 15 },
         ];
     }
@@ -650,9 +650,33 @@ export const MapView: React.FC<MapViewProps> = ({
             'interpolate',
             ['linear'],
             ['zoom'],
-            12, 3,
-            14, 8,
-            17, 16
+            12, [
+              'match',
+              ['get', 'controlType'],
+              'signal', 3,
+              'stop', 3,
+              'yield', 1.8,
+              'crossing', 1.8,
+              3
+            ],
+            14, [
+              'match',
+              ['get', 'controlType'],
+              'signal', 8,
+              'stop', 8,
+              'yield', 5,
+              'crossing', 5,
+              8
+            ],
+            17, [
+              'match',
+              ['get', 'controlType'],
+              'signal', 16,
+              'stop', 16,
+              'yield', 10,
+              'crossing', 10,
+              16
+            ]
           ],
           'circle-stroke-color': [
             'case',
@@ -693,7 +717,15 @@ export const MapView: React.FC<MapViewProps> = ({
           'circle-radius': [
             'case',
             ['has', 'customDelay'], 8,
-            6
+            [
+              'match',
+              ['get', 'controlType'],
+              'signal', 6,
+              'stop', 6,
+              'yield', 4,
+              'crossing', 4,
+              6
+            ]
           ],
           'circle-color': [
             'case',
