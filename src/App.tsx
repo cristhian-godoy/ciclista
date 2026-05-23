@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration, BikeProfile } from './core/types';
+import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration, BikeProfile, RouteAlternative } from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
@@ -302,25 +302,30 @@ export default function App() {
   }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeProfile]);
 
   // 6. Reactive Routing Calculation (Derived State)
-  const routeResult = useMemo(() => {
-    if (!graph || !startCoord || !endCoord) return null;
+  const routeAlternatives = useMemo<RouteAlternative[]>(() => {
+    if (!graph || !startCoord || !endCoord) return [];
 
-    // Pick active cost function based on strategy selected
-    let costFn = standardCost;
-    if (routingStrategy === 'avoid-stops') {
-      costFn = avoidStoppingCost;
-    } else if (routingStrategy === 'quiet-streets') {
-      costFn = avoidBusyRoadsCost;
+    const standardResult = router.findRoute(graph, startCoord, endCoord, standardCost, currentOverrides);
+    const avoidStopsResult = router.findRoute(graph, startCoord, endCoord, avoidStoppingCost, currentOverrides);
+    const quietResult = router.findRoute(graph, startCoord, endCoord, avoidBusyRoadsCost, currentOverrides);
+
+    const alts: RouteAlternative[] = [];
+    if (standardResult) {
+      alts.push({ label: 'standard', result: standardResult });
     }
+    if (avoidStopsResult) {
+      alts.push({ label: 'avoid-stops', result: avoidStopsResult });
+    }
+    if (quietResult) {
+      alts.push({ label: 'quiet-streets', result: quietResult });
+    }
+    return alts;
+  }, [graph, startCoord, endCoord, currentOverrides]);
 
-    return router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      costFn,
-      currentOverrides
-    );
-  }, [graph, startCoord, endCoord, routingStrategy, currentOverrides]);
+  const routeResult = useMemo(() => {
+    const active = routeAlternatives.find(alt => alt.label === routingStrategy);
+    return active ? active.result : null;
+  }, [routeAlternatives, routingStrategy]);
 
   return (
     <div className="app-container">
