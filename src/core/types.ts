@@ -133,6 +133,8 @@ export interface RouteResult {
   signalCount: number;
   /** Total number of pedestrian crossings encountered */
   crossingCount: number;
+  /** Distance in meters broken down by road type category */
+  roadTypeTotals: Record<string, number>;
   /** Detailed list of edges traversed in the route for debugging and inspection */
   edges?: {
     sourceId: string;
