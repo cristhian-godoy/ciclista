@@ -10,3 +10,7 @@
 
 2. **Tree Command Safety**:
    - **Never** run the `tree` shell command without the `--gitignore` option. Running `tree` without it can dump massive, irrelevant folders (e.g., `node_modules`, build artifacts) and pollute/overload the agent's context.
+
+3. **Empty Context Discovery**:
+   - When the conversation context is empty, truncated, or upon resuming a session, run the `tree --info --gitignore` command immediately to gain context and quickly understand the repository's files, directory structure, and layout.
+
