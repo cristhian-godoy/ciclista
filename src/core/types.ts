@@ -229,10 +229,25 @@ export interface RoadRuleConfig {
 }
 
 /**
+ * Configurable delay (in seconds) applied when passing through each type of
+ * intersection control point.
+ */
+export interface NodeDelayConfig {
+  /** Delay at a traffic light (signal). Default: 15 s */
+  signalSeconds: number;
+  /** Delay at a yield sign. Default: 3 s */
+  yieldSeconds: number;
+  /** Delay at a stop sign. Default: 8 s */
+  stopSeconds: number;
+  /** Delay at a pedestrian crossing. Default: 3 s */
+  crossingSeconds: number;
+}
+
+/**
  * Configuration schema for the German Road Rules settings.
  */
 export interface RulesConfiguration {
   signs: Record<GermanSign, SignRuleConfig>;
   roads: Record<RoadType, RoadRuleConfig>;
+  nodeDelays: NodeDelayConfig;
 }
-

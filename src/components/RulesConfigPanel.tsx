@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
-import type { RulesConfiguration, SignRuleConfig, RoadRuleConfig } from '../core/types';
+import type { RulesConfiguration, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../core/types';
 import { GermanSign, RoadType } from '../core/types';
 
 // ─── Default rule configurations ────────────────────────────────────────────
@@ -106,9 +106,52 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       flatPenaltySeconds: 0,
     },
   },
+  nodeDelays: {
+    signalSeconds: 15,
+    yieldSeconds: 3,
+    stopSeconds: 8,
+    crossingSeconds: 3,
+  },
 };
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface IntersectionDelaySectionProps {
+  config: NodeDelayConfig;
+  onChange: (updated: NodeDelayConfig) => void;
+}
+
+const DELAY_FIELDS: { key: keyof NodeDelayConfig; label: string; icon: string; max: number }[] = [
+  { key: 'signalSeconds',   label: 'Traffic Light',        icon: '🚦', max: 120 },
+  { key: 'yieldSeconds',    label: 'Yield Sign',           icon: '⚠️', max: 60  },
+  { key: 'stopSeconds',     label: 'Stop Sign',            icon: '🛑', max: 60  },
+  { key: 'crossingSeconds', label: 'Pedestrian Crossing',  icon: '🚶', max: 60  },
+];
+
+const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({ config, onChange }) => (
+  <div className="rules-list">
+    {DELAY_FIELDS.map(({ key, label, icon, max }) => (
+      <div key={key} className="rules-row">
+        <div className="rules-row-header">
+          <span className="rules-row-name">{icon} {label}</span>
+          <span className="rules-row-meta">{config[key]}s delay</span>
+        </div>
+        <div className="rules-controls">
+          <label className="rules-label">Wait time (seconds)</label>
+          <input
+            type="range"
+            min={0}
+            max={max}
+            step={1}
+            value={config[key]}
+            onChange={e => onChange({ ...config, [key]: Number(e.target.value) })}
+            className="rules-slider"
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 interface SignRowProps {
   config: SignRuleConfig;
@@ -301,6 +344,7 @@ interface RulesConfigPanelProps {
 export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onChange }) => {
   const [signsOpen, setSignsOpen] = useState(false);
   const [roadsOpen, setRoadsOpen] = useState(false);
+  const [intersectionsOpen, setIntersectionsOpen] = useState(false);
 
   const updateSign = (signId: GermanSign, updated: SignRuleConfig) => {
     onChange({
@@ -314,6 +358,10 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
       ...config,
       roads: { ...config.roads, [roadId]: updated },
     });
+  };
+
+  const updateNodeDelays = (updated: NodeDelayConfig) => {
+    onChange({ ...config, nodeDelays: updated });
   };
 
   const handleReset = (e: React.MouseEvent) => {
@@ -382,6 +430,24 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
               />
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Intersection delays sub-section */}
+      <div className="rules-section">
+        <button
+          className="rules-section-toggle"
+          onClick={() => setIntersectionsOpen(v => !v)}
+          aria-expanded={intersectionsOpen}
+        >
+          <span>⏱️ Intersections</span>
+          {intersectionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
+        {intersectionsOpen && (
+          <IntersectionDelaySection
+            config={config.nodeDelays}
+            onChange={updateNodeDelays}
+          />
         )}
       </div>
     </section>

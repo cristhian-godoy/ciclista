@@ -1,4 +1,4 @@
-import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig } from '../types';
+import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from '../types';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
@@ -130,20 +130,19 @@ function resolveSpeedAndPenalty(
 /**
  * Resolves the default wait penalty (in seconds) for a control point node.
  */
-export function getDefaultNodeDelay(tags: Record<string, string>): number {
+/**
+ * Returns the default wait penalty (seconds) for a node, based on its OSM control type.
+ * Respects configured delays from rulesConfig when provided.
+ */
+export function getDefaultNodeDelay(
+  tags: Record<string, string>,
+  cfg?: NodeDelayConfig
+): number {
   const controlType = mapOSMNodeToControl(tags);
-  if (controlType === 'signal') {
-    return 15; // default traffic light wait
-  }
-  if (controlType === 'yield') {
-    return 3;  // default yield delay
-  }
-  if (controlType === 'stop') {
-    return 8;  // default stop delay
-  }
-  if (controlType === 'crossing') {
-    return 3;  // default pedestrian crossing delay
-  }
+  if (controlType === 'signal')   return cfg?.signalSeconds   ?? 15;
+  if (controlType === 'yield')    return cfg?.yieldSeconds    ?? 3;
+  if (controlType === 'stop')     return cfg?.stopSeconds     ?? 8;
+  if (controlType === 'crossing') return cfg?.crossingSeconds ?? 3;
   return 0;
 }
 
@@ -189,7 +188,7 @@ export const standardCost: CostFunction = (
   } else {
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
-    cost += getDefaultNodeDelay(tags);
+    cost += getDefaultNodeDelay(tags, overrides.rulesConfig?.nodeDelays);
   }
 
   return cost;
@@ -222,7 +221,7 @@ export const avoidStoppingCost: CostFunction = (
   } else {
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
-    const defaultDelay = getDefaultNodeDelay(tags);
+    const defaultDelay = getDefaultNodeDelay(tags, overrides.rulesConfig?.nodeDelays);
     if (defaultDelay > 0) {
       // Scale standard delay and add heavy stop avoidance penalty (45s base for signals/stops, 25s for yields/crossings)
       const controlType = mapOSMNodeToControl(tags);
@@ -284,7 +283,7 @@ export function calculateDisplayCost(
   } else {
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
-    cost += getDefaultNodeDelay(tags);
+    cost += getDefaultNodeDelay(tags, overrides.rulesConfig?.nodeDelays);
   }
 
   return cost;
