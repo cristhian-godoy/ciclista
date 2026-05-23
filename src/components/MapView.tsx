@@ -59,6 +59,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const shouldFitBoundsRef = useRef<boolean>(true);
 
   // Keep callback handlers in refs to prevent stale closures in map listeners
   const onStartDragRef = useRef(onStartDrag);
@@ -445,29 +446,6 @@ export const MapView: React.FC<MapViewProps> = ({
         data: { type: 'FeatureCollection', features: [] },
       });
 
-      // Layer: Translucent fill for the loaded bounding box
-      map.addLayer({
-        id: 'loaded-bbox-fill-layer',
-        type: 'fill',
-        source: 'loaded-bbox',
-        paint: {
-          'fill-color': '#6366f1',
-          'fill-opacity': 0.03,
-        },
-      });
-
-      // Layer: Dashed outline border for the loaded bounding box
-      map.addLayer({
-        id: 'loaded-bbox-border-layer',
-        type: 'line',
-        source: 'loaded-bbox',
-        paint: {
-          'line-color': '#6366f1',
-          'line-opacity': 0.35,
-          'line-width': 2,
-          'line-dasharray': [4, 4],
-        },
-      });
 
       // Layer: All parsed network streets (cool techy overlay)
       map.addLayer({
@@ -678,13 +656,25 @@ export const MapView: React.FC<MapViewProps> = ({
   // 2. Track changes to Start and End coordinates from Sidebar Inputs
   useEffect(() => {
     if (startMarkerRef.current) {
+      const currentMarkerLngLat = startMarkerRef.current.getLngLat();
+      const diffLat = Math.abs(startCoord.lat - currentMarkerLngLat.lat);
+      const diffLng = Math.abs(startCoord.lng - currentMarkerLngLat.lng);
       startMarkerRef.current.setLngLat([startCoord.lng, startCoord.lat]);
+      if (diffLat > 0.0001 || diffLng > 0.0001) {
+        shouldFitBoundsRef.current = true;
+      }
     }
   }, [startCoord]);
 
   useEffect(() => {
     if (endMarkerRef.current) {
+      const currentMarkerLngLat = endMarkerRef.current.getLngLat();
+      const diffLat = Math.abs(endCoord.lat - currentMarkerLngLat.lat);
+      const diffLng = Math.abs(endCoord.lng - currentMarkerLngLat.lng);
       endMarkerRef.current.setLngLat([endCoord.lng, endCoord.lat]);
+      if (diffLat > 0.0001 || diffLng > 0.0001) {
+        shouldFitBoundsRef.current = true;
+      }
     }
   }, [endCoord]);
 
@@ -718,7 +708,7 @@ export const MapView: React.FC<MapViewProps> = ({
       });
 
       // Fit map bounds to show full route path smoothly
-      if (coords.length > 1) {
+      if (shouldFitBoundsRef.current && coords.length > 1) {
         const bounds = coords.reduce(
           (acc, val) => acc.extend(val as [number, number]),
           new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number])
@@ -733,6 +723,7 @@ export const MapView: React.FC<MapViewProps> = ({
             }
           : 50;
         map.fitBounds(bounds, { padding, maxZoom: 16 });
+        shouldFitBoundsRef.current = false; // Reset so that subsequent panned fetches don't trigger refit
       }
     } else {
       routeSource.setData({
