@@ -1,12 +1,12 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite A.3 — Separate Routing Weight from Display Cost
+## Current Focus: Bite B.1 — Centralize Node Control Classifier
 
 ## Phase A: Time Calibration
-- [ ] **Bite A.3: Separate routing weight from display cost**
-  - [ ] Update `src/core/types.ts` to include a way to extract/return `displayCost` (travel time prediction) separately from the routing weight.
-  - [ ] Implement `displayCost` calculation (pure time = distance / speed + actual wait delays) in `src/core/router/cost.ts`.
-  - [ ] Update Dijkstra search in `src/core/router/router.ts` to track and return the total accumulated `displayCost` (travel time in seconds) on the resulting path, while still using the preference-weighted `routingCost` for pathfinding.
+- [x] **Bite A.3: Separate routing weight from display cost**
+  - [x] Update `src/core/types.ts` to include a way to extract/return `displayCost` (travel time prediction) separately from the routing weight.
+  - [x] Implement `displayCost` calculation (pure time = distance / speed + actual wait delays) in `src/core/router/cost.ts`.
+  - [x] Update Dijkstra search in `src/core/router/router.ts` to track and return the total accumulated `displayCost` (travel time in seconds) on the resulting path, while still using the preference-weighted `routingCost` for pathfinding.
 
 ## Phase B: Yield / Crossing Detection
 - [ ] **Bite B.1: Centralize node control classifier**
