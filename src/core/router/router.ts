@@ -1,6 +1,7 @@
 import type { IRouter, StreetGraph, Coordinate, CostFunction, LocalOverrides, RouteResult, GraphEdge, GraphNode } from '../types';
 import { haversineDistance } from '../graph/parser';
 import { mapOSMToSignAndRoad } from './rules';
+import { calculateDisplayCost } from './cost';
 
 /**
  * Snaps a raw lat/lng coordinate to the nearest topological node in the graph.
@@ -421,6 +422,8 @@ export class DijkstraRouter implements IRouter {
       const streetsSet = new Set<string>();
       const edgesDetails: NonNullable<RouteResult['edges']> = [];
 
+      let totalDisplayCost = 0;
+
       for (let i = 0; i < pathNodeIds.length; i++) {
         const nodeId = pathNodeIds[i];
         const entry = graph.nodes.get(nodeId)!;
@@ -445,7 +448,7 @@ export class DijkstraRouter implements IRouter {
             if (edge.name) {
               streetsSet.add(edge.name);
             }
-            const edgeCost = costFn(nodeId, edge, nextNodeId, overrides, graph);
+            const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
 
             let turnPenalty = 0;
             if (i > 0) {
@@ -478,6 +481,8 @@ export class DijkstraRouter implements IRouter {
               }
             }
 
+            totalDisplayCost += displayCost + turnPenalty;
+
             const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
             edgesDetails.push({
               sourceId: nodeId,
@@ -486,7 +491,7 @@ export class DijkstraRouter implements IRouter {
               distance: edge.distance,
               highway: edge.tags.highway || 'unknown',
               tags: edge.tags,
-              cost: edgeCost + turnPenalty,
+              cost: displayCost + turnPenalty,
               matchedSign,
               matchedRoad,
             });
@@ -517,7 +522,7 @@ export class DijkstraRouter implements IRouter {
 
       const startInterpDuration = startInterpDist / 1.5;
       const endInterpDuration = endInterpDist / 1.5;
-      const totalDurationSeconds = (distances.get(END_VNODE_ID) || 0) + startInterpDuration + endInterpDuration;
+      const totalDurationSeconds = totalDisplayCost + startInterpDuration + endInterpDuration;
 
       return {
         pathNodeIds,
@@ -677,6 +682,7 @@ export class DijkstraRouter implements IRouter {
     let trafficSignalsCount = 0;
     const streetsSet = new Set<string>();
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
+    let totalDisplayCost = 0;
 
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
@@ -702,7 +708,7 @@ export class DijkstraRouter implements IRouter {
           if (edge.name) {
             streetsSet.add(edge.name);
           }
-          const edgeCost = costFn(nodeId, edge, nextNodeId, overrides, graph);
+          const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
 
           let turnPenalty = 0;
           if (i > 0) {
@@ -735,6 +741,8 @@ export class DijkstraRouter implements IRouter {
             }
           }
 
+          totalDisplayCost += displayCost + turnPenalty;
+
           const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
           edgesDetails.push({
             sourceId: nodeId,
@@ -743,7 +751,7 @@ export class DijkstraRouter implements IRouter {
             distance: edge.distance,
             highway: edge.tags.highway || 'unknown',
             tags: edge.tags,
-            cost: edgeCost + turnPenalty,
+            cost: displayCost + turnPenalty,
             matchedSign,
             matchedRoad,
           });
@@ -787,10 +795,11 @@ export class DijkstraRouter implements IRouter {
     return {
       pathNodeIds,
       coordinates: finalCoords,
-      totalDurationSeconds: distances.get(endNodeId) || 0,
+      totalDurationSeconds: totalDisplayCost,
       totalDistanceMeters,
       streets: Array.from(streetsSet),
       trafficSignalsCount,
+      edges: edgesDetails,
     };
   }
 }

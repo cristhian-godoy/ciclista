@@ -208,3 +208,32 @@ export const avoidBusyRoadsCost: CostFunction = (
 
   return baseCost * multiplier;
 };
+
+/**
+ * Calculates the real-world travel time (display cost) in seconds for an edge.
+ * This is pure physical estimation: Time = Distance / Speed + node delays.
+ * Consistent across all routing strategies.
+ */
+export function calculateDisplayCost(
+  _sourceId: string,
+  edge: GraphEdge,
+  targetId: string,
+  overrides: LocalOverrides,
+  graph: StreetGraph
+): number {
+  const { speed, flatPenalty } = resolveSpeedAndPenalty(edge, overrides);
+  
+  let cost = edge.distance / speed + flatPenalty;
+
+  // Add node delay
+  const customDelay = overrides.nodeDelays.get(targetId);
+  if (customDelay !== undefined) {
+    cost += customDelay;
+  } else {
+    const targetNode = graph.nodes.get(targetId)?.node;
+    const tags = targetNode?.tags || {};
+    cost += getDefaultNodeDelay(tags);
+  }
+
+  return cost;
+}
