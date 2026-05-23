@@ -527,34 +527,15 @@ export const MapView: React.FC<MapViewProps> = ({
         paint: {
           'circle-radius': [
             'case',
-            ['has', 'customDelay'],
-            [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              14, 4,
-              17, 10
-            ],
-            [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              14, 3,
-              17, 7
-            ]
+            ['has', 'customDelay'], 7,
+            5
           ],
           'circle-color': [
             'case',
             ['has', 'customDelay'], '#14b8a6',  // Custom delay timed nodes (Teal)
             '#ef4444'                           // Default OSM traffic signals (Red)
           ],
-          'circle-stroke-width': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            14, 0.5,
-            17, 1.5
-          ],
+          'circle-stroke-width': 1.5,
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.85,
         },
