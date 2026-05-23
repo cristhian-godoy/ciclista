@@ -47,7 +47,9 @@ export default function App() {
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
   const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
   const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
-  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(DEFAULT_RULES_CONFIG);
+  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(
+    () => storage.loadRulesConfig() ?? DEFAULT_RULES_CONFIG
+  );
 
   // 3. Load settings from storage on startup
   const loadCustomOverrides = async () => {
@@ -56,6 +58,11 @@ export default function App() {
     setNodeNotes(overrides.nodeNotes);
     setNodeTurns(overrides.nodeTurns);
   };
+
+  // Persist rules config whenever it changes
+  useEffect(() => {
+    storage.saveRulesConfig(rulesConfig);
+  }, [rulesConfig]);
 
   // Helper to check if coordinate is inside any loaded bounding boxes
   const isInsideLoadedArea = (coord: Coordinate) => {
