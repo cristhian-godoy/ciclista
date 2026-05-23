@@ -109,3 +109,33 @@ export function mapOSMToSignAndRoad(
   // ── 8. Fallback ───────────────────────────────────────────────────────────
   return { sign: null, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
 }
+
+/**
+ * Classifies an OSM node's tags into a traffic control type.
+ */
+export function mapOSMNodeToControl(
+  tags: Record<string, string>
+): 'signal' | 'yield' | 'stop' | 'crossing' | null {
+  if (
+    tags.highway === 'traffic_signals' ||
+    tags.crossing === 'traffic_signals' ||
+    tags.crossing === 'controlled'
+  ) {
+    return 'signal';
+  }
+  if (tags.highway === 'give_way') {
+    return 'yield';
+  }
+  if (tags.highway === 'stop') {
+    return 'stop';
+  }
+  if (
+    tags.highway === 'crossing' ||
+    tags.crossing === 'uncontrolled' ||
+    (tags.crossing !== undefined && tags.crossing !== '' && tags.crossing !== 'no' && tags.crossing !== 'none')
+  ) {
+    return 'crossing';
+  }
+  return null;
+}
+

@@ -1,5 +1,5 @@
 import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph } from '../types';
-import { mapOSMToSignAndRoad } from './rules';
+import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -81,16 +81,17 @@ function resolveSpeedAndPenalty(
  * Resolves the default wait penalty (in seconds) for a control point node.
  */
 export function getDefaultNodeDelay(tags: Record<string, string>): number {
-  if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
+  const controlType = mapOSMNodeToControl(tags);
+  if (controlType === 'signal') {
     return 15; // default traffic light wait
   }
-  if (tags.highway === 'give_way') {
+  if (controlType === 'yield') {
     return 3;  // default yield delay
   }
-  if (tags.highway === 'stop') {
+  if (controlType === 'stop') {
     return 8;  // default stop delay
   }
-  if (tags.highway === 'crossing' || tags.crossing === 'uncontrolled') {
+  if (controlType === 'crossing') {
     return 3;  // default pedestrian crossing delay
   }
   return 0;
@@ -174,7 +175,8 @@ export const avoidStoppingCost: CostFunction = (
     const defaultDelay = getDefaultNodeDelay(tags);
     if (defaultDelay > 0) {
       // Scale standard delay and add heavy stop avoidance penalty (45s base for signals/stops, 25s for yields/crossings)
-      const baseStopPenalty = (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals' || tags.highway === 'stop') ? 45 : 25;
+      const controlType = mapOSMNodeToControl(tags);
+      const baseStopPenalty = (controlType === 'signal' || controlType === 'stop') ? 45 : 25;
       cost += defaultDelay + baseStopPenalty;
     }
   }
