@@ -572,3 +572,62 @@ h2 {
   word-break: break-all;
 }
 
+/* Speed Selector Component */
+.speed-selector-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.speed-selector-buttons {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  border: 1px solid var(--glass-border);
+  gap: 2px;
+}
+
+.speed-selector-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  padding: 6px 4px;
+  border-radius: calc(var(--radius-sm) - 1px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  font-family: inherit;
+}
+
+.speed-selector-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.speed-selector-btn.active {
+  background: var(--accent-primary);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: var(--shadow-glow);
+}
+
+.speed-selector-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.speed-selector-info {
+  font-size: 0.65rem;
+  color: var(--accent-secondary);
+  min-height: 14px;
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+}
+
+

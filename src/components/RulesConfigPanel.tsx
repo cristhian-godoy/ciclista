@@ -223,6 +223,49 @@ const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({ con
   </div>
 );
 
+interface SpeedTypeSelectorProps {
+  value: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
+  disabled?: boolean;
+  onChange: (val: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom') => void;
+}
+
+const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({ value, disabled, onChange }) => {
+  const [hoveredValue, setHoveredValue] = useState<string | null>(null);
+
+  const OPTIONS = [
+    { key: 'relative', label: 'Relative', speed: '100% (Bike Speed)' },
+    { key: 'slow',     label: 'Slow',     speed: '15 km/h' },
+    { key: 'slower',   label: 'Slower',   speed: '10 km/h' },
+    { key: 'dismount', label: 'Dismount', speed: '5 km/h' },
+    { key: 'custom',   label: 'Custom',   speed: 'Custom slider speed' },
+  ] as const;
+
+  const activeOption = OPTIONS.find(o => o.key === (hoveredValue || value));
+
+  return (
+    <div className="speed-selector-container">
+      <div className="speed-selector-buttons">
+        {OPTIONS.map(opt => (
+          <button
+            key={opt.key}
+            type="button"
+            disabled={disabled}
+            className={`speed-selector-btn ${value === opt.key ? 'active' : ''}`}
+            onClick={() => onChange(opt.key)}
+            onMouseEnter={() => setHoveredValue(opt.key)}
+            onMouseLeave={() => setHoveredValue(null)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div className="speed-selector-info">
+        {activeOption ? activeOption.speed : ''}
+      </div>
+    </div>
+  );
+};
+
 interface SignRowProps {
   config: SignRuleConfig;
   onChange: (updated: SignRuleConfig) => void;
@@ -261,20 +304,12 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
           <p className="rules-item-desc">{config.description}</p>
 
           <div className="rules-field">
-            <label htmlFor={`speed-type-${config.signId}`}>Speed type</label>
-            <select
-              id={`speed-type-${config.signId}`}
+            <label>Speed type</label>
+            <SpeedTypeSelector
               value={speedType}
               disabled={config.dismountRequired}
-              onChange={e => onChange({ ...config, speedType: e.target.value as SignRuleConfig['speedType'] })}
-              className="rules-select"
-            >
-              <option value="relative">100% (Bike Speed)</option>
-              <option value="slow">15 km/h (Slow)</option>
-              <option value="slower">10 km/h (Slower)</option>
-              <option value="dismount">5 km/h (Dismount)</option>
-              <option value="custom">Custom</option>
-            </select>
+              onChange={val => onChange({ ...config, speedType: val })}
+            />
           </div>
 
           {config.dismountRequired ? (
@@ -356,19 +391,11 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
       {expanded && (
         <div className="rules-item-body">
           <div className="rules-field">
-            <label htmlFor={`speed-type-${config.roadId}`}>Speed type</label>
-            <select
-              id={`speed-type-${config.roadId}`}
+            <label>Speed type</label>
+            <SpeedTypeSelector
               value={speedType}
-              onChange={e => onChange({ ...config, speedType: e.target.value as RoadRuleConfig['speedType'] })}
-              className="rules-select"
-            >
-              <option value="relative">100% (Bike Speed)</option>
-              <option value="slow">15 km/h (Slow)</option>
-              <option value="slower">10 km/h (Slower)</option>
-              <option value="dismount">5 km/h (Dismount)</option>
-              <option value="custom">Custom</option>
-            </select>
+              onChange={val => onChange({ ...config, speedType: val })}
+            />
           </div>
 
           {speedType === 'custom' && (
