@@ -128,6 +128,10 @@ export interface RouteResult {
     highway: string;
     tags: Record<string, string>;
     cost: number;
+    /** Matched German traffic sign code, if any */
+    matchedSign: string | null;
+    /** Matched road classification */
+    matchedRoad: string;
   }[];
 }
 
