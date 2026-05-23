@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite C.1 — Accumulate road-type distance per edge
+## Current Focus: Bite D.1 — Multi-route result type
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -16,9 +16,9 @@
   - [x] Populate these counters in the path reconstruction loop in `src/core/router/router.ts`.
 
 ## Phase C: Road-type Mix
-- [ ] **Bite C.1: Accumulate road-type distance per edge**
-  - [ ] Track distance composition by highway type (`cycleway | residential | primary | other`) along the computed path in `src/core/router/router.ts`.
-  - [ ] Add `roadTypeTotals: Record<string, number>` to `RouteResult`.
+- [x] **Bite C.1: Accumulate road-type distance per edge**
+  - [x] Track distance composition by highway type (`cycleway | residential | primary | other`) along the computed path in `src/core/router/router.ts`.
+  - [x] Add `roadTypeTotals: Record<string, number>` to `RouteResult`.
 
 ## Phase D: Alternative Routes
 - [ ] **Bite D.1: Multi-route result type**

@@ -4,6 +4,16 @@ import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 import { calculateDisplayCost } from './cost';
 
 /**
+ * Classifies an OSM highway tag into one of four categories for route analytics.
+ */
+export function getRoadTypeCategory(highway: string): 'cycleway' | 'residential' | 'primary' | 'other' {
+  if (highway === 'cycleway') return 'cycleway';
+  if (['residential', 'living_street', 'tertiary', 'tertiary_link', 'unclassified'].includes(highway)) return 'residential';
+  if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(highway)) return 'primary';
+  return 'other';
+}
+
+/**
  * Snaps a raw lat/lng coordinate to the nearest topological node in the graph.
  */
 export function findNearestNode(graph: StreetGraph, coord: Coordinate): string | null {
@@ -422,6 +432,12 @@ export class DijkstraRouter implements IRouter {
       let signalCount = 0;
       let yieldCount = 0;
       let crossingCount = 0;
+      const roadTypeTotals: Record<string, number> = {
+        cycleway: 0,
+        residential: 0,
+        primary: 0,
+        other: 0,
+      };
       const streetsSet = new Set<string>();
       const edgesDetails: NonNullable<RouteResult['edges']> = [];
 
@@ -488,6 +504,9 @@ export class DijkstraRouter implements IRouter {
 
             totalDisplayCost += displayCost + turnPenalty;
 
+            const cat = getRoadTypeCategory(edge.tags.highway || 'unknown');
+            roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
+
             const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
             edgesDetails.push({
               sourceId: nodeId,
@@ -539,6 +558,7 @@ export class DijkstraRouter implements IRouter {
         signalCount,
         yieldCount,
         crossingCount,
+        roadTypeTotals,
         edges: edgesDetails,
       };
 
@@ -691,6 +711,12 @@ export class DijkstraRouter implements IRouter {
     let signalCount = 0;
     let yieldCount = 0;
     let crossingCount = 0;
+    const roadTypeTotals: Record<string, number> = {
+      cycleway: 0,
+      residential: 0,
+      primary: 0,
+      other: 0,
+    };
     const streetsSet = new Set<string>();
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
@@ -756,6 +782,9 @@ export class DijkstraRouter implements IRouter {
 
           totalDisplayCost += displayCost + turnPenalty;
 
+          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown');
+          roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
+
           const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
           edgesDetails.push({
             sourceId: nodeId,
@@ -815,6 +844,7 @@ export class DijkstraRouter implements IRouter {
       signalCount,
       yieldCount,
       crossingCount,
+      roadTypeTotals,
       edges: edgesDetails,
     };
   }
