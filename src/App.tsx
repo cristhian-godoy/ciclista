@@ -14,6 +14,21 @@ const parser = new OSMGraphParser();
 const router = new DijkstraRouter();
 const storage = new LocalStorageProvider();
 
+const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
+  const merged: StreetGraph = { nodes: new Map(g1.nodes) };
+  g2.nodes.forEach((val, key) => {
+    if (merged.nodes.has(key)) {
+      const existing = merged.nodes.get(key)!;
+      const targets = new Set(existing.edges.map(e => e.target));
+      const newEdges = val.edges.filter(e => !targets.has(e.target));
+      existing.edges.push(...newEdges);
+    } else {
+      merged.nodes.set(key, val);
+    }
+  });
+  return merged;
+};
+
 export default function App() {
   // 1. Core Coordinate Defaults (Munich center commute)
   const [startCoord, setStartCoord] = useState<Coordinate>({ lat: 48.13715, lng: 11.5754 });
@@ -21,7 +36,7 @@ export default function App() {
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
-  const [loadedBBox, setLoadedBBox] = useState<[number, number, number, number] | null>(null);
+  const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const [routingStrategy, setRoutingStrategy] = useState<'standard' | 'avoid-stops' | 'quiet-streets'>('standard');
@@ -40,24 +55,27 @@ export default function App() {
     setNodeTurns(overrides.nodeTurns);
   };
 
-  // Helper to check if coordinate is inside bounding box
-  const isInsideBBox = (coord: Coordinate, bbox: [number, number, number, number] | null) => {
-    if (!bbox) return false;
-    const [minLat, minLng, maxLat, maxLng] = bbox;
-    return (
-      coord.lat >= minLat &&
-      coord.lat <= maxLat &&
-      coord.lng >= minLng &&
-      coord.lng <= maxLng
-    );
+  // Helper to check if coordinate is inside any loaded bounding boxes
+  const isInsideLoadedArea = (coord: Coordinate) => {
+    return loadedBBoxes.some(bbox => {
+      const [minLat, minLng, maxLat, maxLng] = bbox;
+      return (
+        coord.lat >= minLat &&
+        coord.lat <= maxLat &&
+        coord.lng >= minLng &&
+        coord.lng <= maxLng
+      );
+    });
   };
 
   // 4. Overpass API fetching implementation
-  const handleFetchOSM = async (bbox: [number, number, number, number], silent = false) => {
+  const handleFetchOSM = async (bbox: [number, number, number, number], merge = false, silent = false) => {
     setIsFetchingOSM(true);
-    setSelectedNode(null); // Clear selected signal node
-    setGraph(null); // Clear previous graph during load to prevent "phantom roads" from another city/preset
-    setLoadedBBox(null);
+    if (!merge) {
+      setSelectedNode(null); // Clear selected signal node
+      setGraph(null); // Clear previous graph during load to prevent "phantom roads" from another city/preset
+      setLoadedBBoxes([]);
+    }
 
     try {
       // Overpass QL query template for bikeable paths (highways) within bounding box
@@ -71,24 +89,29 @@ export default function App() {
 
       const data = await response.json();
       const parsedGraph = parser.parse(data);
-      setGraph(parsedGraph);
-      setLoadedBBox(bbox); // Track loaded bounding box region
+      if (merge) {
+        setGraph(prev => prev ? mergeGraphs(prev, parsedGraph) : parsedGraph);
+        setLoadedBBoxes(prev => [...prev, bbox]);
+      } else {
+        setGraph(parsedGraph);
+        setLoadedBBoxes([bbox]);
+      }
       
     } catch (e: unknown) {
       console.error('Failed to retrieve OSM network data:', e);
       
-      if (graph === null) {
+      if (graph === null && !merge) {
         console.warn('Using mock fallback graph due to initial fetch failure.');
         const mockGraph = parser.parse(null);
         setGraph(mockGraph);
-        setLoadedBBox([48.134, 11.574, 48.144, 11.583]);
+        setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
         // Restoring default mock coords
         setStartCoord({ lat: 48.13715, lng: 11.5754 });
         setEndCoord({ lat: 48.1350, lng: 11.5820 });
       } else {
         // Restore the previous valid graph and bounding box
         setGraph(graph);
-        setLoadedBBox(loadedBBox);
+        setLoadedBBoxes(loadedBBoxes);
       }
 
       if (!silent) {
@@ -134,16 +157,16 @@ export default function App() {
     
     // Auto-fetch map area matching default start/end pins on startup
     const initialBBox = calculateBoundingBox(startCoord, endCoord);
-    handleFetchOSM(initialBBox, true);
+    handleFetchOSM(initialBBox, false, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
-    if (!loadedBBox || isFetchingOSM) return;
+    if (loadedBBoxes.length === 0 || isFetchingOSM) return;
 
-    const startInside = isInsideBBox(startCoord, loadedBBox);
-    const endInside = isInsideBBox(endCoord, loadedBBox);
+    const startInside = isInsideLoadedArea(startCoord);
+    const endInside = isInsideLoadedArea(endCoord);
 
     if (!startInside || !endInside) {
       const newBBox = calculateBoundingBox(startCoord, endCoord);
@@ -157,20 +180,61 @@ export default function App() {
       }
 
       console.log('Coordinates changed outside current map bounds. Fetching expanded region:', newBBox);
-      handleFetchOSM(newBBox, false);
+      handleFetchOSM(newBBox, true, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startCoord, endCoord, loadedBBox, isFetchingOSM]);
+  }, [startCoord, endCoord, loadedBBoxes, isFetchingOSM]);
 
   // Handler for preset selections (forces coordinates update and downstream auto-fetch)
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
+    let newStart: Coordinate;
+    let newEnd: Coordinate;
     if (preset === 'munich') {
-      setStartCoord({ lat: 48.13715, lng: 11.5754 });
-      setEndCoord({ lat: 48.1350, lng: 11.5820 });
-    } else if (preset === 'amsterdam') {
-      setStartCoord({ lat: 52.3725, lng: 4.8900 });
-      setEndCoord({ lat: 52.3700, lng: 4.9000 });
+      newStart = { lat: 48.13715, lng: 11.5754 };
+      newEnd = { lat: 48.1350, lng: 11.5820 };
+    } else {
+      newStart = { lat: 52.3725, lng: 4.8900 };
+      newEnd = { lat: 52.3700, lng: 4.9000 };
+    }
+
+    setStartCoord(newStart);
+    setEndCoord(newEnd);
+
+    // Fetch fresh non-merged area for the new preset city
+    const newBBox = calculateBoundingBox(newStart, newEnd);
+    handleFetchOSM(newBBox, false, false);
+  };
+
+  // Handler to load OSM data as one moves through the map
+  const handleMapBoundsChange = (viewportBBox: [number, number, number, number], zoom: number) => {
+    if (zoom < 13 || isFetchingOSM) return;
+
+    // Check if the current viewport is fully contained within our already loaded bounds
+    const isContained = loadedBBoxes.some(bbox => {
+      return (
+        viewportBBox[0] >= bbox[0] &&
+        viewportBBox[1] >= bbox[1] &&
+        viewportBBox[2] <= bbox[2] &&
+        viewportBBox[3] <= bbox[3]
+      );
+    });
+
+    if (!isContained) {
+      // Calculate a padded bounding box around the viewport to make queries less frequent
+      const latSpan = viewportBBox[2] - viewportBBox[0];
+      const lngSpan = viewportBBox[3] - viewportBBox[1];
+
+      // Pad by 20% on all sides
+      const paddedBBox: [number, number, number, number] = [
+        viewportBBox[0] - latSpan * 0.2,
+        viewportBBox[1] - lngSpan * 0.2,
+        viewportBBox[2] + latSpan * 0.2,
+        viewportBBox[3] + lngSpan * 0.2,
+      ];
+
+      console.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
+      handleFetchOSM(paddedBBox, true, true); // merge = true, silent = true
     }
   };
 
@@ -230,7 +294,7 @@ export default function App() {
       />
       <MapView
         graph={graph}
-        loadedBBox={loadedBBox}
+        loadedBBoxes={loadedBBoxes}
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
@@ -242,6 +306,7 @@ export default function App() {
         onNodeSelect={setSelectedNode}
         onSaveNodeOverride={handleSaveNodeOverride}
         onClearNodeOverride={handleClearNodeOverride}
+        onMapBoundsChange={handleMapBoundsChange}
       />
     </div>
   );

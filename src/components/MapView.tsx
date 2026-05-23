@@ -24,7 +24,7 @@ type GeoJSONFeature =
 
 interface MapViewProps {
   graph: StreetGraph | null;
-  loadedBBox: [number, number, number, number] | null;
+  loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate;
   endCoord: Coordinate;
   routeResult: RouteResult | null;
@@ -36,11 +36,12 @@ interface MapViewProps {
   onNodeSelect: (node: GraphNode | null) => void;
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
   onClearNodeOverride: (nodeId: string) => void;
+  onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
   graph,
-  loadedBBox,
+  loadedBBoxes,
   startCoord,
   endCoord,
   routeResult,
@@ -52,6 +53,7 @@ export const MapView: React.FC<MapViewProps> = ({
   onNodeSelect,
   onSaveNodeOverride,
   onClearNodeOverride,
+  onMapBoundsChange,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -62,6 +64,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
   const onNodeSelectRef = useRef(onNodeSelect);
+  const onMapBoundsChangeRef = useRef(onMapBoundsChange);
 
   useEffect(() => {
     onStartDragRef.current = onStartDrag;
@@ -74,6 +77,10 @@ export const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     onNodeSelectRef.current = onNodeSelect;
   }, [onNodeSelect]);
+
+  useEffect(() => {
+    onMapBoundsChangeRef.current = onMapBoundsChange;
+  }, [onMapBoundsChange]);
 
   // Track map loaded state to synchronize layer updates after style initialization
   const [mapReady, setMapReady] = useState(false);
@@ -399,6 +406,20 @@ export const MapView: React.FC<MapViewProps> = ({
 
     map.on('zoomstart', () => {
       setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    });
+
+    map.on('moveend', () => {
+      const bounds = map.getBounds();
+      const zoom = map.getZoom();
+      const bbox: [number, number, number, number] = [
+        bounds.getSouth(),
+        bounds.getWest(),
+        bounds.getNorth(),
+        bounds.getEast(),
+      ];
+      if (onMapBoundsChangeRef.current) {
+        onMapBoundsChangeRef.current(bbox, zoom);
+      }
     });
 
     map.on('load', () => {
@@ -729,28 +750,29 @@ export const MapView: React.FC<MapViewProps> = ({
     const bboxSource = map.getSource('loaded-bbox') as maplibregl.GeoJSONSource;
     if (!bboxSource) return;
 
-    if (loadedBBox) {
-      const [minLat, minLng, maxLat, maxLng] = loadedBBox;
+    if (loadedBBoxes && loadedBBoxes.length > 0) {
+      const features = loadedBBoxes.map((bbox) => {
+        const [minLat, minLng, maxLat, maxLng] = bbox;
+        return {
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Polygon' as const,
+            coordinates: [
+              [
+                [minLng, minLat],
+                [maxLng, minLat],
+                [maxLng, maxLat],
+                [minLng, maxLat],
+                [minLng, minLat],
+              ]
+            ],
+          },
+          properties: {},
+        };
+      });
       bboxSource.setData({
         type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'Polygon',
-              coordinates: [
-                [
-                  [minLng, minLat],
-                  [maxLng, minLat],
-                  [maxLng, maxLat],
-                  [minLng, maxLat],
-                  [minLng, minLat],
-                ]
-              ],
-            },
-            properties: {},
-          },
-        ],
+        features,
       });
     } else {
       bboxSource.setData({
@@ -758,7 +780,7 @@ export const MapView: React.FC<MapViewProps> = ({
         features: [],
       });
     }
-  }, [loadedBBox, mapReady]);
+  }, [loadedBBoxes, mapReady]);
   // Synchronize layer filters when managed states update
   useEffect(() => {
     const map = mapRef.current;

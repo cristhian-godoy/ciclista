@@ -29,4 +29,5 @@
   - `[x]` Enable strict TypeScript compiler options (`"strict": true` in tsconfigs)
   - `[x]` Clean up all remaining `any` types to enforce full type safety
   - `[x]` Add responsive CSS media queries for mobile viewports
-
+- `[x]` Implement dynamic, viewport-based OSM data auto-loading and merging
+- `[ ]` Progressive Web App
