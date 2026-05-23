@@ -40,9 +40,9 @@ interface OSMRawData {
 export class OSMGraphParser implements IGraphParser {
   parse(rawData: unknown): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
-    const data = rawData as OSMRawData | null | undefined;
+    const data = (rawData && typeof rawData === 'object') ? (rawData as OSMRawData) : null;
 
-    if (!data || !data.elements || data.elements.length === 0) {
+    if (!data || !Array.isArray(data.elements) || data.elements.length === 0) {
       console.warn('Empty or invalid OSM raw data. Loading mock graph instead.');
       return this.loadMockGraph();
     }
@@ -51,20 +51,21 @@ export class OSMGraphParser implements IGraphParser {
 
     // 1. First pass: Collect all node coordinates and tags
     for (const el of data.elements) {
-      if (el.type === 'node') {
-        tempNodes.set(el.id.toString(), {
-          id: el.id.toString(),
-          lat: el.lat || 0,
-          lng: el.lon || 0,
-          tags: el.tags || {},
+      if (el && typeof el === 'object' && el.type === 'node' && el.id !== undefined && el.id !== null) {
+        const idStr = el.id.toString();
+        tempNodes.set(idStr, {
+          id: idStr,
+          lat: typeof el.lat === 'number' ? el.lat : 0,
+          lng: typeof el.lon === 'number' ? el.lon : 0,
+          tags: el.tags && typeof el.tags === 'object' ? el.tags : {},
         });
       }
     }
 
     // 2. Second pass: Process ways and construct edges
     for (const el of data.elements) {
-      if (el.type === 'way') {
-        const wayTags = el.tags || {};
+      if (el && typeof el === 'object' && el.type === 'way') {
+        const wayTags = el.tags && typeof el.tags === 'object' ? el.tags : {};
         const highway = wayTags.highway;
 
         // Skip non-bikeable major roads (motorways) and irrelevant features
@@ -82,7 +83,7 @@ export class OSMGraphParser implements IGraphParser {
           continue;
         }
 
-        const nodesList: number[] = el.nodes || [];
+        const nodesList: number[] = Array.isArray(el.nodes) ? el.nodes : [];
         if (nodesList.length < 2) continue;
 
         // Determine speed limits based on OSM tags or cycling defaults
@@ -101,8 +102,13 @@ export class OSMGraphParser implements IGraphParser {
         const onewayBicycle = wayTags['oneway:bicycle'] === 'yes' || (wayTags['oneway:bicycle'] === undefined && oneway);
 
         for (let i = 0; i < nodesList.length - 1; i++) {
-          const uId = nodesList[i].toString();
-          const vId = nodesList[i + 1].toString();
+          const uNodeVal = nodesList[i];
+          const vNodeVal = nodesList[i + 1];
+          if (uNodeVal === undefined || uNodeVal === null || vNodeVal === undefined || vNodeVal === null) {
+            continue;
+          }
+          const uId = uNodeVal.toString();
+          const vId = vNodeVal.toString();
 
           const uNode = tempNodes.get(uId);
           const vNode = tempNodes.get(vId);
@@ -113,11 +119,15 @@ export class OSMGraphParser implements IGraphParser {
           const dist = haversineDistance(uNode.lat, uNode.lng, vNode.lat, vNode.lng);
 
           // Ensure nodes exist in our graph adjacency list
-          if (!graph.nodes.has(uId)) {
-            graph.nodes.set(uId, { node: uNode, edges: [] });
+          let uEntry = graph.nodes.get(uId);
+          if (!uEntry) {
+            uEntry = { node: uNode, edges: [] };
+            graph.nodes.set(uId, uEntry);
           }
-          if (!graph.nodes.has(vId)) {
-            graph.nodes.set(vId, { node: vNode, edges: [] });
+          let vEntry = graph.nodes.get(vId);
+          if (!vEntry) {
+            vEntry = { node: vNode, edges: [] };
+            graph.nodes.set(vId, vEntry);
           }
 
           // Outgoing edge u -> v
@@ -128,7 +138,7 @@ export class OSMGraphParser implements IGraphParser {
             tags: wayTags,
             speedLimit,
           };
-          graph.nodes.get(uId)!.edges.push(edgeUV);
+          uEntry.edges.push(edgeUV);
 
           // If not one-way, add outgoing edge v -> u
           if (!onewayBicycle) {
@@ -139,7 +149,7 @@ export class OSMGraphParser implements IGraphParser {
               tags: wayTags,
               speedLimit,
             };
-            graph.nodes.get(vId)!.edges.push(edgeVU);
+            vEntry.edges.push(edgeVU);
           }
         }
       }
