@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration } from './core/types';
+import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration, BikeProfile } from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
@@ -50,6 +50,7 @@ export default function App() {
   const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(
     () => storage.loadRulesConfig() ?? DEFAULT_RULES_CONFIG
   );
+  const [bikeProfile, setBikeProfile] = useState<BikeProfile>('normal');
 
   // 3. Load settings from storage on startup
   const loadCustomOverrides = async () => {
@@ -296,8 +297,9 @@ export default function App() {
       nodeNotes,
       nodeTurns,
       rulesConfig,
+      bikeProfile,
     };
-  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig]);
+  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeProfile]);
 
   // 6. Reactive Routing Calculation (Derived State)
   const routeResult = useMemo(() => {
@@ -333,6 +335,8 @@ export default function App() {
         onPresetChange={handlePresetChange}
         rulesConfig={rulesConfig}
         onRulesChange={setRulesConfig}
+        bikeProfile={bikeProfile}
+        onBikeProfileChange={setBikeProfile}
       />
       <MapView
         graph={graph}

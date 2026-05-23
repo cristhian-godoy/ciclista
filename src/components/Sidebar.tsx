@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Coordinate, RouteResult, RulesConfiguration } from '../core/types';
+import type { Coordinate, RouteResult, RulesConfiguration, BikeProfile } from '../core/types';
 import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { RulesConfigPanel } from './RulesConfigPanel';
 
@@ -14,6 +14,8 @@ interface SidebarProps {
   onPresetChange: (presetName: 'munich' | 'amsterdam') => void;
   rulesConfig: RulesConfiguration;
   onRulesChange: (config: RulesConfiguration) => void;
+  bikeProfile: BikeProfile;
+  onBikeProfileChange: (profile: BikeProfile) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,6 +27,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onPresetChange,
   rulesConfig,
   onRulesChange,
+  bikeProfile,
+  onBikeProfileChange,
 }) => {
   const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -131,6 +135,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               Quiet Paths
             </button>
+          </div>
+        </section>
+
+        {/* Section 2b: Bike Profile */}
+        <section className="form-group">
+          <label className="form-label">Bike Profile</label>
+          <div className="strategy-selector">
+            {(['slow', 'normal', 'ebike'] as BikeProfile[]).map((p) => (
+              <button
+                key={p}
+                className={`strategy-btn ${bikeProfile === p ? 'active' : ''}`}
+                onClick={() => onBikeProfileChange(p)}
+              >
+                {p === 'slow' ? '🚲 Slow' : p === 'normal' ? '🚴 Normal' : '⚡ E-Bike'}
+              </button>
+            ))}
           </div>
         </section>
 
