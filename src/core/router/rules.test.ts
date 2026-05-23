@@ -153,14 +153,15 @@ describe('mapOSMNodeToControl', () => {
   });
 
   it('classifies crossings', () => {
-    expect(mapOSMNodeToControl({ highway: 'crossing' })).toBe('crossing');
-    expect(mapOSMNodeToControl({ crossing: 'uncontrolled' })).toBe('crossing');
     expect(mapOSMNodeToControl({ crossing: 'zebra' })).toBe('crossing');
+    expect(mapOSMNodeToControl({ crossing: 'marked' })).toBe('crossing');
   });
 
   it('returns null for non-control nodes', () => {
     expect(mapOSMNodeToControl({})).toBeNull();
     expect(mapOSMNodeToControl({ highway: 'residential' })).toBeNull();
+    expect(mapOSMNodeToControl({ highway: 'crossing' })).toBeNull();
+    expect(mapOSMNodeToControl({ crossing: 'uncontrolled' })).toBeNull();
     expect(mapOSMNodeToControl({ crossing: 'no' })).toBeNull();
     expect(mapOSMNodeToControl({ crossing: 'none' })).toBeNull();
   });

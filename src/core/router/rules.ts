@@ -134,9 +134,8 @@ export function mapOSMNodeToControl(
     return 'stop';
   }
   if (
-    tags.highway === 'crossing' ||
-    tags.crossing === 'uncontrolled' ||
-    (tags.crossing !== undefined && tags.crossing !== '' && tags.crossing !== 'no' && tags.crossing !== 'none')
+    tags.crossing === 'zebra' ||
+    tags.crossing === 'marked'
   ) {
     return 'crossing';
   }

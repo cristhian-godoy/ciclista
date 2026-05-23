@@ -104,8 +104,10 @@ describe('getDefaultNodeDelay', () => {
     expect(getDefaultNodeDelay({ crossing: 'traffic_signals' })).toBe(15);
     expect(getDefaultNodeDelay({ highway: 'give_way' })).toBe(3);
     expect(getDefaultNodeDelay({ highway: 'stop' })).toBe(8);
-    expect(getDefaultNodeDelay({ highway: 'crossing' })).toBe(3);
-    expect(getDefaultNodeDelay({ crossing: 'uncontrolled' })).toBe(3);
+    expect(getDefaultNodeDelay({ crossing: 'zebra' })).toBe(3);
+    expect(getDefaultNodeDelay({ crossing: 'marked' })).toBe(3);
+    expect(getDefaultNodeDelay({ highway: 'crossing' })).toBe(0);
+    expect(getDefaultNodeDelay({ crossing: 'uncontrolled' })).toBe(0);
     expect(getDefaultNodeDelay({})).toBe(0);
   });
 });
@@ -235,7 +237,7 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
     const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: { highway: 'traffic_signals' } };
     const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: { highway: 'give_way' } };
-    const nodeD: GraphNode = { id: 'D', lat: 48.140, lng: 11.578, tags: { highway: 'crossing' } };
+    const nodeD: GraphNode = { id: 'D', lat: 48.140, lng: 11.578, tags: { highway: 'crossing', crossing: 'zebra' } };
 
     const edgeAB: GraphEdge = { target: 'B', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
     const edgeBA: GraphEdge = { target: 'A', distance: 100, name: 'Street AB', tags: { highway: 'cycleway' } };
