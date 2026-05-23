@@ -333,6 +333,7 @@ export default function App() {
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
+        routeAlternatives={routeAlternatives}
         routingStrategy={routingStrategy}
         isFetchingOSM={isFetchingOSM}
         onStrategyChange={setRoutingStrategy}
