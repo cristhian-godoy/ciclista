@@ -127,6 +127,12 @@ export interface RouteResult {
   streets: string[];
   /** Total number of traffic signals encountered */
   trafficSignalsCount: number;
+  /** Total number of yield signs encountered */
+  yieldCount: number;
+  /** Total number of traffic signals encountered (unified count) */
+  signalCount: number;
+  /** Total number of pedestrian crossings encountered */
+  crossingCount: number;
   /** Detailed list of edges traversed in the route for debugging and inspection */
   edges?: {
     sourceId: string;
