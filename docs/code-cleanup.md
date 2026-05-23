@@ -3,17 +3,19 @@
 This document outlines a phased approach to improving the repository's code quality, modularity, and testing, keeping the system clean and maintainable.
 
 ## Phase 1: Automation & Linting Standardization
-*Goal: Ensure all new code adheres to a consistent format and passes lint checks before entering the commit history.*
+
+_Goal: Ensure all new code adheres to a consistent format and passes lint checks before entering the commit history._
 
 - [x] Install Prettier and its ESLint integrations (`prettier`, `eslint-config-prettier`, `eslint-plugin-prettier`).
 - [x] Create a `.prettierrc` configuration file with project-specific formatting rules.
-- [ ] Install `husky` and `lint-staged` as development dependencies.
-- [ ] Initialize Husky and configure the `pre-commit` hook.
-- [ ] Configure `lint-staged` in `package.json` to run Prettier and ESLint on staged files.
+- [x] Install `husky` and `lint-staged` as development dependencies.
+- [x] Initialize Husky and configure the `pre-commit` hook.
+- [x] Configure `lint-staged` in `package.json` to run Prettier and ESLint on staged files.
 - [x] Re-enable the `'react-hooks/set-state-in-effect'` rule in `eslint.config.js` and fix any resulting violations.
 
 ## Phase 2: Type Organization
-*Goal: Prevent `types.ts` from becoming a monolithic bottleneck by co-locating types with their respective domains.*
+
+_Goal: Prevent `types.ts` from becoming a monolithic bottleneck by co-locating types with their respective domains._
 
 - [ ] Create `src/core/router/types.ts` and move router-specific interfaces from `src/core/types.ts`.
 - [ ] Create `src/core/graph/types.ts` and move graph/parsing-specific interfaces.
@@ -22,14 +24,16 @@ This document outlines a phased approach to improving the repository's code qual
 - [ ] Remove the old `src/core/types.ts` file if it is empty, or rename it to `src/core/common/types.ts` for shared interfaces.
 
 ## Phase 3: UI Component De-structuring (Part 1 - App & Sidebar)
-*Goal: Break down the largest React components to follow the Single Responsibility Principle.*
+
+_Goal: Break down the largest React components to follow the Single Responsibility Principle._
 
 - [ ] Analyze `src/App.tsx` and extract layout/scaffolding into smaller wrapper components if necessary.
 - [ ] Break down `src/components/RulesConfigPanel.tsx` into smaller chunks (e.g., individual rule toggle components, slider sections).
 - [ ] Break down `src/components/Sidebar.tsx` by extracting the routing input fields and the stats panel into separate files.
 
 ## Phase 4: UI Component De-structuring (Part 2 - MapView)
-*Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layers.*
+
+_Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layers._
 
 - [ ] Extract MapLibre initialization and core map state into a custom hook (e.g., `useMapInstance.ts`).
 - [ ] Extract layer rendering logic (e.g., drawing routes, drawing nodes) into separate components or hooks (e.g., `RouteLayer.tsx`, `NodeLayer.tsx`).
@@ -37,7 +41,8 @@ This document outlines a phased approach to improving the repository's code qual
 - [ ] Refactor `MapView.tsx` to act purely as an orchestrator for these smaller sub-components.
 
 ## Phase 5: UI Testing Integration
-*Goal: Introduce testing to the React UI layer to prevent visual and interaction regressions.*
+
+_Goal: Introduce testing to the React UI layer to prevent visual and interaction regressions._
 
 - [ ] Install `@testing-library/react` and `@testing-library/jest-dom` (or equivalent for Vitest).
 - [ ] Configure Vitest for DOM testing (e.g., adding `jsdom` or `happy-dom` environment).
