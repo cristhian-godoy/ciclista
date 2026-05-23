@@ -22,7 +22,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       name: 'Sidewalk / Footway',
       description: 'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
       iconCode: '🦶',
-      baseSpeedKmh: 5,
+      baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 20,
     },
@@ -230,7 +230,7 @@ const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({ value, disabled, 
     { key: 'relative', label: 'Relative', speed: '100% (Bike Speed)' },
     { key: 'slow',     label: 'Slow',     speed: '15 km/h' },
     { key: 'slower',   label: 'Slower',   speed: '10 km/h' },
-    { key: 'dismount', label: 'Dismount', speed: '5 km/h' },
+    { key: 'dismount', label: 'Dismount', speed: '4 km/h' },
     { key: 'custom',   label: 'Custom',   speed: 'Custom slider speed' },
   ] as const;
 
