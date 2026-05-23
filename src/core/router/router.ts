@@ -6,8 +6,23 @@ import { calculateDisplayCost } from './cost';
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
  */
-export function getRoadTypeCategory(highway: string): 'cycleway' | 'residential' | 'primary' | 'other' {
-  if (highway === 'cycleway') return 'cycleway';
+export function getRoadTypeCategory(
+  highway: string,
+  tags: Record<string, string>
+): 'cycleway' | 'residential' | 'primary' | 'other' {
+  const hasCyclewayTag = tags.cycleway || tags['cycleway:left'] || tags['cycleway:right'] || tags['cycleway:both'];
+  const hasBicycleDesignated = tags.bicycle === 'designated' || tags.bicycle === 'yes';
+
+  if (
+    highway === 'cycleway' ||
+    !!hasCyclewayTag ||
+    hasBicycleDesignated ||
+    tags.bicycle_road === 'yes' ||
+    tags.cyclestreet === 'yes'
+  ) {
+    return 'cycleway';
+  }
+
   if (['residential', 'living_street', 'tertiary', 'tertiary_link', 'unclassified'].includes(highway)) return 'residential';
   if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(highway)) return 'primary';
   return 'other';
@@ -504,7 +519,7 @@ export class DijkstraRouter implements IRouter {
 
             totalDisplayCost += displayCost + turnPenalty;
 
-            const cat = getRoadTypeCategory(edge.tags.highway || 'unknown');
+            const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
             roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
 
             const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);
@@ -791,7 +806,7 @@ export class DijkstraRouter implements IRouter {
 
           totalDisplayCost += displayCost + turnPenalty;
 
-          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown');
+          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
           roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
 
           const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(edge.tags.highway || '', edge.tags);

@@ -205,6 +205,39 @@ describe('DijkstraRouter separate routing weight from display time', () => {
     expect(result!.roadTypeTotals.cycleway).toBeGreaterThan(0);
     expect(result!.roadTypeTotals.primary).toBeGreaterThan(0);
   });
+
+  it('aggregates roads with cycleway tags or designated bicycle tags as cycleway in roadTypeTotals', () => {
+    const nodeA: GraphNode = { id: 'A', lat: 48.137, lng: 11.575, tags: {} };
+    const nodeB: GraphNode = { id: 'B', lat: 48.138, lng: 11.576, tags: {} };
+    const nodeC: GraphNode = { id: 'C', lat: 48.139, lng: 11.577, tags: {} };
+
+    const edgeAB: GraphEdge = { target: 'B', distance: 150, name: 'Street AB', tags: { highway: 'primary', 'cycleway:left': 'track' } };
+    const edgeBA: GraphEdge = { target: 'A', distance: 150, name: 'Street AB', tags: { highway: 'primary', 'cycleway:left': 'track' } };
+    const edgeBC: GraphEdge = { target: 'C', distance: 250, name: 'Street BC', tags: { highway: 'path', bicycle: 'designated' } };
+    const edgeCB: GraphEdge = { target: 'B', distance: 250, name: 'Street BC', tags: { highway: 'path', bicycle: 'designated' } };
+
+    const graph: StreetGraph = {
+      nodes: new Map([
+        ['A', { node: nodeA, edges: [edgeAB] }],
+        ['B', { node: nodeB, edges: [edgeBC, edgeBA] }],
+        ['C', { node: nodeC, edges: [edgeCB] }],
+      ]),
+    };
+
+    const router = new DijkstraRouter();
+    const result = router.findRoute(
+      graph,
+      { lat: nodeA.lat, lng: nodeA.lng },
+      { lat: nodeC.lat, lng: nodeC.lng },
+      standardCost,
+      { nodeDelays: new Map(), nodeNotes: new Map(), nodeTurns: new Map() }
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.roadTypeTotals).toBeDefined();
+    expect(result!.roadTypeTotals.cycleway).toBeCloseTo(267.4, 1);
+    expect(result!.roadTypeTotals.primary || 0).toBe(0);
+  });
 });
 
 
