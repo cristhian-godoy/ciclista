@@ -295,8 +295,9 @@ export default function App() {
       nodeDelays,
       nodeNotes,
       nodeTurns,
+      rulesConfig,
     };
-  }, [nodeDelays, nodeNotes, nodeTurns]);
+  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig]);
 
   // 6. Reactive Routing Calculation (Derived State)
   const routeResult = useMemo(() => {
