@@ -189,6 +189,7 @@ export class DijkstraRouter implements IRouter {
     let totalDistanceMeters = 0;
     let trafficSignalsCount = 0;
     const streetsSet = new Set<string>();
+    const edgesDetails: NonNullable<RouteResult['edges']> = [];
 
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
@@ -214,6 +215,16 @@ export class DijkstraRouter implements IRouter {
           if (edge.name) {
             streetsSet.add(edge.name);
           }
+          const edgeCost = costFn(nodeId, edge, nextNodeId, overrides, graph);
+          edgesDetails.push({
+            sourceId: nodeId,
+            targetId: nextNodeId,
+            name: edge.name || 'Unnamed Street',
+            distance: edge.distance,
+            highway: edge.tags.highway || 'unknown',
+            tags: edge.tags,
+            cost: edgeCost,
+          });
         }
       }
     }
@@ -226,6 +237,7 @@ export class DijkstraRouter implements IRouter {
       totalDistanceMeters,
       streets: Array.from(streetsSet),
       trafficSignalsCount,
+      edges: edgesDetails,
     };
   }
 }

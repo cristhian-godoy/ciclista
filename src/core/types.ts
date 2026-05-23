@@ -117,6 +117,16 @@ export interface RouteResult {
   streets: string[];
   /** Total number of traffic signals encountered */
   trafficSignalsCount: number;
+  /** Detailed list of edges traversed in the route for debugging and inspection */
+  edges?: {
+    sourceId: string;
+    targetId: string;
+    name: string;
+    distance: number;
+    highway: string;
+    tags: Record<string, string>;
+    cost: number;
+  }[];
 }
 
 /**
