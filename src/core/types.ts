@@ -68,6 +68,8 @@ export interface LocalOverrides {
   nodeNotes: Map<string, string>;
   /** Map of Node ID to turn penalty tags (e.g. hard-left settings) */
   nodeTurns: Map<string, Record<string, unknown>>;
+  /** Global settings override for traffic signs and road rule weights */
+  rulesConfig?: RulesConfiguration;
 }
 
 /**
@@ -150,3 +152,58 @@ export interface IRouter {
     overrides: LocalOverrides
   ): RouteResult | null;
 }
+
+/**
+ * German Traffic Signs that have specific legal requirements for cyclists.
+ */
+export enum GermanSign {
+  VZ_242_1 = 'Vz_242.1', // Fußgängerzone (Pedestrian Zone)
+  VZ_239 = 'Vz_239',     // Gehweg (Sidewalk/Footway)
+  VZ_240 = 'Vz_240',     // Gemeinsamer Geh- und Radweg (Shared path)
+  VZ_241 = 'Vz_241',     // Getrennter Geh- und Radweg (Segregated path)
+  VZ_325_1 = 'Vz_325.1', // Verkehrsberuhigter Bereich (Living Street)
+  VZ_244_1 = 'Vz_244.1', // Fahrradstraße (Bicycle Street)
+}
+
+/**
+ * Standard OSM road classifications used for base speed estimation.
+ */
+export enum RoadType {
+  PRIMARY = 'primary',
+  SECONDARY = 'secondary',
+  RESIDENTIAL = 'residential',
+  SERVICE = 'service',
+  PATH_DEFAULT = 'path_default',
+}
+
+/**
+ * Configuration for a traffic sign rule.
+ */
+export interface SignRuleConfig {
+  signId: GermanSign;
+  name: string;
+  description: string;
+  iconCode: string;
+  baseSpeedKmh: number;
+  flatPenaltySeconds: number;
+  dismountRequired: boolean;
+}
+
+/**
+ * Configuration for a road type rule.
+ */
+export interface RoadRuleConfig {
+  roadId: RoadType;
+  name: string;
+  baseSpeedKmh: number;
+  flatPenaltySeconds: number;
+}
+
+/**
+ * Configuration schema for the German Road Rules settings.
+ */
+export interface RulesConfiguration {
+  signs: Record<GermanSign, SignRuleConfig>;
+  roads: Record<RoadType, RoadRuleConfig>;
+}
+
