@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Coordinate, RouteResult, RulesConfiguration, BikeProfile } from '../core/types';
+import type { Coordinate, RouteResult, RulesConfiguration, BikeProfile, RouteAlternative } from '../core/types';
 import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { RulesConfigPanel } from './RulesConfigPanel';
 
@@ -7,6 +7,7 @@ interface SidebarProps {
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
   routeResult: RouteResult | null;
+  routeAlternatives: RouteAlternative[];
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
@@ -20,6 +21,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   routeResult,
+  routeAlternatives,
   routingStrategy,
   isFetchingOSM,
   onStrategyChange,
@@ -113,28 +115,77 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </section>
 
-        {/* Section 2: Strategy Selector */}
+        {/* Section 2: Route Alternatives Selector */}
         <section className="form-group">
-          <label className="form-label">Routing Cost Strategy</label>
-          <div className="strategy-selector">
-            <button
-              className={`strategy-btn ${routingStrategy === 'standard' ? 'active' : ''}`}
-              onClick={() => onStrategyChange('standard')}
-            >
-              Speed
-            </button>
-            <button
-              className={`strategy-btn ${routingStrategy === 'avoid-stops' ? 'active' : ''}`}
-              onClick={() => onStrategyChange('avoid-stops')}
-            >
-              Avoid Stops
-            </button>
-            <button
-              className={`strategy-btn ${routingStrategy === 'quiet-streets' ? 'active' : ''}`}
-              onClick={() => onStrategyChange('quiet-streets')}
-            >
-              Quiet Paths
-            </button>
+          <label className="form-label">Route Alternatives</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+            {routeAlternatives.map((alt) => {
+              const isActive = routingStrategy === alt.label;
+              const duration = alt.result.totalDurationSeconds;
+              const distance = alt.result.totalDistanceMeters;
+              const signals = alt.result.signalCount;
+
+              const getStrategyLabel = (label: string) => {
+                switch (label) {
+                  case 'standard': return '⚡ Speed';
+                  case 'avoid-stops': return '🛑 Avoid Stops';
+                  case 'quiet-streets': return '🌳 Quiet Paths';
+                  default: return label;
+                }
+              };
+
+              return (
+                <div
+                  key={alt.label}
+                  className={`alternative-card ${isActive ? 'active' : ''}`}
+                  onClick={() => onStrategyChange(alt.label as any)}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-secondary)',
+                    border: `1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                    cursor: 'pointer',
+                    transition: 'var(--transition-fast)',
+                    boxShadow: isActive ? 'var(--shadow-glow)' : 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.background = 'var(--bg-secondary)';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: '600', fontSize: '0.85rem', color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                      {getStrategyLabel(alt.label)}
+                    </span>
+                    {isActive && (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        background: 'var(--accent-primary)',
+                        color: 'var(--text-primary)',
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        fontWeight: '600'
+                      }}>
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <span>⏱️ {formatTime(duration)}</span>
+                    <span>📏 {formatDistance(distance)}</span>
+                    <span>🚦 {signals} signals</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
