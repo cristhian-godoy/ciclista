@@ -59,6 +59,12 @@ export interface IGraphParser {
 }
 
 /**
+ * Bike speed profile selected by the user.
+ * Scales all resolved speeds proportionally.
+ */
+export type BikeProfile = 'slow' | 'normal' | 'ebike';
+
+/**
  * User-defined local overrides for nodes or edges.
  */
 export interface LocalOverrides {
@@ -70,6 +76,8 @@ export interface LocalOverrides {
   nodeTurns: Map<string, Record<string, unknown>>;
   /** Global settings override for traffic signs and road rule weights */
   rulesConfig?: RulesConfiguration;
+  /** Selected bike speed profile */
+  bikeProfile?: BikeProfile;
 }
 
 /**

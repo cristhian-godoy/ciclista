@@ -11,6 +11,16 @@ function kmhToMs(kmh: number): number {
 }
 
 /**
+ * Speed multiplier per bike profile relative to a "normal" 18 km/h baseline.
+ * slow  = 15 km/h, normal = 18 km/h, ebike = 25 km/h.
+ */
+const PROFILE_MULTIPLIER: Record<string, number> = {
+  slow:   15 / 18,  // ~0.833
+  normal: 1.0,
+  ebike:  25 / 18,  // ~1.389
+};
+
+/**
  * Resolves the effective cycling speed (m/s) and flat penalty (s) for an edge,
  * using the active RulesConfiguration when available, falling back to hardcoded defaults.
  */
@@ -21,49 +31,50 @@ function resolveSpeedAndPenalty(
   const highway = edge.tags.highway || '';
   const { sign, road, bicycleFrei } = mapOSMToSignAndRoad(highway, edge.tags);
   const rules = overrides.rulesConfig;
+  const profileMultiplier = PROFILE_MULTIPLIER[overrides.bikeProfile ?? 'normal'] ?? 1.0;
+
+  let speed: number;
+  let flatPenalty: number;
 
   if (rules) {
-    // Sign config takes priority over road config when a sign is matched
     if (sign && rules.signs[sign]) {
       const cfg = rules.signs[sign];
-      return {
-        speed: kmhToMs(cfg.baseSpeedKmh),
-        flatPenalty: cfg.flatPenaltySeconds,
-        bicycleFrei,
-      };
-    }
-    // Fall back to road classification config
-    if (rules.roads[road]) {
+      speed = kmhToMs(cfg.baseSpeedKmh);
+      flatPenalty = cfg.flatPenaltySeconds;
+    } else if (rules.roads[road]) {
       const cfg = rules.roads[road];
-      return {
-        speed: kmhToMs(cfg.baseSpeedKmh),
-        flatPenalty: cfg.flatPenaltySeconds,
-        bicycleFrei,
-      };
+      speed = kmhToMs(cfg.baseSpeedKmh);
+      flatPenalty = cfg.flatPenaltySeconds;
+    } else {
+      speed = kmhToMs(18);
+      flatPenalty = 0;
     }
+  } else {
+    // ── Hardcoded fallback ───────────────────────────────────────────────────
+    const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
+    if (cycleway) {
+      speed = 5.5;
+    } else if (highway === 'cycleway') {
+      speed = 6.0;
+    } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
+      speed = bicycleFrei ? 4.5 : 1.2;
+    } else if (highway === 'service') {
+      speed = (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') ? 1.5 : 3.0;
+    } else if (highway === 'primary') {
+      speed = 4.0;
+    } else if (highway === 'secondary') {
+      speed = 4.5;
+    } else if (highway === 'residential') {
+      speed = 4.8;
+    } else if (highway === 'living_street') {
+      speed = 4.0;
+    } else {
+      speed = 5.0;
+    }
+    flatPenalty = 0;
   }
 
-  // ── Hardcoded fallback (no rulesConfig present) ────────────────────────────
-  const cycleway = edge.tags.cycleway || edge.tags['cycleway:left'] || edge.tags['cycleway:right'];
-  let speed = 5.0; // 18 km/h default
-  if (cycleway) {
-    speed = 5.5;
-  } else if (highway === 'cycleway') {
-    speed = 6.0;
-  } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
-    speed = bicycleFrei ? 4.5 : 1.2;
-  } else if (highway === 'service') {
-    speed = (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') ? 1.5 : 3.0;
-  } else if (highway === 'primary') {
-    speed = 4.0;
-  } else if (highway === 'secondary') {
-    speed = 4.5;
-  } else if (highway === 'residential') {
-    speed = 4.8;
-  } else if (highway === 'living_street') {
-    speed = 4.0;
-  }
-  return { speed, flatPenalty: 0, bicycleFrei };
+  return { speed: speed * profileMultiplier, flatPenalty, bicycleFrei };
 }
 
 // ─── Cost functions ───────────────────────────────────────────────────────────
