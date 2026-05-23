@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Coordinate, RouteResult } from '../core/types';
-import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp } from 'lucide-react';
+import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 
 interface SidebarProps {
   startCoord: Coordinate;
@@ -22,6 +22,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onPresetChange,
 }) => {
   const [showDebug, setShowDebug] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyDebug = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!routeResult || !routeResult.edges) return;
+    
+    const debugText = JSON.stringify({
+      totalDurationSeconds: routeResult.totalDurationSeconds,
+      totalDistanceMeters: routeResult.totalDistanceMeters,
+      trafficSignalsCount: routeResult.trafficSignalsCount,
+      edges: routeResult.edges.map(edge => ({
+        name: edge.name,
+        highway: edge.highway,
+        distance: edge.distance,
+        cost: edge.cost,
+        tags: edge.tags
+      }))
+    }, null, 2);
+
+    navigator.clipboard.writeText(debugText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   // Formatting helpers
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -152,7 +176,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Bug size={16} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
                 Debug Route Edges
               </span>
-              {showDebug ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={handleCopyDebug}
+                  title="Copy path debug info to clipboard"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-primary)',
+                    borderRadius: '4px',
+                    padding: '2px 6px',
+                    fontSize: '0.65rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    zIndex: 2,
+                  }}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={10} style={{ color: 'var(--accent-secondary)' }} />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={10} />
+                      <span>Copy JSON</span>
+                    </>
+                  )}
+                </button>
+                {showDebug ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </div>
             </h2>
             {showDebug && (
               <div style={{ marginTop: '12px', maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
