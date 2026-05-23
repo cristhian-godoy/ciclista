@@ -297,6 +297,11 @@ export class DijkstraRouter implements IRouter {
       }
     }
 
+    if (coordinates.length > 0) {
+      coordinates[0] = { lat: start.lat, lng: start.lng };
+      coordinates[coordinates.length - 1] = { lat: end.lat, lng: end.lng };
+    }
+
     return {
       pathNodeIds,
       coordinates,
