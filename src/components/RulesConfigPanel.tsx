@@ -31,8 +31,8 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       name: 'Shared Path',
       description: 'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
       iconCode: '🚶‍♂️🚲',
-      baseSpeedKmh: 12,
-      speedType: 'custom',
+      baseSpeedKmh: 15,
+      speedType: 'slow',
       flatPenaltySeconds: 0,
     },
     [GermanSign.VZ_241]: {
