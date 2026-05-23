@@ -203,6 +203,8 @@ export const MapView: React.FC<MapViewProps> = ({
     if (selectedNode) {
       setNodeDelay(customNodeDelays.get(selectedNode.id) ?? getDefaultBaseDelay(selectedNode.tags));
       setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
+      // Auto-collapse bottom controls dock to prevent overlap when node configurator is open
+      setDockExpanded(false);
     }
   }, [selectedNode, customNodeDelays, customNodeNotes]);
 
@@ -554,10 +556,14 @@ export const MapView: React.FC<MapViewProps> = ({
 
     map.on('dragstart', () => {
       setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      // Auto-collapse bottom controls dock on map drag
+      setDockExpanded(false);
     });
 
     map.on('zoomstart', () => {
       setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      // Auto-collapse bottom controls dock on map zoom
+      setDockExpanded(false);
     });
 
     map.on('moveend', () => {
@@ -1122,7 +1128,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
             <button
               style={{
-                background: showMinorControls ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)',
+                background: showMinorControls ? 'var(--accent-secondary)' : 'rgba(255, 255, 255, 0.08)',
                 color: showMinorControls ? '#000000' : 'var(--text-primary)',
                 border: 'none',
                 borderRadius: '8px',
@@ -1245,7 +1251,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   key={preset.label}
                   type="button"
                   style={{
-                    background: nodeDelay === preset.value ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)',
+                    background: nodeDelay === preset.value ? 'var(--accent-secondary)' : 'rgba(255, 255, 255, 0.08)',
                     color: nodeDelay === preset.value ? '#000000' : 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '4px',
