@@ -16,7 +16,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 30,
-      dismountRequired: true,
     },
     [GermanSign.VZ_239]: {
       signId: GermanSign.VZ_239,
@@ -26,7 +25,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 5,
       speedType: 'dismount',
       flatPenaltySeconds: 20,
-      dismountRequired: false,
     },
     [GermanSign.VZ_240]: {
       signId: GermanSign.VZ_240,
@@ -36,7 +34,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 12,
       speedType: 'custom',
       flatPenaltySeconds: 0,
-      dismountRequired: false,
     },
     [GermanSign.VZ_241]: {
       signId: GermanSign.VZ_241,
@@ -46,7 +43,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 18,
       speedType: 'relative',
       flatPenaltySeconds: 0,
-      dismountRequired: false,
     },
     [GermanSign.VZ_325_1]: {
       signId: GermanSign.VZ_325_1,
@@ -56,7 +52,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 7,
       speedType: 'relative',
       flatPenaltySeconds: 5,
-      dismountRequired: false,
     },
     [GermanSign.VZ_244_1]: {
       signId: GermanSign.VZ_244_1,
@@ -66,7 +61,6 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       baseSpeedKmh: 20,
       speedType: 'relative',
       flatPenaltySeconds: 0,
-      dismountRequired: false,
     },
   },
   roads: {
@@ -307,15 +301,14 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
             <label>Speed type</label>
             <SpeedTypeSelector
               value={speedType}
-              disabled={config.dismountRequired}
               onChange={val => onChange({ ...config, speedType: val })}
             />
           </div>
 
-          {config.dismountRequired ? (
+          {speedType === 'dismount' ? (
             <div className="rules-field" style={{ marginTop: '4px' }}>
               <span className="rules-speed-info" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                Speed locked: <strong>4 km/h</strong> (Dismount required)
+                Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
           ) : (
@@ -345,17 +338,6 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
               value={config.flatPenaltySeconds}
               onChange={e => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
               className="rules-slider"
-            />
-          </div>
-
-          <div className="rules-field rules-field--toggle">
-            <label htmlFor={`dismount-${config.signId}`}>Require dismount</label>
-            <input
-              id={`dismount-${config.signId}`}
-              type="checkbox"
-              checked={config.dismountRequired}
-              onChange={e => onChange({ ...config, dismountRequired: e.target.checked })}
-              className="rules-checkbox"
             />
           </div>
         </div>
