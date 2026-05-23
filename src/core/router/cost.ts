@@ -21,6 +21,12 @@ function getBaseSpeed(edge: GraphEdge): number {
     } else {
       speed = 1.2; // Walk speed (~4.3 km/h) when walking bike
     }
+  } else if (highway === 'service') {
+    if (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') {
+      speed = 1.5; // Slow down for reversing cars and pedestrians
+    } else {
+      speed = 3.0; // Alleys / basic service paths
+    }
   } else if (highway === 'primary') {
     speed = 4.0; // Slower due to congestion / traffic interaction
   } else if (highway === 'secondary') {
@@ -55,6 +61,17 @@ export const standardCost: CostFunction = (
     if (bicycle !== 'yes' && bicycle !== 'designated') {
       cost += 60; // 60 seconds penalty
       cost *= 4.0; // 4x multiplier
+    }
+  }
+
+  // Heavy penalty for service roads and parking aisles to avoid utilizing them as intersection detours
+  if (highway === 'service') {
+    if (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') {
+      cost += 30;  // 30 seconds flat penalty
+      cost *= 2.5; // 2.5x multiplier
+    } else {
+      cost += 5;   // 5 seconds flat penalty
+      cost *= 1.2; // 1.2x multiplier
     }
   }
 
