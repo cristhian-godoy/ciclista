@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite D.1 — Multi-route result type
+## Current Focus: Bite D.2 — Run 3 alternatives in App
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -21,8 +21,8 @@
   - [x] Add `roadTypeTotals: Record<string, number>` to `RouteResult`.
 
 ## Phase D: Alternative Routes
-- [ ] **Bite D.1: Multi-route result type**
-  - [ ] Add `RouteAlternative` interface to `src/core/types.ts`.
+- [x] **Bite D.1: Multi-route result type**
+  - [x] Add `RouteAlternative` interface to `src/core/types.ts`.
 - [ ] **Bite D.2: Run 3 alternatives in App**
   - [ ] In `src/App.tsx`, calculate three route alternatives: Standard, Avoid Stops, and Quiet Streets.
 - [ ] **Bite D.3: Draw all alternatives on map**
