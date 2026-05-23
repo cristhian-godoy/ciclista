@@ -5,6 +5,7 @@ import { GermanSign, RoadType } from '../core/types';
 
 // ─── Default rule configurations ────────────────────────────────────────────
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
   signs: {
     [GermanSign.VZ_242_1]: {
@@ -13,6 +14,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 242.1 – Fußgängerzone. Cyclists must dismount unless "Fahrräder frei" is posted.',
       iconCode: '🚶',
       baseSpeedKmh: 4,
+      speedType: 'dismount',
       flatPenaltySeconds: 30,
       dismountRequired: true,
     },
@@ -22,6 +24,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
       iconCode: '🦶',
       baseSpeedKmh: 5,
+      speedType: 'dismount',
       flatPenaltySeconds: 20,
       dismountRequired: false,
     },
@@ -31,6 +34,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
       iconCode: '🚶‍♂️🚲',
       baseSpeedKmh: 12,
+      speedType: 'custom',
       flatPenaltySeconds: 0,
       dismountRequired: false,
     },
@@ -40,6 +44,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 241 – Getrennter Geh- und Radweg. Separate tracks for pedestrians and cyclists.',
       iconCode: '🚲',
       baseSpeedKmh: 18,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
       dismountRequired: false,
     },
@@ -49,6 +54,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 325.1 – Verkehrsberuhigter Bereich. Pedestrians have priority, walking speed.',
       iconCode: '🏘️',
       baseSpeedKmh: 7,
+      speedType: 'relative',
       flatPenaltySeconds: 5,
       dismountRequired: false,
     },
@@ -58,6 +64,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       description: 'Vz 244.1 – Fahrradstraße. Bikes have priority, cars may use at low speed.',
       iconCode: '🚲🛣️',
       baseSpeedKmh: 20,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
       dismountRequired: false,
     },
@@ -67,30 +74,35 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
       roadId: RoadType.PRIMARY,
       name: 'Primary Road',
       baseSpeedKmh: 14,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
     },
     [RoadType.SECONDARY]: {
       roadId: RoadType.SECONDARY,
       name: 'Secondary Road',
       baseSpeedKmh: 16,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
     },
     [RoadType.RESIDENTIAL]: {
       roadId: RoadType.RESIDENTIAL,
       name: 'Residential Street',
       baseSpeedKmh: 17,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
     },
     [RoadType.SERVICE]: {
       roadId: RoadType.SERVICE,
       name: 'Service Road',
       baseSpeedKmh: 11,
+      speedType: 'relative',
       flatPenaltySeconds: 5,
     },
     [RoadType.PATH_DEFAULT]: {
       roadId: RoadType.PATH_DEFAULT,
       name: 'Generic Path',
       baseSpeedKmh: 18,
+      speedType: 'relative',
       flatPenaltySeconds: 0,
     },
   },
@@ -105,6 +117,20 @@ interface SignRowProps {
 
 const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
+
+  const getEffectiveSpeedType = (cfg: SignRuleConfig): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
+    if (cfg.speedType) return cfg.speedType;
+    const signId = cfg.signId;
+    if (signId === GermanSign.VZ_241 || signId === GermanSign.VZ_244_1 || signId === GermanSign.VZ_325_1) {
+      return 'relative';
+    }
+    if (signId === GermanSign.VZ_242_1 || signId === GermanSign.VZ_239) {
+      return 'dismount';
+    }
+    return 'custom';
+  };
+
+  const speedType = getEffectiveSpeedType(config);
 
   return (
     <div className="rules-item">
@@ -122,17 +148,44 @@ const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
           <p className="rules-item-desc">{config.description}</p>
 
           <div className="rules-field">
-            <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
-            <input
-              type="range"
-              min={1}
-              max={30}
-              step={1}
-              value={config.baseSpeedKmh}
-              onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-              className="rules-slider"
-            />
+            <label htmlFor={`speed-type-${config.signId}`}>Speed type</label>
+            <select
+              id={`speed-type-${config.signId}`}
+              value={speedType}
+              disabled={config.dismountRequired}
+              onChange={e => onChange({ ...config, speedType: e.target.value as SignRuleConfig['speedType'] })}
+              className="rules-select"
+            >
+              <option value="relative">100% (Bike Speed)</option>
+              <option value="slow">15 km/h (Slow)</option>
+              <option value="slower">10 km/h (Slower)</option>
+              <option value="dismount">5 km/h (Dismount)</option>
+              <option value="custom">Custom</option>
+            </select>
           </div>
+
+          {config.dismountRequired ? (
+            <div className="rules-field" style={{ marginTop: '4px' }}>
+              <span className="rules-speed-info" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                Speed locked: <strong>4 km/h</strong> (Dismount required)
+              </span>
+            </div>
+          ) : (
+            speedType === 'custom' && (
+              <div className="rules-field">
+                <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
+                <input
+                  type="range"
+                  min={1}
+                  max={30}
+                  step={1}
+                  value={config.baseSpeedKmh}
+                  onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
+                  className="rules-slider"
+                />
+              </div>
+            )
+          )}
 
           <div className="rules-field">
             <label>Flat penalty: <strong>{config.flatPenaltySeconds}s</strong></label>
@@ -171,6 +224,12 @@ interface RoadRowProps {
 const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
+  const getEffectiveSpeedType = (cfg: RoadRuleConfig): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
+    return cfg.speedType || 'relative';
+  };
+
+  const speedType = getEffectiveSpeedType(config);
+
   return (
     <div className="rules-item">
       <button
@@ -184,17 +243,35 @@ const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
       {expanded && (
         <div className="rules-item-body">
           <div className="rules-field">
-            <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
-            <input
-              type="range"
-              min={1}
-              max={35}
-              step={1}
-              value={config.baseSpeedKmh}
-              onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-              className="rules-slider"
-            />
+            <label htmlFor={`speed-type-${config.roadId}`}>Speed type</label>
+            <select
+              id={`speed-type-${config.roadId}`}
+              value={speedType}
+              onChange={e => onChange({ ...config, speedType: e.target.value as RoadRuleConfig['speedType'] })}
+              className="rules-select"
+            >
+              <option value="relative">100% (Bike Speed)</option>
+              <option value="slow">15 km/h (Slow)</option>
+              <option value="slower">10 km/h (Slower)</option>
+              <option value="dismount">5 km/h (Dismount)</option>
+              <option value="custom">Custom</option>
+            </select>
           </div>
+
+          {speedType === 'custom' && (
+            <div className="rules-field">
+              <label>Base speed: <strong>{config.baseSpeedKmh} km/h</strong></label>
+              <input
+                type="range"
+                min={1}
+                max={35}
+                step={1}
+                value={config.baseSpeedKmh}
+                onChange={e => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
+                className="rules-slider"
+              />
+            </div>
+          )}
 
           <div className="rules-field">
             <label>Flat penalty: <strong>{config.flatPenaltySeconds}s</strong></label>

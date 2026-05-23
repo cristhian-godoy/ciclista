@@ -1,7 +1,94 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDisplayCost, standardCost, getDefaultNodeDelay } from './cost';
+import { calculateDisplayCost, standardCost, getDefaultNodeDelay, resolveRuleSpeed } from './cost';
 import { DijkstraRouter } from './router';
-import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides } from '../types';
+import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig, RoadRuleConfig } from '../types';
+import { GermanSign, RoadType } from '../types';
+
+describe('resolveRuleSpeed', () => {
+  it('locks speed to 4 km/h if dismountRequired is true', () => {
+    const cfg: SignRuleConfig = {
+      signId: GermanSign.VZ_242_1,
+      name: 'Pedestrian Zone',
+      description: '...',
+      iconCode: '🚶',
+      baseSpeedKmh: 12,
+      speedType: 'custom',
+      flatPenaltySeconds: 0,
+      dismountRequired: true,
+    };
+    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(4);
+    expect(resolveRuleSpeed(cfg, 'normal')).toBe(4);
+    expect(resolveRuleSpeed(cfg, 'slow')).toBe(4);
+  });
+
+  it('resolves relative speed type correctly based on profile', () => {
+    const cfg: RoadRuleConfig = {
+      roadId: RoadType.RESIDENTIAL,
+      name: 'Residential',
+      baseSpeedKmh: 17,
+      speedType: 'relative',
+      flatPenaltySeconds: 0,
+    };
+    expect(resolveRuleSpeed(cfg, 'slow')).toBe(15);
+    expect(resolveRuleSpeed(cfg, 'normal')).toBe(18);
+    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(25);
+  });
+
+  it('resolves fixed speed types slow, slower, and dismount', () => {
+    const base: RoadRuleConfig = {
+      roadId: RoadType.RESIDENTIAL,
+      name: 'Residential',
+      baseSpeedKmh: 17,
+      flatPenaltySeconds: 0,
+    };
+    expect(resolveRuleSpeed({ ...base, speedType: 'slow' }, 'ebike')).toBe(15);
+    expect(resolveRuleSpeed({ ...base, speedType: 'slower' }, 'ebike')).toBe(10);
+    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 'ebike')).toBe(5);
+  });
+
+  it('resolves custom speed type to baseSpeedKmh', () => {
+    const cfg: RoadRuleConfig = {
+      roadId: RoadType.RESIDENTIAL,
+      name: 'Residential',
+      baseSpeedKmh: 22,
+      speedType: 'custom',
+      flatPenaltySeconds: 0,
+    };
+    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(22);
+  });
+
+  it('resolves fallback default speed types if speedType is undefined', () => {
+    const signCfg: SignRuleConfig = {
+      signId: GermanSign.VZ_241, // Segregated path
+      name: 'Segregated Path',
+      description: '...',
+      iconCode: '🚲',
+      baseSpeedKmh: 18,
+      flatPenaltySeconds: 0,
+      dismountRequired: false,
+    };
+    expect(resolveRuleSpeed(signCfg, 'ebike')).toBe(25); // relative
+
+    const sidewalkCfg: SignRuleConfig = {
+      signId: GermanSign.VZ_239, // Sidewalk
+      name: 'Sidewalk',
+      description: '...',
+      iconCode: '🦶',
+      baseSpeedKmh: 5,
+      flatPenaltySeconds: 0,
+      dismountRequired: false,
+    };
+    expect(resolveRuleSpeed(sidewalkCfg, 'ebike')).toBe(5); // dismount
+
+    const roadCfg: RoadRuleConfig = {
+      roadId: RoadType.PRIMARY,
+      name: 'Primary Road',
+      baseSpeedKmh: 14,
+      flatPenaltySeconds: 0,
+    };
+    expect(resolveRuleSpeed(roadCfg, 'ebike')).toBe(25); // relative
+  });
+});
 
 describe('getDefaultNodeDelay', () => {
   it('returns correct delays for various node types', () => {
