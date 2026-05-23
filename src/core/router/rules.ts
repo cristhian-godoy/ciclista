@@ -139,3 +139,15 @@ export function mapOSMNodeToControl(
   return null;
 }
 
+/**
+ * Checks if a set of OSM way tags indicates the presence of a cycleway on the street.
+ */
+export function hasCycleway(tags: Record<string, string>): boolean {
+  return !!(
+    tags.cycleway ||
+    tags['cycleway:left'] ||
+    tags['cycleway:right'] ||
+    tags['cycleway:both']
+  );
+}
+
