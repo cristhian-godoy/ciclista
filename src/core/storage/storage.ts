@@ -1,10 +1,11 @@
-import type { IStorageProvider, LocalOverrides } from '../types';
+import type { IStorageProvider, LocalOverrides, RulesConfiguration } from '../types';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
  */
 export class LocalStorageProvider implements IStorageProvider {
   private STORAGE_KEY = 'ciclista_custom_nodes';
+  private RULES_KEY = 'ciclista_rules_config';
 
   /**
    * Helper to load the raw JSON object from localStorage.
@@ -78,6 +79,26 @@ export class LocalStorageProvider implements IStorageProvider {
     if (raw[nodeId]) {
       delete raw[nodeId];
       this.saveRawData(raw);
+    }
+  }
+
+  /** Persists the full rules configuration to localStorage. */
+  saveRulesConfig(config: RulesConfiguration): void {
+    try {
+      localStorage.setItem(this.RULES_KEY, JSON.stringify(config));
+    } catch (e) {
+      console.error('Failed to save rules config to localStorage:', e);
+    }
+  }
+
+  /** Loads the persisted rules configuration, or returns null if none saved. */
+  loadRulesConfig(): RulesConfiguration | null {
+    try {
+      const data = localStorage.getItem(this.RULES_KEY);
+      return data ? (JSON.parse(data) as RulesConfiguration) : null;
+    } catch (e) {
+      console.error('Failed to load rules config from localStorage:', e);
+      return null;
     }
   }
 }
