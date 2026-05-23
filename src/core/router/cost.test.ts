@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateDisplayCost, standardCost, getDefaultNodeDelay, resolveRuleSpeed } from './cost';
-import { DijkstraRouter } from './router';
+import { DijkstraRouter, calculateTurnPenalty } from './router';
 import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig, RoadRuleConfig } from '../types';
 import { GermanSign, RoadType } from '../types';
 
@@ -87,6 +87,32 @@ describe('resolveRuleSpeed', () => {
       flatPenaltySeconds: 0,
     };
     expect(resolveRuleSpeed(roadCfg, 'ebike')).toBe(25); // relative
+  });
+});
+
+describe('calculateTurnPenalty', () => {
+  it('returns 0 for straight traversal (no turn)', () => {
+    // Traverse from (0,0) to (0,1) to (0,2) - straight line north
+    const p = { lat: 0.0, lng: 0.0 };
+    const c = { lat: 1.0, lng: 0.0 };
+    const n = { lat: 2.0, lng: 0.0 };
+    expect(calculateTurnPenalty(p, c, n)).toBe(0);
+  });
+
+  it('returns 3 for normal turn (e.g., 90 degrees)', () => {
+    // Traverse from (0,0) to (1,0) (going north) then to (1,1) (going east)
+    const p = { lat: 0.0, lng: 0.0 };
+    const c = { lat: 1.0, lng: 0.0 };
+    const n = { lat: 1.0, lng: 1.0 };
+    expect(calculateTurnPenalty(p, c, n)).toBe(3);
+  });
+
+  it('returns 30 for sharp U-turn', () => {
+    // Traverse from (0,0) to (1,0) (going north) then back to (0,0)
+    const p = { lat: 0.0, lng: 0.0 };
+    const c = { lat: 1.0, lng: 0.0 };
+    const n = { lat: 0.0, lng: 0.0 };
+    expect(calculateTurnPenalty(p, c, n)).toBe(30);
   });
 });
 

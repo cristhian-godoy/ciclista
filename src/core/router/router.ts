@@ -4,6 +4,35 @@ import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 import { calculateDisplayCost } from './cost';
 
 /**
+ * Calculates the turn penalty (in seconds) between three points: p -> c -> n.
+ */
+export function calculateTurnPenalty(p: Coordinate, c: Coordinate, n: Coordinate): number {
+  const cosLat = Math.cos(c.lat * Math.PI / 180);
+  const v1x = (c.lng - p.lng) * cosLat;
+  const v1y = c.lat - p.lat;
+  const v2x = (n.lng - c.lng) * cosLat;
+  const v2y = n.lat - c.lat;
+
+  const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+  const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+  if (len1 > 1e-7 && len2 > 1e-7) {
+    const dot = v1x * v2x + v1y * v2y;
+    const cosTheta = dot / (len1 * len2);
+
+    // U-turn or very sharp turn (angle > 135 deg)
+    if (cosTheta < -0.7) {
+      return 30; // 30s penalty
+    }
+    // Normal turn (angle between 45 and 135 deg)
+    else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
+      return 3; // 3s penalty
+    }
+  }
+  return 0;
+}
+
+/**
  * Classifies an OSM highway tag into one of four categories for route analytics.
  */
 export function getRoadTypeCategory(
@@ -387,34 +416,9 @@ export class DijkstraRouter implements IRouter {
           if (parentId) {
             const parentEntry = graph.nodes.get(parentId);
             const neighborEntry = graph.nodes.get(neighborId);
-            if (parentEntry && neighborEntry) {
-              const p = parentEntry.node;
-              const c = currentEntry.node;
-              const n = neighborEntry.node;
-
-              const cosLat = Math.cos(c.lat * Math.PI / 180);
-              const v1x = (c.lng - p.lng) * cosLat;
-              const v1y = c.lat - p.lat;
-              const v2x = (n.lng - c.lng) * cosLat;
-              const v2y = n.lat - c.lat;
-
-              const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
-              const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
-
-              if (len1 > 1e-7 && len2 > 1e-7) {
-                const dot = v1x * v2x + v1y * v2y;
-                const cosTheta = dot / (len1 * len2);
-
-                // U-turn or very sharp turn (angle > 135 deg)
-                if (cosTheta < -0.7) {
-                  edgeCost += 30; // 30s penalty
-                }
-                // Normal turn (angle between 45 and 135 deg)
-                else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
-                  edgeCost += 3; // 3s penalty
-                }
-              }
-            }
+             if (parentEntry && neighborEntry) {
+               edgeCost += calculateTurnPenalty(parentEntry.node, currentEntry.node, neighborEntry.node);
+             }
           }
 
           const altDist = currentDist + edgeCost;
@@ -492,28 +496,7 @@ export class DijkstraRouter implements IRouter {
               const parentEntry = graph.nodes.get(parentId);
               const nextEntry = graph.nodes.get(nextNodeId);
               if (parentEntry && nextEntry) {
-                const p = parentEntry.node;
-                const c = entry.node;
-                const n = nextEntry.node;
-
-                const cosLat = Math.cos(c.lat * Math.PI / 180);
-                const v1x = (c.lng - p.lng) * cosLat;
-                const v1y = c.lat - p.lat;
-                const v2x = (n.lng - c.lng) * cosLat;
-                const v2y = n.lat - c.lat;
-
-                const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
-                const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
-
-                if (len1 > 1e-7 && len2 > 1e-7) {
-                  const dot = v1x * v2x + v1y * v2y;
-                  const cosTheta = dot / (len1 * len2);
-                  if (cosTheta < -0.7) {
-                    turnPenalty = 30; // 30s U-turn penalty
-                  } else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
-                    turnPenalty = 3;  // 3s normal turn penalty
-                  }
-                }
+                turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
               }
             }
 
@@ -676,32 +659,7 @@ export class DijkstraRouter implements IRouter {
           const parentEntry = graph.nodes.get(parentId);
           const neighborEntry = graph.nodes.get(neighborId);
           if (parentEntry && neighborEntry) {
-            const p = parentEntry.node;
-            const c = currentEntry.node;
-            const n = neighborEntry.node;
-
-            const cosLat = Math.cos(c.lat * Math.PI / 180);
-            const v1x = (c.lng - p.lng) * cosLat;
-            const v1y = c.lat - p.lat;
-            const v2x = (n.lng - c.lng) * cosLat;
-            const v2y = n.lat - c.lat;
-
-            const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
-            const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
-
-            if (len1 > 1e-7 && len2 > 1e-7) {
-              const dot = v1x * v2x + v1y * v2y;
-              const cosTheta = dot / (len1 * len2);
-
-              // U-turn or very sharp turn (angle > 135 deg)
-              if (cosTheta < -0.7) {
-                edgeCost += 30; // 30s penalty
-              }
-              // Normal turn (angle between 45 and 135 deg)
-              else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
-                edgeCost += 3; // 3s penalty
-              }
-            }
+            edgeCost += calculateTurnPenalty(parentEntry.node, currentEntry.node, neighborEntry.node);
           }
         }
 
@@ -779,28 +737,7 @@ export class DijkstraRouter implements IRouter {
             const parentEntry = graph.nodes.get(parentId);
             const nextEntry = graph.nodes.get(nextNodeId);
             if (parentEntry && nextEntry) {
-              const p = parentEntry.node;
-              const c = entry.node;
-              const n = nextEntry.node;
-
-              const cosLat = Math.cos(c.lat * Math.PI / 180);
-              const v1x = (c.lng - p.lng) * cosLat;
-              const v1y = c.lat - p.lat;
-              const v2x = (n.lng - c.lng) * cosLat;
-              const v2y = n.lat - c.lat;
-
-              const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
-              const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
-
-              if (len1 > 1e-7 && len2 > 1e-7) {
-                const dot = v1x * v2x + v1y * v2y;
-                const cosTheta = dot / (len1 * len2);
-                if (cosTheta < -0.7) {
-                  turnPenalty = 30; // 30s U-turn penalty
-                } else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
-                  turnPenalty = 3;  // 3s normal turn penalty
-                }
-              }
+              turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
             }
           }
 
