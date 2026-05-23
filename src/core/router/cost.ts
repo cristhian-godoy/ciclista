@@ -246,9 +246,11 @@ export const avoidBusyRoadsCost: CostFunction = (
 
   let multiplier = 1.0;
   if (['primary', 'primary_link'].includes(highway)) {
-    multiplier = isCycleway ? 1.5 : 3.0;
+    multiplier = isCycleway ? 1.5 : 4.0;
   } else if (['secondary', 'secondary_link'].includes(highway)) {
-    multiplier = isCycleway ? 1.2 : 2.0;
+    multiplier = isCycleway ? 1.2 : 2.5;
+  } else if (['tertiary', 'tertiary_link'].includes(highway)) {
+    multiplier = isCycleway ? 1.1 : 1.8;
   } else if (highway === 'cycleway') {
     multiplier = 0.8;
   }
