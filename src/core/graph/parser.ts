@@ -158,9 +158,11 @@ export class OSMGraphParser implements IGraphParser {
     const nodesData: GraphNode[] = [
       { id: '1', lat: 48.13715, lng: 11.5754, tags: { name: 'Home (Marienplatz)' } },
       { id: '2', lat: 48.1428, lng: 11.5775, tags: { highway: 'traffic_signals', name: 'Odeonsplatz Intersection' } },
-      { id: '3', lat: 48.1390, lng: 11.5810, tags: { name: 'Maximilianstrasse' } },
+      { id: '3', lat: 48.1390, lng: 11.5810, tags: { highway: 'give_way', name: 'Maximilianstrasse Yield' } },
       { id: '4', lat: 48.1351, lng: 11.5760, tags: { highway: 'traffic_signals', name: 'Viktualienmarkt Light' } },
       { id: '5', lat: 48.1350, lng: 11.5820, tags: { name: 'Office (Isartor)' } },
+      { id: '6', lat: 48.1380, lng: 11.5780, tags: { highway: 'stop', name: 'Residenzstrasse Stop Sign' } },
+      { id: '7', lat: 48.1405, lng: 11.5795, tags: { highway: 'crossing', crossing: 'controlled', name: 'Pedestrian Crossing' } },
     ];
 
     nodesData.forEach(n => {
@@ -175,13 +177,15 @@ export class OSMGraphParser implements IGraphParser {
       v.edges.push({ target: uId, distance, name, tags, speedLimit: 5 });
     };
 
-    // Route A (Via Intersections with lights)
+    // Route A (Via Intersections with lights and controls)
     addBiEdge('1', '2', 'Theatinerstraße', 180, { highway: 'tertiary' });
-    addBiEdge('2', '3', 'Residenzstraße', 220, { highway: 'residential', cycleway: 'track' });
+    addBiEdge('2', '7', 'Residenzstraße North', 110, { highway: 'residential', cycleway: 'track' });
+    addBiEdge('7', '3', 'Residenzstraße South', 110, { highway: 'residential', cycleway: 'track' });
     addBiEdge('3', '5', 'Maximilianstraße', 250, { highway: 'tertiary' });
 
-    // Route B (Via quieter side paths / alternative lights)
-    addBiEdge('1', '4', 'Sendlinger Straße', 150, { highway: 'residential', cycleway: 'lane' });
+    // Route B (Via stop sign and alternative lights)
+    addBiEdge('1', '6', 'Sendlinger Straße North', 75, { highway: 'residential', cycleway: 'lane' });
+    addBiEdge('6', '4', 'Sendlinger Straße South', 75, { highway: 'residential', cycleway: 'lane' });
     addBiEdge('4', '5', 'Tal', 350, { highway: 'service' });
 
     return graph;

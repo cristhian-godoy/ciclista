@@ -77,6 +77,25 @@ function resolveSpeedAndPenalty(
   return { speed: speed * profileMultiplier, flatPenalty, bicycleFrei };
 }
 
+/**
+ * Resolves the default wait penalty (in seconds) for a control point node.
+ */
+export function getDefaultNodeDelay(tags: Record<string, string>): number {
+  if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
+    return 15; // default traffic light wait
+  }
+  if (tags.highway === 'give_way') {
+    return 5;  // default yield delay
+  }
+  if (tags.highway === 'stop') {
+    return 8;  // default stop delay
+  }
+  if (tags.highway === 'crossing' || tags.crossing === 'uncontrolled') {
+    return 5;  // default pedestrian crossing delay
+  }
+  return 0;
+}
+
 // ─── Cost functions ───────────────────────────────────────────────────────────
 
 /**
@@ -112,20 +131,14 @@ export const standardCost: CostFunction = (
     }
   }
 
-  // Custom node delay or default signal penalty
+  // Custom node delay or default control point penalty
   const customDelay = overrides.nodeDelays.get(targetId);
   if (customDelay !== undefined) {
     cost += customDelay;
   } else {
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
-    if (
-      tags.highway === 'traffic_signals' ||
-      tags.crossing === 'traffic_signals' ||
-      tags.crossing === 'controlled'
-    ) {
-      cost += 15;
-    }
+    cost += getDefaultNodeDelay(tags);
   }
 
   return cost;
@@ -158,13 +171,11 @@ export const avoidStoppingCost: CostFunction = (
   } else {
     const targetNode = graph.nodes.get(targetId)?.node;
     const tags = targetNode?.tags || {};
-    if (
-      tags.highway === 'traffic_signals' ||
-      tags.crossing === 'traffic_signals' ||
-      tags.crossing === 'controlled' ||
-      tags.highway === 'stop'
-    ) {
-      cost += 45;
+    const defaultDelay = getDefaultNodeDelay(tags);
+    if (defaultDelay > 0) {
+      // Scale standard delay and add heavy stop avoidance penalty (45s base for signals/stops, 25s for yields/crossings)
+      const baseStopPenalty = (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals' || tags.highway === 'stop') ? 45 : 25;
+      cost += defaultDelay + baseStopPenalty;
     }
   }
 
