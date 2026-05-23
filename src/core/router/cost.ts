@@ -1,4 +1,4 @@
-import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph } from '../types';
+import type { CostFunction, GraphEdge, LocalOverrides, StreetGraph, BikeProfile, SignRuleConfig, RoadRuleConfig } from '../types';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
@@ -21,6 +21,52 @@ const PROFILE_MULTIPLIER: Record<string, number> = {
 };
 
 /**
+ * Resolves a SignRuleConfig or RoadRuleConfig speed to km/h based on the speedType and bike profile,
+ * obeying require dismount constraint (4 km/h) if active.
+ */
+export function resolveRuleSpeed(
+  cfg: SignRuleConfig | RoadRuleConfig,
+  profile: BikeProfile
+): number {
+  // If require dismount is true (on SignRuleConfig), lock to 4 km/h
+  if ('dismountRequired' in cfg && cfg.dismountRequired) {
+    return 4;
+  }
+
+  let speedType = cfg.speedType;
+  if (!speedType) {
+    if ('signId' in cfg) {
+      const signId = cfg.signId;
+      if (signId === 'Vz_241' || signId === 'Vz_244.1') {
+        speedType = 'relative';
+      } else if (signId === 'Vz_242.1' || signId === 'Vz_239') {
+        speedType = 'dismount';
+      } else {
+        speedType = 'custom';
+      }
+    } else {
+      speedType = 'relative';
+    }
+  }
+
+  switch (speedType) {
+    case 'relative':
+      if (profile === 'slow') return 15;
+      if (profile === 'ebike') return 25;
+      return 18; // normal
+    case 'slow':
+      return 15;
+    case 'slower':
+      return 10;
+    case 'dismount':
+      return 5;
+    case 'custom':
+    default:
+      return cfg.baseSpeedKmh;
+  }
+}
+
+/**
  * Resolves the effective cycling speed (m/s) and flat penalty (s) for an edge,
  * using the active RulesConfiguration when available, falling back to hardcoded defaults.
  */
@@ -31,7 +77,8 @@ function resolveSpeedAndPenalty(
   const highway = edge.tags.highway || '';
   const { sign, road, bicycleFrei } = mapOSMToSignAndRoad(highway, edge.tags);
   const rules = overrides.rulesConfig;
-  const profileMultiplier = PROFILE_MULTIPLIER[overrides.bikeProfile ?? 'normal'] ?? 1.0;
+  const profile = overrides.bikeProfile ?? 'normal';
+  const profileMultiplier = PROFILE_MULTIPLIER[profile] ?? 1.0;
 
   let speed: number;
   let flatPenalty: number;
@@ -39,15 +86,20 @@ function resolveSpeedAndPenalty(
   if (rules) {
     if (sign && rules.signs[sign]) {
       const cfg = rules.signs[sign];
-      speed = kmhToMs(cfg.baseSpeedKmh);
+      const speedKmh = resolveRuleSpeed(cfg, profile);
+      speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
+      return { speed, flatPenalty, bicycleFrei };
     } else if (rules.roads[road]) {
       const cfg = rules.roads[road];
-      speed = kmhToMs(cfg.baseSpeedKmh);
+      const speedKmh = resolveRuleSpeed(cfg, profile);
+      speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
+      return { speed, flatPenalty, bicycleFrei };
     } else {
-      speed = kmhToMs(18);
+      speed = kmhToMs(18) * profileMultiplier;
       flatPenalty = 0;
+      return { speed, flatPenalty, bicycleFrei };
     }
   } else {
     // ── Hardcoded fallback ───────────────────────────────────────────────────
@@ -72,9 +124,8 @@ function resolveSpeedAndPenalty(
       speed = 5.0;
     }
     flatPenalty = 0;
+    return { speed: speed * profileMultiplier, flatPenalty, bicycleFrei };
   }
-
-  return { speed: speed * profileMultiplier, flatPenalty, bicycleFrei };
 }
 
 /**

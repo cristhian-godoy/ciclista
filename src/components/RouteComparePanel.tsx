@@ -62,7 +62,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                 return (
                   <th
                     key={alt.label}
-                    onClick={() => onSelectAlternative(alt.label as any)}
+                    onClick={() => onSelectAlternative(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')}
                     style={{
                       padding: '8px 4px',
                       cursor: 'pointer',

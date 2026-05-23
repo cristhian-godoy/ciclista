@@ -212,6 +212,7 @@ export interface SignRuleConfig {
   description: string;
   iconCode: string;
   baseSpeedKmh: number;
+  speedType?: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
   flatPenaltySeconds: number;
   dismountRequired: boolean;
 }
@@ -223,6 +224,7 @@ export interface RoadRuleConfig {
   roadId: RoadType;
   name: string;
   baseSpeedKmh: number;
+  speedType?: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
   flatPenaltySeconds: number;
 }
 

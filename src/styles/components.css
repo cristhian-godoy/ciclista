@@ -274,6 +274,29 @@ h2 {
   align-items: center;
 }
 
+.rules-select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  outline: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  transition: border-color var(--transition-fast);
+}
+
+.rules-select:focus {
+  border-color: var(--glass-border-focus);
+}
+
+.rules-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .rules-slider {
   -webkit-appearance: none;
   appearance: none;

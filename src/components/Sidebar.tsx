@@ -139,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div
                   key={alt.label}
                   className={`alternative-card ${isActive ? 'active' : ''}`}
-                  onClick={() => onStrategyChange(alt.label as any)}
+                  onClick={() => onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')}
                   style={{
                     padding: '10px 12px',
                     borderRadius: '8px',
