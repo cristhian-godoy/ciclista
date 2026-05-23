@@ -3,7 +3,7 @@ import { OSMGraphParser } from './parser';
 
 describe('OSMGraphParser', () => {
   let parser: OSMGraphParser;
-  let warnSpy: any;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     parser = new OSMGraphParser();
