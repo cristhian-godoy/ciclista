@@ -20,6 +20,30 @@ export function findNearestNode(graph: StreetGraph, coord: Coordinate): string |
 }
 
 /**
+ * Projects a point onto a line segment defined by points a and b.
+ * Returns the projected coordinate, clamped to the segment.
+ */
+export function projectPointOnSegment(p: Coordinate, a: Coordinate, b: Coordinate): Coordinate {
+  const cosLat = Math.cos(a.lat * Math.PI / 180);
+  const abx = (b.lng - a.lng) * cosLat;
+  const aby = b.lat - a.lat;
+  
+  const apx = (p.lng - a.lng) * cosLat;
+  const apy = p.lat - a.lat;
+  
+  const abLen2 = abx * abx + aby * aby;
+  if (abLen2 < 1e-14) return { lat: a.lat, lng: a.lng };
+  
+  let t = (apx * abx + apy * aby) / abLen2;
+  t = Math.max(0, Math.min(1, t));
+  
+  return {
+    lat: a.lat + t * (b.lat - a.lat),
+    lng: a.lng + t * (b.lng - a.lng),
+  };
+}
+
+/**
  * A standard Min-Heap Priority Queue for Dijkstra performance.
  */
 class MinHeap<T> {
@@ -297,14 +321,42 @@ export class DijkstraRouter implements IRouter {
       }
     }
 
-    if (coordinates.length > 0) {
-      coordinates[0] = { lat: start.lat, lng: start.lng };
-      coordinates[coordinates.length - 1] = { lat: end.lat, lng: end.lng };
+    let finalCoords: Coordinate[] = [];
+    if (coordinates.length >= 2) {
+      const n0 = coordinates[0];
+      const n1 = coordinates[1];
+      const nk_1 = coordinates[coordinates.length - 2];
+      const nk = coordinates[coordinates.length - 1];
+
+      const projectedStart = projectPointOnSegment(start, n0, n1);
+      const projectedEnd = projectPointOnSegment(end, nk_1, nk);
+
+      const adjusted: Coordinate[] = [start, projectedStart];
+      for (let i = 1; i < coordinates.length - 1; i++) {
+        adjusted.push(coordinates[i]);
+      }
+      adjusted.push(projectedEnd);
+      adjusted.push(end);
+
+      // Clean consecutive duplicates
+      for (const c of adjusted) {
+        if (finalCoords.length === 0) {
+          finalCoords.push(c);
+        } else {
+          const last = finalCoords[finalCoords.length - 1];
+          const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
+          if (dist2 > 1e-14) {
+            finalCoords.push(c);
+          }
+        }
+      }
+    } else if (coordinates.length === 1) {
+      finalCoords = [start, coordinates[0], end];
     }
 
     return {
       pathNodeIds,
-      coordinates,
+      coordinates: finalCoords,
       // Total duration represents the shortest cost found by Dijkstra (in seconds)
       totalDurationSeconds: distances.get(endNodeId) || 0,
       totalDistanceMeters,
