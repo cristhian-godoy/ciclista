@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type { Coordinate, StreetGraph, GraphNode, LocalOverrides } from './core/types';
+import type { Coordinate, StreetGraph, GraphNode, LocalOverrides, RulesConfiguration } from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
 import { standardCost, avoidStoppingCost, avoidBusyRoadsCost } from './core/router/cost';
+import { DEFAULT_RULES_CONFIG } from './components/RulesConfigPanel';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
@@ -46,6 +47,7 @@ export default function App() {
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
   const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
   const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
+  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(DEFAULT_RULES_CONFIG);
 
   // 3. Load settings from storage on startup
   const loadCustomOverrides = async () => {
@@ -321,6 +323,8 @@ export default function App() {
         onStrategyChange={setRoutingStrategy}
         selectedPreset={selectedPreset}
         onPresetChange={handlePresetChange}
+        rulesConfig={rulesConfig}
+        onRulesChange={setRulesConfig}
       />
       <MapView
         graph={graph}
