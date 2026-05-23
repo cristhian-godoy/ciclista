@@ -1,78 +1,105 @@
-# German Traffic Signs & Rules - Incremental Roadmap
+# Route Alternatives & Analytics — Incremental Roadmap
 
-This plan breaks down the integration of German road rules, signs, and classifications into small, testable, and reversible bites. We implement the UI configuration panel first, followed by the local state management and persistence, then the mapping layer, and finally the routing cost engine integration.
+## Premise
+
+### Time estimate accuracy
+The app currently shows **65m 34s** for a route the user cycles in **45 min** (slow bike, 18 km/h)
+or **36 min** (e-bike, 25 km/h). The cost model was built around routing *preference* (which
+path to prefer), not real elapsed-time prediction. Penalties for signals, turns, and road types
+inflate the total far beyond reality. Before comparing alternatives the displayed time must be
+trustworthy — otherwise the analytics are meaningless. This is the first thing to fix.
+
+### Multiple route alternatives
+Google Maps-style: run the routing engine 2–3 times with deliberately different cost functions
+and display all results simultaneously so the user can compare them visually and analytically.
+
+### Richer analytics
+Side-by-side comparison panel: estimated time (calibrated), distance, signal count, yield count,
+road-type mix (% cycleway, % residential, % primary, …). Stops are excluded — almost none in
+Munich.
+
+---
+
+## Bite-size rule
+**Each bite touches at most 2 files, produces a clean TypeScript build, and is independently
+committable.** If a bite feels large, split it. No bite should require understanding another
+in-progress bite to be reviewed.
 
 ---
 
 ## Proposed Changes
 
-### Phase 1: UI & Configuration State (Small Bites)
+### Phase A: Time Calibration
 
-#### Bite 1.1: Core Types definition in [types.ts](file:///home/cgodoy/work/ciclista/src/core/types.ts)
-Define the configurations for traffic signs and road classifications:
-- Define `GermanSign` enum representing signs: Vz 242.1 (Pedestrian Zone), Vz 239 (Sidewalk), Vz 240 (Shared Path), Vz 241 (Segregated Path), Vz 325.1 (Living Street), Vz 244.1 (Bicycle Street).
-- Define `RoadType` enum representing classifications: Primary, Secondary, Residential, Service, Path (Default).
-- Define `SignRuleConfig` and `RoadRuleConfig` structures (speed limit km/h, flat penalty seconds, and dismount required).
-- Define the global `RulesConfiguration` structure.
+#### Bite A.1 — Speed profile constants  [MODIFY] `src/core/router/cost.ts`
+Replace the current ad-hoc per-highway m/s values with a clean `BASE_SPEED_MS` lookup table
+driven by a user-selectable bike profile: **Slow (15 km/h)**, **Normal (18 km/h)**,
+**E-Bike (25 km/h)**. Signal and turn penalties stay but are expressed as real-world values
+(not inflated routing weights). Routing weights live separately.
 
-#### Bite 1.2: Settings Panel UI [RulesConfigPanel.tsx](file:///home/cgodoy/work/ciclista/src/components/RulesConfigPanel.tsx) [NEW]
-Create a custom React settings component:
-- Render input ranges (sliders) for base speeds and flat penalties.
-- Add checkbox toggles for dismount requirements.
-- Divide configurations into two clean collapsible sections: "German Traffic Signs" and "Road Classifications".
+#### Bite A.2 — Bike profile selector  [MODIFY] `src/components/Sidebar.tsx` + `src/App.tsx`
+Add a 3-button profile selector (Slow / Normal / E-Bike) next to the routing strategy selector.
+Pass selected profile into `currentOverrides` so cost functions use the right speed.
 
-#### Bite 1.3: Sidebar & Main App Integration
-- Add collapsible container for the rules configuration inside [Sidebar.tsx](file:///home/cgodoy/work/ciclista/src/components/Sidebar.tsx).
-- Manage the configuration state using standard React `useState` in [App.tsx](file:///home/cgodoy/work/ciclista/src/App.tsx) and pass state and updates down.
-
-#### Bite 1.4: Persistence in Storage [storage.ts](file:///home/cgodoy/work/ciclista/src/core/storage/storage.ts)
-- Extend `LocalStorageProvider` to save and load `RulesConfiguration` state from browser localStorage.
+#### Bite A.3 — Separate routing weight from display cost  [MODIFY] `src/core/router/cost.ts`
+Extract a `displayCost` calculation (pure time = distance/speed + real signal delays) separate
+from `routingCost` (which keeps the heavy penalties for path preference). Router uses
+`routingCost`; analytics display uses `displayCost` accumulated on each edge.
 
 ---
 
-### Phase 2: Rules Mapping Engine (Small Bites)
+### Phase B: Yield / Crossing Detection
 
-#### Bite 2.1: Mapping logic in [rules.ts](file:///home/cgodoy/work/ciclista/src/core/router/rules.ts) [NEW]
-Implement the tag parser matching OSM attributes to signs or road types:
-- Implement `mapOSMToSignAndRoad(highway: string, tags: Record<string, string>)`.
-- Detect "Fahrräder frei" supplementary signs based on `bicycle=yes` or `bicycle=designated` tags on footways/pedestrian segments.
+#### Bite B.1 — Detect yield nodes  [MODIFY] `src/core/router/rules.ts`
+Add `mapOSMNodeToControl(tags)` → `'signal' | 'yield' | 'crossing' | null`. Yields are OSM
+`highway=give_way` nodes.
 
-#### Bite 2.2: Unit tests in `src/core/router/rules.test.ts` [NEW]
-- Create unit tests verifying various OSM way tag combinations map to the correct German traffic sign or road classification.
-
----
-
-### Phase 3: Cost Engine Integration (Small Bites)
-
-#### Bite 3.1: Pass configuration to Routing Engine
-- Update `CostFunction` signature to accept `rulesConfig: RulesConfiguration`.
-- Adjust Dijkstra router's call references to pass the configuration during route traversal.
-
-#### Bite 3.2: Refactor Costing Calculation in [cost.ts](file:///home/cgodoy/work/ciclista/src/core/router/cost.ts)
-- Replace hardcoded speed estimation (`getBaseSpeed`) and flat penalties in `standardCost` with calculations resolved dynamically through the mapped `GermanSign` or `RoadType` configurations.
-- Include supplementary sign multipliers (e.g. Schrittgeschwindigkeit speed caps).
-
-#### Bite 3.3: Refactor alternate routing cost functions
-- Update `avoidStoppingCost` and `avoidBusyRoadsCost` strategies to integrate dynamically with the rules configuration.
+#### Bite B.2 — Count yields in RouteResult  [MODIFY] `src/core/types.ts` + `src/core/router/router.ts`
+Add `yieldCount: number` to `RouteResult`. Populate in the path reconstruction loop using
+the new node classifier.
 
 ---
 
-### Phase 4: Debug Visibility & Verification (Small Bites)
+### Phase C: Road-type Mix
 
-#### Bite 4.1: Edge Details Debug View
-- Extend the route result data structure to store matched signs/rules per traversed edge.
-- Display the matched German road sign code (e.g. "[Vz 242.1]") or road type in the "Debug Route Edges" list item view in [Sidebar.tsx](file:///home/cgodoy/work/ciclista/src/components/Sidebar.tsx).
+#### Bite C.1 — Accumulate road-type distance per edge  [MODIFY] `src/core/router/router.ts`
+While building `edgesDetails`, bucket each edge's distance into a `roadTypeTotals` map
+(`cycleway | residential | primary | other`). Add `roadTypeTotals: Record<string, number>` to
+`RouteResult`.
 
-#### Bite 4.2: End-to-End manual testing
-- Tweak rules settings (e.g., set Pedestrian Zone flat penalty to `500s`) and verify that routing updates dynamically and recalculates in < 15ms.
+---
+
+### Phase D: Alternative Routes
+
+#### Bite D.1 — Multi-route result type  [MODIFY] `src/core/types.ts`
+Add `RouteAlternative { label: string; result: RouteResult }[]` — a thin wrapper so the app
+can hold multiple results.
+
+#### Bite D.2 — Run 3 alternatives in App  [MODIFY] `src/App.tsx`
+In the routing `useMemo`, run all 3 cost functions (standard / avoid-stops / quiet) in one
+pass and store as `routeAlternatives: RouteAlternative[]`. Deprecate the single
+`routeResult` prop.
+
+#### Bite D.3 — Draw all alternatives on map  [MODIFY] `src/components/MapView.tsx`
+Render up to 3 route lines with distinct colours (accent / muted / secondary). Selected
+alternative is full opacity; others are 40% opacity. Clicking a line selects it.
+
+#### Bite D.4 — Alternative selector in sidebar  [MODIFY] `src/components/Sidebar.tsx`
+Replace the old 3-button strategy selector with a compact card-per-alternative showing
+label + headline stats. Clicking a card selects that alternative and highlights its line.
+
+---
+
+### Phase E: Analytics Comparison Panel
+
+#### Bite E.1 — Comparison table component  [NEW] `src/components/RouteComparePanel.tsx`
+Side-by-side table: Time / Distance / Signals / Yields / % Cycleway / % Residential / %
+Primary. One column per alternative. Replaces the current single Route Analytics section.
 
 ---
 
 ## Verification Plan
-
-### Automated Tests
-- Run `npm run lint` and `npm run build` to verify compile clean state.
-- Add and run vitest unit tests for the mapping rules.
-
-### Manual Verification
-- Render the local server, verify that the configuration panel is fully interactive, values persist on reload, and map pathing updates dynamically upon slider adjustments.
+- `pnpm test` green after every bite.
+- `npx tsc --noEmit` clean after every bite.
+- Manual: set Slow profile → route time should match ~45 min for the reference route.
+  Set E-Bike → should approach ~36 min.
