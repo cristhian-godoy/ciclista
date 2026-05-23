@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 
 import type { Coordinate, StreetGraph, GraphNode, LocalOverrides } from './core/types';
 import { OSMGraphParser } from './core/graph/parser';
-import { DijkstraRouter } from './core/router/router';
+import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';
 import { standardCost, avoidStoppingCost, avoidBusyRoadsCost } from './core/router/cost';
 
@@ -238,6 +238,24 @@ export default function App() {
     }
   };
 
+  // Helper to snap coordinates to the nearest edge if within 3 meters (house-pinning safety)
+  const snapCoordinateToEdge = (coord: Coordinate): Coordinate => {
+    if (!graph) return coord;
+    const nearestEdge = findNearestEdge(graph, coord);
+    if (nearestEdge && nearestEdge.distance < 3) {
+      return nearestEdge.projected;
+    }
+    return coord;
+  };
+
+  const handleStartDrag = (coord: Coordinate) => {
+    setStartCoord(snapCoordinateToEdge(coord));
+  };
+
+  const handleEndDrag = (coord: Coordinate) => {
+    setEndCoord(snapCoordinateToEdge(coord));
+  };
+
   // 5. Save and delete overrides handlers
   const handleSaveNodeOverride = async (nodeId: string, delay: number, notes: string) => {
     await storage.saveNodeDelay(nodeId, delay);
@@ -301,8 +319,8 @@ export default function App() {
         customNodeDelays={nodeDelays}
         customNodeNotes={nodeNotes}
         selectedNode={selectedNode}
-        onStartDrag={setStartCoord}
-        onEndDrag={setEndCoord}
+        onStartDrag={handleStartDrag}
+        onEndDrag={handleEndDrag}
         onNodeSelect={setSelectedNode}
         onSaveNodeOverride={handleSaveNodeOverride}
         onClearNodeOverride={handleClearNodeOverride}
