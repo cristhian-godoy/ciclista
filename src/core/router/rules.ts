@@ -58,8 +58,8 @@ export function mapOSMToSignAndRoad(
     return { sign: GermanSign.VZ_325_1, road: RoadType.RESIDENTIAL, bicycleFrei: true };
   }
 
-  // ── 4. Path / track: check for shared or segregated designation ───────────
-  if (highway === 'path' || highway === 'track') {
+  // ── 4. Path / track / footway: check for shared or segregated designation ───
+  if (['path', 'track', 'footway'].includes(highway)) {
     const segregated = tags.segregated;
     if (
       (bicycle === 'designated' || bicycle === 'yes') &&
@@ -70,6 +70,10 @@ export function mapOSMToSignAndRoad(
       }
       return { sign: GermanSign.VZ_240, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
     }
+  }
+
+  // ── 5. Path / track fallbacks ─────────────────────────────────────────────
+  if (highway === 'path' || highway === 'track') {
     // Generic path open to cyclists
     if (bicycleFrei) {
       return { sign: null, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
@@ -77,12 +81,12 @@ export function mapOSMToSignAndRoad(
     return { sign: null, road: RoadType.PATH_DEFAULT, bicycleFrei: false };
   }
 
-  // ── 5. Pedestrian zone ────────────────────────────────────────────────────
+  // ── 6. Pedestrian zone ────────────────────────────────────────────────────
   if (highway === 'pedestrian') {
     return { sign: GermanSign.VZ_242_1, road: RoadType.PATH_DEFAULT, bicycleFrei };
   }
 
-  // ── 6. Footway / sidewalk ─────────────────────────────────────────────────
+  // ── 7. Footway / sidewalk ─────────────────────────────────────────────────
   if (highway === 'footway' || highway === 'steps') {
     return { sign: GermanSign.VZ_239, road: RoadType.PATH_DEFAULT, bicycleFrei };
   }
