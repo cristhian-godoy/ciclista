@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
-import { GermanSign, RoadType } from '../types';
+import { GermanSign, RoadType } from './types';
 
 describe('mapOSMToSignAndRoad', () => {
   // ── Fahrradstraße ─────────────────────────────────────────────────────────

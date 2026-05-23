@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import type {
-  Coordinate,
-  RouteResult,
-  RulesConfiguration,
-  BikeProfile,
-  RouteAlternative,
-} from '../core/types';
+import type { Coordinate } from '../core/common/types';
+import type { BikeProfile } from '../core/storage/types';
+import type { RouteResult, RulesConfiguration, RouteAlternative } from '../core/router/types';
 import {
   Navigation,
   RefreshCw,

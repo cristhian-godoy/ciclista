@@ -1,5 +1,5 @@
 import React from 'react';
-import type { RouteAlternative } from '../core/types';
+import type { RouteAlternative } from '../core/router/types';
 
 interface RouteComparePanelProps {
   routeAlternatives: RouteAlternative[];

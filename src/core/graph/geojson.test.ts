@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { convertGraphToGeoJSON } from './geojson';
 import { OSMGraphParser } from './parser';
-import type { StreetGraph } from '../types';
+import type { StreetGraph } from './types';
 
 describe('convertGraphToGeoJSON', () => {
   const parser = new OSMGraphParser();

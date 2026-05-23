@@ -7,16 +7,10 @@ import {
   avoidBusyRoadsCost,
 } from './cost';
 import { DijkstraRouter, calculateTurnPenalty } from './router';
-import type {
-  GraphNode,
-  GraphEdge,
-  StreetGraph,
-  LocalOverrides,
-  SignRuleConfig,
-  RoadRuleConfig,
-  NodeDelayConfig,
-} from '../types';
-import { GermanSign, RoadType } from '../types';
+import type { GraphNode, GraphEdge, StreetGraph } from '../graph/types';
+import type { LocalOverrides } from '../storage/types';
+import type { SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from './types';
+import { GermanSign, RoadType } from './types';
 
 describe('resolveRuleSpeed', () => {
   it('resolves relative speed type correctly based on profile', () => {

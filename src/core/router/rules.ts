@@ -1,4 +1,4 @@
-import { GermanSign, RoadType } from '../types';
+import { GermanSign, RoadType } from './types';
 
 /**
  * Result of mapping an OSM way's tags to German traffic sign and road classification.
