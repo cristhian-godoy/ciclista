@@ -139,15 +139,21 @@ export function mapOSMNodeToControl(
   return null;
 }
 
+/** OSM values that explicitly negate the presence of a cycleway. */
+const CYCLEWAY_NEGATIVE = new Set(['no', 'none', 'separate', 'sidepath']);
+
 /**
  * Checks if a set of OSM way tags indicates the presence of a cycleway on the street.
+ * Correctly handles negative values like cycleway:both=no, which are truthy strings
+ * in JS but explicitly mean "no cycleway here".
  */
 export function hasCycleway(tags: Record<string, string>): boolean {
-  return !!(
-    tags.cycleway ||
-    tags['cycleway:left'] ||
-    tags['cycleway:right'] ||
-    tags['cycleway:both']
-  );
+  const candidates = [
+    tags.cycleway,
+    tags['cycleway:left'],
+    tags['cycleway:right'],
+    tags['cycleway:both'],
+  ];
+  return candidates.some(v => v !== undefined && !CYCLEWAY_NEGATIVE.has(v));
 }
 
