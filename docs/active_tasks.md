@@ -1,6 +1,6 @@
 # Milestone 1: Time Calibration & Analytics
 
-## Current Focus: Bite D.3 — Draw all alternatives on map
+## Current Focus: Bite D.4 — Alternative selector in sidebar
 
 ## Phase A: Time Calibration
 - [x] **Bite A.3: Separate routing weight from display cost**
@@ -25,8 +25,8 @@
   - [x] Add `RouteAlternative` interface to `src/core/types.ts`.
 - [x] **Bite D.2: Run 3 alternatives in App**
   - [x] In `src/App.tsx`, calculate three route alternatives: Standard, Avoid Stops, and Quiet Streets.
-- [ ] **Bite D.3: Draw all alternatives on map**
-  - [ ] Update `src/components/MapView.tsx` to render all three lines with distinct colors and opacity. Clicking a line selects it.
+- [x] **Bite D.3: Draw all alternatives on map**
+  - [x] Update `src/components/MapView.tsx` to render all three lines with distinct colors and opacity. Clicking a line selects it.
 - [ ] **Bite D.4: Alternative selector in sidebar**
   - [ ] Add alternative selector cards to `src/components/Sidebar.tsx` to switch the active selection.
 
