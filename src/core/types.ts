@@ -181,28 +181,27 @@ export interface IRouter {
   ): RouteResult | null;
 }
 
-/**
- * German Traffic Signs that have specific legal requirements for cyclists.
- */
-export enum GermanSign {
-  VZ_242_1 = 'Vz_242.1', // Fußgängerzone (Pedestrian Zone)
-  VZ_239 = 'Vz_239',     // Gehweg (Sidewalk/Footway)
-  VZ_240 = 'Vz_240',     // Gemeinsamer Geh- und Radweg (Shared path)
-  VZ_241 = 'Vz_241',     // Getrennter Geh- und Radweg (Segregated path)
-  VZ_325_1 = 'Vz_325.1', // Verkehrsberuhigter Bereich (Living Street)
-  VZ_244_1 = 'Vz_244.1', // Fahrradstraße (Bicycle Street)
-}
+export const GermanSign = {
+  VZ_242_1: 'Vz_242.1', // Fußgängerzone (Pedestrian Zone)
+  VZ_239: 'Vz_239',     // Gehweg (Sidewalk/Footway)
+  VZ_240: 'Vz_240',     // Gemeinsamer Geh- und Radweg (Shared path)
+  VZ_241: 'Vz_241',     // Getrennter Geh- und Radweg (Segregated path)
+  VZ_325_1: 'Vz_325.1', // Verkehrsberuhigter Bereich (Living Street)
+  VZ_244_1: 'Vz_244.1', // Fahrradstraße (Bicycle Street)
+} as const;
+export type GermanSign = typeof GermanSign[keyof typeof GermanSign];
 
 /**
  * Standard OSM road classifications used for base speed estimation.
  */
-export enum RoadType {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-  RESIDENTIAL = 'residential',
-  SERVICE = 'service',
-  PATH_DEFAULT = 'path_default',
-}
+export const RoadType = {
+  PRIMARY: 'primary',
+  SECONDARY: 'secondary',
+  RESIDENTIAL: 'residential',
+  SERVICE: 'service',
+  PATH_DEFAULT: 'path_default',
+} as const;
+export type RoadType = typeof RoadType[keyof typeof RoadType];
 
 /**
  * Configuration for a traffic sign rule.

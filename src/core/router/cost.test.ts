@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDisplayCost, standardCost, avoidStoppingCost, avoidBusyRoadsCost, getDefaultNodeDelay } from './cost';
+import { calculateDisplayCost, standardCost, getDefaultNodeDelay } from './cost';
 import { DijkstraRouter } from './router';
 import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides } from '../types';
 

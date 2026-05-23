@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
-import type { Coordinate, StreetGraph, RouteResult, GraphNode, RouteAlternative } from '../core/types';
+import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown } from 'lucide-react';
+import type { Coordinate, StreetGraph, GraphNode, RouteAlternative } from '../core/types';
 
 type GeoJSONFeature = 
   | {
@@ -27,7 +27,6 @@ interface MapViewProps {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
-  routeResult: RouteResult | null;
   routeAlternatives: RouteAlternative[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
@@ -48,7 +47,6 @@ export const MapView: React.FC<MapViewProps> = ({
   loadedBBoxes,
   startCoord,
   endCoord,
-  routeResult,
   routeAlternatives,
   activeAlternativeLabel,
   onSelectAlternative,

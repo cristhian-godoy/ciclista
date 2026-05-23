@@ -600,6 +600,15 @@ export class DijkstraRouter implements IRouter {
         totalDistanceMeters: 0,
         streets: [],
         trafficSignalsCount: 0,
+        signalCount: 0,
+        yieldCount: 0,
+        crossingCount: 0,
+        roadTypeTotals: {
+          cycleway: 0,
+          residential: 0,
+          primary: 0,
+          other: 0,
+        },
       };
     }
 
