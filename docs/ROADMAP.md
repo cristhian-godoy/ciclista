@@ -4,22 +4,31 @@ This document outlines the strategic vision and technical milestones for Ciclist
 
 ---
 
-## 🏁 Milestone 0: Core Engine & Semantic Mapping
-**Status:** **ALMOST DONE**
+## 🏁 Milestone 0: Core Engine, Semantic Mapping & Control Point Configurability
+**Status:** 🚧 **IN PROGRESS** (Current Active Focus)
 
-Establish a fully client-side routing architecture capable of semantic evaluation of OpenStreetMap data based on actual traffic signs and road types.
+Establish a fully client-side routing architecture capable of semantic evaluation of OpenStreetMap data, and granular, node-level customization (individual traffic lights, yield signs, and crossings).
 
 * **[x] Client-Side Router:** Pure TypeScript Dijkstra implementation using a Min-Heap queue.
 * **[x] Map Rendering:** Integration with MapLibre GL JS and custom WebGL vectors.
 * **[x] Rules Engine:** Parse OSM data into conceptual `GermanSign` and `RoadType` classifications.
 * **[x] Dynamic Penalties:** Real-time cost adjustments for turns, traffic lights, and unpaved roads.
 * **[x] Local Storage:** Persist UI configurations and custom node adjustments across sessions.
-* **[ ] Further Improvements:** We can improve the core engine even more, incl UI configurability
+* **[ ] Phase A: Node-Level Selection & Visualizing Controls on Map**
+    * Render non-signal control nodes (e.g., yield signs `highway=give_way`, stop signs `highway=stop`, crossings `highway=crossing` / `crossing=*`) on the map as interactive layers.
+    * Color-code nodes by their control type (e.g., red for traffic signals, yellow for yield/stop, blue for pedestrian crossings).
+    * Render visual indicators (halo highlight or checkmarks) for nodes with active custom overrides.
+* **[ ] Phase B: Core Routing Engine Integration for Controls**
+    * Add base/default routing delays in `cost.ts` for yield signs (e.g. 5s) and stop signs (e.g. 8s).
+    * Ensure these delays are dynamically applied in all cost functions, prioritizing any node-specific custom override.
+* **[ ] Phase C: Granular Node Configurator Popup**
+    * Display the matched control type (e.g., "Yield Sign", "Traffic Signal", "Pedestrian Crossing") in the node selection panel.
+    * Provide descriptive label presets for each node type (e.g., "Always green (0s)", "Slow light (30s)", "Dangerous intersection (45s)").
 
 ---
 
 ## 🚴 Milestone 1: Time Calibration & Analytics (The "Trust" Phase)
-**Status:** 🚧 **IN PROGRESS**
+**Status:** ⏳ **PENDING**
 
 The current routing costs are optimized for *preference* (penalizing bad paths), resulting in inflated, unrealistic ETAs. This milestone separates logical routing weights from real-world display time, while providing visual comparisons between route strategies.
 
