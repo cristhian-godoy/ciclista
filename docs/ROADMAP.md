@@ -28,19 +28,19 @@ Establish a fully client-side routing architecture capable of semantic evaluatio
 ---
 
 ## 🚴 Milestone 1: Time Calibration & Analytics (The "Trust" Phase)
-**Status:** ⏳ **PENDING**
+**Status:** **COMPLETE**
 
 The current routing costs are optimized for *preference* (penalizing bad paths), resulting in inflated, unrealistic ETAs. This milestone separates logical routing weights from real-world display time, while providing visual comparisons between route strategies.
 
-* **[ ] Phase A: Time Calibration & Bike Profiles**
+* **[x] Phase A: Time Calibration & Bike Profiles**
     * Introduce bike profiles (e.g., Slow, Normal, E-Bike) with distinct top speeds.
     * Separate `routingCost` (used by Dijkstra for pathfinding) from `displayCost` (true chronological time based on distance/speed limits and real node delays).
     * Clamp road speeds dynamically: `effectiveSpeed = Math.min(roadDefaultConfigSpeed, activeBikeProfile.topSpeed)`.
-* **[ ] Phase B & C: Telemetry Analytics**
+* **[x] Phase B & C: Telemetry Analytics**
     * Accumulate metadata along edges during path reconstruction.
     * Count distinct events: Yields (`highway=give_way`), Signals, Crossings.
     * Calculate road-type composition (% cycleway, % residential, % primary).
-* **[ ] Phase D & E: Alternative Routing Comparison**
+* **[x] Phase D & E: Alternative Routing Comparison**
     * Modify the engine to run multiple strategies (Standard, Avoid Stops, Quiet) sequentially.
     * Render all alternative paths on the MapLibre canvas with distinct opacities.
     * Build a side-by-side analytics comparison panel in the sidebar.
