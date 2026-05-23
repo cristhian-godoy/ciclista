@@ -30,9 +30,9 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
 };
 
 export default function App() {
-  // 1. Core Coordinate Defaults (Munich center commute)
-  const [startCoord, setStartCoord] = useState<Coordinate>({ lat: 48.13715, lng: 11.5754 });
-  const [endCoord, setEndCoord] = useState<Coordinate>({ lat: 48.1350, lng: 11.5820 });
+  // 1. Core Coordinate Defaults (initialized to null for user-placed pins)
+  const [startCoord, setStartCoord] = useState<Coordinate | null>(null);
+  const [endCoord, setEndCoord] = useState<Coordinate | null>(null);
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
@@ -130,7 +130,20 @@ export default function App() {
   };
 
   // Helper to compute a bounding box enclosing two coordinates with padding
-  const calculateBoundingBox = (c1: Coordinate, c2: Coordinate): [number, number, number, number] => {
+  const calculateBoundingBox = (c1: Coordinate | null, c2: Coordinate | null): [number, number, number, number] => {
+    if (!c1 || !c2) {
+      // Default bounding box for Munich center
+      const center = { lat: 48.13715, lng: 11.5754 };
+      const latMargin = 0.015;
+      const lngMargin = 0.02;
+      return [
+        center.lat - latMargin,
+        center.lng - lngMargin,
+        center.lat + latMargin,
+        center.lng + lngMargin,
+      ];
+    }
+
     const minLat = Math.min(c1.lat, c2.lat);
     const maxLat = Math.max(c1.lat, c2.lat);
     const minLng = Math.min(c1.lng, c2.lng);
@@ -163,6 +176,7 @@ export default function App() {
 
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
+    if (!startCoord || !endCoord) return;
     if (loadedBBoxes.length === 0 || isFetchingOSM) return;
 
     const startInside = isInsideLoadedArea(startCoord);
@@ -188,21 +202,19 @@ export default function App() {
   // Handler for preset selections (forces coordinates update and downstream auto-fetch)
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-    let newStart: Coordinate;
-    let newEnd: Coordinate;
-    if (preset === 'munich') {
-      newStart = { lat: 48.13715, lng: 11.5754 };
-      newEnd = { lat: 48.1350, lng: 11.5820 };
-    } else {
-      newStart = { lat: 52.3725, lng: 4.8900 };
-      newEnd = { lat: 52.3700, lng: 4.9000 };
-    }
+    setStartCoord(null);
+    setEndCoord(null);
 
-    setStartCoord(newStart);
-    setEndCoord(newEnd);
-
-    // Fetch fresh non-merged area for the new preset city
-    const newBBox = calculateBoundingBox(newStart, newEnd);
+    // Fetch fresh non-merged area for the new preset city center
+    const center = preset === 'munich' ? { lat: 48.13715, lng: 11.5754 } : { lat: 52.3725, lng: 4.8900 };
+    const latMargin = 0.015;
+    const lngMargin = 0.02;
+    const newBBox: [number, number, number, number] = [
+      center.lat - latMargin,
+      center.lng - lngMargin,
+      center.lat + latMargin,
+      center.lng + lngMargin,
+    ];
     handleFetchOSM(newBBox, false, false);
   };
 
@@ -279,7 +291,7 @@ export default function App() {
 
   // 6. Reactive Routing Calculation (Derived State)
   const routeResult = useMemo(() => {
-    if (!graph) return null;
+    if (!graph || !startCoord || !endCoord) return null;
 
     // Pick active cost function based on strategy selected
     let costFn = standardCost;
@@ -316,6 +328,7 @@ export default function App() {
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
+        selectedPreset={selectedPreset}
         customNodeDelays={nodeDelays}
         customNodeNotes={nodeNotes}
         selectedNode={selectedNode}

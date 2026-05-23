@@ -3,8 +3,8 @@ import type { Coordinate, RouteResult } from '../core/types';
 import { Navigation, RefreshCw, Layers, Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 
 interface SidebarProps {
-  startCoord: Coordinate;
-  endCoord: Coordinate;
+  startCoord: Coordinate | null;
+  endCoord: Coordinate | null;
   routeResult: RouteResult | null;
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
