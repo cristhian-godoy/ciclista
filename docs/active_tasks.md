@@ -1,24 +1,35 @@
-# Milestone 0: Core Engine, Semantic Mapping & Control Point Configurability
+# Milestone 1: Time Calibration & Analytics
 
-## Phase A: Node-Level Selection & Visualizing Controls on Map
-- [x] **Bite 0.A.1: Update Graph Adjacency List to Keep Node Tags**
-  - [x] Ensure all parsed OSM nodes with tags like `highway=give_way`, `highway=stop`, `highway=crossing`, etc. are fully preserved in the graph.
-- [x] **Bite 0.A.2: Render Controls (Yield, Stop, Crossing) on the Map**
-  - [x] Add MapLibre sources and layers to render these control points alongside traffic lights.
-  - [x] Distinguish their control types using color-coding.
-- [x] **Bite 0.A.3: Make Non-Signal Controls Selectable**
-  - [x] Wire map click listeners to select these control nodes and center/highlight them.
-- [x] **Bite 0.A.4: Highlight Active Custom Node Overrides**
-  - [x] Render a visual overlay (halo or indicator) for nodes that have an active custom override in `customNodeDelays`.
+## Current Focus: Bite A.3 — Separate Routing Weight from Display Cost
 
-## Phase B: Core Routing Engine Integration for Controls
-- [x] **Bite 0.B.1: Default Delays for Yield/Stop/Crossing**
-  - [x] Integrate default base delays for yield signs (e.g. 5s) and stop signs (e.g. 8s) in `src/core/router/cost.ts`.
-- [x] **Bite 0.B.2: Support Custom Overrides for All Controls**
-  - [x] Ensure custom node overrides apply correctly to yield and stop nodes during routing.
+## Phase A: Time Calibration
+- [ ] **Bite A.3: Separate routing weight from display cost**
+  - [ ] Update `src/core/types.ts` to include a way to extract/return `displayCost` (travel time prediction) separately from the routing weight.
+  - [ ] Implement `displayCost` calculation (pure time = distance / speed + actual wait delays) in `src/core/router/cost.ts`.
+  - [ ] Update Dijkstra search in `src/core/router/router.ts` to track and return the total accumulated `displayCost` (travel time in seconds) on the resulting path, while still using the preference-weighted `routingCost` for pathfinding.
 
-## Phase C: Granular Node Configurator Popup
-- [x] **Bite 0.C.1: Clean Metadata Display in Node Drawer**
-  - [x] Show the control type ("Yield Sign", "Stop Sign", "Traffic Signal") and OSM tags cleanly.
-- [x] **Bite 0.C.2: Node Preset Buttons**
-  - [x] Offer pre-configured delay presets depending on the control type.
+## Phase B: Yield / Crossing Detection
+- [ ] **Bite B.1: Centralize node control classifier**
+  - [ ] Implement a unified node classification function `mapOSMNodeToControl(tags)` in `src/core/router/rules.ts` to classify nodes as `signal`, `yield`, `stop`, or `crossing`.
+- [ ] **Bite B.2: Count controls in RouteResult**
+  - [ ] Add `yieldCount: number`, `signalCount: number`, and `crossingCount: number` to `RouteResult` in `src/core/types.ts`.
+  - [ ] Populate these counters in the path reconstruction loop in `src/core/router/router.ts`.
+
+## Phase C: Road-type Mix
+- [ ] **Bite C.1: Accumulate road-type distance per edge**
+  - [ ] Track distance composition by highway type (`cycleway | residential | primary | other`) along the computed path in `src/core/router/router.ts`.
+  - [ ] Add `roadTypeTotals: Record<string, number>` to `RouteResult`.
+
+## Phase D: Alternative Routes
+- [ ] **Bite D.1: Multi-route result type**
+  - [ ] Add `RouteAlternative` interface to `src/core/types.ts`.
+- [ ] **Bite D.2: Run 3 alternatives in App**
+  - [ ] In `src/App.tsx`, calculate three route alternatives: Standard, Avoid Stops, and Quiet Streets.
+- [ ] **Bite D.3: Draw all alternatives on map**
+  - [ ] Update `src/components/MapView.tsx` to render all three lines with distinct colors and opacity. Clicking a line selects it.
+- [ ] **Bite D.4: Alternative selector in sidebar**
+  - [ ] Add alternative selector cards to `src/components/Sidebar.tsx` to switch the active selection.
+
+## Phase E: Analytics Comparison Panel
+- [ ] **Bite E.1: Comparison table component**
+  - [ ] Create `src/components/RouteComparePanel.tsx` to show a side-by-side comparison of the routes (Time, Distance, Control points, Road mix).
