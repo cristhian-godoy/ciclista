@@ -255,10 +255,20 @@ export class DijkstraRouter implements IRouter {
     const endVId = endEdgeRef.vId;
     const endEdge = endEdgeRef.edge;
 
-    const startUNode = graph.nodes.get(startUId)!.node;
-    const startVNode = graph.nodes.get(startVId)!.node;
-    const endUNode = graph.nodes.get(endUId)!.node;
-    const endVNode = graph.nodes.get(endVId)!.node;
+    const startU = graph.nodes.get(startUId);
+    const startV = graph.nodes.get(startVId);
+    const endU = graph.nodes.get(endUId);
+    const endV = graph.nodes.get(endVId);
+
+    if (!startU || !startV || !endU || !endV) {
+      console.warn('Virtual routing reference nodes missing from graph. Falling back.');
+      return this.findRouteNodeFallback(graph, start, end, costFn, overrides);
+    }
+
+    const startUNode = startU.node;
+    const startVNode = startV.node;
+    const endUNode = endU.node;
+    const endVNode = endV.node;
 
     const START_VNODE_ID = 'virtual-start';
     const END_VNODE_ID = 'virtual-end';
@@ -464,7 +474,8 @@ export class DijkstraRouter implements IRouter {
 
       for (let i = 0; i < pathNodeIds.length; i++) {
         const nodeId = pathNodeIds[i];
-        const entry = graph.nodes.get(nodeId)!;
+        const entry = graph.nodes.get(nodeId);
+        if (!entry) continue;
         coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
 
         // Count control points using centralized node classifier
@@ -590,7 +601,9 @@ export class DijkstraRouter implements IRouter {
     }
 
     if (startNodeId === endNodeId) {
-      const singleNode = graph.nodes.get(startNodeId)!.node;
+      const startNodeEntry = graph.nodes.get(startNodeId);
+      if (!startNodeEntry) return null;
+      const singleNode = startNodeEntry.node;
       return {
         pathNodeIds: [startNodeId],
         coordinates: [{ lat: singleNode.lat, lng: singleNode.lng }],
@@ -705,7 +718,8 @@ export class DijkstraRouter implements IRouter {
 
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
-      const entry = graph.nodes.get(nodeId)!;
+      const entry = graph.nodes.get(nodeId);
+      if (!entry) continue;
       coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
 
       // Count control points using centralized node classifier
