@@ -1,13 +1,7 @@
-import type {
-  IRouter,
-  StreetGraph,
-  Coordinate,
-  CostFunction,
-  LocalOverrides,
-  RouteResult,
-  GraphEdge,
-  GraphNode,
-} from '../types';
+import type { StreetGraph, GraphEdge, GraphNode } from '../graph/types';
+import type { Coordinate } from '../common/types';
+import type { LocalOverrides } from '../storage/types';
+import type { IRouter, CostFunction, RouteResult } from './types';
 import { haversineDistance } from '../graph/parser';
 import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 import { calculateDisplayCost } from './cost';

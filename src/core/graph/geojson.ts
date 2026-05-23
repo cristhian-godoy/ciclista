@@ -1,4 +1,4 @@
-import type { StreetGraph } from '../types';
+import type { StreetGraph } from './types';
 
 export interface GeoJSONFeature {
   type: 'Feature';

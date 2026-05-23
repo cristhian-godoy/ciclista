@@ -6,8 +6,8 @@ import type {
   RoadRuleConfig,
   NodeDelayConfig,
   ComfortLevel,
-} from '../core/types';
-import { GermanSign, RoadType } from '../core/types';
+} from '../core/router/types';
+import { GermanSign, RoadType } from '../core/router/types';
 
 // ─── Default rule configurations ────────────────────────────────────────────
 

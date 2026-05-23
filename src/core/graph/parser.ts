@@ -1,4 +1,4 @@
-import type { IGraphParser, StreetGraph, GraphNode, GraphEdge } from '../types';
+import type { IGraphParser, StreetGraph, GraphNode, GraphEdge } from './types';
 
 /**
  * Calculates the great-circle distance between two points on the Earth's surface

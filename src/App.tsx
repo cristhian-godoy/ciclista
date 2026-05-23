@@ -1,14 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import type {
-  Coordinate,
-  StreetGraph,
-  GraphNode,
-  LocalOverrides,
-  RulesConfiguration,
-  BikeProfile,
-  RouteAlternative,
-} from './core/types';
+import type { Coordinate } from './core/common/types';
+import type { StreetGraph, GraphNode } from './core/graph/types';
+import type { LocalOverrides, BikeProfile } from './core/storage/types';
+import type { RulesConfiguration, RouteAlternative } from './core/router/types';
 import { OSMGraphParser } from './core/graph/parser';
 import { DijkstraRouter, findNearestEdge } from './core/router/router';
 import { LocalStorageProvider } from './core/storage/storage';

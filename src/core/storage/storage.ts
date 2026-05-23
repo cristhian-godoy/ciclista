@@ -1,4 +1,5 @@
-import type { IStorageProvider, LocalOverrides, RulesConfiguration } from '../types';
+import type { IStorageProvider, LocalOverrides } from './types';
+import type { RulesConfiguration } from '../router/types';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.

@@ -17,11 +17,11 @@ _Goal: Ensure all new code adheres to a consistent format and passes lint checks
 
 _Goal: Prevent `types.ts` from becoming a monolithic bottleneck by co-locating types with their respective domains._
 
-- [ ] Create `src/core/router/types.ts` and move router-specific interfaces from `src/core/types.ts`.
-- [ ] Create `src/core/graph/types.ts` and move graph/parsing-specific interfaces.
-- [ ] Create `src/core/storage/types.ts` and move storage-specific interfaces.
-- [ ] Update all import statements across the codebase to point to the new domain-specific type files.
-- [ ] Remove the old `src/core/types.ts` file if it is empty, or rename it to `src/core/common/types.ts` for shared interfaces.
+- [x] Create `src/core/router/types.ts` and move router-specific interfaces from `src/core/types.ts`.
+- [x] Create `src/core/graph/types.ts` and move graph/parsing-specific interfaces.
+- [x] Create `src/core/storage/types.ts` and move storage-specific interfaces.
+- [x] Update all import statements across the codebase to point to the new domain-specific type files.
+- [x] Remove the old `src/core/types.ts` file if it is empty, or rename it to `src/core/common/types.ts` for shared interfaces.
 
 ## Phase 3: UI Component De-structuring (Part 1 - App & Sidebar)
 

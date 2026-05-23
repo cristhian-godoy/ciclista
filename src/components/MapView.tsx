@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown } from 'lucide-react';
-import type { Coordinate, StreetGraph, GraphNode, RouteAlternative } from '../core/types';
+import type { Coordinate } from '../core/common/types';
+import type { StreetGraph, GraphNode } from '../core/graph/types';
+import type { RouteAlternative } from '../core/router/types';
 import { convertGraphToGeoJSON } from '../core/graph/geojson';
 
 type GeoJSONFeature =
