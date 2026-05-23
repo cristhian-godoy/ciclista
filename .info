@@ -4,8 +4,6 @@ docs
 	Planning documents, implementation plans, and active task checklists.
 eslint.config.js
 	Linter configurations.
-feasibility_and_plan.md
-	Feasibility study and TS/JS routing architecture specifications.
 index.html
 	Vite template entry HTML, updated with custom typography.
 package.json
@@ -16,8 +14,6 @@ public
 	Static assets served directly (favicon, svg symbols).
 src
 	Application source code.
-task.md
-	Project roadmap checklist tracking current progress and audit tasks.
 tsconfig.app.json
 	TypeScript configuration for the React application.
 tsconfig.json

@@ -1,4 +1,8 @@
+ROADMAP.md
+	The project's long-term milestone roadmap (Milestones 1 through 4).
 implementation_plan.md
-	Proposed architecture, rules engine design, and default speed configurations.
-task.md
-	German Traffic Signs & Rules integration roadmap checklist.
+	Technical implementation details for the current active milestone.
+active_tasks.md
+	Immediate, session-level checklist of tasks.
+archive
+	Directory containing completed plans and checklists.
