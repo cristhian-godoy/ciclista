@@ -31,9 +31,9 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
 };
 
 export default function App() {
-  // 1. Core Coordinate Defaults (initialized to null for user-placed pins)
-  const [startCoord, setStartCoord] = useState<Coordinate | null>(null);
-  const [endCoord, setEndCoord] = useState<Coordinate | null>(null);
+  // 1. Core Coordinate Defaults (initialized to Munich center defaults for immediate routing)
+  const [startCoord, setStartCoord] = useState<Coordinate | null>({ lat: 48.13715, lng: 11.5754 });
+  const [endCoord, setEndCoord] = useState<Coordinate | null>({ lat: 48.1350, lng: 11.5820 });
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
@@ -297,8 +297,13 @@ async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   // Handler for preset selections (forces coordinates update and downstream auto-fetch)
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-    setStartCoord(null);
-    setEndCoord(null);
+    if (preset === 'munich') {
+      setStartCoord({ lat: 48.13715, lng: 11.5754 });
+      setEndCoord({ lat: 48.1350, lng: 11.5820 });
+    } else {
+      setStartCoord({ lat: 52.3725, lng: 4.8900 });
+      setEndCoord({ lat: 52.3667, lng: 4.9000 });
+    }
 
     // Fetch fresh non-merged area for the new preset city center
     const center = preset === 'munich' ? { lat: 48.13715, lng: 11.5754 } : { lat: 52.3725, lng: 4.8900 };
