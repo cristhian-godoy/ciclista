@@ -214,8 +214,8 @@ export interface SignRuleConfig {
   baseSpeedKmh: number;
   speedType?: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
   flatPenaltySeconds: number;
-  dismountRequired: boolean;
 }
+
 
 /**
  * Configuration for a road type rule.

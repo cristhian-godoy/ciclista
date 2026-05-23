@@ -5,22 +5,6 @@ import type { GraphNode, GraphEdge, StreetGraph, LocalOverrides, SignRuleConfig,
 import { GermanSign, RoadType } from '../types';
 
 describe('resolveRuleSpeed', () => {
-  it('locks speed to 4 km/h if dismountRequired is true', () => {
-    const cfg: SignRuleConfig = {
-      signId: GermanSign.VZ_242_1,
-      name: 'Pedestrian Zone',
-      description: '...',
-      iconCode: '🚶',
-      baseSpeedKmh: 12,
-      speedType: 'custom',
-      flatPenaltySeconds: 0,
-      dismountRequired: true,
-    };
-    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(4);
-    expect(resolveRuleSpeed(cfg, 'normal')).toBe(4);
-    expect(resolveRuleSpeed(cfg, 'slow')).toBe(4);
-  });
-
   it('resolves relative speed type correctly based on profile', () => {
     const cfg: RoadRuleConfig = {
       roadId: RoadType.RESIDENTIAL,
@@ -43,7 +27,7 @@ describe('resolveRuleSpeed', () => {
     };
     expect(resolveRuleSpeed({ ...base, speedType: 'slow' }, 'ebike')).toBe(15);
     expect(resolveRuleSpeed({ ...base, speedType: 'slower' }, 'ebike')).toBe(10);
-    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 'ebike')).toBe(5);
+    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 'ebike')).toBe(4);
   });
 
   it('resolves custom speed type to baseSpeedKmh', () => {
@@ -65,7 +49,6 @@ describe('resolveRuleSpeed', () => {
       iconCode: '🚲',
       baseSpeedKmh: 18,
       flatPenaltySeconds: 0,
-      dismountRequired: false,
     };
     expect(resolveRuleSpeed(signCfg, 'ebike')).toBe(25); // relative
 
@@ -76,9 +59,8 @@ describe('resolveRuleSpeed', () => {
       iconCode: '🦶',
       baseSpeedKmh: 5,
       flatPenaltySeconds: 0,
-      dismountRequired: false,
     };
-    expect(resolveRuleSpeed(sidewalkCfg, 'ebike')).toBe(5); // dismount
+    expect(resolveRuleSpeed(sidewalkCfg, 'ebike')).toBe(4); // dismount
 
     const roadCfg: RoadRuleConfig = {
       roadId: RoadType.PRIMARY,

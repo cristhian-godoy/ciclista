@@ -22,17 +22,12 @@ const PROFILE_MULTIPLIER: Record<string, number> = {
 
 /**
  * Resolves a SignRuleConfig or RoadRuleConfig speed to km/h based on the speedType and bike profile,
- * obeying require dismount constraint (4 km/h) if active.
+ * resolved based on the speedType and bike profile.
  */
 export function resolveRuleSpeed(
   cfg: SignRuleConfig | RoadRuleConfig,
   profile: BikeProfile
 ): number {
-  // If require dismount is true (on SignRuleConfig), lock to 4 km/h
-  if ('dismountRequired' in cfg && cfg.dismountRequired) {
-    return 4;
-  }
-
   let speedType = cfg.speedType;
   if (!speedType) {
     if ('signId' in cfg) {
@@ -59,12 +54,13 @@ export function resolveRuleSpeed(
     case 'slower':
       return 10;
     case 'dismount':
-      return 5;
+      return 4; // lock walking speed to 4 km/h
     case 'custom':
     default:
       return cfg.baseSpeedKmh;
   }
 }
+
 
 /**
  * Resolves the effective cycling speed (m/s) and flat penalty (s) for an edge,
