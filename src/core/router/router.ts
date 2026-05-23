@@ -160,7 +160,43 @@ export class DijkstraRouter implements IRouter {
         if (visited.has(neighborId)) continue;
 
         // Calculate dynamic edge cost using injected cost function
-        const edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
+        let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
+
+        // Apply turn penalty (avoiding U-turns and sharp turns on routing)
+        const parentId = previous.get(currentId);
+        if (parentId) {
+          const parentEntry = graph.nodes.get(parentId);
+          const neighborEntry = graph.nodes.get(neighborId);
+          if (parentEntry && neighborEntry) {
+            const p = parentEntry.node;
+            const c = currentEntry.node;
+            const n = neighborEntry.node;
+
+            const cosLat = Math.cos(c.lat * Math.PI / 180);
+            const v1x = (c.lng - p.lng) * cosLat;
+            const v1y = c.lat - p.lat;
+            const v2x = (n.lng - c.lng) * cosLat;
+            const v2y = n.lat - c.lat;
+
+            const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+            const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+            if (len1 > 1e-7 && len2 > 1e-7) {
+              const dot = v1x * v2x + v1y * v2y;
+              const cosTheta = dot / (len1 * len2);
+
+              // U-turn or very sharp turn (angle > 135 deg)
+              if (cosTheta < -0.7) {
+                edgeCost += 30; // 30s penalty
+              }
+              // Normal turn (angle between 45 and 135 deg)
+              else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
+                edgeCost += 3; // 3s penalty
+              }
+            }
+          }
+        }
+
         const altDist = currentDist + edgeCost;
 
         if (altDist < (distances.get(neighborId) || Infinity)) {
@@ -216,6 +252,38 @@ export class DijkstraRouter implements IRouter {
             streetsSet.add(edge.name);
           }
           const edgeCost = costFn(nodeId, edge, nextNodeId, overrides, graph);
+
+          let turnPenalty = 0;
+          if (i > 0) {
+            const parentId = pathNodeIds[i - 1];
+            const parentEntry = graph.nodes.get(parentId);
+            const nextEntry = graph.nodes.get(nextNodeId);
+            if (parentEntry && nextEntry) {
+              const p = parentEntry.node;
+              const c = entry.node;
+              const n = nextEntry.node;
+
+              const cosLat = Math.cos(c.lat * Math.PI / 180);
+              const v1x = (c.lng - p.lng) * cosLat;
+              const v1y = c.lat - p.lat;
+              const v2x = (n.lng - c.lng) * cosLat;
+              const v2y = n.lat - c.lat;
+
+              const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+              const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+
+              if (len1 > 1e-7 && len2 > 1e-7) {
+                const dot = v1x * v2x + v1y * v2y;
+                const cosTheta = dot / (len1 * len2);
+                if (cosTheta < -0.7) {
+                  turnPenalty = 30; // 30s U-turn penalty
+                } else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
+                  turnPenalty = 3;  // 3s normal turn penalty
+                }
+              }
+            }
+          }
+
           edgesDetails.push({
             sourceId: nodeId,
             targetId: nextNodeId,
@@ -223,7 +291,7 @@ export class DijkstraRouter implements IRouter {
             distance: edge.distance,
             highway: edge.tags.highway || 'unknown',
             tags: edge.tags,
-            cost: edgeCost,
+            cost: edgeCost + turnPenalty,
           });
         }
       }
