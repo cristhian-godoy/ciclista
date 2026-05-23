@@ -1,5 +1,7 @@
 README.md
 	Project documentation, design decisions, and setup instructions.
+docs
+	Planning documents, implementation plans, and active task checklists.
 eslint.config.js
 	Linter configurations.
 feasibility_and_plan.md
