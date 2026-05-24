@@ -63,7 +63,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
 
 ### Phase 4.3: Marker & Popup Components Extraction
 
-- [ ] Create `src/components/map/StartEndMarkers.tsx` that:
+- [x] Create `src/components/map/StartEndMarkers.tsx` that:
   - Synchronizes start and end coordinates with draggable HTML marker pins.
   - Manages marker lifecycles (instantiating, updating LngLat, dragging, and clean removal).
 - [ ] Create `src/components/map/NodePopup.tsx` that:
