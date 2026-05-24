@@ -90,15 +90,15 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 
 ### Phase 5.1: Test Infrastructure Setup
 
-- [ ] Install testing dependencies:
+- [x] Install testing dependencies:
   - `@testing-library/react` (for testing components)
   - `@testing-library/jest-dom` (for standard DOM assertions)
   - `@testing-library/user-event` (for realistic event simulations)
   - `jsdom` (as a browser-like environment for Vitest)
-- [ ] Configure `vite.config.ts` to support Vitest configuration:
+- [x] Configure `vite.config.ts` to support Vitest configuration:
   - Add a `test` property specifying `environment: 'jsdom'` and a setup file.
-- [ ] Create a Vitest setup file `src/test/setup.ts` to extend matching assertions (import `@testing-library/jest-dom`).
-- [ ] Ensure that running the existing unit tests (`pnpm test`) continues to work successfully.
+- [x] Create a Vitest setup file `src/test/setup.ts` to extend matching assertions (import `@testing-library/jest-dom`).
+- [x] Ensure that running the existing unit tests (`pnpm test`) continues to work successfully.
 
 ### Phase 5.2: Mocking Utilities
 

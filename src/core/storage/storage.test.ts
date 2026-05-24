@@ -6,6 +6,7 @@ describe('LocalStorageProvider', () => {
   let provider: LocalStorageProvider;
 
   beforeEach(() => {
+    localStorage.clear();
     provider = new LocalStorageProvider();
   });
 
