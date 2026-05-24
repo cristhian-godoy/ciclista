@@ -66,7 +66,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
 - [x] Create `src/components/map/StartEndMarkers.tsx` that:
   - Synchronizes start and end coordinates with draggable HTML marker pins.
   - Manages marker lifecycles (instantiating, updating LngLat, dragging, and clean removal).
-- [ ] Create `src/components/map/NodePopup.tsx` that:
+- [x] Create `src/components/map/NodePopup.tsx` that:
   - Renders the glassmorphic modal configuring control node delays, presets, notes, and raw OSM tags.
   - Projects the 3D map coordinates of the selected node into 2D screen coordinates using map event listeners (`move`, `zoom`).
 - [ ] Create `src/components/map/MapContextMenu.tsx` that:
