@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
@@ -11,11 +10,15 @@ describe('Sidebar Integration', () => {
     {
       label: 'standard',
       result: {
+        pathNodeIds: [],
         totalDurationSeconds: 150,
         totalDistanceMeters: 600,
+        streets: [],
+        trafficSignalsCount: 0,
         signalCount: 1,
         yieldCount: 0,
         crossingCount: 0,
+        roadTypeTotals: {},
         coordinates: [],
         edges: [],
       },
@@ -23,11 +26,15 @@ describe('Sidebar Integration', () => {
   ];
 
   const mockRouteResult: RouteResult = {
+    pathNodeIds: [],
     totalDurationSeconds: 150,
     totalDistanceMeters: 600,
+    streets: [],
+    trafficSignalsCount: 0,
     signalCount: 1,
     yieldCount: 0,
     crossingCount: 0,
+    roadTypeTotals: {},
     coordinates: [],
     edges: [],
   };

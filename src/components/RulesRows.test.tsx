@@ -18,7 +18,7 @@ describe('RulesRows Components', () => {
   };
 
   const mockRoadConfig: RoadRuleConfig = {
-    roadType: 'residential',
+    roadId: 'residential',
     name: 'Residential Street',
     baseSpeedKmh: 20,
     speedType: 'custom',

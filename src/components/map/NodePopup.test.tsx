@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
@@ -21,7 +20,7 @@ describe('NodePopup', () => {
   it('renders nothing when selectedNode is null', () => {
     const { container } = render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={null}
         onNodeSelect={vi.fn()}
         customNodeDelays={new Map()}
@@ -37,7 +36,7 @@ describe('NodePopup', () => {
   it('renders details, penalty, presets, and tags when selectedNode is provided', () => {
     render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={mockNode}
         onNodeSelect={vi.fn()}
         customNodeDelays={new Map()}
@@ -66,7 +65,7 @@ describe('NodePopup', () => {
     const handleSetDock = vi.fn();
     render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={mockNode}
         onNodeSelect={vi.fn()}
         customNodeDelays={new Map()}
@@ -89,7 +88,7 @@ describe('NodePopup', () => {
 
     render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={mockNode}
         onNodeSelect={handleNodeSelect}
         customNodeDelays={new Map()}
@@ -130,7 +129,7 @@ describe('NodePopup', () => {
 
     render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={mockNode}
         onNodeSelect={handleNodeSelect}
         customNodeDelays={customDelays}
@@ -155,7 +154,7 @@ describe('NodePopup', () => {
 
     render(
       <NodePopup
-        map={new maplibregl.Map({})}
+        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
         selectedNode={mockNode}
         onNodeSelect={vi.fn()}
         customNodeDelays={new Map()}
