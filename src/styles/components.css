@@ -89,7 +89,7 @@ h2 {
 }
 
 /* Accent Buttons */
-.btn {
+.ciclista-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,35 +104,35 @@ h2 {
   width: 100%;
 }
 
-.btn-primary {
+.ciclista-btn--primary {
   background: var(--ciclista-color-brand-main);
   color: var(--ciclista-color-text-primary);
   box-shadow: var(--ciclista-shadow-sm);
 }
 
-.btn-primary:hover {
+.ciclista-btn--primary:hover {
   background: var(--ciclista-color-brand-hover);
   box-shadow: var(--ciclista-shadow-glow);
   transform: translateY(-1px);
 }
 
-.btn-secondary {
+.ciclista-btn--secondary {
   background: rgb(255 255 255 / 5%);
   color: var(--ciclista-color-text-primary);
   border: 1px solid var(--ciclista-glass-border-base);
 }
 
-.btn-secondary:hover {
+.ciclista-btn--secondary:hover {
   background: rgb(255 255 255 / 10%);
   border-color: var(--ciclista-color-text-secondary);
 }
 
-.btn-danger {
+.ciclista-btn--danger {
   background: var(--ciclista-color-brand-danger);
   color: var(--ciclista-color-text-primary);
 }
 
-.btn-danger:hover {
+.ciclista-btn--danger:hover {
   filter: brightness(1.1);
 }
 
