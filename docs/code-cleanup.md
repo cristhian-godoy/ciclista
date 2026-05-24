@@ -29,10 +29,10 @@ This document outlines the bite-sized tasks required to improve the code quality
 
 - **Goal**: Eliminate hardcoded values scattered across the codebase to make tweaking configurations easier.
 - **Tasks**:
-  - [ ] Create `src/core/common/constants.ts` (or `config.ts`).
-  - [ ] Move API constants like `OVERPASS_MIRRORS`, `CACHE_NAME`, and query timeouts.
-  - [ ] Move bounding box padding margins (`0.015`, `0.02`), maximum limits, and default city coordinates to constants.
-  - [ ] Move routing constants (e.g., the 30s U-turn penalty, 3 meters snapping distance).
+  - [x] Create `src/core/common/constants.ts` (or `config.ts`).
+  - [x] Move API constants like `OVERPASS_MIRRORS`, `CACHE_NAME`, and query timeouts.
+  - [x] Move bounding box padding margins (`0.015`, `0.02`), maximum limits, and default city coordinates to constants.
+  - [x] Move routing constants (e.g., the 30s U-turn penalty, 3 meters snapping distance).
 
 ## 5. Polish and Performance Optimization
 

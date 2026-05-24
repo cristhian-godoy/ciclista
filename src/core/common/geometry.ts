@@ -1,6 +1,7 @@
 import type { Coordinate } from './types';
 import type { StreetGraph, GraphEdge } from '../graph/types';
 import { haversineDistance } from '../graph/parser';
+import { ROUTING_CONFIG } from './constants';
 
 /**
  * Calculates the turn penalty (in seconds) between three points: p -> c -> n.
@@ -21,11 +22,11 @@ export function calculateTurnPenalty(p: Coordinate, c: Coordinate, n: Coordinate
 
     // U-turn or very sharp turn (angle > 135 deg)
     if (cosTheta < -0.7) {
-      return 30; // 30s penalty
+      return ROUTING_CONFIG.U_TURN_PENALTY_SECONDS;
     }
     // Normal turn (angle between 45 and 135 deg)
     else if (cosTheta >= -0.7 && cosTheta <= 0.7) {
-      return 3; // 3s penalty
+      return ROUTING_CONFIG.NORMAL_TURN_PENALTY_SECONDS;
     }
   }
   return 0;

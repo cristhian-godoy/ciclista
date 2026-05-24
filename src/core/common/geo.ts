@@ -1,6 +1,7 @@
 import type { Coordinate } from './types';
 import type { StreetGraph } from '../graph/types';
-import { findNearestEdge } from '../router/router';
+import { findNearestEdge } from './geometry';
+import { MAP_CONFIG, ROUTING_CONFIG } from './constants';
 
 // Helper to compute a bounding box enclosing two coordinates with padding
 export function calculateBoundingBox(
@@ -8,15 +9,12 @@ export function calculateBoundingBox(
   c2: Coordinate | null,
 ): [number, number, number, number] {
   if (!c1 || !c2) {
-    // Default bounding box for Munich center
-    const center = { lat: 48.13715, lng: 11.5754 };
-    const latMargin = 0.015;
-    const lngMargin = 0.02;
+    const preset = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
     return [
-      center.lat - latMargin,
-      center.lng - lngMargin,
-      center.lat + latMargin,
-      center.lng + lngMargin,
+      preset.center.lat - preset.latMargin,
+      preset.center.lng - preset.lngMargin,
+      preset.center.lat + preset.latMargin,
+      preset.center.lng + preset.lngMargin,
     ];
   }
 
@@ -28,9 +26,10 @@ export function calculateBoundingBox(
   const latSpan = maxLat - minLat;
   const lngSpan = maxLng - minLng;
 
-  // Generous padding: 30% of route span, or at least ~1.5km to allow alternate paths
-  const latMargin = Math.max(latSpan * 0.3, 0.015);
-  const lngMargin = Math.max(lngSpan * 0.3, 0.02);
+  const defaultPreset = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
+  // Generous padding: 30% of route span, or at least configured margins to allow alternate paths
+  const latMargin = Math.max(latSpan * 0.3, defaultPreset.latMargin);
+  const lngMargin = Math.max(lngSpan * 0.3, defaultPreset.lngMargin);
 
   return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
 }
@@ -46,11 +45,11 @@ export function isInsideLoadedArea(
   });
 }
 
-// Helper to snap coordinates to the nearest edge if within 3 meters (house-pinning safety)
+// Helper to snap coordinates to the nearest edge if within snapping distance (house-pinning safety)
 export function snapCoordinateToEdge(coord: Coordinate, graph: StreetGraph | null): Coordinate {
   if (!graph) return coord;
   const nearestEdge = findNearestEdge(graph, coord);
-  if (nearestEdge && nearestEdge.distance < 3) {
+  if (nearestEdge && nearestEdge.distance < ROUTING_CONFIG.SNAPPING_DISTANCE_METERS) {
     return nearestEdge.projected;
   }
   return coord;

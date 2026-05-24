@@ -9,6 +9,7 @@ import { standardCost, avoidStoppingCost, avoidBusyRoadsCost } from './core/rout
 import { fetchWithCacheAndFallback } from './core/api/overpass';
 import { calculateBoundingBox, isInsideLoadedArea, snapCoordinateToEdge } from './core/common/geo';
 import { useOverrides } from './hooks/useOverrides';
+import { MAP_CONFIG } from './core/common/constants';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
@@ -139,9 +140,10 @@ export default function App() {
       const newBBox = calculateBoundingBox(startCoord, endCoord);
 
       // Limit bounding box size to prevent Overpass query timeouts (max ~35km span)
-      const maxLatSpan = 0.32;
-      const maxLngSpan = 0.42;
-      if (newBBox[2] - newBBox[0] > maxLatSpan || newBBox[3] - newBBox[1] > maxLngSpan) {
+      if (
+        newBBox[2] - newBBox[0] > MAP_CONFIG.MAX_LAT_SPAN ||
+        newBBox[3] - newBBox[1] > MAP_CONFIG.MAX_LNG_SPAN
+      ) {
         console.warn('Auto-fetch map bounds exceeded limit parameters. Skipping auto-fetch.');
         return;
       }
@@ -164,15 +166,12 @@ export default function App() {
     setEndCoord(null);
 
     // Fetch fresh non-merged area for the new preset city center
-    const center =
-      preset === 'munich' ? { lat: 48.13715, lng: 11.5754 } : { lat: 52.3725, lng: 4.89 };
-    const latMargin = 0.015;
-    const lngMargin = 0.02;
+    const presetConfig = MAP_CONFIG.PRESETS[preset];
     const newBBox: [number, number, number, number] = [
-      center.lat - latMargin,
-      center.lng - lngMargin,
-      center.lat + latMargin,
-      center.lng + lngMargin,
+      presetConfig.center.lat - presetConfig.latMargin,
+      presetConfig.center.lng - presetConfig.lngMargin,
+      presetConfig.center.lat + presetConfig.latMargin,
+      presetConfig.center.lng + presetConfig.lngMargin,
     ];
     handleFetchOSM(newBBox, false, false);
   };

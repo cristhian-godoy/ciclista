@@ -13,6 +13,7 @@ import {
   getProjectionT,
   findNearestEdge,
 } from '../common/geometry';
+import { ROUTING_CONFIG } from '../common/constants';
 
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
@@ -431,8 +432,8 @@ export class DijkstraRouter implements IRouter {
 
       const totalDistanceMeters = stats.totalDistanceMeters + startInterpDist + endInterpDist;
 
-      const startInterpDuration = startInterpDist / 1.5;
-      const endInterpDuration = endInterpDist / 1.5;
+      const startInterpDuration = startInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
+      const endInterpDuration = endInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
       const totalDurationSeconds = stats.totalDisplayCost + startInterpDuration + endInterpDuration;
 
       return {
