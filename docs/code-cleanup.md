@@ -121,7 +121,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 
 ### Phase 5.4: Integration Testing for Panels & Popups
 
-- [ ] Write unit tests for `RouteStatsPanel.tsx` and `RouteComparePanel.tsx`:
+- [x] Write unit tests for `RouteStatsPanel.tsx` and `RouteComparePanel.tsx`:
   - Verify display calculations for distance (km), duration (minutes), stops count, quietness index percentage.
   - Verify alternative cards render active styles.
 - [ ] Write integration tests for `NodePopup.tsx`:
