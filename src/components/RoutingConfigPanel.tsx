@@ -44,49 +44,31 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           Choose a preset city. The map area will automatically expand and fetch OSM data as you
           drag or position the pins.
         </p>
-        <div className="form-group" style={{ marginBottom: '12px' }}>
-          <label className="form-label" htmlFor="city-preset-select">
+        <div className="ciclista-form-group" style={{ marginBottom: '12px' }}>
+          <label className="ciclista-label" htmlFor="city-preset-select">
             City Preset
           </label>
           <select
             id="city-preset-select"
-            className="input-text"
+            className="ciclista-input"
             value={selectedPreset}
             onChange={(e) => onPresetChange(e.target.value as 'munich' | 'amsterdam')}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--glass-border)',
-              outline: 'none',
-              cursor: 'pointer',
-            }}
+            style={{ cursor: 'pointer' }}
           >
             <option value="munich">Munich (Marienplatz)</option>
             <option value="amsterdam">Amsterdam (Center)</option>
           </select>
         </div>
-        <div className="form-group" style={{ marginBottom: '12px' }}>
-          <label className="form-label" htmlFor="map-theme-select">
+        <div className="ciclista-form-group" style={{ marginBottom: '12px' }}>
+          <label className="ciclista-label" htmlFor="map-theme-select">
             Map Theme
           </label>
           <select
             id="map-theme-select"
-            className="input-text"
+            className="ciclista-input"
             value={theme}
             onChange={(e) => onThemeChange(e.target.value as 'bright' | 'liberty' | 'dark')}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--glass-border)',
-              outline: 'none',
-              cursor: 'pointer',
-            }}
+            style={{ cursor: 'pointer' }}
           >
             <option value="bright">Bright</option>
             <option value="liberty">Liberty</option>
@@ -100,7 +82,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               alignItems: 'center',
               gap: '8px',
               fontSize: '0.75rem',
-              color: 'var(--accent-secondary)',
+              color: 'var(--ciclista-color-brand-secondary)',
               marginTop: '8px',
             }}
           >
@@ -111,8 +93,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       </section>
 
       {/* Bike Profile */}
-      <section className="form-group">
-        <label className="form-label">Bike Profile</label>
+      <section className="ciclista-form-group">
+        <label className="ciclista-label">Bike Profile</label>
         <div className="strategy-selector">
           {(['slow', 'normal', 'ebike'] as BikeProfile[]).map((p) => (
             <button
