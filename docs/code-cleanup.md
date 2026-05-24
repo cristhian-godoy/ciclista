@@ -52,7 +52,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
   - Listens to dependencies (`graph`, `customNodeDelays`, `showMinorControls`) and dynamically re-updates source data.
   - Controls layer filters dynamically when a cluster is expanded/managed (`managedClusterId`, `managedNodeIds`).
   - Attaches click/hover handlers to layers for selecting control nodes and zooming into clusters.
-- [ ] Create `src/components/map/RouteAlternativesLayer.tsx` that:
+- [x] Create `src/components/map/RouteAlternativesLayer.tsx` that:
   - Adds/manages the `route-path-standard`, `route-path-avoid-stops`, and `route-path-quiet-streets` sources and layers (both core lines and opacity glows).
   - Updates layer paint properties (line opacity, line width) and layers draw order to bring the active route alternative to the front.
   - Computes and fits map bounding boxes smoothly when the active strategy changes.
