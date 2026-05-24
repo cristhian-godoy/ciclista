@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onThemeChange,
 }) => {
   return (
-    <aside className="sidebar">
+    <aside className="sidebar ciclista-glass-panel">
       <div className="sidebar-header">
         <Navigation
           size={24}

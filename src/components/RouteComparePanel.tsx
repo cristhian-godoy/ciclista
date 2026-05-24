@@ -48,7 +48,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
   if (routeAlternatives.length === 0) {
     return (
-      <section className="route-card" style={{ padding: '16px', textAlign: 'center' }}>
+      <section className="ciclista-card" style={{ padding: '16px', textAlign: 'center' }}>
         <h2>Route Comparison</h2>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '12px 0' }}>
           No routes calculated yet. Move pins to generate route comparisons.
@@ -58,7 +58,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   }
 
   return (
-    <section className="route-card" style={{ padding: '14px 12px' }}>
+    <section className="ciclista-card" style={{ padding: '14px 12px' }}>
       <h2 style={{ marginBottom: '12px', fontSize: '0.95rem', fontWeight: '700' }}>
         Route Comparison
       </h2>

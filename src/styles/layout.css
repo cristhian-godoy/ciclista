@@ -25,11 +25,6 @@
   left: var(--ciclista-spacing-md);
   bottom: var(--ciclista-spacing-md);
   width: 380px;
-  background: var(--ciclista-glass-bg-base);
-  backdrop-filter: blur(var(--ciclista-blur-radius));
-  border: 1px solid var(--ciclista-glass-border-base);
-  border-radius: var(--ciclista-radius-lg);
-  box-shadow: var(--ciclista-shadow-md);
   z-index: 10;
   display: flex;
   flex-direction: column;

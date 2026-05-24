@@ -166,7 +166,7 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
 
       {/* Debug Route Details */}
       {routeResult && routeResult.edges && (
-        <section className="route-card">
+        <section className="ciclista-card">
           <h2
             onClick={() => setShowDebug(!showDebug)}
             style={{

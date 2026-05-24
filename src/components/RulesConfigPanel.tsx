@@ -169,7 +169,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
   };
 
   return (
-    <section className="route-card rules-panel">
+    <section className="ciclista-card rules-panel">
       {/* Panel header */}
       <div className="rules-panel-header">
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
