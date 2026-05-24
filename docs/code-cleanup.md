@@ -112,7 +112,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 - [x] Write unit tests for `RulesRows.tsx`:
   - Verify that rules are rendered with correct styling and checked state.
   - Verify that toggling togglers correctly calls state change handlers.
-- [ ] Write unit tests for `RoutingConfigPanel.tsx` / `RulesConfigPanel.tsx`:
+- [x] Write unit tests for `RoutingConfigPanel.tsx` / `RulesConfigPanel.tsx`:
   - Assert that sliders display correct penalty values.
   - Mock state hooks and trigger value changes to verify callbacks.
 - [ ] Write unit tests for `MapLayerDock.tsx`:
