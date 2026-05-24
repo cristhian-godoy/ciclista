@@ -12,3 +12,5 @@ main.tsx
 	React document bootstrapper.
 styles
 	Theme variables, widgets, and absolute layouts.
+test
+	Setup files and general test utility helpers.

@@ -4,5 +4,9 @@ implementation_plan.md
 	Technical implementation details for the current active milestone.
 active_tasks.md
 	Immediate, session-level checklist of tasks.
+code-cleanup.md
+	Checklist for modular refactoring, TypeScript typing, and Vitest test suites.
+turn_penalties_design.md
+	Technical design notes for wait delays at intersection nodes.
 archive
 	Directory containing completed plans and checklists.

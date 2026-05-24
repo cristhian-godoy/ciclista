@@ -1,4 +1,32 @@
+IntersectionDelaySection.tsx
+	Render control node delay configuration input fields.
 MapView.tsx
-	MapLibre GL JS map rendering and marker overlays.
+	MapLibre GL JS map orchestrator rendering markers and map layers.
+RouteComparePanel.test.tsx
+	Unit tests for route speed and comfort comparisons.
+RouteComparePanel.tsx
+	View panel comparing route metrics (comfort, stops, duration).
+RouteStatsPanel.test.tsx
+	Unit tests for active route statistics card rendering.
+RouteStatsPanel.tsx
+	View panel showcasing routing strategies and active route info cards.
+RoutingConfigPanel.test.tsx
+	Unit tests for preset selection and custom parameters.
+RoutingConfigPanel.tsx
+	Configuration widgets for city presets and profile selections.
+RulesConfigPanel.test.tsx
+	Unit tests for road type and traffic sign penalty selectors.
+RulesConfigPanel.tsx
+	Dashboard panel hosting rules configuration collapsible groups.
+RulesRows.test.tsx
+	Unit tests for interactive traffic sign and road speed modifier rows.
+RulesRows.tsx
+	Interactive form rows detailing custom rules and penalties.
+RulesSelectorFields.tsx
+	Dropdown controls for specific speed modifiers and base options.
+Sidebar.test.tsx
+	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx
-	Dashboard sidebar for analytics, filters, and node customizations.
+	Dashboard sidebar layout containing configurations and statistics panels.
+map
+	Directory containing map layer subcomponents and map hooks.

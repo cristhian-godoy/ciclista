@@ -1,0 +1,20 @@
+BBoxBoundaryLayer.tsx
+	Layer component rendering OSM bounding box polygons.
+MapContextMenu.tsx
+	Floating context menu for setting start/end route points on right-click.
+MapLayerDock.test.tsx
+	Unit tests for layer visibility toggling.
+MapLayerDock.tsx
+	Collapsible bottom-right dock controlling map overlay filters.
+NodePopup.test.tsx
+	Integration tests verifying control node override saving behavior.
+NodePopup.tsx
+	Glassmorphic popup configuring node delays and custom notes.
+RouteAlternativesLayer.tsx
+	Layer rendering route alternative paths and selection glows.
+StartEndMarkers.tsx
+	Draggable marker pins for navigation origin and destination.
+StreetGraphLayer.tsx
+	Layer rendering GeoJSON streets network and clustered traffic signals.
+useMapInstance.ts
+	React hook managing map container lifetime and basic handlers.
