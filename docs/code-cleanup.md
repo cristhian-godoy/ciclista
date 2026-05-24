@@ -129,7 +129,6 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
   - Assert node details (ID, type label, tags table) render accurately.
   - Simulate moving the slider and clicking preset buttons (e.g. Always Green, Standard, Slow).
   - Assert clicking "Save" calls `onSaveNodeOverride` with the updated seconds/notes.
-- [ ] Write integration tests for `Sidebar.tsx`:
+- [x] Write integration tests for `Sidebar.tsx`:
   - Mount Sidebar with mocked dependencies.
-  - Test tab switching functionality between "Route Info", "Routing Options", and "Rules Config".
-  - Assert preset dropdown changes options correctly.
+  - Test preset dropdown changes and strategy selections to verify parent callbacks are called correctly.
