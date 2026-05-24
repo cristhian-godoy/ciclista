@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { DEFAULT_RULES_CONFIG } from '../components/RulesConfigPanel';
+import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
 import type { RulesConfiguration } from '../core/router/types';
 import { LocalStorageProvider } from '../core/storage/storage';
 import type { BikeProfile, LocalOverrides } from '../core/storage/types';

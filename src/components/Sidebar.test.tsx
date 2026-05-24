@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
 import type { RouteAlternative, RouteResult } from '../core/router/types';
-import { DEFAULT_RULES_CONFIG } from './RulesConfigPanel';
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar Integration', () => {
