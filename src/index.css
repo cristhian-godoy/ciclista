@@ -1,5 +1,5 @@
 /* Centralized CSS Import Entry Point */
 
-@import './styles/variables.css';
-@import './styles/layout.css';
-@import './styles/components.css';
+@import url('./styles/variables.css');
+@import url('./styles/layout.css');
+@import url('./styles/components.css');
