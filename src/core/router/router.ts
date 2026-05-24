@@ -162,6 +162,13 @@ export class DijkstraRouter implements IRouter {
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
 
+    // To prevent double counting grouped signals (like traffic lights at an intersection),
+    // we track the last seen control of each type and its coordinates.
+    let lastSignalNode: { lat: number; lng: number } | null = null;
+    let lastYieldNode: { lat: number; lng: number } | null = null;
+    let lastStopNode: { lat: number; lng: number } | null = null;
+    let lastCrossingNode: { lat: number; lng: number } | null = null;
+
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
       const entry = graph.nodes.get(nodeId);
@@ -170,13 +177,27 @@ export class DijkstraRouter implements IRouter {
 
       const tags = entry.node.tags || {};
       const controlType = mapOSMNodeToControl(tags);
-      if (controlType === 'signal') {
-        trafficSignalsCount++;
-        signalCount++;
-      } else if (controlType === 'yield') {
-        yieldCount++;
-      } else if (controlType === 'crossing') {
-        crossingCount++;
+
+      if (controlType) {
+        const isNewCluster = (lastNode: { lat: number; lng: number } | null) => {
+          if (!lastNode) return true;
+          return haversineDistance(lastNode.lat, lastNode.lng, entry.node.lat, entry.node.lng) > 35;
+        };
+
+        if (controlType === 'signal' && isNewCluster(lastSignalNode)) {
+          trafficSignalsCount++;
+          signalCount++;
+          lastSignalNode = { lat: entry.node.lat, lng: entry.node.lng };
+        } else if (controlType === 'yield' && isNewCluster(lastYieldNode)) {
+          yieldCount++;
+          lastYieldNode = { lat: entry.node.lat, lng: entry.node.lng };
+        } else if (controlType === 'stop' && isNewCluster(lastStopNode)) {
+          // Track stop nodes as well, even if not explicitly exposed in stats right now
+          lastStopNode = { lat: entry.node.lat, lng: entry.node.lng };
+        } else if (controlType === 'crossing' && isNewCluster(lastCrossingNode)) {
+          crossingCount++;
+          lastCrossingNode = { lat: entry.node.lat, lng: entry.node.lng };
+        }
       }
 
       if (i < pathNodeIds.length - 1) {
