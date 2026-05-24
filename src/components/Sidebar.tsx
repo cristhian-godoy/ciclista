@@ -22,6 +22,8 @@ interface SidebarProps {
   onRulesChange: (config: RulesConfiguration) => void;
   bikeProfile: BikeProfile;
   onBikeProfileChange: (profile: BikeProfile) => void;
+  theme: 'bright' | 'liberty' | 'dark';
+  onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -36,6 +38,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRulesChange,
   bikeProfile,
   onBikeProfileChange,
+  theme,
+  onThemeChange,
 }) => {
   return (
     <aside className="sidebar">
@@ -56,6 +60,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isFetchingOSM={isFetchingOSM}
           bikeProfile={bikeProfile}
           onBikeProfileChange={onBikeProfileChange}
+          theme={theme}
+          onThemeChange={onThemeChange}
         />
 
         {/* Section 2: Route Alternatives Selector & Stats */}

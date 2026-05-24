@@ -8,6 +8,8 @@ interface RoutingConfigPanelProps {
   isFetchingOSM: boolean;
   bikeProfile: BikeProfile;
   onBikeProfileChange: (profile: BikeProfile) => void;
+  theme: 'bright' | 'liberty' | 'dark';
+  onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
 export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
@@ -16,6 +18,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   isFetchingOSM,
   bikeProfile,
   onBikeProfileChange,
+  theme,
+  onThemeChange,
 }) => {
   return (
     <>
@@ -37,8 +41,11 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           drag or position the pins.
         </p>
         <div className="form-group" style={{ marginBottom: '12px' }}>
-          <label className="form-label">City Preset</label>
+          <label className="form-label" htmlFor="city-preset-select">
+            City Preset
+          </label>
           <select
+            id="city-preset-select"
             className="input-text"
             value={selectedPreset}
             onChange={(e) => onPresetChange(e.target.value as 'munich' | 'amsterdam')}
@@ -55,6 +62,31 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           >
             <option value="munich">Munich (Marienplatz)</option>
             <option value="amsterdam">Amsterdam (Center)</option>
+          </select>
+        </div>
+        <div className="form-group" style={{ marginBottom: '12px' }}>
+          <label className="form-label" htmlFor="map-theme-select">
+            Map Theme
+          </label>
+          <select
+            id="map-theme-select"
+            className="input-text"
+            value={theme}
+            onChange={(e) => onThemeChange(e.target.value as 'bright' | 'liberty' | 'dark')}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '6px',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              outline: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="bright">Bright</option>
+            <option value="liberty">Liberty</option>
+            <option value="dark">Dark</option>
           </select>
         </div>
         {isFetchingOSM && (
