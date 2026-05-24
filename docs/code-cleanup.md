@@ -57,7 +57,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
   - Updates layer paint properties (line opacity, line width) and layers draw order to bring the active route alternative to the front.
   - Computes and fits map bounding boxes smoothly when the active strategy changes.
   - Registers mouseenter, mouseleave, and click events on route layers for selection.
-- [ ] Create `src/components/map/BBoxBoundaryLayer.tsx` that:
+- [x] Create `src/components/map/BBoxBoundaryLayer.tsx` that:
   - Adds/manages the `loaded-bbox` source and polygon layer showing downloaded regions.
   - Translates `loadedBBoxes` to Polygon GeoJSON features and syncs source data.
 
