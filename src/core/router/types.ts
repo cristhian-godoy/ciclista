@@ -2,6 +2,9 @@ import type { Coordinate } from '../common/types';
 import type { GraphEdge, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 
+/**
+ * A function that calculates the routing cost/weight for traveling along a graph edge.
+ */
 export type CostFunction = (
   sourceId: string,
   edge: GraphEdge,
@@ -10,6 +13,9 @@ export type CostFunction = (
   graph: StreetGraph,
 ) => number;
 
+/**
+ * Calculated routing path metrics including node IDs, coordinates, duration, distance, and node control statistics.
+ */
 export interface RouteResult {
   pathNodeIds: string[];
   coordinates: Coordinate[];
@@ -34,11 +40,17 @@ export interface RouteResult {
   }[];
 }
 
+/**
+ * An alternative routing path option with a label (strategy name) and the routing result metrics.
+ */
 export interface RouteAlternative {
   label: string;
   result: RouteResult;
 }
 
+/**
+ * Router interface defining the findRoute method to compute optimal paths.
+ */
 export interface IRouter {
   findRoute(
     graph: StreetGraph,
@@ -57,6 +69,9 @@ export const GermanSign = {
   VZ_325_1: 'Vz_325.1',
   VZ_244_1: 'Vz_244.1',
 } as const;
+/**
+ * Badges and keys corresponding to German cycling/traffic sign codes.
+ */
 export type GermanSign = (typeof GermanSign)[keyof typeof GermanSign];
 
 export const RoadType = {
@@ -66,10 +81,19 @@ export const RoadType = {
   SERVICE: 'service',
   PATH_DEFAULT: 'path_default',
 } as const;
+/**
+ * Classifications for various OSM highway types.
+ */
 export type RoadType = (typeof RoadType)[keyof typeof RoadType];
 
+/**
+ * Defines the user-configured cycling comfort ratings.
+ */
 export type ComfortLevel = 'very_low' | 'low' | 'neutral' | 'high' | 'very_high';
 
+/**
+ * Configuration parameters for specific traffic sign speed rules and penalties.
+ */
 export interface SignRuleConfig {
   signId: GermanSign;
   name: string;
@@ -81,6 +105,9 @@ export interface SignRuleConfig {
   comfort?: ComfortLevel;
 }
 
+/**
+ * Configuration parameters for specific road type speed rules and penalties.
+ */
 export interface RoadRuleConfig {
   roadId: RoadType;
   name: string;
@@ -90,6 +117,9 @@ export interface RoadRuleConfig {
   comfort?: ComfortLevel;
 }
 
+/**
+ * Configured average crossing wait times for signals, yield signs, stops, and zebra crossings.
+ */
 export interface NodeDelayConfig {
   signalSeconds: number;
   yieldSeconds: number;
@@ -97,6 +127,9 @@ export interface NodeDelayConfig {
   crossingSeconds: number;
 }
 
+/**
+ * Aggregated configuration wrapper mapping signs, roads, and intersection node delays.
+ */
 export interface RulesConfiguration {
   signs: Record<GermanSign, SignRuleConfig>;
   roads: Record<RoadType, RoadRuleConfig>;
