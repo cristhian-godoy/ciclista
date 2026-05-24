@@ -124,7 +124,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 - [x] Write unit tests for `RouteStatsPanel.tsx` and `RouteComparePanel.tsx`:
   - Verify display calculations for distance (km), duration (minutes), stops count, quietness index percentage.
   - Verify alternative cards render active styles.
-- [ ] Write integration tests for `NodePopup.tsx`:
+- [x] Write integration tests for `NodePopup.tsx`:
   - Mock projected coordinates from map instance.
   - Assert node details (ID, type label, tags table) render accurately.
   - Simulate moving the slider and clicking preset buttons (e.g. Always Green, Standard, Slow).
