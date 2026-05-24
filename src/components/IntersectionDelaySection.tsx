@@ -1,5 +1,6 @@
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+
 import type { NodeDelayConfig } from '../core/router/types';
 
 interface IntersectionRowProps {
@@ -97,6 +98,9 @@ const DELAY_FIELDS: {
   },
 ];
 
+/**
+ *
+ */
 export const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({
   config,
   onChange,

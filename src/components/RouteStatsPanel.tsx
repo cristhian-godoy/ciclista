@@ -1,6 +1,7 @@
+import { Bug, Check, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import React, { useState } from 'react';
-import type { RouteResult, RouteAlternative } from '../core/router/types';
-import { Bug, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+
+import type { RouteAlternative, RouteResult } from '../core/router/types';
 
 interface RouteStatsPanelProps {
   routeAlternatives: RouteAlternative[];
@@ -9,6 +10,9 @@ interface RouteStatsPanelProps {
   routeResult: RouteResult | null;
 }
 
+/**
+ *
+ */
 export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
   routeAlternatives,
   routingStrategy,

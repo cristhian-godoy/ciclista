@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
+import React, { useEffect, useRef } from 'react';
+
 import { convertGraphToGeoJSON } from '../../core/graph/geojson';
-import type { StreetGraph, GraphNode } from '../../core/graph/types';
+import type { GraphNode, StreetGraph } from '../../core/graph/types';
 
 type GeoJSONFeature =
   | {
@@ -33,6 +34,9 @@ interface StreetGraphLayerProps {
   onNodeSelect: (node: GraphNode | null) => void;
 }
 
+/**
+ *
+ */
 export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
   map,
   graph,

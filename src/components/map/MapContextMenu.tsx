@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import { MapPin, ZoomIn } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
-import { ZoomIn, MapPin } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+
 import type { Coordinate } from '../../core/common/types';
 
 interface ContextMenuData {
@@ -23,6 +24,9 @@ interface MapContextMenuProps {
   onEndDrag: (coord: Coordinate | null) => void;
 }
 
+/**
+ *
+ */
 export const MapContextMenu: React.FC<MapContextMenuProps> = ({
   map,
   contextMenu,

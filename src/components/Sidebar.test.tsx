@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect } from 'vitest';
-import { Sidebar } from './Sidebar';
-import { DEFAULT_RULES_CONFIG } from './RulesConfigPanel';
+import { describe, expect, it, vi } from 'vitest';
+
 import type { RouteAlternative, RouteResult } from '../core/router/types';
+import { DEFAULT_RULES_CONFIG } from './RulesConfigPanel';
+import { Sidebar } from './Sidebar';
 
 describe('Sidebar Integration', () => {
   const mockAlternatives: RouteAlternative[] = [

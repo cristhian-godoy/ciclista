@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
+import React, { useEffect, useRef } from 'react';
+
 import type { Coordinate } from '../../core/common/types';
 
 interface StartEndMarkersProps {
@@ -11,6 +12,9 @@ interface StartEndMarkersProps {
   shouldFitBoundsRef: React.RefObject<boolean>;
 }
 
+/**
+ *
+ */
 export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
   map,
   startCoord,

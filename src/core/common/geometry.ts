@@ -1,7 +1,7 @@
-import type { Coordinate } from './types';
-import type { StreetGraph, GraphEdge } from '../graph/types';
 import { haversineDistance } from '../graph/parser';
+import type { GraphEdge, StreetGraph } from '../graph/types';
 import { ROUTING_CONFIG } from './constants';
+import type { Coordinate } from './types';
 
 /**
  * Calculates the turn penalty (in seconds) between three points: p -> c -> n.
@@ -92,6 +92,9 @@ export function getProjectionT(p: Coordinate, a: Coordinate, b: Coordinate): num
   return Math.max(0, Math.min(1, t));
 }
 
+/**
+ *
+ */
 export interface EdgeRef {
   uId: string;
   vId: string;
@@ -100,6 +103,9 @@ export interface EdgeRef {
   edge: GraphEdge;
 }
 
+/**
+ *
+ */
 export function findNearestEdge(graph: StreetGraph, coord: Coordinate): EdgeRef | null {
   let minDistance = Infinity;
   let bestEdge: EdgeRef | null = null;

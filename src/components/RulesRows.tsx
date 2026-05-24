@@ -1,14 +1,18 @@
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+
+import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
 import { GermanSign } from '../core/router/types';
-import type { SignRuleConfig, RoadRuleConfig } from '../core/router/types';
-import { SpeedTypeSelector, ComfortSelector } from './RulesSelectorFields';
+import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
 
 interface SignRowProps {
   config: SignRuleConfig;
   onChange: (updated: SignRuleConfig) => void;
 }
 
+/**
+ *
+ */
 export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -116,6 +120,9 @@ interface RoadRowProps {
   onChange: (updated: RoadRuleConfig) => void;
 }
 
+/**
+ *
+ */
 export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 

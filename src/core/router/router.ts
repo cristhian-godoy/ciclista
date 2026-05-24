@@ -1,20 +1,20 @@
-import type { StreetGraph, GraphEdge, GraphNode } from '../graph/types';
-import type { Coordinate } from '../common/types';
-import type { LocalOverrides } from '../storage/types';
-import type { IRouter, CostFunction, RouteResult } from './types';
-import { haversineDistance } from '../graph/parser';
-import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
-import { calculateDisplayCost } from './cost';
-import { MinHeap } from '../common/MinHeap';
+import { ROUTING_CONFIG } from '../common/constants';
 import {
   calculateTurnPenalty,
-  findNearestNode,
-  projectPointOnSegment,
-  getProjectionT,
   findNearestEdge,
+  findNearestNode,
+  getProjectionT,
+  projectPointOnSegment,
 } from '../common/geometry';
-import { ROUTING_CONFIG } from '../common/constants';
 import { logger } from '../common/logger';
+import { MinHeap } from '../common/MinHeap';
+import type { Coordinate } from '../common/types';
+import { haversineDistance } from '../graph/parser';
+import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import type { LocalOverrides } from '../storage/types';
+import { calculateDisplayCost } from './cost';
+import { hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
+import type { CostFunction, IRouter, RouteResult } from './types';
 
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
@@ -45,6 +45,9 @@ export function getRoadTypeCategory(
   return 'other';
 }
 
+/**
+ *
+ */
 export class DijkstraRouter implements IRouter {
   private runDijkstra(
     graph: StreetGraph,
@@ -235,6 +238,9 @@ export class DijkstraRouter implements IRouter {
     };
   }
 
+  /**
+   *
+   */
   findRoute(
     graph: StreetGraph,
     start: Coordinate,

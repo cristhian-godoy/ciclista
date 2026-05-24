@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
+import React, { useEffect, useRef } from 'react';
+
 import type { RouteAlternative } from '../../core/router/types';
 
 interface RouteAlternativesLayerProps {
@@ -10,6 +11,9 @@ interface RouteAlternativesLayerProps {
   shouldFitBoundsRef: React.RefObject<boolean>;
 }
 
+/**
+ *
+ */
 export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
   map,
   routeAlternatives,

@@ -1,7 +1,13 @@
 import type { RulesConfiguration } from '../router/types';
 
+/**
+ *
+ */
 export type BikeProfile = 'slow' | 'normal' | 'ebike';
 
+/**
+ *
+ */
 export interface LocalOverrides {
   nodeDelays: Map<string, number>;
   nodeNotes: Map<string, string>;
@@ -10,6 +16,9 @@ export interface LocalOverrides {
   bikeProfile?: BikeProfile;
 }
 
+/**
+ *
+ */
 export interface IStorageProvider {
   getOverrides(): Promise<LocalOverrides>;
   saveNodeDelay(nodeId: string, delaySeconds: number): Promise<void>;

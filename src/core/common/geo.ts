@@ -1,9 +1,12 @@
-import type { Coordinate } from './types';
 import type { StreetGraph } from '../graph/types';
-import { findNearestEdge } from './geometry';
 import { MAP_CONFIG, ROUTING_CONFIG } from './constants';
+import { findNearestEdge } from './geometry';
+import type { Coordinate } from './types';
 
 // Helper to compute a bounding box enclosing two coordinates with padding
+/**
+ *
+ */
 export function calculateBoundingBox(
   c1: Coordinate | null,
   c2: Coordinate | null,
@@ -35,6 +38,9 @@ export function calculateBoundingBox(
 }
 
 // Helper to check if coordinate is inside any loaded bounding boxes
+/**
+ *
+ */
 export function isInsideLoadedArea(
   coord: Coordinate,
   loadedBBoxes: [number, number, number, number][],
@@ -46,6 +52,9 @@ export function isInsideLoadedArea(
 }
 
 // Helper to snap coordinates to the nearest edge if within snapping distance (house-pinning safety)
+/**
+ *
+ */
 export function snapCoordinateToEdge(coord: Coordinate, graph: StreetGraph | null): Coordinate {
   if (!graph) return coord;
   const nearestEdge = findNearestEdge(graph, coord);

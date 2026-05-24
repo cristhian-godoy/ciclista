@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { convertGraphToGeoJSON } from './geojson';
 import { OSMGraphParser } from './parser';
 import type { StreetGraph } from './types';

@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect } from 'vitest';
-import { RouteComparePanel } from './RouteComparePanel';
+import { describe, expect, it, vi } from 'vitest';
+
 import type { RouteAlternative } from '../core/router/types';
+import { RouteComparePanel } from './RouteComparePanel';
 
 describe('RouteComparePanel', () => {
   const mockAlternatives = [

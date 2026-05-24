@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+
 import { vi } from 'vitest';
 
 // Stub mock for maplibre-gl

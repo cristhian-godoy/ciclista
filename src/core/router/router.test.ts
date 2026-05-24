@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { DijkstraRouter } from './router';
-import { OSMGraphParser } from '../graph/parser';
-import { standardCost } from './cost';
-import type { StreetGraph } from '../graph/types';
+import { describe, expect, it } from 'vitest';
+
 import type { Coordinate } from '../common/types';
+import { OSMGraphParser } from '../graph/parser';
+import type { StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
+import { standardCost } from './cost';
+import { DijkstraRouter } from './router';
 
 describe('DijkstraRouter', () => {
   const parser = new OSMGraphParser();

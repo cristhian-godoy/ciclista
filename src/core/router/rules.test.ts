@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { mapOSMToSignAndRoad, mapOSMNodeToControl } from './rules';
+import { describe, expect, it } from 'vitest';
+
+import { mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import { GermanSign, RoadType } from './types';
 
 describe('mapOSMToSignAndRoad', () => {

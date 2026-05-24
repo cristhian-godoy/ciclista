@@ -1,6 +1,6 @@
-import type { IStorageProvider, LocalOverrides } from './types';
-import type { RulesConfiguration } from '../router/types';
 import { logger } from '../common/logger';
+import type { RulesConfiguration } from '../router/types';
+import type { IStorageProvider, LocalOverrides } from './types';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
@@ -71,6 +71,9 @@ export class LocalStorageProvider implements IStorageProvider {
     }
   }
 
+  /**
+   *
+   */
   async getOverrides(): Promise<LocalOverrides> {
     const raw = this.loadRawData();
     const nodeDelays = new Map<string, number>();
@@ -101,6 +104,9 @@ export class LocalStorageProvider implements IStorageProvider {
     };
   }
 
+  /**
+   *
+   */
   async saveNodeDelay(nodeId: string, delaySeconds: number): Promise<void> {
     const raw = this.loadRawData();
     if (!raw[nodeId] || typeof raw[nodeId] !== 'object') {
@@ -110,6 +116,9 @@ export class LocalStorageProvider implements IStorageProvider {
     this.saveRawData(raw);
   }
 
+  /**
+   *
+   */
   async saveNodeNotes(nodeId: string, notes: string): Promise<void> {
     const raw = this.loadRawData();
     if (!raw[nodeId] || typeof raw[nodeId] !== 'object') {
@@ -119,6 +128,9 @@ export class LocalStorageProvider implements IStorageProvider {
     this.saveRawData(raw);
   }
 
+  /**
+   *
+   */
   async clearNodeOverrides(nodeId: string): Promise<void> {
     const raw = this.loadRawData();
     if (raw[nodeId]) {

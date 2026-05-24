@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect } from 'vitest';
-import { RulesConfigPanel, DEFAULT_RULES_CONFIG } from './RulesConfigPanel';
+import { describe, expect, it, vi } from 'vitest';
+
+import { DEFAULT_RULES_CONFIG, RulesConfigPanel } from './RulesConfigPanel';
 
 describe('RulesConfigPanel', () => {
   it('renders section headers and reset button', () => {

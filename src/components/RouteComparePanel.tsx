@@ -1,4 +1,5 @@
 import React from 'react';
+
 import type { RouteAlternative } from '../core/router/types';
 
 interface RouteComparePanelProps {
@@ -7,6 +8,9 @@ interface RouteComparePanelProps {
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
 }
 
+/**
+ *
+ */
 export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   routeAlternatives,
   activeAlternativeLabel,
