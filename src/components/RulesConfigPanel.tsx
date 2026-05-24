@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp, RotateCcw, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
 import type {
   NodeDelayConfig,
   RoadRuleConfig,
@@ -10,127 +11,6 @@ import type {
 import { GermanSign, RoadType } from '../core/router/types';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
-
-// ─── Default rule configurations ────────────────────────────────────────────
-
-/* eslint-disable-next-line react-refresh/only-export-components */
-export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
-  signs: {
-    [GermanSign.VZ_242_1]: {
-      signId: GermanSign.VZ_242_1,
-      name: 'Pedestrian Zone',
-      description:
-        'Vz 242.1 – Fußgängerzone. Cyclists must dismount unless "Fahrräder frei" is posted.',
-      iconCode: '🚶',
-      baseSpeedKmh: 4,
-      speedType: 'dismount',
-      flatPenaltySeconds: 30,
-      comfort: 'low',
-    },
-    [GermanSign.VZ_239]: {
-      signId: GermanSign.VZ_239,
-      name: 'Sidewalk / Footway',
-      description:
-        'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
-      iconCode: '🦶',
-      baseSpeedKmh: 4,
-      speedType: 'dismount',
-      flatPenaltySeconds: 20,
-      comfort: 'low',
-    },
-    [GermanSign.VZ_240]: {
-      signId: GermanSign.VZ_240,
-      name: 'Shared Path',
-      description:
-        'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
-      iconCode: '🚶‍♂️🚲',
-      baseSpeedKmh: 15,
-      speedType: 'slow',
-      flatPenaltySeconds: 0,
-      comfort: 'high',
-    },
-    [GermanSign.VZ_241]: {
-      signId: GermanSign.VZ_241,
-      name: 'Segregated Path',
-      description:
-        'Vz 241 – Getrennter Geh- und Radweg. Separate tracks for pedestrians and cyclists.',
-      iconCode: '🚲',
-      baseSpeedKmh: 18,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'very_high',
-    },
-    [GermanSign.VZ_325_1]: {
-      signId: GermanSign.VZ_325_1,
-      name: 'Living Street',
-      description:
-        'Vz 325.1 – Verkehrsberuhigter Bereich. Pedestrians have priority, walking speed.',
-      iconCode: '🏘️',
-      baseSpeedKmh: 7,
-      speedType: 'relative',
-      flatPenaltySeconds: 5,
-      comfort: 'high',
-    },
-    [GermanSign.VZ_244_1]: {
-      signId: GermanSign.VZ_244_1,
-      name: 'Bicycle Street',
-      description: 'Vz 244.1 – Fahrradstraße. Bikes have priority, cars may use at low speed.',
-      iconCode: '🚲🛣️',
-      baseSpeedKmh: 20,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'very_high',
-    },
-  },
-  roads: {
-    [RoadType.PRIMARY]: {
-      roadId: RoadType.PRIMARY,
-      name: 'Primary Road',
-      baseSpeedKmh: 14,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'very_low',
-    },
-    [RoadType.SECONDARY]: {
-      roadId: RoadType.SECONDARY,
-      name: 'Secondary Road',
-      baseSpeedKmh: 16,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'low',
-    },
-    [RoadType.RESIDENTIAL]: {
-      roadId: RoadType.RESIDENTIAL,
-      name: 'Residential Street',
-      baseSpeedKmh: 17,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'high',
-    },
-    [RoadType.SERVICE]: {
-      roadId: RoadType.SERVICE,
-      name: 'Service Road',
-      baseSpeedKmh: 11,
-      speedType: 'relative',
-      flatPenaltySeconds: 5,
-      comfort: 'neutral',
-    },
-    [RoadType.PATH_DEFAULT]: {
-      roadId: RoadType.PATH_DEFAULT,
-      name: 'Generic Path',
-      baseSpeedKmh: 18,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-      comfort: 'high',
-    },
-  },
-  nodeDelays: {
-    signalSeconds: 15,
-    yieldSeconds: 3,
-    stopSeconds: 8,
-    crossingSeconds: 3,
-  },
-};
 
 interface RulesConfigPanelProps {
   config: RulesConfiguration;
