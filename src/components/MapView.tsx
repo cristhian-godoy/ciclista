@@ -138,25 +138,33 @@ export const MapView: React.FC<MapViewProps> = ({
   const handleClick = (e: maplibregl.MapMouseEvent) => {
     setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 
+    if (e.defaultPrevented) {
+      return;
+    }
+
     if (!map) return;
     const features = map.queryRenderedFeatures(e.point, {
       layers: ['traffic-lights-cluster', 'traffic-lights-unclustered'],
     });
-    if (features.length === 0) {
-      setManagedClusterId(null);
-      setManagedNodeIds([]);
-      onNodeSelect(null);
 
-      const sCoord = startCoordRef.current;
-      const eCoord = endCoordRef.current;
-      const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+    // If we clicked on an intersection, do not drop a pin.
+    if (features.length > 0) {
+      return;
+    }
 
-      if (!sCoord || (sCoord && eCoord)) {
-        onStartDrag(clickedCoord);
-        onEndDrag(null);
-      } else {
-        onEndDrag(clickedCoord);
-      }
+    setManagedClusterId(null);
+    setManagedNodeIds([]);
+    onNodeSelect(null);
+
+    const sCoord = startCoordRef.current;
+    const eCoord = endCoordRef.current;
+    const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+
+    if (!sCoord || (sCoord && eCoord)) {
+      onStartDrag(clickedCoord);
+      onEndDrag(null);
+    } else {
+      onEndDrag(clickedCoord);
     }
   };
 
