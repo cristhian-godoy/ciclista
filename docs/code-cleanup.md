@@ -14,9 +14,9 @@ This document outlines the bite-sized tasks required to improve the code quality
 
 - **Goal**: Separate concerns and reduce the size of `App.tsx` (~500 lines) by extracting logic into custom hooks and services.
 - **Tasks**:
-  - [ ] **API Service**: Extract Overpass API fetching, caching (`fetchWithCacheAndFallback`), and mirrors list into `src/core/api/overpass.ts` or a custom hook `useOSMData`.
-  - [ ] **Geospatial Utilities**: Move bounding box helpers (`calculateBoundingBox`, `isInsideLoadedArea`, `snapCoordinateToEdge`) to a new utility file `src/core/common/geo.ts`.
-  - [ ] **State Management**: Extract the complex rules config merging and local storage syncing into a custom hook (e.g., `useOverrides.ts`).
+  - [x] **API Service**: Extract Overpass API fetching, caching (`fetchWithCacheAndFallback`), and mirrors list into `src/core/api/overpass.ts` or a custom hook `useOSMData`.
+  - [x] **Geospatial Utilities**: Move bounding box helpers (`calculateBoundingBox`, `isInsideLoadedArea`, `snapCoordinateToEdge`) to a new utility file `src/core/common/geo.ts`.
+  - [x] **State Management**: Extract the complex rules config merging and local storage syncing into a custom hook (e.g., `useOverrides.ts`).
 
 ## 3. Modularize `router.ts` Utilities
 
