@@ -3,86 +3,42 @@
 :root {
   color-scheme: dark;
 
-  /* Color Palette - Cyberpunk / Sleek Dark HSL */
-  --bg-primary: hsl(220deg 25% 7%);
-  --bg-secondary: hsl(220deg 20% 13%);
-  --bg-tertiary: hsl(220deg 15% 18%);
-
-  /* Glassmorphism Backgrounds */
-  --glass-bg: rgb(20 24 33 / 70%);
-  --glass-bg-hover: rgb(30 36 48 / 80%);
-  --glass-border: rgb(255 255 255 / 8%);
-  --glass-border-focus: rgb(99 102 241 / 40%);
-
-  /* Accents - Neon Indigo & Teal */
-  --accent-primary: hsl(235deg 86% 65%); /* Indigo */
-  --accent-primary-hover: hsl(235deg 86% 70%);
-  --accent-secondary: hsl(172deg 80% 45%); /* Teal */
-  --accent-secondary-hover: hsl(172deg 80% 55%);
-  --accent-danger: hsl(350deg 80% 55%); /* Coral Red */
-
-  /* Typography Colors */
-  --text-primary: hsl(220deg 20% 95%);
-  --text-secondary: hsl(220deg 10% 70%);
-  --text-muted: hsl(220deg 10% 45%);
-
-  /* Shadows & Blurs */
-  --shadow-sm: 0 2px 8px rgb(0 0 0 / 30%);
-  --shadow-md: 0 8px 32px rgb(0 0 0 / 50%);
-  --shadow-glow: 0 0 15px rgb(99 102 241 / 30%);
-  --blur-radius: 12px;
-
-  /* Sizing and Spacing */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-round: 50%;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
   /* Ciclista Standard Design Tokens */
-  --ciclista-color-brand-main: var(--accent-primary);
-  --ciclista-color-brand-hover: var(--accent-primary-hover);
-  --ciclista-color-brand-secondary: var(--accent-secondary);
-  --ciclista-color-brand-secondary-hover: var(--accent-secondary-hover);
-  --ciclista-color-brand-danger: var(--accent-danger);
-  --ciclista-color-surface-base: var(--bg-primary);
-  --ciclista-color-surface-elevated: var(--bg-secondary);
-  --ciclista-color-surface-tertiary: var(--bg-tertiary);
-  --ciclista-color-text-primary: var(--text-primary);
-  --ciclista-color-text-secondary: var(--text-secondary);
-  --ciclista-color-text-muted: var(--text-muted);
+  --ciclista-color-brand-main: hsl(235deg 86% 65%); /* Indigo */
+  --ciclista-color-brand-hover: hsl(235deg 86% 70%);
+  --ciclista-color-brand-secondary: hsl(172deg 80% 45%); /* Teal */
+  --ciclista-color-brand-secondary-hover: hsl(172deg 80% 55%);
+  --ciclista-color-brand-danger: hsl(350deg 80% 55%); /* Coral Red */
+  --ciclista-color-surface-base: hsl(220deg 25% 7%);
+  --ciclista-color-surface-elevated: hsl(220deg 20% 13%);
+  --ciclista-color-surface-tertiary: hsl(220deg 15% 18%);
+  --ciclista-color-text-primary: hsl(220deg 20% 95%);
+  --ciclista-color-text-secondary: hsl(220deg 10% 70%);
+  --ciclista-color-text-muted: hsl(220deg 10% 45%);
   --ciclista-color-danger-bg: rgb(239 68 68 / 15%);
   --ciclista-color-danger-border: rgb(239 68 68 / 30%);
   --ciclista-color-danger-text: hsl(0deg 85% 65%);
   --ciclista-color-success-bg: rgb(16 185 129 / 15%);
   --ciclista-color-success-border: rgb(16 185 129 / 30%);
-  --ciclista-glass-bg-base: var(--glass-bg);
-  --ciclista-glass-bg-hover: var(--glass-bg-hover);
-  --ciclista-glass-border-base: var(--glass-border);
-  --ciclista-glass-border-focus: var(--glass-border-focus);
-  --ciclista-shadow-sm: var(--shadow-sm);
-  --ciclista-shadow-md: var(--shadow-md);
-  --ciclista-shadow-glow: var(--shadow-glow);
-  --ciclista-blur-radius: var(--blur-radius);
-  --ciclista-radius-sm: var(--radius-sm);
-  --ciclista-radius-md: var(--radius-md);
-  --ciclista-radius-lg: var(--radius-lg);
-  --ciclista-radius-round: var(--radius-round);
-  --ciclista-spacing-xs: var(--spacing-xs);
-  --ciclista-spacing-sm: var(--spacing-sm);
-  --ciclista-spacing-md: var(--spacing-md);
-  --ciclista-spacing-lg: var(--spacing-lg);
-  --ciclista-spacing-xl: var(--spacing-xl);
-  --ciclista-transition-fast: var(--transition-fast);
-  --ciclista-transition-normal: var(--transition-normal);
+  --ciclista-glass-bg-base: rgb(20 24 33 / 70%);
+  --ciclista-glass-bg-hover: rgb(30 36 48 / 80%);
+  --ciclista-glass-border-base: rgb(255 255 255 / 8%);
+  --ciclista-glass-border-focus: rgb(99 102 241 / 40%);
+  --ciclista-shadow-sm: 0 2px 8px rgb(0 0 0 / 30%);
+  --ciclista-shadow-md: 0 8px 32px rgb(0 0 0 / 50%);
+  --ciclista-shadow-glow: 0 0 15px rgb(99 102 241 / 30%);
+  --ciclista-blur-radius: 12px;
+  --ciclista-radius-sm: 6px;
+  --ciclista-radius-md: 12px;
+  --ciclista-radius-lg: 20px;
+  --ciclista-radius-round: 50%;
+  --ciclista-spacing-xs: 4px;
+  --ciclista-spacing-sm: 8px;
+  --ciclista-spacing-md: 16px;
+  --ciclista-spacing-lg: 24px;
+  --ciclista-spacing-xl: 32px;
+  --ciclista-transition-fast: 0.15s ease;
+  --ciclista-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --ciclista-shadow-mobile-top: 0 -8px 32px rgb(0 0 0 / 50%);
 }
 
