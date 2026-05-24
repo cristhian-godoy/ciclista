@@ -14,6 +14,7 @@ import {
   findNearestEdge,
 } from '../common/geometry';
 import { ROUTING_CONFIG } from '../common/constants';
+import { logger } from '../common/logger';
 
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
@@ -265,7 +266,7 @@ export class DijkstraRouter implements IRouter {
     const endV = graph.nodes.get(endVId);
 
     if (!startU || !startV || !endU || !endV) {
-      console.warn('Virtual routing reference nodes missing from graph. Falling back.');
+      logger.warn('Virtual routing reference nodes missing from graph. Falling back.');
       return this.findRouteNodeFallback(graph, start, end, costFn, overrides);
     }
 
@@ -404,7 +405,7 @@ export class DijkstraRouter implements IRouter {
       );
 
       if (!destReached) {
-        console.warn('Destination node is unreachable from source node');
+        logger.warn('Destination node is unreachable from source node');
         return null;
       }
 
@@ -474,7 +475,7 @@ export class DijkstraRouter implements IRouter {
     const endNodeId = findNearestNode(graph, end);
 
     if (!startNodeId || !endNodeId) {
-      console.error('Could not find start or end nodes in graph');
+      logger.error('Could not find start or end nodes in graph');
       return null;
     }
 
@@ -511,7 +512,7 @@ export class DijkstraRouter implements IRouter {
     );
 
     if (!destReached) {
-      console.warn('Destination node is unreachable from source node');
+      logger.warn('Destination node is unreachable from source node');
       return null;
     }
 

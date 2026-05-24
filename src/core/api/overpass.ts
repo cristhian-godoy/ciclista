@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../common/constants';
+import { logger } from '../common/logger';
 
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   const cacheKey = new Request(
@@ -10,11 +11,11 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
     const cache = await caches.open(API_CONFIG.CACHE_NAME);
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
-      console.log('Serving Overpass query from client-side CacheStorage.');
+      logger.log('Serving Overpass query from client-side CacheStorage.');
       return await cachedResponse.json();
     }
   } catch (e) {
-    console.warn('CacheStorage not available or query matching failed:', e);
+    logger.warn('CacheStorage not available or query matching failed:', e);
   }
 
   // Iterate over available public mirrors to fetch the data
@@ -22,7 +23,7 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
   for (const baseUrl of API_CONFIG.OVERPASS_MIRRORS) {
     try {
       const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
-      console.log(`Fetching Overpass query from mirror: ${baseUrl}`);
+      logger.log(`Fetching Overpass query from mirror: ${baseUrl}`);
       const response = await fetch(url);
 
       if (response.status === 429) {
@@ -44,13 +45,13 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
           }),
         );
       } catch (cacheErr) {
-        console.warn('Failed to cache successful Overpass response:', cacheErr);
+        logger.warn('Failed to cache successful Overpass response:', cacheErr);
       }
 
       return data;
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
-      console.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);
+      logger.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);
       lastError = err instanceof Error ? err : new Error(errorMsg);
     }
   }
