@@ -219,7 +219,7 @@ export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
     map.on('mouseleave', 'traffic-lights-cluster', resetCursor);
 
     // Click handler for unclustered traffic signals
-    const handleUnclusteredClick = (e: maplibregl.MapMouseEvent) => {
+    const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const properties = feature.properties;
@@ -244,7 +244,7 @@ export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
     };
 
     // Click handler for crossing clusters
-    const handleClusterClick = (e: maplibregl.MapMouseEvent) => {
+    const handleClusterClick = (e: maplibregl.MapLayerMouseEvent) => {
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const geometry = feature.geometry;
