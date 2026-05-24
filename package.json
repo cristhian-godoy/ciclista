@@ -2,16 +2,17 @@
   "name": "ciclista",
   "private": true,
   "version": "0.0.0",
+  "description": "Sleek, responsive cycling commuter route analyzer and stopping optimizer.",
   "type": "module",
   "packageManager": "pnpm@10.4.1",
   "scripts": {
-    "dev": "vite",
     "build": "tsc -b && vite build",
+    "dev": "vite",
+    "preinstall": "npx only-allow pnpm",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
     "prepare": "husky",
-    "preinstall": "npx only-allow pnpm"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -46,11 +47,11 @@
     "vitest": "^4.1.7"
   },
   "lint-staged": {
-    "*.{ts,tsx,js}": [
+    "*.{ts,tsx,js,json}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{json,css,md}": [
+    "*.{css,md}": [
       "prettier --write"
     ]
   }
