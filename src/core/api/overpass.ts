@@ -1,12 +1,4 @@
-const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.osm.ch/api/interpreter',
-];
-
-const CACHE_NAME = 'overpass-cache-v1';
+import { API_CONFIG } from '../common/constants';
 
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   const cacheKey = new Request(
@@ -15,7 +7,7 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
 
   // Try loading from client-side CacheStorage
   try {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(API_CONFIG.CACHE_NAME);
     const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
       console.log('Serving Overpass query from client-side CacheStorage.');
@@ -27,7 +19,7 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
 
   // Iterate over available public mirrors to fetch the data
   let lastError: Error | null = null;
-  for (const baseUrl of OVERPASS_MIRRORS) {
+  for (const baseUrl of API_CONFIG.OVERPASS_MIRRORS) {
     try {
       const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
       console.log(`Fetching Overpass query from mirror: ${baseUrl}`);
@@ -44,7 +36,7 @@ export async function fetchWithCacheAndFallback(query: string): Promise<unknown>
 
       // Put successful response into client-side CacheStorage
       try {
-        const cache = await caches.open(CACHE_NAME);
+        const cache = await caches.open(API_CONFIG.CACHE_NAME);
         await cache.put(
           cacheKey,
           new Response(JSON.stringify(data), {
