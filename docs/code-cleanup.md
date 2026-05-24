@@ -46,7 +46,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
 
 ### Phase 4.2: Layer Components Extraction
 
-- [ ] Create `src/components/map/StreetGraphLayer.tsx` that:
+- [x] Create `src/components/map/StreetGraphLayer.tsx` that:
   - Adds/manages the `network-streets` and `traffic-lights` GeoJSON sources.
   - Adds/manages layers: `network-streets-layer`, `traffic-lights-cluster` (crossings), and `traffic-lights-unclustered` (individual signals).
   - Listens to dependencies (`graph`, `customNodeDelays`, `showMinorControls`) and dynamically re-updates source data.
