@@ -1,16 +1,17 @@
-import React, { useRef, useState, useEffect } from 'react';
 import type maplibregl from 'maplibre-gl';
+import React, { useEffect, useRef, useState } from 'react';
+
 import type { Coordinate } from '../core/common/types';
-import type { StreetGraph, GraphNode } from '../core/graph/types';
+import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { RouteAlternative } from '../core/router/types';
-import { useMapInstance } from './map/useMapInstance';
-import { StreetGraphLayer } from './map/StreetGraphLayer';
-import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
-import { StartEndMarkers } from './map/StartEndMarkers';
-import { NodePopup } from './map/NodePopup';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
+import { NodePopup } from './map/NodePopup';
+import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
+import { StartEndMarkers } from './map/StartEndMarkers';
+import { StreetGraphLayer } from './map/StreetGraphLayer';
+import { useMapInstance } from './map/useMapInstance';
 
 interface MapViewProps {
   graph: StreetGraph | null;
@@ -33,6 +34,9 @@ interface MapViewProps {
   theme: 'bright' | 'liberty' | 'dark';
 }
 
+/**
+ *
+ */
 export const MapView: React.FC<MapViewProps> = ({
   graph,
   loadedBBoxes,

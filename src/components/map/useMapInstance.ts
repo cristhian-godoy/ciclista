@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+import maplibregl from 'maplibre-gl';
+import { useEffect, useRef, useState } from 'react';
 
 interface UseMapInstanceOptions {
   selectedPreset: 'munich' | 'amsterdam';
@@ -12,6 +13,9 @@ interface UseMapInstanceOptions {
   onZoomStart?: () => void;
 }
 
+/**
+ *
+ */
 export const useMapInstance = ({
   selectedPreset,
   theme,

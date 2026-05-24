@@ -8,6 +8,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginPrettier from 'eslint-plugin-prettier';
 import packageJson from 'eslint-plugin-package-json';
 import jsdoc from 'eslint-plugin-jsdoc';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -25,10 +26,13 @@ export default defineConfig([
     plugins: {
       prettier: eslintPluginPrettier,
       jsdoc,
+      'simple-import-sort': simpleImportSort,
     },
     rules: {
       'react-hooks/set-state-in-effect': 'error',
       'prettier/prettier': 'error',
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
       'jsdoc/require-jsdoc': [
         'warn',
         {

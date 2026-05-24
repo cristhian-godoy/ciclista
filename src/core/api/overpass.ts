@@ -1,6 +1,9 @@
 import { API_CONFIG } from '../common/constants';
 import { logger } from '../common/logger';
 
+/**
+ *
+ */
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   const cacheKey = new Request(
     `https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}`,

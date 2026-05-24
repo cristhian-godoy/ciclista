@@ -1,6 +1,7 @@
-import React from 'react';
-import type { BikeProfile } from '../core/storage/types';
 import { Layers, RefreshCw } from 'lucide-react';
+import React from 'react';
+
+import type { BikeProfile } from '../core/storage/types';
 
 interface RoutingConfigPanelProps {
   selectedPreset: 'munich' | 'amsterdam';
@@ -12,6 +13,9 @@ interface RoutingConfigPanelProps {
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
+/**
+ *
+ */
 export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   selectedPreset,
   onPresetChange,

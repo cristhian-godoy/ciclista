@@ -1,3 +1,6 @@
+/**
+ *
+ */
 export interface GraphNode {
   id: string;
   lat: number;
@@ -5,6 +8,9 @@ export interface GraphNode {
   tags: Record<string, string>;
 }
 
+/**
+ *
+ */
 export interface GraphEdge {
   target: string;
   distance: number;
@@ -13,6 +19,9 @@ export interface GraphEdge {
   tags: Record<string, string>;
 }
 
+/**
+ *
+ */
 export interface StreetGraph {
   nodes: Map<
     string,
@@ -23,6 +32,9 @@ export interface StreetGraph {
   >;
 }
 
+/**
+ *
+ */
 export interface IGraphParser {
   parse(rawData: unknown): StreetGraph;
 }

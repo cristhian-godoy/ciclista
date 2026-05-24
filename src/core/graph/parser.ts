@@ -1,4 +1,4 @@
-import type { IGraphParser, StreetGraph, GraphNode, GraphEdge } from './types';
+import type { GraphEdge, GraphNode, IGraphParser, StreetGraph } from './types';
 
 /**
  * Calculates the great-circle distance between two points on the Earth's surface
@@ -37,7 +37,13 @@ interface OSMRawData {
   elements?: OSMElement[];
 }
 
+/**
+ *
+ */
 export class OSMGraphParser implements IGraphParser {
+  /**
+   *
+   */
   parse(rawData: unknown): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
     const data = rawData && typeof rawData === 'object' ? (rawData as OSMRawData) : null;

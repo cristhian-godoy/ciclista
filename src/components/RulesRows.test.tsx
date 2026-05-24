@@ -1,9 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect } from 'vitest';
-import { SignRow, RoadRow } from './RulesRows';
+import { describe, expect, it, vi } from 'vitest';
+
+import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
 import { GermanSign } from '../core/router/types';
-import type { SignRuleConfig, RoadRuleConfig } from '../core/router/types';
+import { RoadRow, SignRow } from './RulesRows';
 
 describe('RulesRows Components', () => {
   const mockSignConfig: SignRuleConfig = {

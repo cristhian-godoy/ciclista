@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect } from 'vitest';
 import maplibregl from 'maplibre-gl';
-import { NodePopup } from './NodePopup';
+import { describe, expect, it, vi } from 'vitest';
+
 import type { GraphNode } from '../../core/graph/types';
+import { NodePopup } from './NodePopup';
 
 describe('NodePopup', () => {
   const mockNode: GraphNode = {

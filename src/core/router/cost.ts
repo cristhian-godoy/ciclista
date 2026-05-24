@@ -1,13 +1,13 @@
 import type { GraphEdge, StreetGraph } from '../graph/types';
-import type { LocalOverrides, BikeProfile } from '../storage/types';
+import type { BikeProfile, LocalOverrides } from '../storage/types';
+import { hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type {
-  CostFunction,
-  SignRuleConfig,
-  RoadRuleConfig,
-  NodeDelayConfig,
   ComfortLevel,
+  CostFunction,
+  NodeDelayConfig,
+  RoadRuleConfig,
+  SignRuleConfig,
 } from './types';
-import { mapOSMToSignAndRoad, mapOSMNodeToControl, hasCycleway } from './rules';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 

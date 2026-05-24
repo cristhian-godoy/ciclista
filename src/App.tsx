@@ -1,19 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
-
-import type { Coordinate } from './core/common/types';
-import type { StreetGraph, GraphNode } from './core/graph/types';
-import type { RouteAlternative } from './core/router/types';
-import { OSMGraphParser } from './core/graph/parser';
-import { DijkstraRouter } from './core/router/router';
-import { standardCost, avoidStoppingCost, avoidBusyRoadsCost } from './core/router/cost';
-import { fetchWithCacheAndFallback } from './core/api/overpass';
-import { calculateBoundingBox, isInsideLoadedArea, snapCoordinateToEdge } from './core/common/geo';
-import { useOverrides } from './hooks/useOverrides';
-import { MAP_CONFIG } from './core/common/constants';
-import { logger } from './core/common/logger';
+import { useEffect, useMemo, useState } from 'react';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
+import { fetchWithCacheAndFallback } from './core/api/overpass';
+import { MAP_CONFIG } from './core/common/constants';
+import { calculateBoundingBox, isInsideLoadedArea, snapCoordinateToEdge } from './core/common/geo';
+import { logger } from './core/common/logger';
+import type { Coordinate } from './core/common/types';
+import { OSMGraphParser } from './core/graph/parser';
+import type { GraphNode, StreetGraph } from './core/graph/types';
+import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './core/router/cost';
+import { DijkstraRouter } from './core/router/router';
+import type { RouteAlternative } from './core/router/types';
+import { useOverrides } from './hooks/useOverrides';
 
 // Instantiate core modules (fully decoupled from components)
 const parser = new OSMGraphParser();
@@ -45,6 +44,9 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
   return { nodes: mergedNodes };
 };
 
+/**
+ *
+ */
 export default function App() {
   // 1. Core Coordinate Defaults (initially null for a clean pinless map startup)
   const [startCoord, setStartCoord] = useState<Coordinate | null>(null);

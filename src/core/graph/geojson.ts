@@ -1,5 +1,8 @@
 import type { StreetGraph } from './types';
 
+/**
+ *
+ */
 export interface GeoJSONFeature {
   type: 'Feature';
   geometry: {
@@ -9,6 +12,9 @@ export interface GeoJSONFeature {
   properties: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface GraphGeoJSON {
   streets: GeoJSONFeature[];
   controls: GeoJSONFeature[];

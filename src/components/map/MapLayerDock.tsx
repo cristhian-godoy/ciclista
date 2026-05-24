@@ -1,5 +1,5 @@
-import React from 'react';
 import { ChevronDown, Sliders } from 'lucide-react';
+import React from 'react';
 
 interface MapLayerDockProps {
   showMinorControls: boolean;
@@ -8,6 +8,9 @@ interface MapLayerDockProps {
   setDockExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+/**
+ *
+ */
 export const MapLayerDock: React.FC<MapLayerDockProps> = ({
   showMinorControls,
   setShowMinorControls,

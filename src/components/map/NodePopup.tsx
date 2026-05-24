@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { Check, X } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
-import { X, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+
 import type { GraphNode } from '../../core/graph/types';
 
 interface NodePopupProps {
@@ -14,6 +15,9 @@ interface NodePopupProps {
   setDockExpanded: (expanded: boolean) => void;
 }
 
+/**
+ *
+ */
 export const NodePopup: React.FC<NodePopupProps> = ({
   map,
   selectedNode,

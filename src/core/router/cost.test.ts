@@ -1,16 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import { calculateTurnPenalty } from '../common/geometry';
+import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import type { LocalOverrides } from '../storage/types';
 import {
+  avoidBusyRoadsCost,
   calculateDisplayCost,
-  standardCost,
   getDefaultNodeDelay,
   resolveRuleSpeed,
-  avoidBusyRoadsCost,
+  standardCost,
 } from './cost';
 import { DijkstraRouter } from './router';
-import { calculateTurnPenalty } from '../common/geometry';
-import type { GraphNode, GraphEdge, StreetGraph } from '../graph/types';
-import type { LocalOverrides } from '../storage/types';
-import type { SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from './types';
+import type { NodeDelayConfig, RoadRuleConfig, SignRuleConfig } from './types';
 import { GermanSign, RoadType } from './types';
 
 describe('resolveRuleSpeed', () => {

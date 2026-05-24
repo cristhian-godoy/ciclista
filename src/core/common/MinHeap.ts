@@ -4,11 +4,17 @@
 export class MinHeap<T> {
   private heap: { element: T; priority: number }[] = [];
 
+  /**
+   *
+   */
   push(element: T, priority: number) {
     this.heap.push({ element, priority });
     this.bubbleUp(this.heap.length - 1);
   }
 
+  /**
+   *
+   */
   pop(): T | null {
     if (this.heap.length === 0) return null;
     const top = this.heap[0].element;
@@ -20,6 +26,9 @@ export class MinHeap<T> {
     return top;
   }
 
+  /**
+   *
+   */
   isEmpty() {
     return this.heap.length === 0;
   }

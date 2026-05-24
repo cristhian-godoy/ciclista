@@ -1,14 +1,15 @@
+import { ChevronDown, ChevronUp, RotateCcw, Settings } from 'lucide-react';
 import React, { useState } from 'react';
-import { Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+
 import type {
+  NodeDelayConfig,
+  RoadRuleConfig,
   RulesConfiguration,
   SignRuleConfig,
-  RoadRuleConfig,
-  NodeDelayConfig,
 } from '../core/router/types';
 import { GermanSign, RoadType } from '../core/router/types';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
-import { SignRow, RoadRow } from './RulesRows';
+import { RoadRow, SignRow } from './RulesRows';
 
 // ─── Default rule configurations ────────────────────────────────────────────
 
@@ -136,6 +137,9 @@ interface RulesConfigPanelProps {
   onChange: (updated: RulesConfiguration) => void;
 }
 
+/**
+ *
+ */
 export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onChange }) => {
   const [signsOpen, setSignsOpen] = useState(false);
   const [roadsOpen, setRoadsOpen] = useState(false);

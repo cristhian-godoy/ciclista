@@ -1,12 +1,13 @@
-import React from 'react';
-import type { Coordinate } from '../core/common/types';
-import type { BikeProfile } from '../core/storage/types';
-import type { RouteResult, RulesConfiguration, RouteAlternative } from '../core/router/types';
 import { Navigation } from 'lucide-react';
-import { RulesConfigPanel } from './RulesConfigPanel';
+import React from 'react';
+
+import type { Coordinate } from '../core/common/types';
+import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
+import type { BikeProfile } from '../core/storage/types';
 import { RouteComparePanel } from './RouteComparePanel';
-import { RoutingConfigPanel } from './RoutingConfigPanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
+import { RoutingConfigPanel } from './RoutingConfigPanel';
+import { RulesConfigPanel } from './RulesConfigPanel';
 
 interface SidebarProps {
   startCoord: Coordinate | null;
@@ -26,6 +27,9 @@ interface SidebarProps {
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
+/**
+ *
+ */
 export const Sidebar: React.FC<SidebarProps> = ({
   routeResult,
   routeAlternatives,

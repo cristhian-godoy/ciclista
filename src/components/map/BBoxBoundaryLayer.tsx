@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
 import maplibregl from 'maplibre-gl';
+import React, { useEffect } from 'react';
 
 interface BBoxBoundaryLayerProps {
   map: maplibregl.Map;
   loadedBBoxes: [number, number, number, number][];
 }
 
+/**
+ *
+ */
 export const BBoxBoundaryLayer: React.FC<BBoxBoundaryLayerProps> = ({ map, loadedBBoxes }) => {
   // Add source on mount/map change
   useEffect(() => {

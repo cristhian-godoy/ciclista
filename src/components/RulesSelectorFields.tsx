@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import type { ComfortLevel } from '../core/router/types';
 
 interface SpeedTypeSelectorProps {
@@ -7,6 +8,9 @@ interface SpeedTypeSelectorProps {
   onChange: (val: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom') => void;
 }
 
+/**
+ *
+ */
 export const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({
   value,
   disabled,
@@ -51,6 +55,9 @@ interface ComfortSelectorProps {
   onChange: (val: ComfortLevel) => void;
 }
 
+/**
+ *
+ */
 export const ComfortSelector: React.FC<ComfortSelectorProps> = ({ value, onChange }) => {
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
 

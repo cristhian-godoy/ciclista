@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import type { GermanSign, RulesConfiguration } from '../router/types';
 import { LocalStorageProvider } from './storage';
-import type { RulesConfiguration, GermanSign } from '../router/types';
 
 describe('LocalStorageProvider', () => {
   let provider: LocalStorageProvider;
