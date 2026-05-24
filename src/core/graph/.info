@@ -1,2 +1,10 @@
+geojson.test.ts
+	Unit tests for GeoJSON features builders and coordinate mapping.
+geojson.ts
+	GeoJSON translation helper functions for map layer inputs.
+parser.test.ts
+	Unit tests for OSM XML/JSON parsing and network connectivity builders.
 parser.ts
 	OSM Overpass JSON graph parser and builder.
+types.ts
+	OSM raw data shapes, node representation, and street graph type definitions.

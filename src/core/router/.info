@@ -1,4 +1,14 @@
+cost.test.ts
+	Unit tests verifying speed, stop penalties, and quietness factors logic.
 cost.ts
 	Cost calculation methods (speed-based, stop avoidance, quiet paths).
+router.test.ts
+	Unit tests for finding the shortest/most comfortable path under various profiles.
 router.ts
 	Dijkstra pathfinding search algorithm using a Min-Heap queue.
+rules.test.ts
+	Unit tests verifying base rules configuration resolving.
+rules.ts
+	Rules processor evaluating weight modifiers for road types and traffic signs.
+types.ts
+	Routing strategies interfaces, rules, presets, and route alternative structures.

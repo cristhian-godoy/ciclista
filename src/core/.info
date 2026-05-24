@@ -1,8 +1,8 @@
+common
+	Shared global types and models.
 graph
 	OSM Overpass JSON data parsing and graph construction.
 router
 	Dijkstra pathfinding and dynamic routing cost algorithms.
 storage
 	Local browser storage persistence adapters.
-types.ts
-	Core interfaces and types mapping the codebase architecture.

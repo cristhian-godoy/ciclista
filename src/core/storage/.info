@@ -1,2 +1,6 @@
+storage.test.ts
+	Unit tests checking localStorage serialization, loading, and clear mock events.
 storage.ts
 	Web-storage adapter implementing browser localStorage persistence.
+types.ts
+	Local overrides and storage configurations type definitions.

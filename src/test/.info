@@ -1,0 +1,2 @@
+setup.ts
+	Vitest global test suite environment configurations and MapLibre mock stubs.
