@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
@@ -6,7 +5,7 @@ import { RouteComparePanel } from './RouteComparePanel';
 import type { RouteAlternative } from '../core/router/types';
 
 describe('RouteComparePanel', () => {
-  const mockAlternatives: RouteAlternative[] = [
+  const mockAlternatives = [
     {
       label: 'standard',
       result: {
@@ -41,7 +40,7 @@ describe('RouteComparePanel', () => {
         },
       },
     },
-  ];
+  ] as unknown as RouteAlternative[];
 
   it('renders placeholder when no alternatives exist', () => {
     render(

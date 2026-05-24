@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
@@ -6,7 +5,7 @@ import { RouteStatsPanel } from './RouteStatsPanel';
 import type { RouteAlternative, RouteResult } from '../core/router/types';
 
 describe('RouteStatsPanel', () => {
-  const mockAlternatives: RouteAlternative[] = [
+  const mockAlternatives = [
     {
       label: 'standard',
       result: {
@@ -31,9 +30,9 @@ describe('RouteStatsPanel', () => {
         edges: [],
       },
     },
-  ];
+  ] as unknown as RouteAlternative[];
 
-  const mockRouteResult: RouteResult = {
+  const mockRouteResult = {
     totalDurationSeconds: 150,
     totalDistanceMeters: 600,
     signalCount: 1,
@@ -56,7 +55,7 @@ describe('RouteStatsPanel', () => {
         tags: {},
       },
     ],
-  };
+  } as unknown as RouteResult;
 
   it('renders alternative strategies and their formatted values', () => {
     render(
