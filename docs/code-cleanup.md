@@ -33,19 +33,103 @@ _Goal: Break down the largest React components to follow the Single Responsibili
 
 ## Phase 4: UI Component De-structuring (Part 2 - MapView)
 
-_Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layers._
+_Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layers and components._
 
-- [ ] Extract MapLibre initialization and core map state into a custom hook (e.g., `useMapInstance.ts`).
-- [ ] Extract layer rendering logic (e.g., drawing routes, drawing nodes) into separate components or hooks (e.g., `RouteLayer.tsx`, `NodeLayer.tsx`).
-- [ ] Extract map controls and popup logic into their own dedicated components (e.g., `MapPopup.tsx`).
-- [ ] Refactor `MapView.tsx` to act purely as an orchestrator for these smaller sub-components.
+### Phase 4.1: Custom Hook Creation & Map Setup Extraction
+
+- [x] Create a custom React hook `useMapInstance` in `src/components/map/useMapInstance.ts` that:
+  - Initializes the `maplibregl.Map` instance inside a container reference.
+  - Registers standard navigation controls and basic event listeners (`load`, `dragstart`, `zoomstart`, `moveend`, `click`, `contextmenu`).
+  - Synces center/zoom values with preset switches (`munich` vs `amsterdam`).
+  - Cleans up and removes the map instance on component unmount.
+  - Exposes `{ map, mapContainerRef, mapReady }`.
+
+### Phase 4.2: Layer Components Extraction
+
+- [ ] Create `src/components/map/StreetGraphLayer.tsx` that:
+  - Adds/manages the `network-streets` and `traffic-lights` GeoJSON sources.
+  - Adds/manages layers: `network-streets-layer`, `traffic-lights-cluster` (crossings), and `traffic-lights-unclustered` (individual signals).
+  - Listens to dependencies (`graph`, `customNodeDelays`, `showMinorControls`) and dynamically re-updates source data.
+  - Controls layer filters dynamically when a cluster is expanded/managed (`managedClusterId`, `managedNodeIds`).
+  - Attaches click/hover handlers to layers for selecting control nodes and zooming into clusters.
+- [ ] Create `src/components/map/RouteAlternativesLayer.tsx` that:
+  - Adds/manages the `route-path-standard`, `route-path-avoid-stops`, and `route-path-quiet-streets` sources and layers (both core lines and opacity glows).
+  - Updates layer paint properties (line opacity, line width) and layers draw order to bring the active route alternative to the front.
+  - Computes and fits map bounding boxes smoothly when the active strategy changes.
+  - Registers mouseenter, mouseleave, and click events on route layers for selection.
+- [ ] Create `src/components/map/BBoxBoundaryLayer.tsx` that:
+  - Adds/manages the `loaded-bbox` source and polygon layer showing downloaded regions.
+  - Translates `loadedBBoxes` to Polygon GeoJSON features and syncs source data.
+
+### Phase 4.3: Marker & Popup Components Extraction
+
+- [ ] Create `src/components/map/StartEndMarkers.tsx` that:
+  - Synchronizes start and end coordinates with draggable HTML marker pins.
+  - Manages marker lifecycles (instantiating, updating LngLat, dragging, and clean removal).
+- [ ] Create `src/components/map/NodePopup.tsx` that:
+  - Renders the glassmorphic modal configuring control node delays, presets, notes, and raw OSM tags.
+  - Projects the 3D map coordinates of the selected node into 2D screen coordinates using map event listeners (`move`, `zoom`).
+- [ ] Create `src/components/map/MapContextMenu.tsx` that:
+  - Renders the floating right-click context menu options (`Start Route Here`, `End Route Here`, `Manage Traffic Lights`).
+- [ ] Create `src/components/map/MapLayerDock.tsx` that:
+  - Renders the collapsible layers bottom overlay controls dock (expanding/collapsing and toggling minor controls).
+
+### Phase 4.4: MapView Integration & Cleanup
+
+- [ ] Refactor `src/components/MapView.tsx` to serve as a high-level orchestrator:
+  - Invoke `useMapInstance` hook.
+  - Render the target container `div`.
+  - Once the map is loaded and ready, mount the extracted subcomponents as React children, passing down the map instance and coordinate state props.
+- [ ] Verify that full application flow (routing, marker dragging, customized delays, loading presets, and toggling layers) works identically to the original monolithic implementation.
+
+---
 
 ## Phase 5: UI Testing Integration
 
-_Goal: Introduce testing to the React UI layer to prevent visual and interaction regressions._
+_Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and introduce unit and integration tests for UI components._
 
-- [ ] Install `@testing-library/react` and `@testing-library/jest-dom` (or equivalent for Vitest).
-- [ ] Configure Vitest for DOM testing (e.g., adding `jsdom` or `happy-dom` environment).
-- [ ] Write unit tests for small, isolated UI components (e.g., the extracted rule toggle components).
-- [ ] Write integration tests for the `Sidebar` and `RulesConfigPanel` to ensure they handle state changes correctly.
-- [ ] Set up tests for the map state interactions (mocking MapLibre where necessary).
+### Phase 5.1: Test Infrastructure Setup
+
+- [ ] Install testing dependencies:
+  - `@testing-library/react` (for testing components)
+  - `@testing-library/jest-dom` (for standard DOM assertions)
+  - `@testing-library/user-event` (for realistic event simulations)
+  - `jsdom` (as a browser-like environment for Vitest)
+- [ ] Configure `vite.config.ts` to support Vitest configuration:
+  - Add a `test` property specifying `environment: 'jsdom'` and a setup file.
+- [ ] Create a Vitest setup file `src/test/setup.ts` to extend matching assertions (import `@testing-library/jest-dom`).
+- [ ] Ensure that running the existing unit tests (`pnpm test`) continues to work successfully.
+
+### Phase 5.2: Mocking Utilities
+
+- [ ] Create a robust MapLibre GL stub mock in `src/test/mocks/maplibre-gl.ts` or directly in `src/test/setup.ts` to mock:
+  - `Map` class (stubbing events `on`, `off`, `addSource`, `addLayer`, `getSource`, `remove`, `fitBounds`, `easeTo`, `project`, `getBounds`, `getZoom`, `addControl`, `getCanvas`).
+  - `Marker` class (stubbing dragging handlers, draggable options, and DOM positioning).
+  - `NavigationControl`, `LngLatBounds`, and basic structures.
+
+### Phase 5.3: Unit Testing Extracted UI Components
+
+- [ ] Write unit tests for `RulesRows.tsx`:
+  - Verify that rules are rendered with correct styling and checked state.
+  - Verify that toggling togglers correctly calls state change handlers.
+- [ ] Write unit tests for `RoutingConfigPanel.tsx` / `RulesConfigPanel.tsx`:
+  - Assert that sliders display correct penalty values.
+  - Mock state hooks and trigger value changes to verify callbacks.
+- [ ] Write unit tests for `MapLayerDock.tsx`:
+  - Assert that dock renders collapsed and expands on click.
+  - Test clicking "Show Minor Controls" triggers layer toggle handlers.
+
+### Phase 5.4: Integration Testing for Panels & Popups
+
+- [ ] Write unit tests for `RouteStatsPanel.tsx` and `RouteComparePanel.tsx`:
+  - Verify display calculations for distance (km), duration (minutes), stops count, quietness index percentage.
+  - Verify alternative cards render active styles.
+- [ ] Write integration tests for `NodePopup.tsx`:
+  - Mock projected coordinates from map instance.
+  - Assert node details (ID, type label, tags table) render accurately.
+  - Simulate moving the slider and clicking preset buttons (e.g. Always Green, Standard, Slow).
+  - Assert clicking "Save" calls `onSaveNodeOverride` with the updated seconds/notes.
+- [ ] Write integration tests for `Sidebar.tsx`:
+  - Mount Sidebar with mocked dependencies.
+  - Test tab switching functionality between "Route Info", "Routing Options", and "Rules Config".
+  - Assert preset dropdown changes options correctly.
