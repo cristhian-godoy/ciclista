@@ -93,43 +93,43 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
+  gap: var(--ciclista-spacing-sm);
   border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-md);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-md);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition: var(--ciclista-transition-normal);
   width: 100%;
 }
 
 .btn-primary {
-  background: var(--accent-primary);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  box-shadow: var(--ciclista-shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--accent-primary-hover);
-  box-shadow: var(--shadow-glow);
+  background: var(--ciclista-color-brand-hover);
+  box-shadow: var(--ciclista-shadow-glow);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: rgb(255 255 255 / 5%);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+  color: var(--ciclista-color-text-primary);
+  border: 1px solid var(--ciclista-glass-border-base);
 }
 
 .btn-secondary:hover {
   background: rgb(255 255 255 / 10%);
-  border-color: var(--text-secondary);
+  border-color: var(--ciclista-color-text-secondary);
 }
 
 .btn-danger {
-  background: var(--accent-danger);
-  color: #fff;
+  background: var(--ciclista-color-brand-danger);
+  color: var(--ciclista-color-text-primary);
 }
 
 .btn-danger:hover {
@@ -379,36 +379,36 @@ h2 {
 /* Toggle Switch Options */
 .strategy-selector {
   display: flex;
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-xs);
-  border: 1px solid var(--glass-border);
+  background: var(--ciclista-color-surface-base);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-xs);
+  border: 1px solid var(--ciclista-glass-border-base);
 }
 
 .strategy-btn {
   flex: 1;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-sm);
-  color: var(--text-secondary);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-sm);
+  color: var(--ciclista-color-text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
 }
 
 .strategy-btn.active {
-  background: var(--accent-primary);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  box-shadow: var(--ciclista-shadow-sm);
 }
 
 /* Badge Chips */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--spacing-sm);
+  padding: 2px var(--ciclista-spacing-sm);
   border-radius: 20px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -416,15 +416,15 @@ h2 {
 }
 
 .badge-signal {
-  background: rgb(239 68 68 / 15%);
-  color: hsl(0deg 85% 65%);
-  border: 1px solid rgb(239 68 68 / 30%);
+  background: var(--ciclista-color-danger-bg);
+  color: var(--ciclista-color-danger-text);
+  border: 1px solid var(--ciclista-color-danger-border);
 }
 
 .badge-bike {
-  background: rgb(16 185 129 / 15%);
-  color: var(--accent-secondary);
-  border: 1px solid rgb(16 185 129 / 30%);
+  background: var(--ciclista-color-success-bg);
+  color: var(--ciclista-color-brand-secondary);
+  border: 1px solid var(--ciclista-color-success-border);
 }
 
 /* Custom Map Context Menu */
