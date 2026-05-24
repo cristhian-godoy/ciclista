@@ -34,9 +34,9 @@ const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
 };
 
 export default function App() {
-  // 1. Core Coordinate Defaults (initialized to Munich center defaults for immediate routing)
-  const [startCoord, setStartCoord] = useState<Coordinate | null>({ lat: 48.13715, lng: 11.5754 });
-  const [endCoord, setEndCoord] = useState<Coordinate | null>({ lat: 48.135, lng: 11.582 });
+  // 1. Core Coordinate Defaults (initially null for a clean pinless map startup)
+  const [startCoord, setStartCoord] = useState<Coordinate | null>(null);
+  const [endCoord, setEndCoord] = useState<Coordinate | null>(null);
 
   // 2. State management
   const [graph, setGraph] = useState<StreetGraph | null>(null);
@@ -210,9 +210,9 @@ export default function App() {
         const mockGraph = parser.parse(null);
         setGraph(mockGraph);
         setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
-        // Restoring default mock coords
-        setStartCoord({ lat: 48.13715, lng: 11.5754 });
-        setEndCoord({ lat: 48.135, lng: 11.582 });
+        // Keep coordinates null or cleared in case of fallback graph
+        setStartCoord(null);
+        setEndCoord(null);
       } else {
         // Restore the previous valid graph and bounding box
         setGraph(graph);
@@ -309,16 +309,11 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCoord, endCoord, loadedBBoxes, isFetchingOSM]);
 
-  // Handler for preset selections (forces coordinates update and downstream auto-fetch)
+  // Handler for preset selections (clears coordinates and forces downstream auto-fetch for the new city center)
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-    if (preset === 'munich') {
-      setStartCoord({ lat: 48.13715, lng: 11.5754 });
-      setEndCoord({ lat: 48.135, lng: 11.582 });
-    } else {
-      setStartCoord({ lat: 52.3725, lng: 4.89 });
-      setEndCoord({ lat: 52.3667, lng: 4.9 });
-    }
+    setStartCoord(null);
+    setEndCoord(null);
 
     // Fetch fresh non-merged area for the new preset city center
     const center =
