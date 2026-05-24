@@ -1,8 +1,8 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from '../core/router/rules';
 import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
-import { GermanSign } from '../core/router/types';
 import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
 
 interface SignRowProps {
@@ -16,25 +16,7 @@ interface SignRowProps {
 export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const getEffectiveSpeedType = (
-    cfg: SignRuleConfig,
-  ): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
-    if (cfg.speedType) return cfg.speedType;
-    const signId = cfg.signId;
-    if (
-      signId === GermanSign.VZ_241 ||
-      signId === GermanSign.VZ_244_1 ||
-      signId === GermanSign.VZ_325_1
-    ) {
-      return 'relative';
-    }
-    if (signId === GermanSign.VZ_242_1 || signId === GermanSign.VZ_239) {
-      return 'dismount';
-    }
-    return 'custom';
-  };
-
-  const speedType = getEffectiveSpeedType(config);
+  const speedType = getEffectiveSignSpeedType(config);
 
   return (
     <div className="rules-item">
@@ -126,14 +108,7 @@ interface RoadRowProps {
 export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const getEffectiveSpeedType = (
-    cfg: RoadRuleConfig,
-  ): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' => {
-    if (cfg.speedType) return cfg.speedType;
-    return 'custom';
-  };
-
-  const speedType = getEffectiveSpeedType(config);
+  const speedType = getEffectiveRoadSpeedType(config);
 
   return (
     <div className="rules-item">
