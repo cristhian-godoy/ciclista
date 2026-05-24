@@ -9,6 +9,7 @@ import { logger } from './core/common/logger';
 import type { Coordinate } from './core/common/types';
 import { OSMGraphParser } from './core/graph/parser';
 import type { GraphNode, StreetGraph } from './core/graph/types';
+import { mergeGraphs } from './core/graph/utils';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './core/router/cost';
 import { DijkstraRouter } from './core/router/router';
 import type { RouteAlternative } from './core/router/types';
@@ -17,32 +18,6 @@ import { useOverrides } from './hooks/useOverrides';
 // Instantiate core modules (fully decoupled from components)
 const parser = new OSMGraphParser();
 const router = new DijkstraRouter();
-
-const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
-  const mergedNodes = new Map(g1.nodes);
-
-  for (const [key, val] of g2.nodes.entries()) {
-    const existing = mergedNodes.get(key);
-    if (existing) {
-      const targets = new Set<string>();
-      const existingEdges = existing.edges;
-      for (let i = 0; i < existingEdges.length; i++) {
-        targets.add(existingEdges[i].target);
-      }
-
-      const newEdges = val.edges.filter((e) => !targets.has(e.target));
-      if (newEdges.length > 0) {
-        mergedNodes.set(key, {
-          ...existing,
-          edges: [...existingEdges, ...newEdges],
-        });
-      }
-    } else {
-      mergedNodes.set(key, val);
-    }
-  }
-  return { nodes: mergedNodes };
-};
 
 /**
  *
