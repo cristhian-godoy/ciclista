@@ -109,7 +109,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 
 ### Phase 5.3: Unit Testing Extracted UI Components
 
-- [ ] Write unit tests for `RulesRows.tsx`:
+- [x] Write unit tests for `RulesRows.tsx`:
   - Verify that rules are rendered with correct styling and checked state.
   - Verify that toggling togglers correctly calls state change handlers.
 - [ ] Write unit tests for `RoutingConfigPanel.tsx` / `RulesConfigPanel.tsx`:
