@@ -6,7 +6,8 @@
       ["color", "background-color", "border-color", "fill", "box-shadow"],
       {
         "ignoreVariables": true,
-        "severity": "warning"
+        "ignoreValues": ["none", "transparent"],
+        "severity": "error"
       }
     ],
     "selector-class-pattern": null,
