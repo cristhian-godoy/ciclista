@@ -10,6 +10,7 @@
     "dev": "vite",
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint .",
+    "lint:css": "stylelint 'src/**/*.css'",
     "prepare": "husky",
     "preview": "vite preview",
     "test": "vitest run"
@@ -56,7 +57,11 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{css,md}": [
+    "*.css": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.md": [
       "prettier --write"
     ]
   }
