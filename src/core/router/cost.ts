@@ -149,6 +149,21 @@ export function getDefaultNodeDelay(tags: Record<string, string>, cfg?: NodeDela
 // ─── Cost functions ───────────────────────────────────────────────────────────
 
 /**
+ * Applies a heavy penalty if the path is a footway/pedestrian/path and does not allow bicycles.
+ *
+ * @param cost - The base cost before path restriction evaluation.
+ * @param highway - The highway classification.
+ * @param bicycleFrei - Boolean indicating if bicycle travel is allowed.
+ * @returns The cost after applying the restriction penalty if applicable.
+ */
+function applyRestrictedPathPenalty(cost: number, highway: string, bicycleFrei: boolean): number {
+  if (['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei) {
+    return (cost + 60) * 4.0;
+  }
+  return cost;
+}
+
+/**
  * Standard routing cost: Time = Distance / Speed + flat penalties.
  * Uses rulesConfig when available for dynamic speed and penalty resolution.
  */
@@ -165,10 +180,7 @@ export const standardCost: CostFunction = (
   let cost = edge.distance / speed + flatPenalty;
 
   // Heavy penalty for paths that don't allow bicycles (overrides cannot override physics)
-  if (['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei) {
-    cost += 60;
-    cost *= 4.0;
-  }
+  cost = applyRestrictedPathPenalty(cost, highway, bicycleFrei);
 
   // Service road penalties
   if (highway === 'service') {
@@ -210,10 +222,7 @@ export const avoidStoppingCost: CostFunction = (
 
   let cost = edge.distance / speed + flatPenalty;
 
-  if (['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei) {
-    cost += 60;
-    cost *= 4.0;
-  }
+  cost = applyRestrictedPathPenalty(cost, highway, bicycleFrei);
 
   const customDelay = overrides.nodeDelays.get(targetId);
   if (customDelay !== undefined) {
