@@ -29,6 +29,8 @@ export const useMapInstance = ({
   const onClickRef = useRef(onClick);
   const onDragStartRef = useRef(onDragStart);
   const onZoomStartRef = useRef(onZoomStart);
+  const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
+  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     onMapBoundsChangeRef.current = onMapBoundsChange;
@@ -107,10 +109,39 @@ export const useMapInstance = ({
       }
     });
 
-    mapInstance.on('click', (e) => {
-      if (onClickRef.current) {
-        onClickRef.current(e);
+    mapInstance.on('mousedown', (e) => {
+      mouseDownPosRef.current = { x: e.point.x, y: e.point.y };
+    });
+
+    mapInstance.on('dblclick', () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
       }
+    });
+
+    mapInstance.on('click', (e) => {
+      if (mouseDownPosRef.current) {
+        const dx = e.point.x - mouseDownPosRef.current.x;
+        const dy = e.point.y - mouseDownPosRef.current.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 5) {
+          return;
+        }
+      }
+
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+        return;
+      }
+
+      clickTimeoutRef.current = setTimeout(() => {
+        clickTimeoutRef.current = null;
+        if (onClickRef.current) {
+          onClickRef.current(e);
+        }
+      }, 200);
     });
 
     mapInstance.on('dragstart', () => {
@@ -146,6 +177,9 @@ export const useMapInstance = ({
     return () => {
       if (container) {
         container.removeEventListener('contextmenu', preventDefaultContextMenu);
+      }
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
       }
       mapInstance.remove();
       setMap(null);
