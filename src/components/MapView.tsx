@@ -1,29 +1,16 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin, ZoomIn, Check, X, Sliders, ChevronDown } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import type maplibregl from 'maplibre-gl';
 import type { Coordinate } from '../core/common/types';
 import type { StreetGraph, GraphNode } from '../core/graph/types';
 import type { RouteAlternative } from '../core/router/types';
-import { convertGraphToGeoJSON } from '../core/graph/geojson';
-
-type GeoJSONFeature =
-  | {
-      type: 'Feature';
-      geometry: {
-        type: 'Point';
-        coordinates: number[];
-      };
-      properties: Record<string, unknown>;
-    }
-  | {
-      type: 'Feature';
-      geometry: {
-        type: 'LineString';
-        coordinates: number[][];
-      };
-      properties: Record<string, unknown>;
-    };
+import { useMapInstance } from './map/useMapInstance';
+import { StreetGraphLayer } from './map/StreetGraphLayer';
+import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
+import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
+import { StartEndMarkers } from './map/StartEndMarkers';
+import { NodePopup } from './map/NodePopup';
+import { MapContextMenu } from './map/MapContextMenu';
+import { MapLayerDock } from './map/MapLayerDock';
 
 interface MapViewProps {
   graph: StreetGraph | null;
@@ -64,48 +51,6 @@ export const MapView: React.FC<MapViewProps> = ({
   onClearNodeOverride,
   onMapBoundsChange,
 }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const startMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const endMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const shouldFitBoundsRef = useRef<boolean>(true);
-
-  // Keep callback handlers in refs to prevent stale closures in map listeners
-  const onStartDragRef = useRef(onStartDrag);
-  const onEndDragRef = useRef(onEndDrag);
-  const onNodeSelectRef = useRef(onNodeSelect);
-  const onMapBoundsChangeRef = useRef(onMapBoundsChange);
-
-  useEffect(() => {
-    onStartDragRef.current = onStartDrag;
-  }, [onStartDrag]);
-
-  useEffect(() => {
-    onEndDragRef.current = onEndDrag;
-  }, [onEndDrag]);
-
-  useEffect(() => {
-    onNodeSelectRef.current = onNodeSelect;
-  }, [onNodeSelect]);
-
-  useEffect(() => {
-    onMapBoundsChangeRef.current = onMapBoundsChange;
-  }, [onMapBoundsChange]);
-
-  const startCoordRef = useRef(startCoord);
-  const endCoordRef = useRef(endCoord);
-
-  useEffect(() => {
-    startCoordRef.current = startCoord;
-  }, [startCoord]);
-
-  useEffect(() => {
-    endCoordRef.current = endCoord;
-  }, [endCoord]);
-
-  // Track map loaded state to synchronize layer updates after style initialization
-  const [mapReady, setMapReady] = useState(false);
-
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
     x: number;
@@ -126,144 +71,20 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const [managedClusterId, setManagedClusterId] = useState<string | null>(null);
   const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
-
-  // Toggle minor control points visibility (yield, stop, crossing)
   const [showMinorControls, setShowMinorControls] = useState(false);
   const [dockExpanded, setDockExpanded] = useState(true);
 
-  // Node delay/note editing states for map popup editor
-  const [nodeDelay, setNodeDelay] = useState<number>(30);
-  const [nodeNotes, setNodeNotes] = useState<string>('');
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
+  const shouldFitBoundsRef = useRef<boolean>(true);
+  const startCoordRef = useRef(startCoord);
+  const endCoordRef = useRef(endCoord);
 
-  const getDefaultBaseDelay = (tags: Record<string, string>): number => {
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      return 15;
-    }
-    if (tags.highway === 'give_way') {
-      return 3;
-    }
-    if (tags.highway === 'stop') {
-      return 8;
-    }
-    if (tags.highway === 'crossing' || tags.crossing) {
-      return 3;
-    }
-    return 0;
-  };
-
-  const getControlType = (
-    tags: Record<string, string>,
-  ): 'signal' | 'yield' | 'stop' | 'crossing' => {
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      return 'signal';
-    }
-    if (tags.highway === 'give_way') {
-      return 'yield';
-    }
-    if (tags.highway === 'stop') {
-      return 'stop';
-    }
-    return 'crossing';
-  };
-
-  const getControlTypeLabel = (tags: Record<string, string>) => {
-    const type = getControlType(tags);
-    switch (type) {
-      case 'signal':
-        return '🚦 Traffic Signal';
-      case 'yield':
-        return '⚠️ Yield Sign (Give Way)';
-      case 'stop':
-        return '🛑 Stop Sign';
-      case 'crossing':
-        return '🚶 Pedestrian Crossing';
-    }
-  };
-
-  const getPresets = (
-    type: 'signal' | 'yield' | 'stop' | 'crossing',
-  ): { label: string; value: number }[] => {
-    switch (type) {
-      case 'signal':
-        return [
-          { label: 'Always Green', value: 0 },
-          { label: 'Standard (15s)', value: 15 },
-          { label: 'Slow (30s)', value: 30 },
-          { label: 'Major (60s)', value: 60 },
-        ];
-      case 'yield':
-        return [
-          { label: 'Clear', value: 0 },
-          { label: 'Standard (3s)', value: 3 },
-          { label: 'Heavy (15s)', value: 15 },
-        ];
-      case 'stop':
-        return [
-          { label: 'Rolling (2s)', value: 2 },
-          { label: 'Standard (8s)', value: 8 },
-          { label: 'Busy (20s)', value: 20 },
-        ];
-      case 'crossing':
-        return [
-          { label: 'Clear', value: 0 },
-          { label: 'Standard (3s)', value: 3 },
-          { label: 'Busy (15s)', value: 15 },
-        ];
-    }
-  };
-
-  // Sync node delay/notes and update position projection when selectedNode changes
+  // Keep coord refs synchronized for event handlers
   useEffect(() => {
-    if (selectedNode) {
-      setTimeout(() => {
-        setNodeDelay(
-          customNodeDelays.get(selectedNode.id) ?? getDefaultBaseDelay(selectedNode.tags),
-        );
-        setNodeNotes(customNodeNotes.get(selectedNode.id) ?? '');
-        // Auto-collapse bottom controls dock to prevent overlap when node configurator is open
-        setDockExpanded(false);
-      }, 0);
-    }
-  }, [selectedNode, customNodeDelays, customNodeNotes]);
+    startCoordRef.current = startCoord;
+    endCoordRef.current = endCoord;
+  }, [startCoord, endCoord]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !selectedNode || !mapReady) {
-      setPopupPos(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const pos = map.project([selectedNode.lng, selectedNode.lat]);
-      setPopupPos({ x: pos.x, y: pos.y });
-    };
-
-    updatePosition();
-    map.on('move', updatePosition);
-    map.on('zoom', updatePosition);
-
-    return () => {
-      map.off('move', updatePosition);
-      map.off('zoom', updatePosition);
-    };
-  }, [selectedNode, mapReady]);
-
-  const handleSaveNode = () => {
-    if (selectedNode) {
-      onSaveNodeOverride(selectedNode.id, nodeDelay, nodeNotes);
-      onNodeSelect(null);
-    }
-  };
-
-  const handleResetNode = () => {
-    if (selectedNode) {
-      onClearNodeOverride(selectedNode.id);
-      onNodeSelect(null);
-    }
-  };
-
-  // Handle window clicks to close context menu
+  // Window click listener to close context menu
   useEffect(() => {
     const handleWindowClick = () => {
       setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
@@ -274,787 +95,7 @@ export const MapView: React.FC<MapViewProps> = ({
     };
   }, []);
 
-  // Helper to update graph line and point layers
-  const triggerGraphLayersUpdate = useCallback(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    let lineFeatures: GeoJSONFeature[] = [];
-    let lightFeatures: GeoJSONFeature[] = [];
-
-    if (graph) {
-      const geojson = convertGraphToGeoJSON(graph, customNodeDelays, showMinorControls);
-      lineFeatures = geojson.streets as GeoJSONFeature[];
-      lightFeatures = geojson.controls as GeoJSONFeature[];
-    }
-
-    const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
-    if (streetSource) {
-      streetSource.setData({
-        type: 'FeatureCollection',
-        features: lineFeatures,
-      });
-    }
-
-    const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-    if (lightSource) {
-      lightSource.setData({
-        type: 'FeatureCollection',
-        features: lightFeatures,
-      });
-    }
-  }, [graph, customNodeDelays, mapReady, showMinorControls]);
-
-  // 1. Initialize Map
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    // Use CartoDB Dark Matter tiles for a premium dark mode
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          'carto-dark': {
-            type: 'raster',
-            tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-            ],
-            tileSize: 256,
-            attribution:
-              '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
-          },
-        },
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        layers: [
-          {
-            id: 'carto-dark-layer',
-            type: 'raster',
-            source: 'carto-dark',
-            minzoom: 0,
-            maxzoom: 20,
-          },
-        ],
-      },
-      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725],
-      zoom: 14.5,
-    });
-
-    mapRef.current = map;
-
-    // Add navigation controls
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    const container = mapContainerRef.current;
-    const preventDefaultContextMenu = (e: MouseEvent) => e.preventDefault();
-    if (container) {
-      container.addEventListener('contextmenu', preventDefaultContextMenu);
-    }
-
-    map.on('contextmenu', (e) => {
-      e.originalEvent.preventDefault();
-
-      // Check if right click was on a crossing cluster
-      const features = map.queryRenderedFeatures(e.point, {
-        layers: ['traffic-lights-cluster'],
-      });
-      const isCrossing = features.length > 0;
-      const crossingId =
-        isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
-      const nodeIds =
-        isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
-
-      setContextMenu({
-        visible: true,
-        x: e.point.x,
-        y: e.point.y,
-        lng: e.lngLat.lng,
-        lat: e.lngLat.lat,
-        crossingId,
-        nodeIds,
-      });
-    });
-
-    map.on('click', (e) => {
-      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
-
-      // If clicked on empty space, deselect active node and re-group signals
-      const features = map.queryRenderedFeatures(e.point, {
-        layers: ['traffic-lights-cluster', 'traffic-lights-unclustered'],
-      });
-      if (features.length === 0) {
-        setManagedClusterId(null);
-        setManagedNodeIds([]);
-        onNodeSelectRef.current(null);
-
-        // UX: Clicking on map adds start pin, or end pin if start is set. If both are set, restart pin placement.
-        const sCoord = startCoordRef.current;
-        const eCoord = endCoordRef.current;
-        const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
-
-        if (!sCoord || (sCoord && eCoord)) {
-          onStartDragRef.current(clickedCoord);
-          onEndDragRef.current(null);
-        } else {
-          onEndDragRef.current(clickedCoord);
-        }
-      }
-    });
-
-    map.on('dragstart', () => {
-      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
-      // Auto-collapse bottom controls dock on map drag
-      setDockExpanded(false);
-    });
-
-    map.on('zoomstart', () => {
-      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
-      // Auto-collapse bottom controls dock on map zoom
-      setDockExpanded(false);
-    });
-
-    map.on('moveend', () => {
-      const bounds = map.getBounds();
-      const zoom = map.getZoom();
-      const bbox: [number, number, number, number] = [
-        bounds.getSouth(),
-        bounds.getWest(),
-        bounds.getNorth(),
-        bounds.getEast(),
-      ];
-      if (onMapBoundsChangeRef.current) {
-        onMapBoundsChangeRef.current(bbox, zoom);
-      }
-    });
-
-    map.on('load', () => {
-      // Initialize sources
-      map.addSource('network-streets', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-
-      // 3 Sources for alternatives
-      map.addSource('route-path-standard', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-      map.addSource('route-path-avoid-stops', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-      map.addSource('route-path-quiet-streets', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-
-      map.addSource('traffic-lights', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-        cluster: false,
-      });
-
-      map.addSource('loaded-bbox', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-
-      // Layer: All parsed network streets (cool techy overlay)
-      map.addLayer({
-        id: 'network-streets-layer',
-        type: 'line',
-        source: 'network-streets',
-        paint: {
-          'line-color': 'rgba(99, 102, 241, 0.15)',
-          'line-width': 1.5,
-        },
-      });
-
-      // Layer: Glowing Computed Route Path (Standard - Indigo)
-      map.addLayer({
-        id: 'route-path-layer-standard',
-        type: 'line',
-        source: 'route-path-standard',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#6366f1',
-          'line-width': 5,
-        },
-      });
-
-      map.addLayer(
-        {
-          id: 'route-path-glow-standard',
-          type: 'line',
-          source: 'route-path-standard',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#6366f1',
-            'line-width': 9,
-            'line-opacity': 0.3,
-          },
-        },
-        'route-path-layer-standard',
-      );
-
-      // Layer: Glowing Computed Route Path (Avoid Stops - Rose)
-      map.addLayer({
-        id: 'route-path-layer-avoid-stops',
-        type: 'line',
-        source: 'route-path-avoid-stops',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#f43f5e',
-          'line-width': 5,
-        },
-      });
-
-      map.addLayer(
-        {
-          id: 'route-path-glow-avoid-stops',
-          type: 'line',
-          source: 'route-path-avoid-stops',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#f43f5e',
-            'line-width': 9,
-            'line-opacity': 0.3,
-          },
-        },
-        'route-path-layer-avoid-stops',
-      );
-
-      // Layer: Glowing Computed Route Path (Quiet Streets - Teal)
-      map.addLayer({
-        id: 'route-path-layer-quiet-streets',
-        type: 'line',
-        source: 'route-path-quiet-streets',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#14b8a6',
-          'line-width': 5,
-        },
-      });
-
-      map.addLayer(
-        {
-          id: 'route-path-glow-quiet-streets',
-          type: 'line',
-          source: 'route-path-quiet-streets',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#14b8a6',
-            'line-width': 9,
-            'line-opacity': 0.3,
-          },
-        },
-        'route-path-layer-quiet-streets',
-      );
-
-      // Click and hover interaction handlers for route selection
-      map.on('click', 'route-path-layer-standard', () => {
-        onSelectAlternative('standard');
-      });
-      map.on('click', 'route-path-layer-avoid-stops', () => {
-        onSelectAlternative('avoid-stops');
-      });
-      map.on('click', 'route-path-layer-quiet-streets', () => {
-        onSelectAlternative('quiet-streets');
-      });
-
-      const setPointerCursor = () => {
-        map.getCanvas().style.cursor = 'pointer';
-      };
-      const resetCursor = () => {
-        map.getCanvas().style.cursor = '';
-      };
-
-      map.on('mouseenter', 'route-path-layer-standard', setPointerCursor);
-      map.on('mouseleave', 'route-path-layer-standard', resetCursor);
-      map.on('mouseenter', 'route-path-layer-avoid-stops', setPointerCursor);
-      map.on('mouseleave', 'route-path-layer-avoid-stops', resetCursor);
-      map.on('mouseenter', 'route-path-layer-quiet-streets', setPointerCursor);
-      map.on('mouseleave', 'route-path-layer-quiet-streets', resetCursor);
-
-      // Layer: Traffic light clusters (grouped crossings)
-      map.addLayer({
-        id: 'traffic-lights-cluster',
-        type: 'circle',
-        source: 'traffic-lights',
-        filter: ['==', ['get', 'type'], 'crossing'],
-        paint: {
-          'circle-color': [
-            'match',
-            ['get', 'controlType'],
-            'signal',
-            '#ef4444', // Red for signals
-            'stop',
-            '#ea580c', // Orange-Red for stop signs
-            'yield',
-            '#f59e0b', // Amber/Yellow for yield signs
-            'crossing',
-            '#3b82f6', // Blue for pedestrian crossings
-            '#9ca3af', // Grey fallback
-          ],
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            12,
-            [
-              'match',
-              ['get', 'controlType'],
-              'signal',
-              3,
-              'stop',
-              3,
-              'yield',
-              1.8,
-              'crossing',
-              1.8,
-              3,
-            ],
-            14,
-            ['match', ['get', 'controlType'], 'signal', 8, 'stop', 8, 'yield', 5, 'crossing', 5, 8],
-            17,
-            [
-              'match',
-              ['get', 'controlType'],
-              'signal',
-              16,
-              'stop',
-              16,
-              'yield',
-              10,
-              'crossing',
-              10,
-              16,
-            ],
-          ],
-          'circle-stroke-color': [
-            'case',
-            ['==', ['get', 'hasCustomDelay'], 'true'],
-            '#14b8a6', // Teal halo for custom delays
-            '#ffffff', // White otherwise
-          ],
-          'circle-stroke-width': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            12,
-            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 1.5, 0.5],
-            14,
-            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 3.0, 1.5],
-            17,
-            ['case', ['==', ['get', 'hasCustomDelay'], 'true'], 4.0, 2.0],
-          ],
-          'circle-opacity': 0.85,
-        },
-      });
-
-      // Layer: Traffic light individual markers (ungrouped)
-      map.addLayer({
-        id: 'traffic-lights-unclustered',
-        type: 'circle',
-        source: 'traffic-lights',
-        filter: ['==', ['get', 'type'], 'signal-hidden'], // Start hidden
-        paint: {
-          'circle-radius': [
-            'case',
-            ['has', 'customDelay'],
-            8,
-            ['match', ['get', 'controlType'], 'signal', 6, 'stop', 6, 'yield', 4, 'crossing', 4, 6],
-          ],
-          'circle-color': [
-            'case',
-            ['has', 'customDelay'],
-            '#14b8a6', // Custom delay timed nodes (Teal)
-            [
-              'match',
-              ['get', 'controlType'],
-              'signal',
-              '#ef4444',
-              'stop',
-              '#ea580c',
-              'yield',
-              '#f59e0b',
-              'crossing',
-              '#3b82f6',
-              '#9ca3af',
-            ],
-          ],
-          'circle-stroke-width': ['case', ['has', 'customDelay'], 2.5, 1.5],
-          'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.85,
-        },
-      });
-
-      // Handle clicking on unclustered traffic signals
-      map.on('click', 'traffic-lights-unclustered', (e) => {
-        if (!e.features || e.features.length === 0) return;
-        const feature = e.features[0];
-        const properties = feature.properties;
-        const geometry = feature.geometry;
-
-        if (geometry && 'coordinates' in geometry && properties && properties.id) {
-          const coords = (geometry as { coordinates: number[] }).coordinates;
-          onNodeSelectRef.current({
-            id: properties.id,
-            lat: coords[1],
-            lng: coords[0],
-            tags: JSON.parse((properties.tags as string) || '{}'),
-          });
-
-          // Smoothly pan to center the clicked traffic signal node
-          map.easeTo({
-            center: [coords[0], coords[1]],
-            duration: 400,
-          });
-        }
-      });
-
-      // Handle clicking on crossing clusters to zoom in and manage traffic lights
-      map.on('click', 'traffic-lights-cluster', (e) => {
-        if (!e.features || e.features.length === 0) return;
-        const feature = e.features[0];
-        const geometry = feature.geometry;
-        const properties = feature.properties;
-
-        if (geometry && 'coordinates' in geometry && properties) {
-          const coords = (geometry as { coordinates: number[] }).coordinates;
-          const crossingId = properties.crossingId as string;
-          const nodeIds = JSON.parse((properties.nodeIds as string) || '[]');
-
-          setManagedClusterId(crossingId);
-          setManagedNodeIds(nodeIds);
-
-          map.easeTo({
-            center: [coords[0], coords[1]],
-            zoom: 17.5,
-          });
-        }
-      });
-
-      // Change cursor to pointer over traffic lights and clusters
-      map.on('mouseenter', 'traffic-lights-unclustered', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'traffic-lights-unclustered', () => {
-        map.getCanvas().style.cursor = '';
-      });
-
-      map.on('mouseenter', 'traffic-lights-cluster', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'traffic-lights-cluster', () => {
-        map.getCanvas().style.cursor = '';
-      });
-
-      // Set map ready state, triggering downstream style-dependent operations
-      setMapReady(true);
-    });
-
-    return () => {
-      if (container) {
-        container.removeEventListener('contextmenu', preventDefaultContextMenu);
-      }
-      map.remove();
-      mapRef.current = null;
-      setMapReady(false);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Fly/ease to preset centers when selectedPreset changes
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    const centers = {
-      munich: [11.5754, 48.13715] as [number, number],
-      amsterdam: [4.89, 52.3725] as [number, number],
-    };
-    map.easeTo({
-      center: centers[selectedPreset],
-      zoom: 14.5,
-      duration: 800,
-    });
-  }, [selectedPreset, mapReady]);
-
-  // 2. Dynamically create/update/remove Start Marker
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    if (startCoord) {
-      if (!startMarkerRef.current) {
-        const startEl = document.createElement('div');
-        startEl.style.width = '28px';
-        startEl.style.height = '28px';
-        startEl.style.borderRadius = '50%';
-        startEl.style.backgroundColor = '#10b981'; // Emerald Green
-        startEl.style.border = '3px solid #ffffff';
-        startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
-        startEl.style.cursor = 'grab';
-        startEl.style.display = 'flex';
-        startEl.style.alignItems = 'center';
-        startEl.style.justifyContent = 'center';
-        startEl.style.color = '#ffffff';
-        startEl.style.fontWeight = 'bold';
-        startEl.style.fontSize = '12px';
-        startEl.style.fontFamily = 'inherit';
-        startEl.innerHTML = 'A';
-
-        const startMarker = new maplibregl.Marker({ element: startEl, draggable: true })
-          .setLngLat([startCoord.lng, startCoord.lat])
-          .addTo(map);
-
-        startMarker.on('dragend', () => {
-          const lngLat = startMarker.getLngLat();
-          onStartDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
-        });
-        startMarkerRef.current = startMarker;
-        shouldFitBoundsRef.current = true;
-      } else {
-        const currentMarkerLngLat = startMarkerRef.current.getLngLat();
-        const diffLat = Math.abs(startCoord.lat - currentMarkerLngLat.lat);
-        const diffLng = Math.abs(startCoord.lng - currentMarkerLngLat.lng);
-        startMarkerRef.current.setLngLat([startCoord.lng, startCoord.lat]);
-        if (diffLat > 0.0001 || diffLng > 0.0001) {
-          shouldFitBoundsRef.current = true;
-        }
-      }
-    } else {
-      if (startMarkerRef.current) {
-        startMarkerRef.current.remove();
-        startMarkerRef.current = null;
-      }
-    }
-  }, [startCoord, mapReady]);
-
-  // 3. Dynamically create/update/remove End Marker
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    if (endCoord) {
-      if (!endMarkerRef.current) {
-        const endEl = document.createElement('div');
-        endEl.style.width = '28px';
-        endEl.style.height = '28px';
-        endEl.style.borderRadius = '50%';
-        endEl.style.backgroundColor = '#ef4444'; // Red
-        endEl.style.border = '3px solid #ffffff';
-        endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
-        endEl.style.cursor = 'grab';
-        endEl.style.display = 'flex';
-        endEl.style.alignItems = 'center';
-        endEl.style.justifyContent = 'center';
-        endEl.style.color = '#ffffff';
-        endEl.style.fontWeight = 'bold';
-        endEl.style.fontSize = '12px';
-        endEl.style.fontFamily = 'inherit';
-        endEl.innerHTML = 'B';
-
-        const endMarker = new maplibregl.Marker({ element: endEl, draggable: true })
-          .setLngLat([endCoord.lng, endCoord.lat])
-          .addTo(map);
-
-        endMarker.on('dragend', () => {
-          const lngLat = endMarker.getLngLat();
-          onEndDragRef.current({ lat: lngLat.lat, lng: lngLat.lng });
-        });
-        endMarkerRef.current = endMarker;
-        shouldFitBoundsRef.current = true;
-      } else {
-        const currentMarkerLngLat = endMarkerRef.current.getLngLat();
-        const diffLat = Math.abs(endCoord.lat - currentMarkerLngLat.lat);
-        const diffLng = Math.abs(endCoord.lng - currentMarkerLngLat.lng);
-        endMarkerRef.current.setLngLat([endCoord.lng, endCoord.lat]);
-        if (diffLat > 0.0001 || diffLng > 0.0001) {
-          shouldFitBoundsRef.current = true;
-        }
-      }
-    } else {
-      if (endMarkerRef.current) {
-        endMarkerRef.current.remove();
-        endMarkerRef.current = null;
-      }
-    }
-  }, [endCoord, mapReady]);
-
-  // 3. Update layers when graph data or custom settings change, or when map style is loaded
-  useEffect(() => {
-    triggerGraphLayersUpdate();
-  }, [triggerGraphLayersUpdate]);
-
-  // 4. Update computed route layers for alternatives
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    const strategies: ('standard' | 'avoid-stops' | 'quiet-streets')[] = [
-      'standard',
-      'avoid-stops',
-      'quiet-streets',
-    ];
-
-    // Update each source's data and layer styles
-    strategies.forEach((strategy) => {
-      const source = map.getSource(`route-path-${strategy}`) as maplibregl.GeoJSONSource;
-      if (!source) return;
-
-      const alt = routeAlternatives.find((a) => a.label === strategy);
-      if (alt && alt.result && alt.result.coordinates.length > 0) {
-        const coords = alt.result.coordinates.map((c) => [c.lng, c.lat]);
-        source.setData({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: coords,
-              },
-              properties: {},
-            },
-          ],
-        });
-      } else {
-        source.setData({
-          type: 'FeatureCollection',
-          features: [],
-        });
-      }
-
-      // Update styling dynamically based on active selection
-      const isActive = activeAlternativeLabel === strategy;
-      map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', isActive ? 1.0 : 0.4);
-      map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', isActive ? 0.3 : 0.0);
-      map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', isActive ? 6 : 4);
-
-      // Bring active layer to front
-      if (isActive) {
-        if (map.getLayer(`route-path-glow-${strategy}`)) {
-          map.moveLayer(`route-path-glow-${strategy}`, 'traffic-lights-cluster');
-        }
-        if (map.getLayer(`route-path-layer-${strategy}`)) {
-          map.moveLayer(`route-path-layer-${strategy}`, 'traffic-lights-cluster');
-        }
-      }
-    });
-
-    // Fit map bounds to show full route path smoothly (using active selection coordinates)
-    const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
-    if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
-      const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
-      if (shouldFitBoundsRef.current && coords.length > 1) {
-        const bounds = coords.reduce(
-          (acc, val) => acc.extend(val as [number, number]),
-          new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number]),
-        );
-        const isMobile = window.innerWidth <= 768;
-        const padding = isMobile
-          ? {
-              top: 40,
-              bottom: window.innerHeight * 0.45 + 40,
-              left: 20,
-              right: 20,
-            }
-          : 50;
-        map.fitBounds(bounds, { padding, maxZoom: 16 });
-        shouldFitBoundsRef.current = false;
-      }
-    }
-  }, [routeAlternatives, activeAlternativeLabel, mapReady]);
-
-  // 5. Update loaded bounding box boundary layer
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    const bboxSource = map.getSource('loaded-bbox') as maplibregl.GeoJSONSource;
-    if (!bboxSource) return;
-
-    if (loadedBBoxes && loadedBBoxes.length > 0) {
-      const features = loadedBBoxes.map((bbox) => {
-        const [minLat, minLng, maxLat, maxLng] = bbox;
-        return {
-          type: 'Feature' as const,
-          geometry: {
-            type: 'Polygon' as const,
-            coordinates: [
-              [
-                [minLng, minLat],
-                [maxLng, minLat],
-                [maxLng, maxLat],
-                [minLng, maxLat],
-                [minLng, minLat],
-              ],
-            ],
-          },
-          properties: {},
-        };
-      });
-      bboxSource.setData({
-        type: 'FeatureCollection',
-        features,
-      });
-    } else {
-      bboxSource.setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
-    }
-  }, [loadedBBoxes, mapReady]);
-  // Synchronize layer filters when managed states update
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    if (managedClusterId !== null && managedNodeIds.length > 0) {
-      // Hide the managed crossing cluster, keep other crossing clusters visible
-      map.setFilter('traffic-lights-cluster', [
-        'all',
-        ['==', ['get', 'type'], 'crossing'],
-        ['!=', ['get', 'crossingId'], managedClusterId],
-      ]);
-      // Show ONLY the individual signals belonging to the managed crossing
-      map.setFilter('traffic-lights-unclustered', [
-        'all',
-        ['==', ['get', 'type'], 'signal'],
-        ['==', ['get', 'parentCrossingId'], managedClusterId],
-      ]);
-    } else {
-      // Show all crossings
-      map.setFilter('traffic-lights-cluster', ['==', ['get', 'type'], 'crossing']);
-      // Hide all individual signals
-      map.setFilter('traffic-lights-unclustered', ['==', ['get', 'type'], 'signal-hidden']);
-    }
-  }, [managedClusterId, managedNodeIds, mapReady]);
-
-  // Reset managed cluster state if selectedNode becomes null (drawer is closed/saved)
+  // Reset managed cluster state if selectedNode becomes null
   const prevSelectedNodeRef = useRef<GraphNode | null>(null);
   useEffect(() => {
     if (prevSelectedNodeRef.current !== null && selectedNode === null) {
@@ -1064,342 +105,135 @@ export const MapView: React.FC<MapViewProps> = ({
     prevSelectedNodeRef.current = selectedNode;
   }, [selectedNode]);
 
+  // Handle right click on map (context menu trigger)
+  const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
+    if (!map) return;
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: ['traffic-lights-cluster'],
+    });
+    const isCrossing = features.length > 0;
+    const crossingId =
+      isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
+    const nodeIds =
+      isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
+
+    setContextMenu({
+      visible: true,
+      x: e.point.x,
+      y: e.point.y,
+      lng: e.lngLat.lng,
+      lat: e.lngLat.lat,
+      crossingId,
+      nodeIds,
+    });
+  };
+
+  // Handle left click on map (deselect / dropping markers)
+  const handleClick = (e: maplibregl.MapMouseEvent) => {
+    setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+
+    if (!map) return;
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: ['traffic-lights-cluster', 'traffic-lights-unclustered'],
+    });
+    if (features.length === 0) {
+      setManagedClusterId(null);
+      setManagedNodeIds([]);
+      onNodeSelect(null);
+
+      const sCoord = startCoordRef.current;
+      const eCoord = endCoordRef.current;
+      const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+
+      if (!sCoord || (sCoord && eCoord)) {
+        onStartDrag(clickedCoord);
+        onEndDrag(null);
+      } else {
+        onEndDrag(clickedCoord);
+      }
+    }
+  };
+
+  const handleDragStart = () => {
+    setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    setDockExpanded(false);
+  };
+
+  const handleZoomStart = () => {
+    setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    setDockExpanded(false);
+  };
+
+  // Initialize and retrieve map instance via custom hook
+  const { map, mapContainerRef, mapReady } = useMapInstance({
+    selectedPreset,
+    onMapBoundsChange,
+    onContextMenu: handleContextMenu,
+    onClick: handleClick,
+    onDragStart: handleDragStart,
+    onZoomStart: handleZoomStart,
+  });
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
       <div ref={mapContainerRef} className="map-container" />
 
-      {/* Collapsible Floating Bottom Dock */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 5,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
-        {dockExpanded ? (
-          <div
-            style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              padding: '8px 12px 8px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(12px)',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              Map Layers
-            </span>
-
-            <div
-              style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)' }}
-            />
-
-            <button
-              style={{
-                background: showMinorControls
-                  ? 'var(--accent-secondary)'
-                  : 'rgba(255, 255, 255, 0.08)',
-                color: showMinorControls ? '#000000' : 'var(--text-primary)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-              }}
-              onClick={() => setShowMinorControls((v) => !v)}
-            >
-              <span>🚦</span>
-              <span>{showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}</span>
-            </button>
-
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                marginLeft: '4px',
-              }}
-              onClick={() => setDockExpanded(false)}
-            >
-              <ChevronDown size={14} />
-            </button>
-          </div>
-        ) : (
-          <button
-            style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
-              backdropFilter: 'blur(8px)',
-              transition: 'all 0.2s ease',
-            }}
-            onClick={() => setDockExpanded(true)}
-            title="Show Map Controls"
-          >
-            <Sliders size={16} />
-          </button>
-        )}
-      </div>
-
-      {/* Dynamic Glassmorphic Map Popup */}
-      {selectedNode && popupPos && (
-        <div
-          className="map-popup"
-          style={{
-            position: 'absolute',
-            left: `${popupPos.x}px`,
-            top: `${popupPos.y}px`,
-            transform: 'translate(-50%, -100%) translateY(-15px)',
-            zIndex: 10,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '8px',
-            }}
-          >
-            <h3
-              style={{
-                margin: 0,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-              }}
-            >
-              Configure Control Point
-            </h3>
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-              }}
-              onClick={() => onNodeSelect(null)}
-            >
-              <X size={14} />
-            </button>
-          </div>
-
-          <div
-            style={{
-              fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
-              marginBottom: '8px',
-              lineHeight: '1.4',
-            }}
-          >
-            <strong>Type:</strong> {getControlTypeLabel(selectedNode.tags)}
-            <br />
-            <strong>ID:</strong> {selectedNode.id}
-            <br />
-            <strong>OSM Name:</strong> {selectedNode.tags.name || 'Unnamed Crossing'}
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '10px' }}>
-            <label className="form-label" style={{ fontSize: '0.65rem' }}>
-              Wait Penalty: {nodeDelay} seconds
-            </label>
-            <div className="slider-container">
-              <input
-                type="range"
-                min="0"
-                max="180"
-                step="5"
-                className="slider"
-                value={nodeDelay}
-                onChange={(e) => setNodeDelay(parseInt(e.target.value))}
-              />
-            </div>
-            {/* Presets buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-              {getPresets(getControlType(selectedNode.tags)).map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  style={{
-                    background:
-                      nodeDelay === preset.value
-                        ? 'var(--accent-secondary)'
-                        : 'rgba(255, 255, 255, 0.08)',
-                    color: nodeDelay === preset.value ? '#000000' : 'var(--text-primary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '2px 6px',
-                    fontSize: '0.62rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onClick={() => setNodeDelay(preset.value)}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '10px' }}>
-            <label className="form-label" style={{ fontSize: '0.65rem' }}>
-              Custom Notes
-            </label>
-            <input
-              className="input-text"
-              type="text"
-              placeholder="e.g. Constant bus priority request"
-              value={nodeNotes}
-              onChange={(e) => setNodeNotes(e.target.value)}
-              style={{ padding: '6px 8px', fontSize: '0.8rem' }}
-            />
-          </div>
-
-          {/* Collapsible/Scrollable OSM Info Section */}
-          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>
-            OSM Tags
-          </div>
-          <div className="osm-tags-container">
-            {Object.entries(selectedNode.tags).length > 0 ? (
-              Object.entries(selectedNode.tags).map(([key, val]) => (
-                <div key={key} className="osm-tag-row">
-                  <span className="osm-tag-key">{key}</span>
-                  <span className="osm-tag-val">{String(val)}</span>
-                </div>
-              ))
-            ) : (
-              <div style={{ padding: '6px 8px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                No tags available
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button
-              className="btn btn-primary"
-              style={{
-                flex: 1,
-                padding: '6px var(--spacing-sm)',
-                fontSize: '0.8rem',
-                height: '32px',
-              }}
-              onClick={handleSaveNode}
-            >
-              <Check size={14} style={{ marginRight: '4px' }} />
-              Save
-            </button>
-            {customNodeDelays.has(selectedNode.id) && (
-              <button
-                className="btn btn-secondary btn-danger"
-                style={{
-                  flex: 0.5,
-                  padding: '6px var(--spacing-sm)',
-                  fontSize: '0.8rem',
-                  height: '32px',
-                  color: 'var(--text-primary)',
-                  background: 'var(--accent-danger)',
-                }}
-                onClick={handleResetNode}
-              >
-                Reset
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-      {contextMenu.visible && (
-        <div
-          className="map-context-menu"
-          style={{
-            left: `${contextMenu.x}px`,
-            top: `${contextMenu.y}px`,
-          }}
-          onClick={(e) => e.stopPropagation()} // Prevent closing menu when clicking on it
-        >
-          {contextMenu.crossingId !== null && (
-            <button
-              className="map-context-menu-item"
-              onClick={() => {
-                const map = mapRef.current;
-                if (map && contextMenu.crossingId !== null) {
-                  const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
-                  setManagedClusterId(contextMenu.crossingId);
-                  setManagedNodeIds(nodeIds);
-
-                  // Zoom in to the cluster location so the user can easily see individual signals
-                  map.easeTo({
-                    center: [contextMenu.lng, contextMenu.lat],
-                    zoom: 17.5,
-                  });
-                }
-                setContextMenu((prev) => ({ ...prev, visible: false }));
-              }}
-            >
-              <ZoomIn size={14} style={{ color: '#f59e0b' }} />
-              <span>Manage Traffic Lights</span>
-            </button>
-          )}
-          <button
-            className="map-context-menu-item"
-            onClick={() => {
-              onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-              setContextMenu((prev) => ({ ...prev, visible: false }));
-            }}
-          >
-            <MapPin size={14} style={{ color: '#10b981' }} />
-            <span>Start Route Here</span>
-          </button>
-          <button
-            className="map-context-menu-item"
-            onClick={() => {
-              onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-              setContextMenu((prev) => ({ ...prev, visible: false }));
-            }}
-          >
-            <MapPin size={14} style={{ color: '#ef4444' }} />
-            <span>End Route Here</span>
-          </button>
-        </div>
+      {map && mapReady && (
+        <>
+          <StreetGraphLayer
+            map={map}
+            graph={graph}
+            customNodeDelays={customNodeDelays}
+            showMinorControls={showMinorControls}
+            managedClusterId={managedClusterId}
+            managedNodeIds={managedNodeIds}
+            setManagedClusterId={setManagedClusterId}
+            setManagedNodeIds={setManagedNodeIds}
+            onNodeSelect={onNodeSelect}
+          />
+          <RouteAlternativesLayer
+            map={map}
+            routeAlternatives={routeAlternatives}
+            activeAlternativeLabel={activeAlternativeLabel}
+            onSelectAlternative={onSelectAlternative}
+            shouldFitBoundsRef={shouldFitBoundsRef}
+          />
+          <BBoxBoundaryLayer map={map} loadedBBoxes={loadedBBoxes} />
+          <StartEndMarkers
+            map={map}
+            startCoord={startCoord}
+            endCoord={endCoord}
+            onStartDrag={onStartDrag}
+            onEndDrag={onEndDrag}
+            shouldFitBoundsRef={shouldFitBoundsRef}
+          />
+          <NodePopup
+            key={selectedNode?.id}
+            map={map}
+            selectedNode={selectedNode}
+            onNodeSelect={onNodeSelect}
+            customNodeDelays={customNodeDelays}
+            customNodeNotes={customNodeNotes}
+            onSaveNodeOverride={onSaveNodeOverride}
+            onClearNodeOverride={onClearNodeOverride}
+            setDockExpanded={setDockExpanded}
+          />
+          <MapContextMenu
+            map={map}
+            contextMenu={contextMenu}
+            setContextMenu={setContextMenu}
+            setManagedClusterId={setManagedClusterId}
+            setManagedNodeIds={setManagedNodeIds}
+            onStartDrag={onStartDrag}
+            onEndDrag={onEndDrag}
+          />
+          <MapLayerDock
+            showMinorControls={showMinorControls}
+            setShowMinorControls={setShowMinorControls}
+            dockExpanded={dockExpanded}
+            setDockExpanded={setDockExpanded}
+          />
+        </>
       )}
     </div>
   );

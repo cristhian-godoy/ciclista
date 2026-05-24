@@ -76,11 +76,11 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
 
 ### Phase 4.4: MapView Integration & Cleanup
 
-- [ ] Refactor `src/components/MapView.tsx` to serve as a high-level orchestrator:
+- [x] Refactor `src/components/MapView.tsx` to serve as a high-level orchestrator:
   - Invoke `useMapInstance` hook.
   - Render the target container `div`.
   - Once the map is loaded and ready, mount the extracted subcomponents as React children, passing down the map instance and coordinate state props.
-- [ ] Verify that full application flow (routing, marker dragging, customized delays, loading presets, and toggling layers) works identically to the original monolithic implementation.
+- [x] Verify that full application flow (routing, marker dragging, customized delays, loading presets, and toggling layers) works identically to the original monolithic implementation.
 
 ---
 
