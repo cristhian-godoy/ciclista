@@ -52,10 +52,10 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
             style={{
               width: '100%',
               padding: '8px',
-              borderRadius: '6px',
-              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
+              border: '1px solid var(--glass-border)',
               outline: 'none',
               cursor: 'pointer',
             }}
@@ -76,10 +76,10 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
             style={{
               width: '100%',
               padding: '8px',
-              borderRadius: '6px',
-              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
+              border: '1px solid var(--glass-border)',
               outline: 'none',
               cursor: 'pointer',
             }}
