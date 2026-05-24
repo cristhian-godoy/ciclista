@@ -22,8 +22,8 @@ This document outlines the bite-sized tasks required to improve the code quality
 
 - **Goal**: Keep `router.ts` focused purely on routing algorithms by extracting unrelated utilities.
 - **Tasks**:
-  - [ ] Move the `MinHeap` class to a shared utility file `src/core/common/MinHeap.ts`.
-  - [ ] Move geometry and projection functions (`findNearestNode`, `projectPointOnSegment`, `findNearestEdge`, `getProjectionT`, `calculateTurnPenalty`) into `src/core/common/geometry.ts`.
+  - [x] Move the `MinHeap` class to a shared utility file `src/core/common/MinHeap.ts`.
+  - [x] Move geometry and projection functions (`findNearestNode`, `projectPointOnSegment`, `findNearestEdge`, `getProjectionT`, `calculateTurnPenalty`) into `src/core/common/geometry.ts`.
 
 ## 4. Centralize Magic Numbers and Configurations
 

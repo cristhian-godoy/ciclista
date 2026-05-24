@@ -6,7 +6,8 @@ import {
   resolveRuleSpeed,
   avoidBusyRoadsCost,
 } from './cost';
-import { DijkstraRouter, calculateTurnPenalty } from './router';
+import { DijkstraRouter } from './router';
+import { calculateTurnPenalty } from '../common/geometry';
 import type { GraphNode, GraphEdge, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 import type { SignRuleConfig, RoadRuleConfig, NodeDelayConfig } from './types';
