@@ -28,7 +28,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   return (
     <>
       {/* Dynamic Presets & Auto-Fetch Info */}
-      <section className="route-card">
+      <section className="ciclista-card">
         <h2>
           <Layers
             size={16}
