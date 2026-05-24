@@ -71,7 +71,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
   - Projects the 3D map coordinates of the selected node into 2D screen coordinates using map event listeners (`move`, `zoom`).
 - [x] Create `src/components/map/MapContextMenu.tsx` that:
   - Renders the floating right-click context menu options (`Start Route Here`, `End Route Here`, `Manage Traffic Lights`).
-- [ ] Create `src/components/map/MapLayerDock.tsx` that:
+- [x] Create `src/components/map/MapLayerDock.tsx` that:
   - Renders the collapsible layers bottom overlay controls dock (expanding/collapsing and toggling minor controls).
 
 ### Phase 4.4: MapView Integration & Cleanup
