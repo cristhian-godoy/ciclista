@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 
 import type { Coordinate } from './core/common/types';
 import type { StreetGraph, GraphNode } from './core/graph/types';
-import type { LocalOverrides, BikeProfile } from './core/storage/types';
-import type { RulesConfiguration, RouteAlternative } from './core/router/types';
+import type { RouteAlternative } from './core/router/types';
 import { OSMGraphParser } from './core/graph/parser';
-import { DijkstraRouter, findNearestEdge } from './core/router/router';
-import { LocalStorageProvider } from './core/storage/storage';
+import { DijkstraRouter } from './core/router/router';
 import { standardCost, avoidStoppingCost, avoidBusyRoadsCost } from './core/router/cost';
-import { DEFAULT_RULES_CONFIG } from './components/RulesConfigPanel';
+import { fetchWithCacheAndFallback } from './core/api/overpass';
+import { calculateBoundingBox, isInsideLoadedArea, snapCoordinateToEdge } from './core/common/geo';
+import { useOverrides } from './hooks/useOverrides';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
@@ -16,7 +16,6 @@ import { Sidebar } from './components/Sidebar';
 // Instantiate core modules (fully decoupled from components)
 const parser = new OSMGraphParser();
 const router = new DijkstraRouter();
-const storage = new LocalStorageProvider();
 
 const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
   const merged: StreetGraph = { nodes: new Map(g1.nodes) };
@@ -48,135 +47,20 @@ export default function App() {
   >('standard');
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
 
-  // Custom node overrides state loaded from storage
-  const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
-  const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
-  const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
-  const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(() => {
-    const saved = storage.loadRulesConfig();
-    if (!saved) return DEFAULT_RULES_CONFIG;
+  // Load custom storage overrides state and rules config using the custom hook
+  const {
+    nodeDelays,
+    nodeNotes,
+    rulesConfig,
+    setRulesConfig,
+    bikeProfile,
+    setBikeProfile,
+    currentOverrides,
+    handleSaveNodeOverride,
+    handleClearNodeOverride,
+  } = useOverrides();
 
-    // Deep merge signs and roads to gracefully handle schema upgrades (e.g. comfort field).
-    const mergedSigns = { ...DEFAULT_RULES_CONFIG.signs };
-    if (saved.signs) {
-      for (const k of Object.keys(saved.signs) as Array<keyof typeof saved.signs>) {
-        if (mergedSigns[k]) {
-          mergedSigns[k] = { ...mergedSigns[k], ...saved.signs[k] };
-        }
-      }
-    }
-
-    const mergedRoads = { ...DEFAULT_RULES_CONFIG.roads };
-    if (saved.roads) {
-      for (const k of Object.keys(saved.roads) as Array<keyof typeof saved.roads>) {
-        if (mergedRoads[k]) {
-          mergedRoads[k] = { ...mergedRoads[k], ...saved.roads[k] };
-        }
-      }
-    }
-
-    return {
-      ...DEFAULT_RULES_CONFIG,
-      ...saved,
-      signs: mergedSigns,
-      roads: mergedRoads,
-      nodeDelays: { ...DEFAULT_RULES_CONFIG.nodeDelays, ...(saved.nodeDelays ?? {}) },
-    };
-  });
-  const [bikeProfile, setBikeProfile] = useState<BikeProfile>('normal');
-
-  // 3. Load settings from storage on startup
-  const loadCustomOverrides = async () => {
-    const overrides = await storage.getOverrides();
-    setNodeDelays(overrides.nodeDelays);
-    setNodeNotes(overrides.nodeNotes);
-    setNodeTurns(overrides.nodeTurns);
-  };
-
-  // Persist rules config whenever it changes
-  useEffect(() => {
-    storage.saveRulesConfig(rulesConfig);
-  }, [rulesConfig]);
-
-  // Helper to check if coordinate is inside any loaded bounding boxes
-  const isInsideLoadedArea = (coord: Coordinate) => {
-    return loadedBBoxes.some((bbox) => {
-      const [minLat, minLng, maxLat, maxLng] = bbox;
-      return (
-        coord.lat >= minLat && coord.lat <= maxLat && coord.lng >= minLng && coord.lng <= maxLng
-      );
-    });
-  };
-
-  const OVERPASS_MIRRORS = [
-    'https://overpass-api.de/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.osm.ch/api/interpreter',
-  ];
-
-  const CACHE_NAME = 'overpass-cache-v1';
-
-  async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
-    const cacheKey = new Request(
-      `https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}`,
-    );
-
-    // Try loading from client-side CacheStorage
-    try {
-      const cache = await caches.open(CACHE_NAME);
-      const cachedResponse = await cache.match(cacheKey);
-      if (cachedResponse) {
-        console.log('Serving Overpass query from client-side CacheStorage.');
-        return await cachedResponse.json();
-      }
-    } catch (e) {
-      console.warn('CacheStorage not available or query matching failed:', e);
-    }
-
-    // Iterate over available public mirrors to fetch the data
-    let lastError: Error | null = null;
-    for (const baseUrl of OVERPASS_MIRRORS) {
-      try {
-        const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
-        console.log(`Fetching Overpass query from mirror: ${baseUrl}`);
-        const response = await fetch(url);
-
-        if (response.status === 429) {
-          throw new Error(`Mirror ${baseUrl} returned HTTP 429 Too Many Requests (Rate Limited).`);
-        }
-        if (!response.ok) {
-          throw new Error(`Mirror ${baseUrl} returned error status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Put successful response into client-side CacheStorage
-        try {
-          const cache = await caches.open(CACHE_NAME);
-          await cache.put(
-            cacheKey,
-            new Response(JSON.stringify(data), {
-              headers: { 'Content-Type': 'application/json' },
-            }),
-          );
-        } catch (cacheErr) {
-          console.warn('Failed to cache successful Overpass response:', cacheErr);
-        }
-
-        return data;
-      } catch (err: unknown) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        console.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);
-        lastError = err instanceof Error ? err : new Error(errorMsg);
-      }
-    }
-
-    throw lastError || new Error('All Overpass mirrors failed or returned rate limits.');
-  }
-
-  // 4. Overpass API fetching implementation
+  // 3. Overpass API fetching implementation
   const handleFetchOSM = async (
     bbox: [number, number, number, number],
     merge = false,
@@ -234,44 +118,8 @@ export default function App() {
     }
   };
 
-  // Helper to compute a bounding box enclosing two coordinates with padding
-  const calculateBoundingBox = (
-    c1: Coordinate | null,
-    c2: Coordinate | null,
-  ): [number, number, number, number] => {
-    if (!c1 || !c2) {
-      // Default bounding box for Munich center
-      const center = { lat: 48.13715, lng: 11.5754 };
-      const latMargin = 0.015;
-      const lngMargin = 0.02;
-      return [
-        center.lat - latMargin,
-        center.lng - lngMargin,
-        center.lat + latMargin,
-        center.lng + lngMargin,
-      ];
-    }
-
-    const minLat = Math.min(c1.lat, c2.lat);
-    const maxLat = Math.max(c1.lat, c2.lat);
-    const minLng = Math.min(c1.lng, c2.lng);
-    const maxLng = Math.max(c1.lng, c2.lng);
-
-    const latSpan = maxLat - minLat;
-    const lngSpan = maxLng - minLng;
-
-    // Generous padding: 30% of route span, or at least ~1.5km to allow alternate paths
-    const latMargin = Math.max(latSpan * 0.3, 0.015);
-    const lngMargin = Math.max(lngSpan * 0.3, 0.02);
-
-    return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
-  };
-
   useEffect(() => {
     setTimeout(() => {
-      // Load custom settings
-      loadCustomOverrides();
-
       // Auto-fetch map area matching default start/end pins on startup
       const initialBBox = calculateBoundingBox(startCoord, endCoord);
       handleFetchOSM(initialBBox, false, true);
@@ -284,8 +132,8 @@ export default function App() {
     if (!startCoord || !endCoord) return;
     if (loadedBBoxes.length === 0 || isFetchingOSM) return;
 
-    const startInside = isInsideLoadedArea(startCoord);
-    const endInside = isInsideLoadedArea(endCoord);
+    const startInside = isInsideLoadedArea(startCoord, loadedBBoxes);
+    const endInside = isInsideLoadedArea(endCoord, loadedBBoxes);
 
     if (!startInside || !endInside) {
       const newBBox = calculateBoundingBox(startCoord, endCoord);
@@ -361,48 +209,15 @@ export default function App() {
     }
   };
 
-  // Helper to snap coordinates to the nearest edge if within 3 meters (house-pinning safety)
-  const snapCoordinateToEdge = (coord: Coordinate): Coordinate => {
-    if (!graph) return coord;
-    const nearestEdge = findNearestEdge(graph, coord);
-    if (nearestEdge && nearestEdge.distance < 3) {
-      return nearestEdge.projected;
-    }
-    return coord;
-  };
-
   const handleStartDrag = (coord: Coordinate | null) => {
-    setStartCoord(coord ? snapCoordinateToEdge(coord) : null);
+    setStartCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
 
   const handleEndDrag = (coord: Coordinate | null) => {
-    setEndCoord(coord ? snapCoordinateToEdge(coord) : null);
+    setEndCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
 
-  // 5. Save and delete overrides handlers
-  const handleSaveNodeOverride = async (nodeId: string, delay: number, notes: string) => {
-    await storage.saveNodeDelay(nodeId, delay);
-    await storage.saveNodeNotes(nodeId, notes);
-    await loadCustomOverrides(); // Reload active states
-  };
-
-  const handleClearNodeOverride = async (nodeId: string) => {
-    await storage.clearNodeOverrides(nodeId);
-    await loadCustomOverrides(); // Reload active states
-  };
-
-  // Pack overrides together for the routing functions
-  const currentOverrides: LocalOverrides = useMemo(() => {
-    return {
-      nodeDelays,
-      nodeNotes,
-      nodeTurns,
-      rulesConfig,
-      bikeProfile,
-    };
-  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeProfile]);
-
-  // 6. Reactive Routing Calculation (Derived State)
+  // 4. Reactive Routing Calculation (Derived State)
   const routeAlternatives = useMemo<RouteAlternative[]>(() => {
     if (!graph || !startCoord || !endCoord) return [];
 
