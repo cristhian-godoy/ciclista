@@ -237,6 +237,195 @@ class MinHeap<T> {
 }
 
 export class DijkstraRouter implements IRouter {
+  private runDijkstra(
+    graph: StreetGraph,
+    startId: string,
+    endId: string,
+    costFn: CostFunction,
+    overrides: LocalOverrides,
+  ): { destReached: boolean; previous: Map<string, string> } {
+    const distances = new Map<string, number>();
+    const previous = new Map<string, string>();
+    const visited = new Set<string>();
+    const heap = new MinHeap<string>();
+
+    distances.set(startId, 0);
+    heap.push(startId, 0);
+
+    for (const nodeId of graph.nodes.keys()) {
+      if (nodeId !== startId) {
+        distances.set(nodeId, Infinity);
+      }
+    }
+
+    let destReached = false;
+
+    while (!heap.isEmpty()) {
+      const currentId = heap.pop();
+      if (!currentId) break;
+
+      if (currentId === endId) {
+        destReached = true;
+        break;
+      }
+
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const currentEntry = graph.nodes.get(currentId);
+      if (!currentEntry) continue;
+
+      const currentDist = distances.get(currentId) || 0;
+
+      for (const edge of currentEntry.edges) {
+        const neighborId = edge.target;
+        if (visited.has(neighborId)) continue;
+
+        let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
+
+        const parentId = previous.get(currentId);
+        if (parentId) {
+          const parentEntry = graph.nodes.get(parentId);
+          const neighborEntry = graph.nodes.get(neighborId);
+          if (parentEntry && neighborEntry) {
+            edgeCost += calculateTurnPenalty(
+              parentEntry.node,
+              currentEntry.node,
+              neighborEntry.node,
+            );
+          }
+        }
+
+        const altDist = currentDist + edgeCost;
+
+        if (altDist < (distances.get(neighborId) || Infinity)) {
+          distances.set(neighborId, altDist);
+          previous.set(neighborId, currentId);
+          heap.push(neighborId, altDist);
+        }
+      }
+    }
+
+    return { destReached, previous };
+  }
+
+  private buildRouteStatistics(
+    graph: StreetGraph,
+    previous: Map<string, string>,
+    endId: string,
+    overrides: LocalOverrides,
+  ): {
+    pathNodeIds: string[];
+    coordinates: Coordinate[];
+    totalDistanceMeters: number;
+    streets: string[];
+    trafficSignalsCount: number;
+    signalCount: number;
+    yieldCount: number;
+    crossingCount: number;
+    roadTypeTotals: Record<string, number>;
+    edges: NonNullable<RouteResult['edges']>;
+    totalDisplayCost: number;
+  } {
+    const pathNodeIds: string[] = [];
+    let current = endId;
+    while (current) {
+      pathNodeIds.unshift(current);
+      current = previous.get(current) || '';
+    }
+
+    const coordinates: Coordinate[] = [];
+    let totalDistanceMeters = 0;
+    let trafficSignalsCount = 0;
+    let signalCount = 0;
+    let yieldCount = 0;
+    let crossingCount = 0;
+    const roadTypeTotals: Record<string, number> = {
+      cycleway: 0,
+      residential: 0,
+      primary: 0,
+      other: 0,
+    };
+    const streetsSet = new Set<string>();
+    const edgesDetails: NonNullable<RouteResult['edges']> = [];
+    let totalDisplayCost = 0;
+
+    for (let i = 0; i < pathNodeIds.length; i++) {
+      const nodeId = pathNodeIds[i];
+      const entry = graph.nodes.get(nodeId);
+      if (!entry) continue;
+      coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
+
+      const tags = entry.node.tags || {};
+      const controlType = mapOSMNodeToControl(tags);
+      if (controlType === 'signal') {
+        trafficSignalsCount++;
+        signalCount++;
+      } else if (controlType === 'yield') {
+        yieldCount++;
+      } else if (controlType === 'crossing') {
+        crossingCount++;
+      }
+
+      if (i < pathNodeIds.length - 1) {
+        const nextNodeId = pathNodeIds[i + 1];
+        const edge = entry.edges.find((e) => e.target === nextNodeId);
+        if (edge) {
+          totalDistanceMeters += edge.distance;
+          if (edge.name) {
+            streetsSet.add(edge.name);
+          }
+          const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
+
+          let turnPenalty = 0;
+          if (i > 0) {
+            const parentId = pathNodeIds[i - 1];
+            const parentEntry = graph.nodes.get(parentId);
+            const nextEntry = graph.nodes.get(nextNodeId);
+            if (parentEntry && nextEntry) {
+              turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
+            }
+          }
+
+          totalDisplayCost += displayCost + turnPenalty;
+
+          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
+          roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
+
+          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
+            edge.tags.highway || '',
+            edge.tags,
+          );
+          edgesDetails.push({
+            sourceId: nodeId,
+            targetId: nextNodeId,
+            name: edge.name || 'Unnamed Street',
+            distance: edge.distance,
+            highway: edge.tags.highway || 'unknown',
+            tags: edge.tags,
+            cost: displayCost + turnPenalty,
+            matchedSign,
+            matchedRoad,
+          });
+        }
+      }
+    }
+
+    return {
+      pathNodeIds,
+      coordinates,
+      totalDistanceMeters,
+      streets: Array.from(streetsSet),
+      trafficSignalsCount,
+      signalCount,
+      yieldCount,
+      crossingCount,
+      roadTypeTotals,
+      edges: edgesDetails,
+      totalDisplayCost,
+    };
+  }
+
   findRoute(
     graph: StreetGraph,
     start: Coordinate,
@@ -397,169 +586,25 @@ export class DijkstraRouter implements IRouter {
         }
       }
 
-      // 5. Setup Dijkstra data structures
-      const distances = new Map<string, number>();
-      const previous = new Map<string, string>();
-      const visited = new Set<string>();
-      const heap = new MinHeap<string>();
-
-      distances.set(START_VNODE_ID, 0);
-      heap.push(START_VNODE_ID, 0);
-
-      // Initialize all other node distances to Infinity
-      for (const nodeId of graph.nodes.keys()) {
-        if (nodeId !== START_VNODE_ID) {
-          distances.set(nodeId, Infinity);
-        }
-      }
-
-      let destReached = false;
-
-      // 6. Main Dijkstra search loop
-      while (!heap.isEmpty()) {
-        const currentId = heap.pop();
-        if (!currentId) break;
-
-        if (currentId === END_VNODE_ID) {
-          destReached = true;
-          break;
-        }
-
-        if (visited.has(currentId)) continue;
-        visited.add(currentId);
-
-        const currentEntry = graph.nodes.get(currentId);
-        if (!currentEntry) continue;
-
-        const currentDist = distances.get(currentId) || 0;
-
-        for (const edge of currentEntry.edges) {
-          const neighborId = edge.target;
-          if (visited.has(neighborId)) continue;
-
-          // Calculate dynamic edge cost using injected cost function
-          let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
-
-          // Apply turn penalty (avoiding U-turns and sharp turns on routing)
-          const parentId = previous.get(currentId);
-          if (parentId) {
-            const parentEntry = graph.nodes.get(parentId);
-            const neighborEntry = graph.nodes.get(neighborId);
-            if (parentEntry && neighborEntry) {
-              edgeCost += calculateTurnPenalty(
-                parentEntry.node,
-                currentEntry.node,
-                neighborEntry.node,
-              );
-            }
-          }
-
-          const altDist = currentDist + edgeCost;
-
-          if (altDist < (distances.get(neighborId) || Infinity)) {
-            distances.set(neighborId, altDist);
-            previous.set(neighborId, currentId);
-            heap.push(neighborId, altDist);
-          }
-        }
-      }
+      // 5. Run Dijkstra search loop
+      const { destReached, previous } = this.runDijkstra(
+        graph,
+        START_VNODE_ID,
+        END_VNODE_ID,
+        costFn,
+        overrides,
+      );
 
       if (!destReached) {
         console.warn('Destination node is unreachable from source node');
         return null;
       }
 
-      // 7. Reconstruct the path and calculate statistics
-      const pathNodeIds: string[] = [];
-      let current = END_VNODE_ID;
-      while (current) {
-        pathNodeIds.unshift(current);
-        current = previous.get(current) || '';
-      }
-
-      // Build statistics
-      const coordinates: Coordinate[] = [];
-      let totalDistanceMeters = 0;
-      let trafficSignalsCount = 0;
-      let signalCount = 0;
-      let yieldCount = 0;
-      let crossingCount = 0;
-      const roadTypeTotals: Record<string, number> = {
-        cycleway: 0,
-        residential: 0,
-        primary: 0,
-        other: 0,
-      };
-      const streetsSet = new Set<string>();
-      const edgesDetails: NonNullable<RouteResult['edges']> = [];
-
-      let totalDisplayCost = 0;
-
-      for (let i = 0; i < pathNodeIds.length; i++) {
-        const nodeId = pathNodeIds[i];
-        const entry = graph.nodes.get(nodeId);
-        if (!entry) continue;
-        coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
-
-        // Count control points using centralized node classifier
-        const tags = entry.node.tags || {};
-        const controlType = mapOSMNodeToControl(tags);
-        if (controlType === 'signal') {
-          trafficSignalsCount++;
-          signalCount++;
-        } else if (controlType === 'yield') {
-          yieldCount++;
-        } else if (controlType === 'crossing') {
-          crossingCount++;
-        }
-
-        // Add edge distance and street names
-        if (i < pathNodeIds.length - 1) {
-          const nextNodeId = pathNodeIds[i + 1];
-          const edge = entry.edges.find((e) => e.target === nextNodeId);
-          if (edge) {
-            totalDistanceMeters += edge.distance;
-            if (edge.name) {
-              streetsSet.add(edge.name);
-            }
-            const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
-
-            let turnPenalty = 0;
-            if (i > 0) {
-              const parentId = pathNodeIds[i - 1];
-              const parentEntry = graph.nodes.get(parentId);
-              const nextEntry = graph.nodes.get(nextNodeId);
-              if (parentEntry && nextEntry) {
-                turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
-              }
-            }
-
-            totalDisplayCost += displayCost + turnPenalty;
-
-            const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
-            roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
-
-            const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
-              edge.tags.highway || '',
-              edge.tags,
-            );
-            edgesDetails.push({
-              sourceId: nodeId,
-              targetId: nextNodeId,
-              name: edge.name || 'Unnamed Street',
-              distance: edge.distance,
-              highway: edge.tags.highway || 'unknown',
-              tags: edge.tags,
-              cost: displayCost + turnPenalty,
-              matchedSign,
-              matchedRoad,
-            });
-          }
-        }
-      }
+      // 6. Reconstruct the path and calculate statistics
+      const stats = this.buildRouteStatistics(graph, previous, END_VNODE_ID, overrides);
 
       // Add start/end coordinates to the path with duplicate cleaning
-      const rawCoords: Coordinate[] = [start, ...coordinates, end];
+      const rawCoords: Coordinate[] = [start, ...stats.coordinates, end];
       const finalCoords: Coordinate[] = [];
       for (const c of rawCoords) {
         if (finalCoords.length === 0) {
@@ -577,27 +622,27 @@ export class DijkstraRouter implements IRouter {
       const startInterpDist = haversineDistance(start.lat, start.lng, startProj.lat, startProj.lng);
       const endInterpDist = haversineDistance(end.lat, end.lng, endProj.lat, endProj.lng);
 
-      totalDistanceMeters += startInterpDist + endInterpDist;
+      const totalDistanceMeters = stats.totalDistanceMeters + startInterpDist + endInterpDist;
 
       const startInterpDuration = startInterpDist / 1.5;
       const endInterpDuration = endInterpDist / 1.5;
-      const totalDurationSeconds = totalDisplayCost + startInterpDuration + endInterpDuration;
+      const totalDurationSeconds = stats.totalDisplayCost + startInterpDuration + endInterpDuration;
 
       return {
-        pathNodeIds,
+        pathNodeIds: stats.pathNodeIds,
         coordinates: finalCoords,
         totalDurationSeconds,
         totalDistanceMeters,
-        streets: Array.from(streetsSet),
-        trafficSignalsCount,
-        signalCount,
-        yieldCount,
-        crossingCount,
-        roadTypeTotals,
-        edges: edgesDetails,
+        streets: stats.streets,
+        trafficSignalsCount: stats.trafficSignalsCount,
+        signalCount: stats.signalCount,
+        yieldCount: stats.yieldCount,
+        crossingCount: stats.crossingCount,
+        roadTypeTotals: stats.roadTypeTotals,
+        edges: stats.edges,
       };
     } finally {
-      // 8. Restore the graph to pristine state
+      // 7. Restore the graph to pristine state
       for (const [nodeId, originalEdges] of backupNodes.entries()) {
         const entry = graph.nodes.get(nodeId);
         if (entry) {
@@ -648,179 +693,36 @@ export class DijkstraRouter implements IRouter {
       };
     }
 
-    // 2. Setup Dijkstra data structures
-    const distances = new Map<string, number>();
-    const previous = new Map<string, string>();
-    const visited = new Set<string>();
-    const heap = new MinHeap<string>();
-
-    distances.set(startNodeId, 0);
-    heap.push(startNodeId, 0);
-
-    // Initialize all other node distances to Infinity
-    for (const nodeId of graph.nodes.keys()) {
-      if (nodeId !== startNodeId) {
-        distances.set(nodeId, Infinity);
-      }
-    }
-
-    let destReached = false;
-
-    // 3. Main Dijkstra search loop
-    while (!heap.isEmpty()) {
-      const currentId = heap.pop();
-      if (!currentId) break;
-
-      if (currentId === endNodeId) {
-        destReached = true;
-        break;
-      }
-
-      if (visited.has(currentId)) continue;
-      visited.add(currentId);
-
-      const currentEntry = graph.nodes.get(currentId);
-      if (!currentEntry) continue;
-
-      const currentDist = distances.get(currentId) || 0;
-
-      for (const edge of currentEntry.edges) {
-        const neighborId = edge.target;
-        if (visited.has(neighborId)) continue;
-
-        // Calculate dynamic edge cost using injected cost function
-        let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
-
-        // Apply turn penalty (avoiding U-turns and sharp turns on routing)
-        const parentId = previous.get(currentId);
-        if (parentId) {
-          const parentEntry = graph.nodes.get(parentId);
-          const neighborEntry = graph.nodes.get(neighborId);
-          if (parentEntry && neighborEntry) {
-            edgeCost += calculateTurnPenalty(
-              parentEntry.node,
-              currentEntry.node,
-              neighborEntry.node,
-            );
-          }
-        }
-
-        const altDist = currentDist + edgeCost;
-
-        if (altDist < (distances.get(neighborId) || Infinity)) {
-          distances.set(neighborId, altDist);
-          previous.set(neighborId, currentId);
-          heap.push(neighborId, altDist);
-        }
-      }
-    }
+    // 2. Run Dijkstra search loop
+    const { destReached, previous } = this.runDijkstra(
+      graph,
+      startNodeId,
+      endNodeId,
+      costFn,
+      overrides,
+    );
 
     if (!destReached) {
       console.warn('Destination node is unreachable from source node');
       return null;
     }
 
-    // 4. Reconstruct the path and calculate statistics
-    const pathNodeIds: string[] = [];
-    let current = endNodeId;
-    while (current) {
-      pathNodeIds.unshift(current);
-      current = previous.get(current) || '';
-    }
-
-    // Build statistics
-    const coordinates: Coordinate[] = [];
-    let totalDistanceMeters = 0;
-    let trafficSignalsCount = 0;
-    let signalCount = 0;
-    let yieldCount = 0;
-    let crossingCount = 0;
-    const roadTypeTotals: Record<string, number> = {
-      cycleway: 0,
-      residential: 0,
-      primary: 0,
-      other: 0,
-    };
-    const streetsSet = new Set<string>();
-    const edgesDetails: NonNullable<RouteResult['edges']> = [];
-    let totalDisplayCost = 0;
-
-    for (let i = 0; i < pathNodeIds.length; i++) {
-      const nodeId = pathNodeIds[i];
-      const entry = graph.nodes.get(nodeId);
-      if (!entry) continue;
-      coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
-
-      // Count control points using centralized node classifier
-      const tags = entry.node.tags || {};
-      const controlType = mapOSMNodeToControl(tags);
-      if (controlType === 'signal') {
-        trafficSignalsCount++;
-        signalCount++;
-      } else if (controlType === 'yield') {
-        yieldCount++;
-      } else if (controlType === 'crossing') {
-        crossingCount++;
-      }
-
-      // Add edge distance and street names
-      if (i < pathNodeIds.length - 1) {
-        const nextNodeId = pathNodeIds[i + 1];
-        const edge = entry.edges.find((e) => e.target === nextNodeId);
-        if (edge) {
-          totalDistanceMeters += edge.distance;
-          if (edge.name) {
-            streetsSet.add(edge.name);
-          }
-          const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
-
-          let turnPenalty = 0;
-          if (i > 0) {
-            const parentId = pathNodeIds[i - 1];
-            const parentEntry = graph.nodes.get(parentId);
-            const nextEntry = graph.nodes.get(nextNodeId);
-            if (parentEntry && nextEntry) {
-              turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
-            }
-          }
-
-          totalDisplayCost += displayCost + turnPenalty;
-
-          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
-          roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
-
-          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
-            edge.tags.highway || '',
-            edge.tags,
-          );
-          edgesDetails.push({
-            sourceId: nodeId,
-            targetId: nextNodeId,
-            name: edge.name || 'Unnamed Street',
-            distance: edge.distance,
-            highway: edge.tags.highway || 'unknown',
-            tags: edge.tags,
-            cost: displayCost + turnPenalty,
-            matchedSign,
-            matchedRoad,
-          });
-        }
-      }
-    }
+    // 3. Reconstruct the path and calculate statistics
+    const stats = this.buildRouteStatistics(graph, previous, endNodeId, overrides);
 
     let finalCoords: Coordinate[] = [];
-    if (coordinates.length >= 2) {
-      const n0 = coordinates[0];
-      const n1 = coordinates[1];
-      const nk_1 = coordinates[coordinates.length - 2];
-      const nk = coordinates[coordinates.length - 1];
+    if (stats.coordinates.length >= 2) {
+      const n0 = stats.coordinates[0];
+      const n1 = stats.coordinates[1];
+      const nk_1 = stats.coordinates[stats.coordinates.length - 2];
+      const nk = stats.coordinates[stats.coordinates.length - 1];
 
       const projectedStart = projectPointOnSegment(start, n0, n1);
       const projectedEnd = projectPointOnSegment(end, nk_1, nk);
 
       const adjusted: Coordinate[] = [start, projectedStart];
-      for (let i = 1; i < coordinates.length - 1; i++) {
-        adjusted.push(coordinates[i]);
+      for (let i = 1; i < stats.coordinates.length - 1; i++) {
+        adjusted.push(stats.coordinates[i]);
       }
       adjusted.push(projectedEnd);
       adjusted.push(end);
@@ -837,22 +739,22 @@ export class DijkstraRouter implements IRouter {
           }
         }
       }
-    } else if (coordinates.length === 1) {
-      finalCoords = [start, coordinates[0], end];
+    } else if (stats.coordinates.length === 1) {
+      finalCoords = [start, stats.coordinates[0], end];
     }
 
     return {
-      pathNodeIds,
+      pathNodeIds: stats.pathNodeIds,
       coordinates: finalCoords,
-      totalDurationSeconds: totalDisplayCost,
-      totalDistanceMeters,
-      streets: Array.from(streetsSet),
-      trafficSignalsCount,
-      signalCount,
-      yieldCount,
-      crossingCount,
-      roadTypeTotals,
-      edges: edgesDetails,
+      totalDurationSeconds: stats.totalDisplayCost,
+      totalDistanceMeters: stats.totalDistanceMeters,
+      streets: stats.streets,
+      trafficSignalsCount: stats.trafficSignalsCount,
+      signalCount: stats.signalCount,
+      yieldCount: stats.yieldCount,
+      crossingCount: stats.crossingCount,
+      roadTypeTotals: stats.roadTypeTotals,
+      edges: stats.edges,
     };
   }
 }
