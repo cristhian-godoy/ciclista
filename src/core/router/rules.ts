@@ -1,3 +1,4 @@
+import type { RoadRuleConfig, SignRuleConfig } from './types';
 import { GermanSign, RoadType } from './types';
 
 /**
@@ -145,4 +146,43 @@ export function hasCycleway(tags: Record<string, string>): boolean {
     tags['cycleway:both'],
   ];
   return candidates.some((v) => v !== undefined && !CYCLEWAY_NEGATIVE.has(v));
+}
+
+/**
+ * Resolves the effective speed type for a traffic sign rule configuration.
+ * Falls back to default classification-based types if no custom value is specified.
+ *
+ * @param cfg - The sign rule config containing optional custom speedType and sign ID.
+ * @returns The resolved speed type.
+ */
+export function getEffectiveSignSpeedType(
+  cfg: SignRuleConfig,
+): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' {
+  if (cfg.speedType) return cfg.speedType;
+  const signId = cfg.signId;
+  if (
+    signId === GermanSign.VZ_241 ||
+    signId === GermanSign.VZ_244_1 ||
+    signId === GermanSign.VZ_325_1
+  ) {
+    return 'relative';
+  }
+  if (signId === GermanSign.VZ_242_1 || signId === GermanSign.VZ_239) {
+    return 'dismount';
+  }
+  return 'custom';
+}
+
+/**
+ * Resolves the effective speed type for a road rule configuration.
+ * Falls back to 'custom' speed rules if no specific type override is set.
+ *
+ * @param cfg - The road rule config containing optional custom speedType.
+ * @returns The resolved speed type.
+ */
+export function getEffectiveRoadSpeedType(
+  cfg: RoadRuleConfig,
+): 'relative' | 'slow' | 'slower' | 'dismount' | 'custom' {
+  if (cfg.speedType) return cfg.speedType;
+  return 'custom';
 }

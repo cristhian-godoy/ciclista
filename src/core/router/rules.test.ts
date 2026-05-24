@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
-
-import { mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
+import {
+  getEffectiveRoadSpeedType,
+  getEffectiveSignSpeedType,
+  mapOSMNodeToControl,
+  mapOSMToSignAndRoad,
+} from './rules';
 import { GermanSign, RoadType } from './types';
 
 describe('mapOSMToSignAndRoad', () => {
@@ -167,5 +170,79 @@ describe('mapOSMNodeToControl', () => {
     expect(mapOSMNodeToControl({ crossing: 'uncontrolled' })).toBeNull();
     expect(mapOSMNodeToControl({ crossing: 'no' })).toBeNull();
     expect(mapOSMNodeToControl({ crossing: 'none' })).toBeNull();
+  });
+});
+
+describe('getEffectiveSignSpeedType', () => {
+  it('respects existing speedType if provided', () => {
+    const cfg = {
+      signId: GermanSign.VZ_240,
+      name: 'Test',
+      description: 'Test',
+      iconCode: '',
+      baseSpeedKmh: 15,
+      speedType: 'slow' as const,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveSignSpeedType(cfg)).toBe('slow');
+  });
+
+  it('maps VZ_241, VZ_244_1, VZ_325_1 to relative', () => {
+    const base = {
+      name: '',
+      description: '',
+      iconCode: '',
+      baseSpeedKmh: 15,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_241 })).toBe('relative');
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_244_1 })).toBe('relative');
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_325_1 })).toBe('relative');
+  });
+
+  it('maps VZ_242_1, VZ_239 to dismount', () => {
+    const base = {
+      name: '',
+      description: '',
+      iconCode: '',
+      baseSpeedKmh: 15,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_242_1 })).toBe('dismount');
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_239 })).toBe('dismount');
+  });
+
+  it('defaults to custom for other signs', () => {
+    const base = {
+      name: '',
+      description: '',
+      iconCode: '',
+      baseSpeedKmh: 15,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_240 })).toBe('custom');
+  });
+});
+
+describe('getEffectiveRoadSpeedType', () => {
+  it('respects existing speedType if provided', () => {
+    const cfg = {
+      roadId: RoadType.PRIMARY,
+      name: 'Test',
+      baseSpeedKmh: 30,
+      speedType: 'slow' as const,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveRoadSpeedType(cfg)).toBe('slow');
+  });
+
+  it('defaults to custom', () => {
+    const cfg = {
+      roadId: RoadType.PRIMARY,
+      name: 'Test',
+      baseSpeedKmh: 30,
+      flatPenaltySeconds: 0,
+    };
+    expect(getEffectiveRoadSpeedType(cfg)).toBe('custom');
   });
 });
