@@ -53,6 +53,8 @@ describe('Sidebar Integration', () => {
     onRulesChange: vi.fn(),
     bikeProfile: 'normal' as const,
     onBikeProfileChange: vi.fn(),
+    theme: 'bright' as const,
+    onThemeChange: vi.fn(),
   };
 
   it('renders all mounted config and stats panels', () => {
@@ -87,7 +89,7 @@ describe('Sidebar Integration', () => {
     );
 
     // Test preset dropdown change
-    await user.selectOptions(screen.getByRole('combobox'), 'amsterdam');
+    await user.selectOptions(screen.getByRole('combobox', { name: /City Preset/i }), 'amsterdam');
     expect(handlePresetChange).toHaveBeenCalledWith('amsterdam');
 
     // Test stats strategy card click

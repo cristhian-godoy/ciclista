@@ -59,6 +59,7 @@ export default function App() {
     'standard' | 'avoid-stops' | 'quiet-streets'
   >('standard');
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
+  const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
 
   // Load custom storage overrides state and rules config using the custom hook
   const {
@@ -288,6 +289,8 @@ export default function App() {
         onRulesChange={setRulesConfig}
         bikeProfile={bikeProfile}
         onBikeProfileChange={setBikeProfile}
+        theme={theme}
+        onThemeChange={setTheme}
       />
       <MapView
         graph={graph}
@@ -307,6 +310,7 @@ export default function App() {
         onSaveNodeOverride={handleSaveNodeOverride}
         onClearNodeOverride={handleClearNodeOverride}
         onMapBoundsChange={handleMapBoundsChange}
+        theme={theme}
       />
     </div>
   );

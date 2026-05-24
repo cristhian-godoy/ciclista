@@ -30,6 +30,7 @@ interface MapViewProps {
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
   onClearNodeOverride: (nodeId: string) => void;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
+  theme: 'bright' | 'liberty' | 'dark';
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -50,6 +51,7 @@ export const MapView: React.FC<MapViewProps> = ({
   onSaveNodeOverride,
   onClearNodeOverride,
   onMapBoundsChange,
+  theme,
 }) => {
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
@@ -167,6 +169,7 @@ export const MapView: React.FC<MapViewProps> = ({
   // Initialize and retrieve map instance via custom hook
   const { map, mapContainerRef, mapReady } = useMapInstance({
     selectedPreset,
+    theme,
     onMapBoundsChange,
     onContextMenu: handleContextMenu,
     onClick: handleClick,

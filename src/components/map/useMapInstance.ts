@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface UseMapInstanceOptions {
   selectedPreset: 'munich' | 'amsterdam';
+  theme: 'bright' | 'liberty' | 'dark';
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
   onContextMenu?: (e: maplibregl.MapMouseEvent) => void;
   onClick?: (e: maplibregl.MapMouseEvent) => void;
@@ -13,6 +14,7 @@ interface UseMapInstanceOptions {
 
 export const useMapInstance = ({
   selectedPreset,
+  theme,
   onMapBoundsChange,
   onContextMenu,
   onClick,
@@ -56,38 +58,14 @@ export const useMapInstance = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Use CartoDB Dark Matter tiles for a premium dark mode style
+    // Use OpenFreeMap vector style URL
     const mapInstance = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          'carto-dark': {
-            type: 'raster',
-            tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-            ],
-            tileSize: 256,
-            attribution:
-              '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>',
-          },
-        },
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        layers: [
-          {
-            id: 'carto-dark-layer',
-            type: 'raster',
-            source: 'carto-dark',
-            minzoom: 0,
-            maxzoom: 20,
-          },
-        ],
-      },
+      style: `https://tiles.openfreemap.org/styles/${theme}`,
       center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725],
       zoom: 14.5,
+      dragRotate: false,
+      pitchWithRotate: false,
     });
 
     setMap(mapInstance);
@@ -97,8 +75,53 @@ export const useMapInstance = ({
 
     const container = mapContainerRef.current;
     const preventDefaultContextMenu = (e: MouseEvent) => e.preventDefault();
+
+    // Middle mouse button rotation/pitch/pan handler
+    let isMiddleDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleMiddleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        isMiddleDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        document.addEventListener('mousemove', handleMiddleMouseMove);
+        document.addEventListener('mouseup', handleMiddleMouseUp);
+      }
+    };
+
+    const handleMiddleMouseMove = (e: MouseEvent) => {
+      if (!isMiddleDragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      if (e.shiftKey) {
+        // Pan map
+        mapInstance.panBy([-dx, -dy], { animate: false });
+      } else {
+        // Rotate & Pitch map
+        const newBearing = mapInstance.getBearing() + dx * 0.5;
+        const newPitch = Math.max(0, Math.min(85, mapInstance.getPitch() - dy * 0.5));
+        mapInstance.setBearing(newBearing);
+        mapInstance.setPitch(newPitch);
+      }
+    };
+
+    const handleMiddleMouseUp = (e: MouseEvent) => {
+      if (e.button === 1) {
+        isMiddleDragging = false;
+        document.removeEventListener('mousemove', handleMiddleMouseMove);
+        document.removeEventListener('mouseup', handleMiddleMouseUp);
+      }
+    };
+
     if (container) {
       container.addEventListener('contextmenu', preventDefaultContextMenu);
+      container.addEventListener('mousedown', handleMiddleMouseDown);
     }
 
     // Attach basic map event listeners
@@ -177,7 +200,10 @@ export const useMapInstance = ({
     return () => {
       if (container) {
         container.removeEventListener('contextmenu', preventDefaultContextMenu);
+        container.removeEventListener('mousedown', handleMiddleMouseDown);
       }
+      document.removeEventListener('mousemove', handleMiddleMouseMove);
+      document.removeEventListener('mouseup', handleMiddleMouseUp);
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
       }
@@ -189,26 +215,48 @@ export const useMapInstance = ({
   }, []);
 
   // Handle fly/ease preset switches
-  const isFirstRun = useRef(true);
+  const lastPresetRef = useRef(selectedPreset);
   useEffect(() => {
-    if (isFirstRun.current) {
-      isFirstRun.current = false;
+    if (!map || !mapReady) return;
+
+    if (lastPresetRef.current !== selectedPreset) {
+      lastPresetRef.current = selectedPreset;
+      const centers = {
+        munich: [11.5754, 48.13715] as [number, number],
+        amsterdam: [4.89, 52.3725] as [number, number],
+      };
+
+      map.easeTo({
+        center: centers[selectedPreset],
+        zoom: 14.5,
+        duration: 800,
+      });
+    }
+  }, [selectedPreset, mapReady, map]);
+
+  // Handle theme changes
+  const isFirstTheme = useRef(true);
+  useEffect(() => {
+    if (!map) return;
+
+    if (isFirstTheme.current) {
+      isFirstTheme.current = false;
       return;
     }
 
-    if (!map || !mapReady) return;
+    setMapReady(false);
 
-    const centers = {
-      munich: [11.5754, 48.13715] as [number, number],
-      amsterdam: [4.89, 52.3725] as [number, number],
+    const handleStyleLoad = () => {
+      setMapReady(true);
     };
 
-    map.easeTo({
-      center: centers[selectedPreset],
-      zoom: 14.5,
-      duration: 800,
-    });
-  }, [selectedPreset, mapReady, map]);
+    map.on('style.load', handleStyleLoad);
+    map.setStyle(`https://tiles.openfreemap.org/styles/${theme}`);
+
+    return () => {
+      map.off('style.load', handleStyleLoad);
+    };
+  }, [theme, map]);
 
   return { map, mapContainerRef, mapReady };
 };

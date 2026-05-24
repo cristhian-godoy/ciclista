@@ -193,6 +193,11 @@ vi.mock('maplibre-gl', () => {
     queryRenderedFeatures() {
       return [];
     }
+    setStyle() {
+      setTimeout(() => {
+        this._trigger('style.load');
+      }, 0);
+    }
   }
 
   return {

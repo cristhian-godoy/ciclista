@@ -12,11 +12,13 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeProfile="normal"
         onBikeProfileChange={vi.fn()}
+        theme="bright"
+        onThemeChange={vi.fn()}
       />,
     );
 
     expect(screen.getByText('City Preset')).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toHaveValue('munich');
+    expect(screen.getByRole('combobox', { name: /City Preset/i })).toHaveValue('munich');
     expect(screen.getByRole('option', { name: /Munich/i })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /Amsterdam/i })).toBeInTheDocument();
   });
@@ -32,11 +34,33 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeProfile="normal"
         onBikeProfileChange={vi.fn()}
+        theme="bright"
+        onThemeChange={vi.fn()}
       />,
     );
 
-    await user.selectOptions(screen.getByRole('combobox'), 'amsterdam');
+    await user.selectOptions(screen.getByRole('combobox', { name: /City Preset/i }), 'amsterdam');
     expect(handlePresetChange).toHaveBeenCalledWith('amsterdam');
+  });
+
+  it('calls onThemeChange when a different theme is selected', async () => {
+    const user = userEvent.setup();
+    const handleThemeChange = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        selectedPreset="munich"
+        onPresetChange={vi.fn()}
+        isFetchingOSM={false}
+        bikeProfile="normal"
+        onBikeProfileChange={vi.fn()}
+        theme="bright"
+        onThemeChange={handleThemeChange}
+      />,
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: /Map Theme/i }), 'dark');
+    expect(handleThemeChange).toHaveBeenCalledWith('dark');
   });
 
   it('shows fetching status overlay when isFetchingOSM is true', () => {
@@ -47,6 +71,8 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={true}
         bikeProfile="normal"
         onBikeProfileChange={vi.fn()}
+        theme="bright"
+        onThemeChange={vi.fn()}
       />,
     );
 
@@ -64,6 +90,8 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeProfile="normal"
         onBikeProfileChange={handleBikeChange}
+        theme="bright"
+        onThemeChange={vi.fn()}
       />,
     );
 
