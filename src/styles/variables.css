@@ -59,6 +59,11 @@
   --ciclista-color-text-primary: var(--text-primary);
   --ciclista-color-text-secondary: var(--text-secondary);
   --ciclista-color-text-muted: var(--text-muted);
+  --ciclista-color-danger-bg: rgb(239 68 68 / 15%);
+  --ciclista-color-danger-border: rgb(239 68 68 / 30%);
+  --ciclista-color-danger-text: hsl(0deg 85% 65%);
+  --ciclista-color-success-bg: rgb(16 185 129 / 15%);
+  --ciclista-color-success-border: rgb(16 185 129 / 30%);
   --ciclista-glass-bg-base: var(--glass-bg);
   --ciclista-glass-bg-hover: var(--glass-bg-hover);
   --ciclista-glass-border-base: var(--glass-border);
