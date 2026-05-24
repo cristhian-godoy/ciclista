@@ -102,9 +102,18 @@ export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
     });
 
     // Click triggers
-    const handleStandardClick = () => onSelectAlternativeRef.current('standard');
-    const handleAvoidStopsClick = () => onSelectAlternativeRef.current('avoid-stops');
-    const handleQuietStreetsClick = () => onSelectAlternativeRef.current('quiet-streets');
+    const handleStandardClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      onSelectAlternativeRef.current('standard');
+    };
+    const handleAvoidStopsClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      onSelectAlternativeRef.current('avoid-stops');
+    };
+    const handleQuietStreetsClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      onSelectAlternativeRef.current('quiet-streets');
+    };
 
     map.on('click', 'route-path-layer-standard', handleStandardClick);
     map.on('click', 'route-path-layer-avoid-stops', handleAvoidStopsClick);
