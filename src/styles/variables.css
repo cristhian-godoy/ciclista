@@ -78,6 +78,7 @@
   --ciclista-spacing-xl: var(--spacing-xl);
   --ciclista-transition-fast: var(--transition-fast);
   --ciclista-transition-normal: var(--transition-normal);
+  --ciclista-shadow-mobile-top: 0 -8px 32px rgb(0 0 0 / 50%);
 }
 
 /* Base Typography Reset */
@@ -98,8 +99,8 @@
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--ciclista-color-surface-base);
+  color: var(--ciclista-color-text-primary);
   overflow: hidden;
   height: 100vh;
   width: 100vw;
