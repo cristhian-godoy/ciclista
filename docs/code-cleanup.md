@@ -69,7 +69,7 @@ _Goal: Refactor the heavily-loaded `MapView.tsx` into manageable, isolated layer
 - [x] Create `src/components/map/NodePopup.tsx` that:
   - Renders the glassmorphic modal configuring control node delays, presets, notes, and raw OSM tags.
   - Projects the 3D map coordinates of the selected node into 2D screen coordinates using map event listeners (`move`, `zoom`).
-- [ ] Create `src/components/map/MapContextMenu.tsx` that:
+- [x] Create `src/components/map/MapContextMenu.tsx` that:
   - Renders the floating right-click context menu options (`Start Route Here`, `End Route Here`, `Manage Traffic Lights`).
 - [ ] Create `src/components/map/MapLayerDock.tsx` that:
   - Renders the collapsible layers bottom overlay controls dock (expanding/collapsing and toggling minor controls).
