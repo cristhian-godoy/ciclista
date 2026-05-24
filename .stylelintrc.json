@@ -8,6 +8,10 @@
         "ignoreVariables": true,
         "severity": "warning"
       }
-    ]
+    ],
+    "selector-class-pattern": null,
+    "keyframes-name-pattern": null,
+    "no-descending-specificity": null,
+    "declaration-block-no-duplicate-properties": null
   }
 }
