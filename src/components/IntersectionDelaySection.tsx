@@ -36,7 +36,7 @@ const IntersectionRow: React.FC<IntersectionRowProps> = ({
       {expanded && (
         <div className="rules-item-body">
           <p className="rules-item-desc">{description}</p>
-          <div className="rules-field">
+          <div className="ciclista-form-group--small">
             <label>
               Wait time: <strong>{value}s</strong>
             </label>
@@ -47,7 +47,7 @@ const IntersectionRow: React.FC<IntersectionRowProps> = ({
               step={1}
               value={value}
               onChange={(e) => onChange(Number(e.target.value))}
-              className="rules-slider"
+              className="ciclista-slider--small"
             />
           </div>
         </div>

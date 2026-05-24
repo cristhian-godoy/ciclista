@@ -51,7 +51,7 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
         <div className="rules-item-body">
           <p className="rules-item-desc">{config.description}</p>
 
-          <div className="rules-field">
+          <div className="ciclista-form-group--small">
             <label>Speed type</label>
             <SpeedTypeSelector
               value={speedType}
@@ -60,17 +60,17 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
           </div>
 
           {speedType === 'dismount' ? (
-            <div className="rules-field" style={{ marginTop: '4px' }}>
+            <div className="ciclista-form-group--small" style={{ marginTop: '4px' }}>
               <span
                 className="rules-speed-info"
-                style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+                style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}
               >
                 Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
           ) : (
             speedType === 'custom' && (
-              <div className="rules-field">
+              <div className="ciclista-form-group--small">
                 <label>
                   Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
                 </label>
@@ -81,13 +81,13 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
                   step={1}
                   value={config.baseSpeedKmh}
                   onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-                  className="rules-slider"
+                  className="ciclista-slider--small"
                 />
               </div>
             )
           )}
 
-          <div className="rules-field" style={{ marginTop: '8px' }}>
+          <div className="ciclista-form-group--small" style={{ marginTop: '8px' }}>
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}
@@ -95,7 +95,7 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
             />
           </div>
 
-          <div className="rules-field">
+          <div className="ciclista-form-group--small">
             <label>
               Avoidance time penalty: <strong>{config.flatPenaltySeconds}s</strong>
             </label>
@@ -106,7 +106,7 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
               step={5}
               value={config.flatPenaltySeconds}
               onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
-              className="rules-slider"
+              className="ciclista-slider--small"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
       </button>
       {expanded && (
         <div className="rules-item-body">
-          <div className="rules-field">
+          <div className="ciclista-form-group--small">
             <label>Speed type</label>
             <SpeedTypeSelector
               value={speedType}
@@ -157,17 +157,17 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
           </div>
 
           {speedType === 'dismount' ? (
-            <div className="rules-field" style={{ marginTop: '4px' }}>
+            <div className="ciclista-form-group--small" style={{ marginTop: '4px' }}>
               <span
                 className="rules-speed-info"
-                style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+                style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}
               >
                 Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
           ) : (
             speedType === 'custom' && (
-              <div className="rules-field">
+              <div className="ciclista-form-group--small">
                 <label>
                   Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
                 </label>
@@ -178,13 +178,13 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
                   step={1}
                   value={config.baseSpeedKmh}
                   onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-                  className="rules-slider"
+                  className="ciclista-slider--small"
                 />
               </div>
             )
           )}
 
-          <div className="rules-field" style={{ marginTop: '8px' }}>
+          <div className="ciclista-form-group--small" style={{ marginTop: '8px' }}>
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}
@@ -192,7 +192,7 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
             />
           </div>
 
-          <div className="rules-field">
+          <div className="ciclista-form-group--small">
             <label>
               Avoidance time penalty: <strong>{config.flatPenaltySeconds}s</strong>
             </label>
@@ -203,7 +203,7 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
               step={5}
               value={config.flatPenaltySeconds}
               onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
-              className="rules-slider"
+              className="ciclista-slider--small"
             />
           </div>
         </div>

@@ -63,8 +63,8 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
   return (
     <>
       {/* Route Alternatives Selector */}
-      <section className="form-group">
-        <label className="form-label">Route Alternatives</label>
+      <section className="ciclista-form-group">
+        <label className="ciclista-label">Route Alternatives</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
           {routeAlternatives.map((alt) => {
             const isActive = routingStrategy === alt.label;

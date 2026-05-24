@@ -249,17 +249,17 @@ export const NodePopup: React.FC<NodePopupProps> = ({
         <strong>OSM Name:</strong> {selectedNode.tags.name || 'Unnamed Crossing'}
       </div>
 
-      <div className="form-group" style={{ marginBottom: '10px' }}>
-        <label className="form-label" style={{ fontSize: '0.65rem' }}>
+      <div className="ciclista-form-group" style={{ marginBottom: '10px' }}>
+        <label className="ciclista-label" style={{ fontSize: '0.65rem' }}>
           Wait Penalty: {nodeDelay} seconds
         </label>
-        <div className="slider-container">
+        <div className="ciclista-slider-container">
           <input
             type="range"
             min="0"
             max="180"
             step="5"
-            className="slider"
+            className="ciclista-slider"
             value={nodeDelay}
             onChange={(e) => setNodeDelay(parseInt(e.target.value))}
           />
@@ -273,9 +273,10 @@ export const NodePopup: React.FC<NodePopupProps> = ({
               style={{
                 background:
                   nodeDelay === preset.value
-                    ? 'var(--accent-secondary)'
+                    ? 'var(--ciclista-color-brand-secondary)'
                     : 'rgba(255, 255, 255, 0.08)',
-                color: nodeDelay === preset.value ? '#000000' : 'var(--text-primary)',
+                color:
+                  nodeDelay === preset.value ? '#000000' : 'var(--ciclista-color-text-primary)',
                 border: 'none',
                 borderRadius: '4px',
                 padding: '2px 6px',
@@ -291,12 +292,12 @@ export const NodePopup: React.FC<NodePopupProps> = ({
         </div>
       </div>
 
-      <div className="form-group" style={{ marginBottom: '10px' }}>
-        <label className="form-label" style={{ fontSize: '0.65rem' }}>
+      <div className="ciclista-form-group" style={{ marginBottom: '10px' }}>
+        <label className="ciclista-label" style={{ fontSize: '0.65rem' }}>
           Custom Notes
         </label>
         <input
-          className="input-text"
+          className="ciclista-input"
           type="text"
           placeholder="e.g. Constant bus priority request"
           value={nodeNotes}
