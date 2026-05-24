@@ -139,7 +139,7 @@ h2 {
 /* ─── Road Rules Config Panel ──────────────────────────────────────── */
 
 .rules-panel {
-  gap: var(--spacing-xs);
+  gap: var(--ciclista-spacing-xs);
 }
 
 .rules-panel-header {
@@ -154,25 +154,25 @@ h2 {
   align-items: center;
   gap: 4px;
   background: rgb(255 255 255 / 4%);
-  border: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
+  color: var(--ciclista-color-text-muted);
+  border-radius: var(--ciclista-radius-sm);
   padding: 3px 8px;
   font-size: 0.65rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
 }
 
 .rules-reset-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
+  color: var(--ciclista-color-text-primary);
+  border-color: var(--ciclista-color-text-secondary);
   background: rgb(255 255 255 / 8%);
 }
 
 .rules-section {
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
   overflow: hidden;
 }
 
@@ -183,18 +183,18 @@ h2 {
   width: 100%;
   background: rgb(255 255 255 / 4%);
   border: none;
-  color: var(--text-secondary);
+  color: var(--ciclista-color-text-secondary);
   padding: 8px 10px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
   text-align: left;
 }
 
 .rules-section-toggle:hover {
   background: rgb(255 255 255 / 7%);
-  color: var(--text-primary);
+  color: var(--ciclista-color-text-primary);
 }
 
 .rules-list {
@@ -214,18 +214,18 @@ h2 {
   width: 100%;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--ciclista-color-text-primary);
   padding: 6px 10px;
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
   text-align: left;
 }
 
 .rules-item-header:hover {
   background: rgb(255 255 255 / 4%);
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
 }
 
 .rules-item-icon {
@@ -248,7 +248,7 @@ h2 {
 
 .rules-item-desc {
   font-size: 0.68rem;
-  color: var(--text-muted);
+  color: var(--ciclista-color-text-muted);
   line-height: 1.45;
   margin: 0;
   padding-bottom: 4px;
@@ -263,11 +263,11 @@ h2 {
 
 .rules-field label {
   font-size: 0.7rem;
-  color: var(--text-secondary);
+  color: var(--ciclista-color-text-secondary);
 }
 
 .rules-field label strong {
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
 }
 
 .rules-field--toggle {
@@ -279,19 +279,19 @@ h2 {
 .rules-select {
   width: 100%;
   padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+  border-radius: var(--ciclista-radius-sm);
+  background: var(--ciclista-color-surface-tertiary);
+  color: var(--ciclista-color-text-primary);
+  border: 1px solid var(--ciclista-glass-border-base);
   outline: none;
   cursor: pointer;
   font-size: 0.75rem;
   margin-top: 4px;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--ciclista-transition-fast);
 }
 
 .rules-select:focus {
-  border-color: var(--glass-border-focus);
+  border-color: var(--ciclista-glass-border-focus);
 }
 
 .rules-select:disabled {
@@ -301,55 +301,53 @@ h2 {
 
 .rules-slider {
   appearance: none;
-  appearance: none;
   width: 100%;
   height: 3px;
   border-radius: 2px;
-  background: var(--bg-tertiary);
+  background: var(--ciclista-color-surface-tertiary);
   outline: none;
   cursor: pointer;
 }
 
 .rules-slider::-webkit-slider-thumb {
   appearance: none;
-  appearance: none;
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: var(--accent-primary);
+  background: var(--ciclista-color-brand-main);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
 }
 
 .rules-slider::-webkit-slider-thumb:hover {
-  background: var(--accent-primary-hover);
+  background: var(--ciclista-color-brand-hover);
   transform: scale(1.2);
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--ciclista-shadow-glow);
 }
 
 .rules-checkbox {
   width: 15px;
   height: 15px;
-  accent-color: var(--accent-primary);
+  accent-color: var(--ciclista-color-brand-main);
   cursor: pointer;
 }
 
 /* Route Info Card */
 .route-card {
   background: rgb(255 255 255 / 3%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+  padding: var(--ciclista-spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--ciclista-spacing-sm);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
+  gap: var(--ciclista-spacing-sm);
+  margin-top: var(--ciclista-spacing-xs);
 }
 
 .stat-item {
@@ -358,21 +356,21 @@ h2 {
   align-items: center;
   justify-content: center;
   background: rgb(0 0 0 / 20%);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-sm);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-sm);
   text-align: center;
 }
 
 .stat-val {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
 }
 
 .stat-lbl {
   font-size: 0.65rem;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--ciclista-color-text-muted);
   margin-top: 2px;
 }
 
@@ -430,12 +428,11 @@ h2 {
 /* Custom Map Context Menu */
 .map-context-menu {
   position: absolute;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-radius));
-  backdrop-filter: blur(var(--blur-radius));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  background: var(--ciclista-glass-bg-base);
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  box-shadow: var(--ciclista-shadow-md);
   padding: 4px;
   min-width: 140px;
   z-index: 1000;
@@ -447,31 +444,31 @@ h2 {
 .map-context-menu-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--ciclista-spacing-sm);
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--ciclista-color-text-primary);
   padding: 8px 12px;
   font-size: 0.85rem;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
   border-radius: 4px;
-  transition: var(--transition-fast);
+  transition: var(--ciclista-transition-fast);
   width: 100%;
 }
 
 .map-context-menu-item:hover {
   background: rgb(255 255 255 / 8%);
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
 }
 
 .map-context-menu-item svg {
-  color: var(--text-muted);
+  color: var(--ciclista-color-text-muted);
 }
 
 .map-context-menu-item:hover svg {
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
 }
 
 @keyframes fadeIn {
@@ -488,15 +485,14 @@ h2 {
 
 /* Map Node Editor Popup */
 .map-popup {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-radius));
-  backdrop-filter: blur(var(--blur-radius));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  padding: var(--spacing-md);
+  background: var(--ciclista-glass-bg-base);
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+  box-shadow: var(--ciclista-shadow-md);
+  padding: var(--ciclista-spacing-md);
   width: 280px;
-  color: var(--text-primary);
+  color: var(--ciclista-color-text-primary);
   display: flex;
   flex-direction: column;
   animation: fadeIn 0.15s ease-out;
@@ -511,7 +507,7 @@ h2 {
   transform: translateX(-50%);
   border-width: 9px 9px 0;
   border-style: solid;
-  border-color: var(--glass-border) transparent;
+  border-color: var(--ciclista-glass-border-base) transparent;
   display: block;
   width: 0;
   z-index: 0;
@@ -525,7 +521,7 @@ h2 {
   transform: translateX(-50%);
   border-width: 8px 8px 0;
   border-style: solid;
-  border-color: rgb(20 24 33 / 95%) transparent; /* Darker bg for overlay base */
+  border-color: var(--ciclista-color-surface-elevated) transparent;
   display: block;
   width: 0;
   z-index: 1;
@@ -536,15 +532,15 @@ h2 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
+  color: var(--ciclista-color-text-secondary);
+  margin-bottom: var(--ciclista-spacing-xs);
+  margin-top: var(--ciclista-spacing-xs);
 }
 
 .osm-tags-container {
   background: rgb(0 0 0 / 25%);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border-radius: var(--ciclista-radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
   max-height: 100px;
   overflow-y: auto;
   font-family: monospace;
@@ -563,14 +559,14 @@ h2 {
 }
 
 .osm-tag-key {
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
   font-weight: 500;
   word-break: break-all;
   margin-right: 8px;
 }
 
 .osm-tag-val {
-  color: var(--text-secondary);
+  color: var(--ciclista-color-text-secondary);
   text-align: right;
   word-break: break-all;
 }
@@ -586,10 +582,10 @@ h2 {
 
 .speed-selector-buttons {
   display: flex;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
+  background: var(--ciclista-color-surface-tertiary);
+  border-radius: var(--ciclista-radius-sm);
   padding: 2px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--ciclista-glass-border-base);
   gap: 2px;
 }
 
@@ -597,26 +593,26 @@ h2 {
   flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: var(--ciclista-color-text-secondary);
   font-size: 0.7rem;
   padding: 6px 4px;
-  border-radius: calc(var(--radius-sm) - 1px);
+  border-radius: calc(var(--ciclista-radius-sm) - 1px);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--ciclista-transition-fast);
   text-align: center;
   font-family: inherit;
 }
 
 .speed-selector-btn:hover:not(:disabled) {
-  color: var(--text-primary);
+  color: var(--ciclista-color-text-primary);
   background: rgb(255 255 255 / 5%);
 }
 
 .speed-selector-btn.active {
-  background: var(--accent-primary);
-  color: #fff;
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
   font-weight: 500;
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--ciclista-shadow-glow);
 }
 
 .speed-selector-btn:disabled {
@@ -626,7 +622,7 @@ h2 {
 
 .speed-selector-info {
   font-size: 0.65rem;
-  color: var(--accent-secondary);
+  color: var(--ciclista-color-brand-secondary);
   min-height: 14px;
   display: flex;
   align-items: center;
