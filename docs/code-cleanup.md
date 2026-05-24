@@ -38,5 +38,5 @@ This document outlines the bite-sized tasks required to improve the code quality
 
 - **Goal**: Finalize code cleanliness for production.
 - **Tasks**:
-  - [ ] Clean up leftover development logs (`console.log` and `console.warn`) in `App.tsx` and `router.ts`, or replace them with a proper environment-aware logger.
-  - [ ] Optimize `mergeGraphs` in `App.tsx` to reduce memory allocations/cloning when merging large graph areas.
+  - [x] Clean up leftover development logs (`console.log` and `console.warn`) in `App.tsx` and `router.ts`, or replace them with a proper environment-aware logger.
+  - [x] Optimize `mergeGraphs` in `App.tsx` to reduce memory allocations/cloning when merging large graph areas.

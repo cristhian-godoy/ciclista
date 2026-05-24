@@ -10,6 +10,7 @@ import { fetchWithCacheAndFallback } from './core/api/overpass';
 import { calculateBoundingBox, isInsideLoadedArea, snapCoordinateToEdge } from './core/common/geo';
 import { useOverrides } from './hooks/useOverrides';
 import { MAP_CONFIG } from './core/common/constants';
+import { logger } from './core/common/logger';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
@@ -19,18 +20,29 @@ const parser = new OSMGraphParser();
 const router = new DijkstraRouter();
 
 const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
-  const merged: StreetGraph = { nodes: new Map(g1.nodes) };
-  g2.nodes.forEach((val, key) => {
-    if (merged.nodes.has(key)) {
-      const existing = merged.nodes.get(key)!;
-      const targets = new Set(existing.edges.map((e) => e.target));
+  const mergedNodes = new Map(g1.nodes);
+
+  for (const [key, val] of g2.nodes.entries()) {
+    const existing = mergedNodes.get(key);
+    if (existing) {
+      const targets = new Set<string>();
+      const existingEdges = existing.edges;
+      for (let i = 0; i < existingEdges.length; i++) {
+        targets.add(existingEdges[i].target);
+      }
+
       const newEdges = val.edges.filter((e) => !targets.has(e.target));
-      existing.edges.push(...newEdges);
+      if (newEdges.length > 0) {
+        mergedNodes.set(key, {
+          ...existing,
+          edges: [...existingEdges, ...newEdges],
+        });
+      }
     } else {
-      merged.nodes.set(key, val);
+      mergedNodes.set(key, val);
     }
-  });
-  return merged;
+  }
+  return { nodes: mergedNodes };
 };
 
 export default function App() {
@@ -88,10 +100,10 @@ export default function App() {
         setLoadedBBoxes([bbox]);
       }
     } catch (e: unknown) {
-      console.error('Failed to retrieve OSM network data:', e);
+      logger.error('Failed to retrieve OSM network data:', e);
 
       if (graph === null && !merge) {
-        console.warn('Using mock fallback graph due to initial fetch failure.');
+        logger.warn('Using mock fallback graph due to initial fetch failure.');
         const mockGraph = parser.parse(null);
         setGraph(mockGraph);
         setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
@@ -144,11 +156,11 @@ export default function App() {
         newBBox[2] - newBBox[0] > MAP_CONFIG.MAX_LAT_SPAN ||
         newBBox[3] - newBBox[1] > MAP_CONFIG.MAX_LNG_SPAN
       ) {
-        console.warn('Auto-fetch map bounds exceeded limit parameters. Skipping auto-fetch.');
+        logger.warn('Auto-fetch map bounds exceeded limit parameters. Skipping auto-fetch.');
         return;
       }
 
-      console.log(
+      logger.log(
         'Coordinates changed outside current map bounds. Fetching expanded region:',
         newBBox,
       );
@@ -203,7 +215,7 @@ export default function App() {
         viewportBBox[3] + lngSpan * 0.2,
       ];
 
-      console.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
+      logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
       handleFetchOSM(paddedBBox, true, true); // merge = true, silent = true
     }
   };
