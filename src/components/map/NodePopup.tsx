@@ -326,7 +326,7 @@ export const NodePopup: React.FC<NodePopupProps> = ({
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
         <button
-          className="btn btn-primary"
+          className="ciclista-btn ciclista-btn--primary"
           style={{
             flex: 1,
             padding: '6px var(--spacing-sm)',
@@ -340,7 +340,7 @@ export const NodePopup: React.FC<NodePopupProps> = ({
         </button>
         {customNodeDelays.has(selectedNode.id) && (
           <button
-            className="btn btn-secondary btn-danger"
+            className="ciclista-btn ciclista-btn--danger"
             style={{
               flex: 0.5,
               padding: '6px var(--spacing-sm)',
