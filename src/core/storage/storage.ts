@@ -1,5 +1,6 @@
 import type { IStorageProvider, LocalOverrides } from './types';
 import type { RulesConfiguration } from '../router/types';
+import { logger } from '../common/logger';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
@@ -32,7 +33,7 @@ export class LocalStorageProvider implements IStorageProvider {
       try {
         localStorage.setItem(key, value);
       } catch (e) {
-        console.error('localStorage write failed:', e);
+        logger.error('localStorage write failed:', e);
       }
     } else {
       this.inMemoryStorage.set(key, value);
@@ -52,7 +53,7 @@ export class LocalStorageProvider implements IStorageProvider {
       const parsed = JSON.parse(data);
       return parsed && typeof parsed === 'object' ? parsed : {};
     } catch (e) {
-      console.error('Failed to load overrides from localStorage:', e);
+      logger.error('Failed to load overrides from localStorage:', e);
       return {};
     }
   }
@@ -66,7 +67,7 @@ export class LocalStorageProvider implements IStorageProvider {
     try {
       this.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-      console.error('Failed to save overrides to localStorage:', e);
+      logger.error('Failed to save overrides to localStorage:', e);
     }
   }
 
@@ -131,7 +132,7 @@ export class LocalStorageProvider implements IStorageProvider {
     try {
       this.setItem(this.RULES_KEY, JSON.stringify(config));
     } catch (e) {
-      console.error('Failed to save rules config to localStorage:', e);
+      logger.error('Failed to save rules config to localStorage:', e);
     }
   }
 
@@ -143,7 +144,7 @@ export class LocalStorageProvider implements IStorageProvider {
       const parsed = JSON.parse(data);
       return parsed && typeof parsed === 'object' ? (parsed as RulesConfiguration) : null;
     } catch (e) {
-      console.error('Failed to load rules config from localStorage:', e);
+      logger.error('Failed to load rules config from localStorage:', e);
       return null;
     }
   }
