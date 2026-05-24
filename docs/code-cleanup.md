@@ -115,7 +115,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 - [x] Write unit tests for `RoutingConfigPanel.tsx` / `RulesConfigPanel.tsx`:
   - Assert that sliders display correct penalty values.
   - Mock state hooks and trigger value changes to verify callbacks.
-- [ ] Write unit tests for `MapLayerDock.tsx`:
+- [x] Write unit tests for `MapLayerDock.tsx`:
   - Assert that dock renders collapsed and expands on click.
   - Test clicking "Show Minor Controls" triggers layer toggle handlers.
 
