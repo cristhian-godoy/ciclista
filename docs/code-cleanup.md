@@ -102,7 +102,7 @@ _Goal: Setup React DOM testing, mock heavy browser APIs (MapLibre GL), and intro
 
 ### Phase 5.2: Mocking Utilities
 
-- [ ] Create a robust MapLibre GL stub mock in `src/test/mocks/maplibre-gl.ts` or directly in `src/test/setup.ts` to mock:
+- [x] Create a robust MapLibre GL stub mock in `src/test/mocks/maplibre-gl.ts` or directly in `src/test/setup.ts` to mock:
   - `Map` class (stubbing events `on`, `off`, `addSource`, `addLayer`, `getSource`, `remove`, `fitBounds`, `easeTo`, `project`, `getBounds`, `getZoom`, `addControl`, `getCanvas`).
   - `Marker` class (stubbing dragging handlers, draggable options, and DOM positioning).
   - `NavigationControl`, `LngLatBounds`, and basic structures.
