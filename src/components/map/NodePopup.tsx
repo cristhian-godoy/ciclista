@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react';
+import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { useMapContext } from './MapContext';
@@ -82,17 +82,49 @@ export const NodePopup: React.FC = () => {
     return 'crossing';
   };
 
-  const getControlTypeLabel = (tags: Record<string, string>) => {
+  const getControlTypeLabel = (tags: Record<string, string>): React.ReactNode => {
     const type = getControlType(tags);
     switch (type) {
       case 'signal':
-        return '🚦 Traffic Signal';
+        return (
+          <span
+            className="control-type-label"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          >
+            <TrafficCone size={12} aria-label="Traffic Light Icon" />
+            Traffic Signal
+          </span>
+        );
       case 'yield':
-        return '⚠️ Yield Sign (Give Way)';
+        return (
+          <span
+            className="control-type-label"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          >
+            <AlertTriangle size={12} aria-label="Yield Sign Icon" />
+            Yield Sign (Give Way)
+          </span>
+        );
       case 'stop':
-        return '🛑 Stop Sign';
+        return (
+          <span
+            className="control-type-label"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          >
+            <Octagon size={12} aria-label="Stop Sign Icon" />
+            Stop Sign
+          </span>
+        );
       case 'crossing':
-        return '🚶 Pedestrian Crossing';
+        return (
+          <span
+            className="control-type-label"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          >
+            <Footprints size={12} aria-label="Pedestrian Crossing Icon" />
+            Pedestrian Crossing
+          </span>
+        );
     }
   };
 

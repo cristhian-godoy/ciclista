@@ -1,11 +1,18 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Footprints,
+  Octagon,
+  TrafficCone,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { NodeDelayConfig } from '../core/router/types';
 
 interface IntersectionRowProps {
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   value: number;
   max: number;
   description: string;
@@ -64,35 +71,35 @@ interface IntersectionDelaySectionProps {
 const DELAY_FIELDS: {
   key: keyof NodeDelayConfig;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   max: number;
   description: string;
 }[] = [
   {
     key: 'signalSeconds',
     label: 'Traffic Light',
-    icon: '🚦',
+    icon: <TrafficCone size={14} aria-label="Traffic Light Icon" />,
     max: 120,
     description: 'Default wait time when passing through a traffic light intersection.',
   },
   {
     key: 'yieldSeconds',
     label: 'Yield Sign',
-    icon: '⚠️',
+    icon: <AlertTriangle size={14} aria-label="Yield Sign Icon" />,
     max: 60,
     description: 'Default time penalty/slowdown when crossing a road with a yield sign.',
   },
   {
     key: 'stopSeconds',
     label: 'Stop Sign',
-    icon: '🛑',
+    icon: <Octagon size={14} aria-label="Stop Sign Icon" />,
     max: 60,
     description: 'Default wait time for bringing the bicycle to a complete stop at a stop sign.',
   },
   {
     key: 'crossingSeconds',
     label: 'Pedestrian Crossing',
-    icon: '🚶',
+    icon: <Footprints size={14} aria-label="Pedestrian Crossing Icon" />,
     max: 60,
     description: 'Default time penalty/slowdown when encountering a pedestrian crossing.',
   },

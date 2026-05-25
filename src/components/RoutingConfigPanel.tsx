@@ -1,4 +1,4 @@
-import { Layers, RefreshCw } from 'lucide-react';
+import { Bike, Gauge, Layers, RefreshCw, Zap } from 'lucide-react';
 import React from 'react';
 
 import type { BikeProfile } from '../core/storage/types';
@@ -84,13 +84,19 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               className={`strategy-btn ${bikeProfile === p ? 'active' : ''}`}
               onClick={() => onBikeProfileChange(p)}
             >
-              {p === 'slow'
-                ? '🚲 Slow'
-                : p === 'normal'
-                  ? '🚴 Normal'
-                  : p === 'ebike'
-                    ? '⚡ E-Bike'
-                    : '🏁 Road'}
+              {p === 'slow' && <Bike size={12} aria-label="Slow Bike Icon" />}
+              {p === 'normal' && <Bike size={12} aria-label="Normal Bike Icon" />}
+              {p === 'ebike' && <Zap size={12} aria-label="E-Bike Icon" />}
+              {p === 'road' && <Gauge size={12} aria-label="Road Bike Icon" />}
+              <span>
+                {p === 'slow'
+                  ? 'Slow'
+                  : p === 'normal'
+                    ? 'Normal'
+                    : p === 'ebike'
+                      ? 'E-Bike'
+                      : 'Road'}
+              </span>
             </button>
           ))}
         </div>

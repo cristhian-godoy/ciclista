@@ -7,9 +7,11 @@ import {
   Home,
   Layers,
   Milestone,
+  Octagon,
   Route,
   TrafficCone,
   Trees,
+  Zap,
 } from 'lucide-react';
 import React from 'react';
 
@@ -46,14 +48,47 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
     return `${Math.round((value / total) * 100)}%`;
   };
 
-  const getStrategyLabel = (label: string) => {
+  const getStrategyLabel = (label: string): React.ReactNode => {
     switch (label) {
       case 'standard':
-        return '⚡ Speed';
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              justifyContent: 'center',
+            }}
+          >
+            <Zap size={12} aria-label="Speed Icon" /> Speed
+          </span>
+        );
       case 'avoid-stops':
-        return '🛑 Stops';
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              justifyContent: 'center',
+            }}
+          >
+            <Octagon size={12} aria-label="Stops Icon" /> Stops
+          </span>
+        );
       case 'quiet-streets':
-        return '🌳 Quiet';
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              justifyContent: 'center',
+            }}
+          >
+            <Trees size={12} aria-label="Quiet Icon" /> Quiet
+          </span>
+        );
       default:
         return label;
     }
