@@ -5,11 +5,32 @@ import type { IStorageProvider, LocalOverrides } from './types';
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
  * Safely falls back to an in-memory storage if localStorage is unavailable (e.g. SSR or test environments).
+ * Uses a debounced write queue and in-memory cache to prevent main-thread blocking UI stutter.
  */
 export class LocalStorageProvider implements IStorageProvider {
   private STORAGE_KEY = 'ciclista_custom_nodes';
   private RULES_KEY = 'ciclista_rules_config';
   private inMemoryStorage = new Map<string, string>();
+
+  // In-memory cache for overrides data to avoid parse/stringify on every operation
+  private overridesCache: Record<
+    string,
+    { delay?: number; notes?: string; turns?: Record<string, unknown> }
+  > | null = null;
+
+  // Timer reference for the debounced write
+  private writeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Initializes the LocalStorageProvider and sets up beforeunload listener.
+   */
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.flushPendingWrites();
+      });
+    }
+  }
 
   private isLocalStorageAvailable(): boolean {
     try {
@@ -47,27 +68,62 @@ export class LocalStorageProvider implements IStorageProvider {
     string,
     { delay?: number; notes?: string; turns?: Record<string, unknown> }
   > {
+    if (this.overridesCache !== null) {
+      return this.overridesCache;
+    }
+
     try {
       const data = this.getItem(this.STORAGE_KEY);
-      if (!data) return {};
+      if (!data) {
+        this.overridesCache = {};
+        return this.overridesCache;
+      }
       const parsed = JSON.parse(data);
-      return parsed && typeof parsed === 'object' ? parsed : {};
+      this.overridesCache = parsed && typeof parsed === 'object' ? parsed : {};
     } catch (e) {
       logger.error('Failed to load overrides from localStorage:', e);
-      return {};
+      this.overridesCache = {};
     }
+    return this.overridesCache;
   }
 
   /**
-   * Helper to save raw JSON object to localStorage.
+   * Helper to save raw JSON object to localStorage with debouncing.
    */
   private saveRawData(
     data: Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }>,
   ): void {
-    try {
-      this.setItem(this.STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      logger.error('Failed to save overrides to localStorage:', e);
+    // Keep cache updated immediately for synchronous in-memory read access
+    this.overridesCache = data;
+
+    // Clear previous timer
+    if (this.writeTimer !== null) {
+      clearTimeout(this.writeTimer);
+    }
+
+    // Schedule the write to localStorage
+    this.writeTimer = setTimeout(() => {
+      try {
+        this.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        logger.error('Failed to save overrides to localStorage:', e);
+      }
+      this.writeTimer = null;
+    }, 200); // 200ms debounce
+  }
+
+  /**
+   * Immediately writes any pending overrides to localStorage if a write is scheduled.
+   */
+  private flushPendingWrites(): void {
+    if (this.writeTimer !== null && this.overridesCache !== null) {
+      clearTimeout(this.writeTimer);
+      this.writeTimer = null;
+      try {
+        this.setItem(this.STORAGE_KEY, JSON.stringify(this.overridesCache));
+      } catch (e) {
+        logger.error('Failed to flush overrides to localStorage:', e);
+      }
     }
   }
 
