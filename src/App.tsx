@@ -1,18 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
-import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './core/router/cost';
-import { DijkstraRouter } from './core/router/router';
 import type { RouteAlternative } from './core/router/types';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
 import { useRoutingState } from './hooks/useRoutingState';
-
-// Instantiate core modules (fully decoupled from components)
-const router = new DijkstraRouter();
 
 /**
  *
@@ -74,43 +69,40 @@ export default function App() {
     handlePresetChange(preset);
   };
 
-  // 4. Reactive Routing Calculation (Derived State)
-  const routeAlternatives = useMemo<RouteAlternative[]>(() => {
-    if (!graph || !startCoord || !endCoord) return [];
+  // 4. Reactive Concurrent Routing Calculation via WebWorker
+  const [routeAlternatives, setRouteAlternatives] = useState<RouteAlternative[]>([]);
 
-    const standardResult = router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      standardCost,
-      currentOverrides,
-    );
-    const avoidStopsResult = router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      avoidStoppingCost,
-      currentOverrides,
-    );
-    const quietResult = router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      avoidBusyRoadsCost,
-      currentOverrides,
-    );
+  useEffect(() => {
+    if (!graph || !startCoord || !endCoord) {
+      Promise.resolve().then(() => {
+        setRouteAlternatives((prev) => (prev.length === 0 ? prev : []));
+      });
+      return;
+    }
 
-    const alts: RouteAlternative[] = [];
-    if (standardResult) {
-      alts.push({ label: 'standard', result: standardResult });
-    }
-    if (avoidStopsResult) {
-      alts.push({ label: 'avoid-stops', result: avoidStopsResult });
-    }
-    if (quietResult) {
-      alts.push({ label: 'quiet-streets', result: quietResult });
-    }
-    return alts;
+    const worker = new Worker(new URL('./core/router/router.worker.ts', import.meta.url), {
+      type: 'module',
+    });
+
+    worker.onmessage = (e) => {
+      const { routeAlternatives: alts, error } = e.data;
+      if (error) {
+        console.error('Worker routing error:', error);
+      } else if (alts) {
+        setRouteAlternatives(alts);
+      }
+    };
+
+    worker.postMessage({
+      graph,
+      startCoord,
+      endCoord,
+      overrides: currentOverrides,
+    });
+
+    return () => {
+      worker.terminate();
+    };
   }, [graph, startCoord, endCoord, currentOverrides]);
 
   const routeResult = useMemo(() => {
