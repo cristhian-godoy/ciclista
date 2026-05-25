@@ -48,6 +48,16 @@ export function getRoadTypeCategory(
 /**
  *
  */
+interface VirtualRoutingConfig {
+  startNode: GraphNode;
+  endNode: GraphNode;
+  startEdges: GraphEdge[];
+  endVirtualEdges: Map<string, GraphEdge>;
+}
+
+/**
+ *
+ */
 export class DijkstraRouter implements IRouter {
   private runDijkstra(
     graph: StreetGraph,
@@ -55,8 +65,9 @@ export class DijkstraRouter implements IRouter {
     endId: string,
     costFn: CostFunction,
     overrides: LocalOverrides,
+    virtualConfig?: VirtualRoutingConfig,
   ): { destReached: boolean; previous: Map<string, string> } {
-    const N = graph.nodes.size;
+    const N = graph.nodes.size + (virtualConfig ? 2 : 0);
     const nodeIdToInt = new Map<string, number>();
     const intToNodeId = new Array<string>(N);
 
@@ -65,6 +76,15 @@ export class DijkstraRouter implements IRouter {
       nodeIdToInt.set(nodeId, idx);
       intToNodeId[idx] = nodeId;
       idx++;
+    }
+
+    if (virtualConfig) {
+      nodeIdToInt.set(startId, idx);
+      intToNodeId[idx] = startId;
+      idx++;
+
+      nodeIdToInt.set(endId, idx);
+      intToNodeId[idx] = endId;
     }
 
     const startInt = nodeIdToInt.get(startId);
@@ -100,12 +120,34 @@ export class DijkstraRouter implements IRouter {
       visited[currentInt] = 1;
 
       const currentId = intToNodeId[currentInt];
-      const currentEntry = graph.nodes.get(currentId);
-      if (!currentEntry) continue;
+      let currentEdges: GraphEdge[] = [];
+      let currentNode: GraphNode | undefined;
+
+      if (virtualConfig && currentId === startId) {
+        currentNode = virtualConfig.startNode;
+        currentEdges = virtualConfig.startEdges;
+      } else if (virtualConfig && currentId === endId) {
+        currentNode = virtualConfig.endNode;
+        currentEdges = [];
+      } else {
+        const entry = graph.nodes.get(currentId);
+        if (entry) {
+          currentNode = entry.node;
+          currentEdges = entry.edges;
+          if (virtualConfig) {
+            const extraEdge = virtualConfig.endVirtualEdges.get(currentId);
+            if (extraEdge) {
+              currentEdges = [...currentEdges, extraEdge];
+            }
+          }
+        }
+      }
+
+      if (!currentNode) continue;
 
       const currentDist = distances[currentInt];
 
-      for (const edge of currentEntry.edges) {
+      for (const edge of currentEdges) {
         const neighborId = edge.target;
         const neighborInt = nodeIdToInt.get(neighborId);
         if (neighborInt === undefined) continue;
@@ -117,14 +159,26 @@ export class DijkstraRouter implements IRouter {
         const parentInt = previousInt[currentInt];
         if (parentInt !== -1) {
           const parentId = intToNodeId[parentInt];
-          const parentEntry = graph.nodes.get(parentId);
-          const neighborEntry = graph.nodes.get(neighborId);
-          if (parentEntry && neighborEntry) {
-            edgeCost += calculateTurnPenalty(
-              parentEntry.node,
-              currentEntry.node,
-              neighborEntry.node,
-            );
+          let parentNode: GraphNode | undefined;
+          if (virtualConfig && parentId === startId) {
+            parentNode = virtualConfig.startNode;
+          } else if (virtualConfig && parentId === endId) {
+            parentNode = virtualConfig.endNode;
+          } else {
+            parentNode = graph.nodes.get(parentId)?.node;
+          }
+
+          let neighborNode: GraphNode | undefined;
+          if (virtualConfig && neighborId === startId) {
+            neighborNode = virtualConfig.startNode;
+          } else if (virtualConfig && neighborId === endId) {
+            neighborNode = virtualConfig.endNode;
+          } else {
+            neighborNode = graph.nodes.get(neighborId)?.node;
+          }
+
+          if (parentNode && neighborNode) {
+            edgeCost += calculateTurnPenalty(parentNode, currentNode, neighborNode);
           }
         }
 
@@ -153,6 +207,7 @@ export class DijkstraRouter implements IRouter {
     previous: Map<string, string>,
     endId: string,
     overrides: LocalOverrides,
+    virtualConfig?: VirtualRoutingConfig,
   ): {
     pathNodeIds: string[];
     coordinates: Coordinate[];
@@ -189,8 +244,6 @@ export class DijkstraRouter implements IRouter {
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
 
-    // To prevent double counting grouped signals (like traffic lights at an intersection),
-    // we track the last seen control of each type and its coordinates.
     let lastSignalNode: { lat: number; lng: number } | null = null;
     let lastYieldNode: { lat: number; lng: number } | null = null;
     let lastStopNode: { lat: number; lng: number } | null = null;
@@ -198,38 +251,61 @@ export class DijkstraRouter implements IRouter {
 
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
-      const entry = graph.nodes.get(nodeId);
-      if (!entry) continue;
-      coordinates.push({ lat: entry.node.lat, lng: entry.node.lng });
+      let currentNode: GraphNode | undefined;
+      let currentEdges: GraphEdge[] = [];
 
-      const tags = entry.node.tags || {};
+      if (virtualConfig && nodeId === 'virtual-start') {
+        currentNode = virtualConfig.startNode;
+        currentEdges = virtualConfig.startEdges;
+      } else if (virtualConfig && nodeId === 'virtual-end') {
+        currentNode = virtualConfig.endNode;
+        currentEdges = [];
+      } else {
+        const entry = graph.nodes.get(nodeId);
+        if (entry) {
+          currentNode = entry.node;
+          currentEdges = entry.edges;
+          if (virtualConfig) {
+            const extraEdge = virtualConfig.endVirtualEdges.get(nodeId);
+            if (extraEdge) {
+              currentEdges = [...currentEdges, extraEdge];
+            }
+          }
+        }
+      }
+
+      if (!currentNode) continue;
+      coordinates.push({ lat: currentNode.lat, lng: currentNode.lng });
+
+      const tags = currentNode.tags || {};
       const controlType = mapOSMNodeToControl(tags);
 
       if (controlType) {
         const isNewCluster = (lastNode: { lat: number; lng: number } | null) => {
           if (!lastNode) return true;
-          return haversineDistance(lastNode.lat, lastNode.lng, entry.node.lat, entry.node.lng) > 35;
+          return (
+            haversineDistance(lastNode.lat, lastNode.lng, currentNode.lat, currentNode.lng) > 35
+          );
         };
 
         if (controlType === 'signal' && isNewCluster(lastSignalNode)) {
           trafficSignalsCount++;
           signalCount++;
-          lastSignalNode = { lat: entry.node.lat, lng: entry.node.lng };
+          lastSignalNode = { lat: currentNode.lat, lng: currentNode.lng };
         } else if (controlType === 'yield' && isNewCluster(lastYieldNode)) {
           yieldCount++;
-          lastYieldNode = { lat: entry.node.lat, lng: entry.node.lng };
+          lastYieldNode = { lat: currentNode.lat, lng: currentNode.lng };
         } else if (controlType === 'stop' && isNewCluster(lastStopNode)) {
-          // Track stop nodes as well, even if not explicitly exposed in stats right now
-          lastStopNode = { lat: entry.node.lat, lng: entry.node.lng };
+          lastStopNode = { lat: currentNode.lat, lng: currentNode.lng };
         } else if (controlType === 'crossing' && isNewCluster(lastCrossingNode)) {
           crossingCount++;
-          lastCrossingNode = { lat: entry.node.lat, lng: entry.node.lng };
+          lastCrossingNode = { lat: currentNode.lat, lng: currentNode.lng };
         }
       }
 
       if (i < pathNodeIds.length - 1) {
         const nextNodeId = pathNodeIds[i + 1];
-        const edge = entry.edges.find((e) => e.target === nextNodeId);
+        const edge = currentEdges.find((e) => e.target === nextNodeId);
         if (edge) {
           totalDistanceMeters += edge.distance;
           if (edge.name) {
@@ -240,10 +316,26 @@ export class DijkstraRouter implements IRouter {
           let turnPenalty = 0;
           if (i > 0) {
             const parentId = pathNodeIds[i - 1];
-            const parentEntry = graph.nodes.get(parentId);
-            const nextEntry = graph.nodes.get(nextNodeId);
-            if (parentEntry && nextEntry) {
-              turnPenalty = calculateTurnPenalty(parentEntry.node, entry.node, nextEntry.node);
+            let parentNode: GraphNode | undefined;
+            if (virtualConfig && parentId === 'virtual-start') {
+              parentNode = virtualConfig.startNode;
+            } else if (virtualConfig && parentId === 'virtual-end') {
+              parentNode = virtualConfig.endNode;
+            } else {
+              parentNode = graph.nodes.get(parentId)?.node;
+            }
+
+            let nextNode: GraphNode | undefined;
+            if (virtualConfig && nextNodeId === 'virtual-start') {
+              nextNode = virtualConfig.startNode;
+            } else if (virtualConfig && nextNodeId === 'virtual-end') {
+              nextNode = virtualConfig.endNode;
+            } else {
+              nextNode = graph.nodes.get(nextNodeId)?.node;
+            }
+
+            if (parentNode && nextNode) {
+              turnPenalty = calculateTurnPenalty(parentNode, currentNode, nextNode);
             }
           }
 
@@ -299,7 +391,6 @@ export class DijkstraRouter implements IRouter {
     const startEdgeRef = findNearestEdge(graph, start);
     const endEdgeRef = findNearestEdge(graph, end);
 
-    // If we can't find nearest edges (e.g. empty/invalid graph), fall back to node snapping
     if (!startEdgeRef || !endEdgeRef) {
       return this.findRouteNodeFallback(graph, start, end, costFn, overrides);
     }
@@ -346,175 +437,155 @@ export class DijkstraRouter implements IRouter {
       tags: {},
     };
 
-    const backupNodes = new Map<string, GraphEdge[]>();
-    const backupNodeEdges = (nodeId: string) => {
-      if (backupNodes.has(nodeId)) return;
-      const entry = graph.nodes.get(nodeId);
-      if (entry) {
-        backupNodes.set(nodeId, [...entry.edges]);
-      }
-    };
+    const startEdges: GraphEdge[] = [];
+    const endVirtualEdges = new Map<string, GraphEdge>();
 
-    try {
-      // 1. Inject virtual start/end nodes
-      graph.nodes.set(START_VNODE_ID, { node: virtualStartNode, edges: [] });
-      graph.nodes.set(END_VNODE_ID, { node: virtualEndNode, edges: [] });
+    const distToVs = haversineDistance(
+      startProj.lat,
+      startProj.lng,
+      startVNode.lat,
+      startVNode.lng,
+    );
+    const distToUs = haversineDistance(
+      startProj.lat,
+      startProj.lng,
+      startUNode.lat,
+      startUNode.lng,
+    );
 
-      // 2. Add outgoing edges from virtual-start
-      const distToVs = haversineDistance(
-        startProj.lat,
-        startProj.lng,
-        startVNode.lat,
-        startVNode.lng,
-      );
-      const distToUs = haversineDistance(
-        startProj.lat,
-        startProj.lng,
-        startUNode.lat,
-        startUNode.lng,
-      );
+    startEdges.push({
+      target: startVId,
+      distance: distToVs,
+      name: startEdge.name,
+      speedLimit: startEdge.speedLimit,
+      tags: startEdge.tags,
+    });
 
-      // Edge UV_S (virtual-start -> V_s)
-      graph.nodes.get(START_VNODE_ID)!.edges.push({
-        target: startVId,
-        distance: distToVs,
-        name: startEdge.name,
-        speedLimit: startEdge.speedLimit,
-        tags: startEdge.tags,
+    const startEdgeVU = graph.nodes.get(startVId)?.edges.find((e) => e.target === startUId);
+    if (startEdgeVU) {
+      startEdges.push({
+        target: startUId,
+        distance: distToUs,
+        name: startEdgeVU.name,
+        speedLimit: startEdgeVU.speedLimit,
+        tags: startEdgeVU.tags,
       });
+    }
 
-      // Edge VU_S (virtual-start -> U_s if bidirectional)
-      const startEdgeVU = graph.nodes.get(startVId)?.edges.find((e) => e.target === startUId);
-      if (startEdgeVU) {
-        graph.nodes.get(START_VNODE_ID)!.edges.push({
-          target: startUId,
-          distance: distToUs,
+    const distUToE = haversineDistance(endUNode.lat, endUNode.lng, endProj.lat, endProj.lng);
+    const distVToE = haversineDistance(endVNode.lat, endVNode.lng, endProj.lat, endProj.lng);
+
+    endVirtualEdges.set(endUId, {
+      target: END_VNODE_ID,
+      distance: distUToE,
+      name: endEdge.name,
+      speedLimit: endEdge.speedLimit,
+      tags: endEdge.tags,
+    });
+
+    const endEdgeVU = graph.nodes.get(endVId)?.edges.find((e) => e.target === endUId);
+    if (endEdgeVU) {
+      endVirtualEdges.set(endVId, {
+        target: END_VNODE_ID,
+        distance: distVToE,
+        name: endEdgeVU.name,
+        speedLimit: endEdgeVU.speedLimit,
+        tags: endEdgeVU.tags,
+      });
+    }
+
+    const sameEdge =
+      (startUId === endUId && startVId === endVId) || (startUId === endVId && startVId === endUId);
+    if (sameEdge) {
+      const ts = getProjectionT(start, startUNode, startVNode);
+      const te = getProjectionT(end, startUNode, startVNode);
+
+      if (ts <= te) {
+        startEdges.push({
+          target: END_VNODE_ID,
+          distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
+          name: startEdge.name,
+          speedLimit: startEdge.speedLimit,
+          tags: startEdge.tags,
+        });
+      }
+
+      if (ts >= te && startEdgeVU) {
+        startEdges.push({
+          target: END_VNODE_ID,
+          distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
           name: startEdgeVU.name,
           speedLimit: startEdgeVU.speedLimit,
           tags: startEdgeVU.tags,
         });
       }
-
-      // 3. Add incoming edges to virtual-end
-      const distUToE = haversineDistance(endUNode.lat, endUNode.lng, endProj.lat, endProj.lng);
-      const distVToE = haversineDistance(endVNode.lat, endVNode.lng, endProj.lat, endProj.lng);
-
-      backupNodeEdges(endUId);
-      graph.nodes.get(endUId)!.edges.push({
-        target: END_VNODE_ID,
-        distance: distUToE,
-        name: endEdge.name,
-        speedLimit: endEdge.speedLimit,
-        tags: endEdge.tags,
-      });
-
-      const endEdgeVU = graph.nodes.get(endVId)?.edges.find((e) => e.target === endUId);
-      if (endEdgeVU) {
-        backupNodeEdges(endVId);
-        graph.nodes.get(endVId)!.edges.push({
-          target: END_VNODE_ID,
-          distance: distVToE,
-          name: endEdgeVU.name,
-          speedLimit: endEdgeVU.speedLimit,
-          tags: endEdgeVU.tags,
-        });
-      }
-
-      // 4. Handle same-edge direct routing
-      const sameEdge =
-        (startUId === endUId && startVId === endVId) ||
-        (startUId === endVId && startVId === endUId);
-      if (sameEdge) {
-        const ts = getProjectionT(start, startUNode, startVNode);
-        const te = getProjectionT(end, startUNode, startVNode);
-
-        if (ts <= te) {
-          graph.nodes.get(START_VNODE_ID)!.edges.push({
-            target: END_VNODE_ID,
-            distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
-            name: startEdge.name,
-            speedLimit: startEdge.speedLimit,
-            tags: startEdge.tags,
-          });
-        }
-
-        if (ts >= te && startEdgeVU) {
-          graph.nodes.get(START_VNODE_ID)!.edges.push({
-            target: END_VNODE_ID,
-            distance: haversineDistance(startProj.lat, startProj.lng, endProj.lat, endProj.lng),
-            name: startEdgeVU.name,
-            speedLimit: startEdgeVU.speedLimit,
-            tags: startEdgeVU.tags,
-          });
-        }
-      }
-
-      // 5. Run Dijkstra search loop
-      const { destReached, previous } = this.runDijkstra(
-        graph,
-        START_VNODE_ID,
-        END_VNODE_ID,
-        costFn,
-        overrides,
-      );
-
-      if (!destReached) {
-        logger.warn('Destination node is unreachable from source node');
-        return null;
-      }
-
-      // 6. Reconstruct the path and calculate statistics
-      const stats = this.buildRouteStatistics(graph, previous, END_VNODE_ID, overrides);
-
-      // Add start/end coordinates to the path with duplicate cleaning
-      const rawCoords: Coordinate[] = [start, ...stats.coordinates, end];
-      const finalCoords: Coordinate[] = [];
-      for (const c of rawCoords) {
-        if (finalCoords.length === 0) {
-          finalCoords.push(c);
-        } else {
-          const last = finalCoords[finalCoords.length - 1];
-          const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
-          if (dist2 > 1e-14) {
-            finalCoords.push(c);
-          }
-        }
-      }
-
-      // Add out-of-network interpolation segments to stats
-      const startInterpDist = haversineDistance(start.lat, start.lng, startProj.lat, startProj.lng);
-      const endInterpDist = haversineDistance(end.lat, end.lng, endProj.lat, endProj.lng);
-
-      const totalDistanceMeters = stats.totalDistanceMeters + startInterpDist + endInterpDist;
-
-      const startInterpDuration = startInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
-      const endInterpDuration = endInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
-      const totalDurationSeconds = stats.totalDisplayCost + startInterpDuration + endInterpDuration;
-
-      return {
-        pathNodeIds: stats.pathNodeIds,
-        coordinates: finalCoords,
-        totalDurationSeconds,
-        totalDistanceMeters,
-        streets: stats.streets,
-        trafficSignalsCount: stats.trafficSignalsCount,
-        signalCount: stats.signalCount,
-        yieldCount: stats.yieldCount,
-        crossingCount: stats.crossingCount,
-        roadTypeTotals: stats.roadTypeTotals,
-        edges: stats.edges,
-      };
-    } finally {
-      // 7. Restore the graph to pristine state
-      for (const [nodeId, originalEdges] of backupNodes.entries()) {
-        const entry = graph.nodes.get(nodeId);
-        if (entry) {
-          entry.edges = originalEdges;
-        }
-      }
-      graph.nodes.delete(START_VNODE_ID);
-      graph.nodes.delete(END_VNODE_ID);
     }
+
+    const virtualConfig: VirtualRoutingConfig = {
+      startNode: virtualStartNode,
+      endNode: virtualEndNode,
+      startEdges,
+      endVirtualEdges,
+    };
+
+    const { destReached, previous } = this.runDijkstra(
+      graph,
+      START_VNODE_ID,
+      END_VNODE_ID,
+      costFn,
+      overrides,
+      virtualConfig,
+    );
+
+    if (!destReached) {
+      logger.warn('Destination node is unreachable from source node');
+      return null;
+    }
+
+    const stats = this.buildRouteStatistics(
+      graph,
+      previous,
+      END_VNODE_ID,
+      overrides,
+      virtualConfig,
+    );
+
+    const rawCoords: Coordinate[] = [start, ...stats.coordinates, end];
+    const finalCoords: Coordinate[] = [];
+    for (const c of rawCoords) {
+      if (finalCoords.length === 0) {
+        finalCoords.push(c);
+      } else {
+        const last = finalCoords[finalCoords.length - 1];
+        const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
+        if (dist2 > 1e-14) {
+          finalCoords.push(c);
+        }
+      }
+    }
+
+    const startInterpDist = haversineDistance(start.lat, start.lng, startProj.lat, startProj.lng);
+    const endInterpDist = haversineDistance(end.lat, end.lng, endProj.lat, endProj.lng);
+
+    const totalDistanceMeters = stats.totalDistanceMeters + startInterpDist + endInterpDist;
+
+    const startInterpDuration = startInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
+    const endInterpDuration = endInterpDist / ROUTING_CONFIG.INTERPOLATION_SPEED_MS;
+    const totalDurationSeconds = stats.totalDisplayCost + startInterpDuration + endInterpDuration;
+
+    return {
+      pathNodeIds: stats.pathNodeIds,
+      coordinates: finalCoords,
+      totalDurationSeconds,
+      totalDistanceMeters,
+      streets: stats.streets,
+      trafficSignalsCount: stats.trafficSignalsCount,
+      signalCount: stats.signalCount,
+      yieldCount: stats.yieldCount,
+      crossingCount: stats.crossingCount,
+      roadTypeTotals: stats.roadTypeTotals,
+      edges: stats.edges,
+    };
   }
 
   private findRouteNodeFallback(
@@ -524,7 +595,6 @@ export class DijkstraRouter implements IRouter {
     costFn: CostFunction,
     overrides: LocalOverrides,
   ): RouteResult | null {
-    // 1. Snap start/end coords to nearest nodes
     const startNodeId = findNearestNode(graph, start);
     const endNodeId = findNearestNode(graph, end);
 
@@ -556,7 +626,6 @@ export class DijkstraRouter implements IRouter {
       };
     }
 
-    // 2. Run Dijkstra search loop
     const { destReached, previous } = this.runDijkstra(
       graph,
       startNodeId,
@@ -570,7 +639,6 @@ export class DijkstraRouter implements IRouter {
       return null;
     }
 
-    // 3. Reconstruct the path and calculate statistics
     const stats = this.buildRouteStatistics(graph, previous, endNodeId, overrides);
 
     let finalCoords: Coordinate[] = [];
@@ -590,7 +658,6 @@ export class DijkstraRouter implements IRouter {
       adjusted.push(projectedEnd);
       adjusted.push(end);
 
-      // Clean consecutive duplicates
       for (const c of adjusted) {
         if (finalCoords.length === 0) {
           finalCoords.push(c);
