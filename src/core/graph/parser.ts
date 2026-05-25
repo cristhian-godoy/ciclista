@@ -1,21 +1,19 @@
 import type { GraphEdge, GraphNode, IGraphParser, StreetGraph } from './types';
 
 /**
- * Calculates the great-circle distance between two points on the Earth's surface
- * using the Haversine formula. Returns distance in meters.
+ * Calculates the distance between two nearby points on the Earth's surface
+ * using a fast flat-earth Pythagorean (equirectangular) approximation.
+ * Returns distance in meters.
  */
 export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000; // Radius of Earth in meters
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  const degToRad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * degToRad;
+  const dLon = (lon2 - lon1) * degToRad;
+  const meanLat = ((lat1 + lat2) / 2) * degToRad;
+  const x = dLon * Math.cos(meanLat);
+  const y = dLat;
+  return R * Math.sqrt(x * x + y * y);
 }
 
 /**
