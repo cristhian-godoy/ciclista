@@ -1,2 +1,18 @@
+active_tasks.md
+	Milestone 1 travel times and comparisons checklist.
+branding-and-design-plan.md
+	Visual style and design system plan.
+code-cleanup.md
+	DRY and refactoring checklist.
+further-improvements.md
+	Completed roadmaps for Milestones 1 through 4.
 german_traffic_signs_checklist.md
 	German Traffic Signs & Rules integration roadmap checklist.
+implementation_plan.md
+	Initial project implementation plan.
+openfreemap-migration-plan.md
+	Migration details to OpenFreeMap styles.
+package-linting-plan.md
+	Setup details for linters and prettier.
+quality-and-automation-plan.md
+	Testing and continuous integration setup.
