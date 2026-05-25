@@ -388,7 +388,8 @@ export class DijkstraRouter implements IRouter {
   }
 
   /**
-   *
+   * Evaluates shortest/most-comfortable path routing using Dijkstra's algorithm.
+   * Leverages start/end snapping and falls back to nearest node searches if snapping fails.
    */
   findRoute(
     graph: StreetGraph,

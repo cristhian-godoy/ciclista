@@ -5,7 +5,7 @@ export class MinHeap<T> {
   private heap: { element: T; priority: number }[] = [];
 
   /**
-   *
+   * Pushes a new element into the heap with the specified priority.
    */
   push(element: T, priority: number) {
     this.heap.push({ element, priority });
@@ -13,7 +13,7 @@ export class MinHeap<T> {
   }
 
   /**
-   *
+   * Removes and returns the element with the lowest priority from the heap.
    */
   pop(): T | null {
     if (this.heap.length === 0) return null;
@@ -27,7 +27,7 @@ export class MinHeap<T> {
   }
 
   /**
-   *
+   * Checks whether the heap contains no elements.
    */
   isEmpty() {
     return this.heap.length === 0;

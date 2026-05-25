@@ -128,7 +128,7 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   /**
-   *
+   * Retrieves all user-configured node overrides (delays, notes, and turns) from localStorage.
    */
   async getOverrides(): Promise<LocalOverrides> {
     const raw = this.loadRawData();
@@ -161,7 +161,7 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   /**
-   *
+   * Saves a custom crossing/intersection delay penalty for a specific node to localStorage.
    */
   async saveNodeDelay(nodeId: string, delaySeconds: number): Promise<void> {
     const raw = this.loadRawData();
@@ -173,7 +173,7 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   /**
-   *
+   * Saves a custom descriptive node note/memo for a specific node to localStorage.
    */
   async saveNodeNotes(nodeId: string, notes: string): Promise<void> {
     const raw = this.loadRawData();
@@ -185,7 +185,7 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   /**
-   *
+   * Removes all local storage overrides (delays and notes) associated with a specific node.
    */
   async clearNodeOverrides(nodeId: string): Promise<void> {
     const raw = this.loadRawData();

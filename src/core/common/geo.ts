@@ -5,7 +5,7 @@ import type { Coordinate } from './types';
 
 // Helper to compute a bounding box enclosing two coordinates with padding
 /**
- *
+ * Calculates a bounding box encompassing two coordinates with safety padding.
  */
 export function calculateBoundingBox(
   c1: Coordinate | null,
@@ -39,7 +39,7 @@ export function calculateBoundingBox(
 
 // Helper to check if coordinate is inside any loaded bounding boxes
 /**
- *
+ * Checks if a coordinate is within any of the loaded bounding boxes.
  */
 export function isInsideLoadedArea(
   coord: Coordinate,
@@ -53,7 +53,7 @@ export function isInsideLoadedArea(
 
 // Helper to snap coordinates to the nearest edge if within snapping distance (house-pinning safety)
 /**
- *
+ * Snaps a coordinate to the nearest graph edge if it is within a threshold distance.
  */
 export function snapCoordinateToEdge(coord: Coordinate, graph: StreetGraph | null): Coordinate {
   if (!graph) return coord;

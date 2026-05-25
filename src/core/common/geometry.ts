@@ -104,7 +104,7 @@ export interface EdgeRef {
 }
 
 /**
- *
+ * Finds the nearest edge in the graph to a given coordinate.
  */
 export function findNearestEdge(graph: StreetGraph, coord: Coordinate): EdgeRef | null {
   let minDistance = Infinity;
