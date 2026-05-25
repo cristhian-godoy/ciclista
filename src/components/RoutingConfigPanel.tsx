@@ -30,45 +30,36 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       {/* Dynamic Presets & Auto-Fetch Info */}
       <section className="ciclista-card">
         <h2>
-          <Layers
-            size={16}
-            style={{
-              verticalAlign: 'middle',
-              marginRight: '8px',
-              color: 'var(--accent-secondary)',
-            }}
-          />
+          <Layers size={16} className="preset-header-icon" />
           Map Area Presets
         </h2>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+        <p className="config-panel-desc">
           Choose a preset city. The map area will automatically expand and fetch OSM data as you
           drag or position the pins.
         </p>
-        <div className="ciclista-form-group" style={{ marginBottom: '12px' }}>
+        <div className="ciclista-form-group config-form-group">
           <label className="ciclista-label" htmlFor="city-preset-select">
             City Preset
           </label>
           <select
             id="city-preset-select"
-            className="ciclista-input"
+            className="ciclista-input config-select"
             value={selectedPreset}
             onChange={(e) => onPresetChange(e.target.value as 'munich' | 'amsterdam')}
-            style={{ cursor: 'pointer' }}
           >
             <option value="munich">Munich (Marienplatz)</option>
             <option value="amsterdam">Amsterdam (Center)</option>
           </select>
         </div>
-        <div className="ciclista-form-group" style={{ marginBottom: '12px' }}>
+        <div className="ciclista-form-group config-form-group">
           <label className="ciclista-label" htmlFor="map-theme-select">
             Map Theme
           </label>
           <select
             id="map-theme-select"
-            className="ciclista-input"
+            className="ciclista-input config-select"
             value={theme}
             onChange={(e) => onThemeChange(e.target.value as 'bright' | 'liberty' | 'dark')}
-            style={{ cursor: 'pointer' }}
           >
             <option value="bright">Bright</option>
             <option value="liberty">Liberty</option>
@@ -76,16 +67,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           </select>
         </div>
         {isFetchingOSM && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '0.75rem',
-              color: 'var(--ciclista-color-brand-secondary)',
-              marginTop: '8px',
-            }}
-          >
+          <div className="config-fetching-container">
             <RefreshCw size={12} className="spin" />
             <span>Fetching street network from Overpass...</span>
           </div>
