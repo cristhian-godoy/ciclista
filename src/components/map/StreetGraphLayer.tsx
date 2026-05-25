@@ -23,7 +23,8 @@ type GeoJSONFeature =
     };
 
 /**
- *
+ * Map layer rendering the raw street network edges (LineStrings) and
+ * customizable intersection control nodes (Point clusters) directly on the map.
  */
 export const StreetGraphLayer: React.FC = () => {
   const {

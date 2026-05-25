@@ -14,7 +14,8 @@ interface UseMapInstanceOptions {
 }
 
 /**
- *
+ * React hook that manages the lifecycle of the MapLibre GL map instance,
+ * initializes container attachments, and binds viewport or click event callbacks.
  */
 export const useMapInstance = ({
   selectedPreset,

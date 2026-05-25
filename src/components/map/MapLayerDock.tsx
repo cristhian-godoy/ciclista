@@ -4,7 +4,8 @@ import React from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- *
+ * Collapsible map overlay panel that controls the visibility of street networks,
+ * bounding boxes, node markers, and traffic signal overlays.
  */
 export const MapLayerDock: React.FC = () => {
   const { showMinorControls, setShowMinorControls, dockExpanded, setDockExpanded } =
