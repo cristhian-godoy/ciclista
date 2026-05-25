@@ -28,7 +28,8 @@ interface SidebarProps {
 }
 
 /**
- *
+ * Main dashboard sidebar layout containing route configurations, bike profiles,
+ * and detailed comparison or analytics panels.
  */
 export const Sidebar: React.FC<SidebarProps> = ({
   routeResult,

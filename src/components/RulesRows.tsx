@@ -35,7 +35,8 @@ interface SignRowProps {
 }
 
 /**
- *
+ * Interactive row component representing configuration options for a specific infrastructure/traffic sign.
+ * Allows toggling active speed profiles, custom speeds, comfort, and flat avoidance penalties.
  */
 export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);
@@ -127,7 +128,8 @@ interface RoadRowProps {
 }
 
 /**
- *
+ * Interactive row component representing configuration options for a specific road type.
+ * Allows configuring speed modifiers, comfort rating, and route avoidance penalty values.
  */
 export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
   const [expanded, setExpanded] = useState(false);

@@ -26,7 +26,8 @@ interface RulesConfigPanelProps {
 }
 
 /**
- *
+ * Collapsible rules configuration panel for setting custom speeds, weight modifiers,
+ * and wait-time penalties across various road types and infrastructure elements.
  */
 export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onChange }) => {
   const [signsOpen, setSignsOpen] = useState(false);
