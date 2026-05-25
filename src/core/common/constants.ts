@@ -8,6 +8,8 @@ export const API_CONFIG = {
   ],
   CACHE_NAME: 'overpass-cache-v1',
   QUERY_TIMEOUT_SECONDS: 25,
+  CACHE_TTL_MS: 24 * 60 * 60 * 1000, // 24 hours
+  CACHE_MAX_ITEMS: 20,
 } as const;
 
 export const MAP_CONFIG = {
