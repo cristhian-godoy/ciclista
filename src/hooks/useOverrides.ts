@@ -56,10 +56,7 @@ export function useOverrides() {
 
   // Load custom settings on startup
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadCustomOverrides();
-    }, 0);
-    return () => clearTimeout(timer);
+    void Promise.resolve().then(loadCustomOverrides);
   }, []);
 
   // Persist rules config whenever it changes
