@@ -272,7 +272,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Road mix: Primary */}
-            <tr style={{ borderBottom: 'none' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
               <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-danger)' }}>
                 🚗 % Primary
               </td>
@@ -286,6 +286,78 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                       padding: '8px 4px',
                       textAlign: 'center',
                       color: 'var(--accent-danger)',
+                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
+                    }}
+                  >
+                    {formatPct(dist, alt.result.totalDistanceMeters)}
+                  </td>
+                );
+              })}
+            </tr>
+
+            {/* Surface mix: Paved */}
+            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                🛣️ % Paved
+              </td>
+              {routeAlternatives.map((alt) => {
+                const isActive = activeAlternativeLabel === alt.label;
+                const dist = alt.result.surfaceTotals?.paved || 0;
+                return (
+                  <td
+                    key={alt.label}
+                    style={{
+                      padding: '8px 4px',
+                      textAlign: 'center',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
+                    }}
+                  >
+                    {formatPct(dist, alt.result.totalDistanceMeters)}
+                  </td>
+                );
+              })}
+            </tr>
+
+            {/* Surface mix: Gravel */}
+            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                🪨 % Gravel
+              </td>
+              {routeAlternatives.map((alt) => {
+                const isActive = activeAlternativeLabel === alt.label;
+                const dist = alt.result.surfaceTotals?.gravel || 0;
+                return (
+                  <td
+                    key={alt.label}
+                    style={{
+                      padding: '8px 4px',
+                      textAlign: 'center',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
+                    }}
+                  >
+                    {formatPct(dist, alt.result.totalDistanceMeters)}
+                  </td>
+                );
+              })}
+            </tr>
+
+            {/* Surface mix: Cobblestone */}
+            <tr style={{ borderBottom: 'none' }}>
+              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                🧱 % Cobble
+              </td>
+              {routeAlternatives.map((alt) => {
+                const isActive = activeAlternativeLabel === alt.label;
+                const dist = alt.result.surfaceTotals?.cobblestone || 0;
+                return (
+                  <td
+                    key={alt.label}
+                    style={{
+                      padding: '8px 4px',
+                      textAlign: 'center',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                       background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
                     }}
                   >

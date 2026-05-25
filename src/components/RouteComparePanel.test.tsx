@@ -22,6 +22,11 @@ describe('RouteComparePanel', () => {
           residential: 300,
           primary: 200,
         },
+        surfaceTotals: {
+          paved: 900,
+          gravel: 100,
+          cobblestone: 0,
+        },
       },
     },
     {
@@ -38,6 +43,11 @@ describe('RouteComparePanel', () => {
           cycleway: 1200,
           residential: 0,
           primary: 0,
+        },
+        surfaceTotals: {
+          paved: 1200,
+          gravel: 0,
+          cobblestone: 0,
         },
       },
     },
@@ -85,6 +95,13 @@ describe('RouteComparePanel', () => {
 
     // Percentages: standard cycleway (500/1000) => 50%
     expect(screen.getByText('50%')).toBeInTheDocument();
+
+    // Surface percentages
+    expect(screen.getByText('🛣️ % Paved')).toBeInTheDocument();
+    expect(screen.getByText('90%')).toBeInTheDocument();
+    expect(screen.getByText('🪨 % Gravel')).toBeInTheDocument();
+    expect(screen.getByText('10%')).toBeInTheDocument();
+    expect(screen.getByText('🧱 % Cobble')).toBeInTheDocument();
   });
 
   it('triggers onSelectAlternative when clicking on strategy header', async () => {

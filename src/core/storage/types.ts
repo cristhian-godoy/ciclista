@@ -3,7 +3,7 @@ import type { RulesConfiguration } from '../router/types';
 /**
  *
  */
-export type BikeProfile = 'slow' | 'normal' | 'ebike';
+export type BikeProfile = 'slow' | 'normal' | 'ebike' | 'road';
 
 /**
  *

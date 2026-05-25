@@ -96,13 +96,19 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       <section className="ciclista-form-group">
         <label className="ciclista-label">Bike Profile</label>
         <div className="strategy-selector">
-          {(['slow', 'normal', 'ebike'] as BikeProfile[]).map((p) => (
+          {(['slow', 'normal', 'ebike', 'road'] as BikeProfile[]).map((p) => (
             <button
               key={p}
               className={`strategy-btn ${bikeProfile === p ? 'active' : ''}`}
               onClick={() => onBikeProfileChange(p)}
             >
-              {p === 'slow' ? '🚲 Slow' : p === 'normal' ? '🚴 Normal' : '⚡ E-Bike'}
+              {p === 'slow'
+                ? '🚲 Slow'
+                : p === 'normal'
+                  ? '🚴 Normal'
+                  : p === 'ebike'
+                    ? '⚡ E-Bike'
+                    : '🏁 Road'}
             </button>
           ))}
         </div>

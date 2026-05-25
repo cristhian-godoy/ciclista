@@ -31,6 +31,10 @@ describe('DijkstraRouter', () => {
       expect(result.totalDistanceMeters).toBeGreaterThan(0);
       expect(result.totalDurationSeconds).toBeGreaterThan(0);
       expect(result.coordinates.length).toBeGreaterThanOrEqual(2);
+      expect(result.surfaceTotals).toBeDefined();
+      expect(result.surfaceTotals.paved).toBeGreaterThanOrEqual(0);
+      expect(result.surfaceTotals.gravel).toBeGreaterThanOrEqual(0);
+      expect(result.surfaceTotals.cobblestone).toBeGreaterThanOrEqual(0);
     }
   });
 
