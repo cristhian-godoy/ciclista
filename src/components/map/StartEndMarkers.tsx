@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- *
+ * Component that manages the lifecycle and positioning of the draggable
+ * start (origin) and end (destination) pin markers on the map canvas.
  */
 export const StartEndMarkers: React.FC = () => {
   const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds } = useMapContext();

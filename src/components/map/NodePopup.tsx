@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- *
+ * Glassmorphic popup modal that displays details for a selected street intersection node,
+ * allowing users to set custom delay values, override presets, and save descriptive notes.
  */
 export const NodePopup: React.FC = () => {
   const {

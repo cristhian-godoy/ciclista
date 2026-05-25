@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- *
+ * Interactive floating context menu triggered by right-clicking on the map canvas.
+ * Provides quick actions to set the start (origin) or end (destination) navigation pins.
  */
 export const MapContextMenu: React.FC = () => {
   const {

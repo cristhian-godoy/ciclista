@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- *
+ * Map overlay layer that renders all computed routing path alternatives (Standard, Avoid Stops, Quiet Streets).
+ * Handles pathway styling, route highlight glows, hover effects, and selection click listeners.
  */
 export const RouteAlternativesLayer: React.FC = () => {
   const {
