@@ -1,10 +1,11 @@
 import type maplibregl from 'maplibre-gl';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { RouteAlternative } from '../core/router/types';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
+import { MapProvider, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
 import { NodePopup } from './map/NodePopup';
@@ -34,53 +35,28 @@ interface MapViewProps {
   theme: 'bright' | 'liberty' | 'dark';
 }
 
-/**
- *
- */
-export const MapView: React.FC<MapViewProps> = ({
-  graph,
-  loadedBBoxes,
-  startCoord,
-  endCoord,
-  routeAlternatives,
-  activeAlternativeLabel,
-  onSelectAlternative,
-  selectedPreset,
-  customNodeDelays,
-  customNodeNotes,
-  selectedNode,
-  onStartDrag,
-  onEndDrag,
-  onNodeSelect,
-  onSaveNodeOverride,
-  onClearNodeOverride,
-  onMapBoundsChange,
-  theme,
-}) => {
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    lng: number;
-    lat: number;
-    crossingId: string | null;
-    nodeIds: string | null;
-  }>({
-    visible: false,
-    x: 0,
-    y: 0,
-    lng: 0,
-    lat: 0,
-    crossingId: null,
-    nodeIds: null,
-  });
+const MapViewContent: React.FC<{
+  onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
+}> = ({ onMapBoundsChange }) => {
+  const {
+    map,
+    setMap,
+    mapReady,
+    setMapReady,
+    selectedPreset,
+    theme,
+    setContextMenu,
+    setManagedClusterId,
+    setManagedNodeIds,
+    onNodeSelect,
+    onStartDrag,
+    onEndDrag,
+    selectedNode,
+    setDockExpanded,
+    startCoord,
+    endCoord,
+  } = useMapContext();
 
-  const [managedClusterId, setManagedClusterId] = useState<string | null>(null);
-  const [managedNodeIds, setManagedNodeIds] = useState<string[]>([]);
-  const [showMinorControls, setShowMinorControls] = useState(false);
-  const [dockExpanded, setDockExpanded] = useState(true);
-
-  const shouldFitBoundsRef = useRef<boolean>(true);
   const startCoordRef = useRef(startCoord);
   const endCoordRef = useRef(endCoord);
 
@@ -99,7 +75,7 @@ export const MapView: React.FC<MapViewProps> = ({
     return () => {
       window.removeEventListener('click', handleWindowClick);
     };
-  }, []);
+  }, [setContextMenu]);
 
   // Reset managed cluster state if selectedNode becomes null
   const prevSelectedNodeRef = useRef<GraphNode | null>(null);
@@ -109,7 +85,7 @@ export const MapView: React.FC<MapViewProps> = ({
       setManagedNodeIds([]);
     }
     prevSelectedNodeRef.current = selectedNode;
-  }, [selectedNode]);
+  }, [selectedNode, setManagedClusterId, setManagedNodeIds]);
 
   // Handle right click on map (context menu trigger)
   const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
@@ -179,7 +155,11 @@ export const MapView: React.FC<MapViewProps> = ({
   };
 
   // Initialize and retrieve map instance via custom hook
-  const { map, mapContainerRef, mapReady } = useMapInstance({
+  const {
+    map: mapInstance,
+    mapContainerRef,
+    mapReady: mapInstanceReady,
+  } = useMapInstance({
     selectedPreset,
     theme,
     onMapBoundsChange,
@@ -189,67 +169,38 @@ export const MapView: React.FC<MapViewProps> = ({
     onZoomStart: handleZoomStart,
   });
 
+  // Synchronize internal map state with context
+  useEffect(() => {
+    setMap(mapInstance);
+    setMapReady(mapInstanceReady);
+  }, [mapInstance, mapInstanceReady, setMap, setMapReady]);
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
       <div ref={mapContainerRef} className="map-container" />
 
       {map && mapReady && (
         <>
-          <StreetGraphLayer
-            map={map}
-            graph={graph}
-            customNodeDelays={customNodeDelays}
-            showMinorControls={showMinorControls}
-            managedClusterId={managedClusterId}
-            managedNodeIds={managedNodeIds}
-            setManagedClusterId={setManagedClusterId}
-            setManagedNodeIds={setManagedNodeIds}
-            onNodeSelect={onNodeSelect}
-          />
-          <RouteAlternativesLayer
-            map={map}
-            routeAlternatives={routeAlternatives}
-            activeAlternativeLabel={activeAlternativeLabel}
-            onSelectAlternative={onSelectAlternative}
-            shouldFitBoundsRef={shouldFitBoundsRef}
-          />
-          <BBoxBoundaryLayer map={map} loadedBBoxes={loadedBBoxes} />
-          <StartEndMarkers
-            map={map}
-            startCoord={startCoord}
-            endCoord={endCoord}
-            onStartDrag={onStartDrag}
-            onEndDrag={onEndDrag}
-            shouldFitBoundsRef={shouldFitBoundsRef}
-          />
-          <NodePopup
-            key={selectedNode?.id}
-            map={map}
-            selectedNode={selectedNode}
-            onNodeSelect={onNodeSelect}
-            customNodeDelays={customNodeDelays}
-            customNodeNotes={customNodeNotes}
-            onSaveNodeOverride={onSaveNodeOverride}
-            onClearNodeOverride={onClearNodeOverride}
-            setDockExpanded={setDockExpanded}
-          />
-          <MapContextMenu
-            map={map}
-            contextMenu={contextMenu}
-            setContextMenu={setContextMenu}
-            setManagedClusterId={setManagedClusterId}
-            setManagedNodeIds={setManagedNodeIds}
-            onStartDrag={onStartDrag}
-            onEndDrag={onEndDrag}
-          />
-          <MapLayerDock
-            showMinorControls={showMinorControls}
-            setShowMinorControls={setShowMinorControls}
-            dockExpanded={dockExpanded}
-            setDockExpanded={setDockExpanded}
-          />
+          <StreetGraphLayer />
+          <RouteAlternativesLayer />
+          <BBoxBoundaryLayer />
+          <StartEndMarkers />
+          <NodePopup key={selectedNode?.id} />
+          <MapContextMenu />
+          <MapLayerDock />
         </>
       )}
     </div>
+  );
+};
+
+/**
+ *
+ */
+export const MapView: React.FC<MapViewProps> = (props) => {
+  return (
+    <MapProvider {...props}>
+      <MapViewContent onMapBoundsChange={props.onMapBoundsChange} />
+    </MapProvider>
   );
 };

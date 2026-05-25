@@ -1,33 +1,23 @@
 import { Check, X } from 'lucide-react';
-import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef, useState } from 'react';
 
-import type { GraphNode } from '../../core/graph/types';
-
-interface NodePopupProps {
-  map: maplibregl.Map;
-  selectedNode: GraphNode | null;
-  onNodeSelect: (node: GraphNode | null) => void;
-  customNodeDelays: Map<string, number>;
-  customNodeNotes: Map<string, string>;
-  onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
-  onClearNodeOverride: (nodeId: string) => void;
-  setDockExpanded: (expanded: boolean) => void;
-}
+import { useMapContext } from './MapContext';
 
 /**
  *
  */
-export const NodePopup: React.FC<NodePopupProps> = ({
-  map,
-  selectedNode,
-  onNodeSelect,
-  customNodeDelays,
-  customNodeNotes,
-  onSaveNodeOverride,
-  onClearNodeOverride,
-  setDockExpanded,
-}) => {
+export const NodePopup: React.FC = () => {
+  const {
+    map,
+    selectedNode,
+    onNodeSelect,
+    customNodeDelays,
+    customNodeNotes,
+    onSaveNodeOverride,
+    onClearNodeOverride,
+    setDockExpanded,
+  } = useMapContext();
+
   const getDefaultBaseDelay = (tags: Record<string, string>): number => {
     if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
       return 15;
@@ -56,7 +46,7 @@ export const NodePopup: React.FC<NodePopupProps> = ({
   });
 
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(() => {
-    if (!selectedNode) return null;
+    if (!selectedNode || !map) return null;
     const pos = map.project([selectedNode.lng, selectedNode.lat]);
     return { x: pos.x, y: pos.y };
   });
@@ -148,7 +138,7 @@ export const NodePopup: React.FC<NodePopupProps> = ({
 
   // Project map coordinates on map move/zoom
   useEffect(() => {
-    if (!selectedNode) return;
+    if (!map || !selectedNode) return;
 
     const updatePosition = () => {
       const pos = map.project([selectedNode.lng, selectedNode.lat]);

@@ -4,7 +4,52 @@ import maplibregl from 'maplibre-gl';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { GraphNode } from '../../core/graph/types';
+import { MapContext, MapContextType } from './MapContext';
 import { NodePopup } from './NodePopup';
+
+const defaultContextValue: MapContextType = {
+  map: null,
+  setMap: vi.fn(),
+  mapReady: false,
+  setMapReady: vi.fn(),
+  graph: null,
+  loadedBBoxes: [],
+  startCoord: null,
+  endCoord: null,
+  routeAlternatives: [],
+  activeAlternativeLabel: 'standard',
+  onSelectAlternative: vi.fn(),
+  selectedPreset: 'munich',
+  customNodeDelays: new Map(),
+  customNodeNotes: new Map(),
+  selectedNode: null,
+  onStartDrag: vi.fn(),
+  onEndDrag: vi.fn(),
+  onNodeSelect: vi.fn(),
+  onSaveNodeOverride: vi.fn(),
+  onClearNodeOverride: vi.fn(),
+  theme: 'bright',
+  shouldFitBounds: false,
+  setShouldFitBounds: vi.fn(),
+  showMinorControls: false,
+  setShowMinorControls: vi.fn(),
+  dockExpanded: true,
+  setDockExpanded: vi.fn(),
+  managedClusterId: null,
+  setManagedClusterId: vi.fn(),
+  managedNodeIds: [],
+  setManagedNodeIds: vi.fn(),
+  contextMenu: {
+    visible: false,
+    x: 0,
+    y: 0,
+    lng: 0,
+    lat: 0,
+    crossingId: null,
+    nodeIds: null,
+  },
+  setContextMenu: vi.fn(),
+};
 
 describe('NodePopup', () => {
   const mockNode: GraphNode = {
@@ -19,33 +64,43 @@ describe('NodePopup', () => {
   };
 
   it('renders nothing when selectedNode is null', () => {
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: null,
+      onNodeSelect: vi.fn(),
+      customNodeDelays: new Map(),
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: vi.fn(),
+      onClearNodeOverride: vi.fn(),
+      setDockExpanded: vi.fn(),
+    };
+
     const { container } = render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={null}
-        onNodeSelect={vi.fn()}
-        customNodeDelays={new Map()}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={vi.fn()}
-        onClearNodeOverride={vi.fn()}
-        setDockExpanded={vi.fn()}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
     expect(container.firstChild).toBeNull();
   });
 
   it('renders details, penalty, presets, and tags when selectedNode is provided', () => {
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: mockNode,
+      onNodeSelect: vi.fn(),
+      customNodeDelays: new Map(),
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: vi.fn(),
+      onClearNodeOverride: vi.fn(),
+      setDockExpanded: vi.fn(),
+    };
+
     render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={mockNode}
-        onNodeSelect={vi.fn()}
-        customNodeDelays={new Map()}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={vi.fn()}
-        onClearNodeOverride={vi.fn()}
-        setDockExpanded={vi.fn()}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
 
     expect(screen.getByText('Configure Control Point')).toBeInTheDocument();
@@ -64,17 +119,22 @@ describe('NodePopup', () => {
 
   it('calls setDockExpanded(false) on mount', async () => {
     const handleSetDock = vi.fn();
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: mockNode,
+      onNodeSelect: vi.fn(),
+      customNodeDelays: new Map(),
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: vi.fn(),
+      onClearNodeOverride: vi.fn(),
+      setDockExpanded: handleSetDock,
+    };
+
     render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={mockNode}
-        onNodeSelect={vi.fn()}
-        customNodeDelays={new Map()}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={vi.fn()}
-        onClearNodeOverride={vi.fn()}
-        setDockExpanded={handleSetDock}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
 
     await waitFor(() => {
@@ -87,17 +147,22 @@ describe('NodePopup', () => {
     const handleSave = vi.fn();
     const handleNodeSelect = vi.fn();
 
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: mockNode,
+      onNodeSelect: handleNodeSelect,
+      customNodeDelays: new Map(),
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: handleSave,
+      onClearNodeOverride: vi.fn(),
+      setDockExpanded: vi.fn(),
+    };
+
     render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={mockNode}
-        onNodeSelect={handleNodeSelect}
-        customNodeDelays={new Map()}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={handleSave}
-        onClearNodeOverride={vi.fn()}
-        setDockExpanded={vi.fn()}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
 
     // Initial delay is standard (15s) for traffic signals
@@ -128,17 +193,22 @@ describe('NodePopup', () => {
 
     const customDelays = new Map([['node_123', 45]]);
 
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: mockNode,
+      onNodeSelect: handleNodeSelect,
+      customNodeDelays: customDelays,
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: vi.fn(),
+      onClearNodeOverride: handleClear,
+      setDockExpanded: vi.fn(),
+    };
+
     render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={mockNode}
-        onNodeSelect={handleNodeSelect}
-        customNodeDelays={customDelays}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={vi.fn()}
-        onClearNodeOverride={handleClear}
-        setDockExpanded={vi.fn()}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
 
     const resetBtn = screen.getByRole('button', { name: 'Reset' });
@@ -153,17 +223,22 @@ describe('NodePopup', () => {
     const user = userEvent.setup();
     const handleSave = vi.fn();
 
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      map: new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions),
+      selectedNode: mockNode,
+      onNodeSelect: vi.fn(),
+      customNodeDelays: new Map(),
+      customNodeNotes: new Map(),
+      onSaveNodeOverride: handleSave,
+      onClearNodeOverride: vi.fn(),
+      setDockExpanded: vi.fn(),
+    };
+
     render(
-      <NodePopup
-        map={new maplibregl.Map({ container: 'map' } as maplibregl.MapOptions)}
-        selectedNode={mockNode}
-        onNodeSelect={vi.fn()}
-        customNodeDelays={new Map()}
-        customNodeNotes={new Map()}
-        onSaveNodeOverride={handleSave}
-        onClearNodeOverride={vi.fn()}
-        setDockExpanded={vi.fn()}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <NodePopup />
+      </MapContext.Provider>,
     );
 
     const slider = screen.getByRole('slider');

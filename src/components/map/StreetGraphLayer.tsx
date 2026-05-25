@@ -2,7 +2,7 @@ import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { convertGraphToGeoJSON } from '../../core/graph/geojson';
-import type { GraphNode, StreetGraph } from '../../core/graph/types';
+import { useMapContext } from './MapContext';
 
 type GeoJSONFeature =
   | {
@@ -22,32 +22,22 @@ type GeoJSONFeature =
       properties: Record<string, unknown>;
     };
 
-interface StreetGraphLayerProps {
-  map: maplibregl.Map;
-  graph: StreetGraph | null;
-  customNodeDelays: Map<string, number>;
-  showMinorControls: boolean;
-  managedClusterId: string | null;
-  managedNodeIds: string[];
-  setManagedClusterId: (id: string | null) => void;
-  setManagedNodeIds: (ids: string[]) => void;
-  onNodeSelect: (node: GraphNode | null) => void;
-}
-
 /**
  *
  */
-export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
-  map,
-  graph,
-  customNodeDelays,
-  showMinorControls,
-  managedClusterId,
-  managedNodeIds,
-  setManagedClusterId,
-  setManagedNodeIds,
-  onNodeSelect,
-}) => {
+export const StreetGraphLayer: React.FC = () => {
+  const {
+    map,
+    graph,
+    customNodeDelays,
+    showMinorControls,
+    managedClusterId,
+    managedNodeIds,
+    setManagedClusterId,
+    setManagedNodeIds,
+    onNodeSelect,
+  } = useMapContext();
+
   // Keep callback handlers in refs to prevent stale closures in map listeners
   const onNodeSelectRef = useRef(onNodeSelect);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
@@ -67,6 +57,7 @@ export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
 
   // Setup layers and sources
   useEffect(() => {
+    if (!map) return;
     if (!map.getSource('network-streets')) {
       map.addSource('network-streets', {
         type: 'geojson',
@@ -306,6 +297,7 @@ export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
 
   // Synchronize sources with data changes
   useEffect(() => {
+    if (!map) return;
     let lineFeatures: GeoJSONFeature[] = [];
     let lightFeatures: GeoJSONFeature[] = [];
 
@@ -334,6 +326,7 @@ export const StreetGraphLayer: React.FC<StreetGraphLayerProps> = ({
 
   // Synchronize layer filters when managed states update
   useEffect(() => {
+    if (!map) return;
     if (managedClusterId !== null && managedNodeIds.length > 0) {
       // Hide the managed crossing cluster, keep other crossing clusters visible
       map.setFilter('traffic-lights-cluster', [
