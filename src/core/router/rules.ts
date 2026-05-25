@@ -131,7 +131,7 @@ export function mapOSMNodeToControl(
 }
 
 /** OSM values that explicitly negate the presence of a cycleway. */
-const CYCLEWAY_NEGATIVE = new Set(['no', 'none', 'separate', 'sidepath']);
+const CYCLEWAY_NEGATIVE = new Set(['no', 'none', 'separate']);
 
 /**
  * Checks if a set of OSM way tags indicates the presence of a cycleway on the street.

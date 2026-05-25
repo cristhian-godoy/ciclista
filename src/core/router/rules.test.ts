@@ -1,6 +1,7 @@
 import {
   getEffectiveRoadSpeedType,
   getEffectiveSignSpeedType,
+  hasCycleway,
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from './rules';
@@ -244,5 +245,29 @@ describe('getEffectiveRoadSpeedType', () => {
       flatPenaltySeconds: 0,
     };
     expect(getEffectiveRoadSpeedType(cfg)).toBe('custom');
+  });
+});
+
+describe('hasCycleway', () => {
+  it('identifies standard cycleway values', () => {
+    expect(hasCycleway({ cycleway: 'yes' })).toBe(true);
+    expect(hasCycleway({ cycleway: 'lane' })).toBe(true);
+    expect(hasCycleway({ 'cycleway:left': 'track' })).toBe(true);
+  });
+
+  it('correctly handles negative values like no, none, separate', () => {
+    expect(hasCycleway({ cycleway: 'no' })).toBe(false);
+    expect(hasCycleway({ cycleway: 'none' })).toBe(false);
+    expect(hasCycleway({ cycleway: 'separate' })).toBe(false);
+    expect(hasCycleway({ 'cycleway:both': 'no' })).toBe(false);
+  });
+
+  it('correctly recognizes sidepath as a cycleway (not negative)', () => {
+    expect(hasCycleway({ cycleway: 'sidepath' })).toBe(true);
+    expect(hasCycleway({ 'cycleway:right': 'sidepath' })).toBe(true);
+  });
+
+  it('returns false for empty tags', () => {
+    expect(hasCycleway({})).toBe(false);
   });
 });
