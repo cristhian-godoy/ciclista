@@ -90,18 +90,19 @@ describe('RouteComparePanel', () => {
     expect(screen.getByText('1.20 km')).toBeInTheDocument();
 
     // Signals: 2 vs 0
-    expect(screen.getByText('🚦 2')).toBeInTheDocument();
-    expect(screen.getByText('🚦 0')).toBeInTheDocument();
+    expect(screen.getByText('Traffic Lights')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(1);
 
     // Percentages: standard cycleway (500/1000) => 50%
     expect(screen.getByText('50%')).toBeInTheDocument();
 
     // Surface percentages
-    expect(screen.getByText('🛣️ % Paved')).toBeInTheDocument();
+    expect(screen.getByText('% Paved')).toBeInTheDocument();
     expect(screen.getByText('90%')).toBeInTheDocument();
-    expect(screen.getByText('🪨 % Gravel')).toBeInTheDocument();
+    expect(screen.getByText('% Gravel')).toBeInTheDocument();
     expect(screen.getByText('10%')).toBeInTheDocument();
-    expect(screen.getByText('🧱 % Cobble')).toBeInTheDocument();
+    expect(screen.getByText('% Cobble')).toBeInTheDocument();
   });
 
   it('triggers onSelectAlternative when clicking on strategy header', async () => {

@@ -1,3 +1,16 @@
+import {
+  Accessibility,
+  AlertTriangle,
+  Bike,
+  Car,
+  Clock,
+  Home,
+  Layers,
+  Milestone,
+  Route,
+  TrafficCone,
+  Trees,
+} from 'lucide-react';
 import React from 'react';
 
 import type { RouteAlternative } from '../core/router/types';
@@ -9,7 +22,7 @@ interface RouteComparePanelProps {
 }
 
 /**
- *
+ * Renders a side-by-side comparison of generated routes with Lucide icons.
  */
 export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   routeAlternatives,
@@ -48,9 +61,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
 
   if (routeAlternatives.length === 0) {
     return (
-      <section className="ciclista-card" style={{ padding: '16px', textAlign: 'center' }}>
-        <h2>Route Comparison</h2>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '12px 0' }}>
+      <section className="ciclista-card compare-panel-placeholder">
+        <h2 className="compare-panel-title">Route Comparison</h2>
+        <p className="placeholder-text">
           No routes calculated yet. Move pins to generate route comparisons.
         </p>
       </section>
@@ -58,24 +71,13 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   }
 
   return (
-    <section className="ciclista-card" style={{ padding: '14px 12px' }}>
-      <h2 style={{ marginBottom: '12px', fontSize: '0.95rem', fontWeight: '700' }}>
-        Route Comparison
-      </h2>
-      <div style={{ overflowX: 'auto', margin: '0 -4px' }}>
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: '0.75rem',
-            textAlign: 'left',
-          }}
-        >
+    <section className="ciclista-card compare-panel-container">
+      <h2 className="compare-panel-title">Route Comparison</h2>
+      <div className="compare-table-wrapper">
+        <table className="compare-table">
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '6px 4px', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                Metric
-              </th>
+            <tr className="header-row">
+              <th className="metric-col">Metric</th>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
@@ -84,18 +86,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                     onClick={() =>
                       onSelectAlternative(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')
                     }
-                    style={{
-                      padding: '8px 4px',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-                      fontWeight: isActive ? '700' : '500',
-                      background: isActive ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
-                      borderTopLeftRadius: '4px',
-                      borderTopRightRadius: '4px',
-                      borderBottom: isActive ? '2px solid var(--accent-primary)' : 'none',
-                      transition: 'var(--transition-fast)',
-                    }}
+                    className={`strategy-col ${isActive ? 'active' : ''}`}
                   >
                     {getStrategyLabel(alt.label)}
                   </th>
@@ -105,23 +96,16 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
           </thead>
           <tbody>
             {/* Time prediction */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Time Predict
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Clock size={12} aria-label="Time Icon" /> Time Predict
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      fontWeight: isActive ? '700' : 'normal',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatTime(alt.result.totalDurationSeconds)}
                   </td>
                 );
@@ -129,22 +113,16 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Distance */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Distance
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Milestone size={12} aria-label="Distance Icon" /> Distance
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatDistance(alt.result.totalDistanceMeters)}
                   </td>
                 );
@@ -152,80 +130,62 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Signals */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Traffic Lights
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <TrafficCone size={12} aria-label="Signals Icon" /> Traffic Lights
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
-                    🚦 {alt.result.signalCount}
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
+                    {alt.result.signalCount}
                   </td>
                 );
               })}
             </tr>
 
             {/* Yields */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Yield Signs
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <AlertTriangle size={12} aria-label="Yield Icon" /> Yield Signs
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
-                    ⚠️ {alt.result.yieldCount}
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
+                    {alt.result.yieldCount}
                   </td>
                 );
               })}
             </tr>
 
             {/* Crossing */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Crossings
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Accessibility size={12} aria-label="Crossing Icon" /> Crossings
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
-                    🚶 {alt.result.crossingCount}
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
+                    {alt.result.crossingCount}
                   </td>
                 );
               })}
             </tr>
 
             {/* Road mix: Cycleway */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td
-                style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-secondary)' }}
-              >
-                🚲 % Cycleway
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Bike size={12} aria-label="Cycleway Icon" /> % Cycleway
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
@@ -233,13 +193,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                 return (
                   <td
                     key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      fontWeight: isActive ? '700' : 'normal',
-                      color: 'var(--accent-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
+                    className={`value-col cycleway-pct ${isActive ? 'active' : ''}`}
                   >
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
@@ -248,23 +202,17 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Road mix: Residential */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                🏠 % Resident
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Home size={12} aria-label="Residential Icon" /> % Resident
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.residential || 0;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
                 );
@@ -272,9 +220,11 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Road mix: Primary */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--accent-danger)' }}>
-                🚗 % Primary
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Car size={12} aria-label="Primary Road Icon" /> % Primary
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
@@ -282,12 +232,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                 return (
                   <td
                     key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: 'var(--accent-danger)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
+                    className={`value-col primary-pct ${isActive ? 'active' : ''}`}
                   >
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
@@ -296,23 +241,17 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Surface mix: Paved */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                🛣️ % Paved
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Route size={12} aria-label="Paved Surface Icon" /> % Paved
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.paved || 0;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
                 );
@@ -320,23 +259,17 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Surface mix: Gravel */}
-            <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                🪨 % Gravel
+            <tr>
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Trees size={12} aria-label="Gravel Surface Icon" /> % Gravel
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.gravel || 0;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
                 );
@@ -344,23 +277,17 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             </tr>
 
             {/* Surface mix: Cobblestone */}
-            <tr style={{ borderBottom: 'none' }}>
-              <td style={{ padding: '8px 4px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                🧱 % Cobble
+            <tr className="last-row">
+              <td className="metric-col">
+                <span className="metric-cell-content">
+                  <Layers size={12} aria-label="Cobblestone Surface Icon" /> % Cobble
+                </span>
               </td>
               {routeAlternatives.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.cobblestone || 0;
                 return (
-                  <td
-                    key={alt.label}
-                    style={{
-                      padding: '8px 4px',
-                      textAlign: 'center',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(99, 102, 241, 0.04)' : 'transparent',
-                    }}
-                  >
+                  <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
                     {formatPct(dist, alt.result.totalDistanceMeters)}
                   </td>
                 );
