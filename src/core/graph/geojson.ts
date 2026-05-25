@@ -1,7 +1,8 @@
 import type { StreetGraph } from './types';
 
 /**
- *
+ * Represents a standard GeoJSON Feature object used to map geometry and properties
+ * for visualization layers.
  */
 export interface GeoJSONFeature {
   type: 'Feature';
@@ -13,7 +14,8 @@ export interface GeoJSONFeature {
 }
 
 /**
- *
+ * Container structure grouping street features (lines) and control features (points)
+ * formatted as GeoJSON for visualization on the map.
  */
 export interface GraphGeoJSON {
   streets: GeoJSONFeature[];

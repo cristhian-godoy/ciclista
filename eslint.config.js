@@ -33,7 +33,12 @@ export default defineConfig([
       'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'jsdoc/require-description': 'error',
+      'jsdoc/require-description': [
+        'error',
+        {
+          contexts: ['any'],
+        },
+      ],
       'jsdoc/require-jsdoc': [
         'error',
         {

@@ -46,7 +46,9 @@ export function getRoadTypeCategory(
 }
 
 /**
- *
+ * Configuration for out-of-network virtual routing.
+ * Defines temporary start/end nodes and their corresponding virtual edges
+ * to connect points outside the street graph into the traversable graph structure.
  */
 interface VirtualRoutingConfig {
   startNode: GraphNode;
@@ -56,7 +58,9 @@ interface VirtualRoutingConfig {
 }
 
 /**
- *
+ * Router implementation that uses Dijkstra's shortest path algorithm
+ * to find optimal bicycle paths, incorporating turn penalties, local delays,
+ * and custom safety rules configuration.
  */
 export class DijkstraRouter implements IRouter {
   private runDijkstra(
