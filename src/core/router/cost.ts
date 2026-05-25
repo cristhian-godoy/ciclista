@@ -1,6 +1,6 @@
 import type { GraphEdge, StreetGraph } from '../graph/types';
 import type { BikeProfile, LocalOverrides } from '../storage/types';
-import { hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
+import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type {
   ComfortLevel,
   CostFunction,
@@ -27,6 +27,7 @@ const PROFILE_MULTIPLIER: Record<string, number> = {
   slow: 15 / 18, // ~0.833
   normal: 1.0,
   ebike: 25 / 18, // ~1.389
+  road: 22 / 18, // ~1.222
 };
 
 /**
@@ -99,17 +100,14 @@ function resolveSpeedAndPenalty(
       const speedKmh = resolveRuleSpeed(cfg, profile);
       speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
-      return { speed, flatPenalty, bicycleFrei };
     } else if (rules.roads && rules.roads[road]) {
       const cfg = rules.roads[road];
       const speedKmh = resolveRuleSpeed(cfg, profile);
       speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
-      return { speed, flatPenalty, bicycleFrei };
     } else {
       speed = kmhToMs(18) * profileMultiplier;
       flatPenalty = 0;
-      return { speed, flatPenalty, bicycleFrei };
     }
   } else {
     // ── Hardcoded fallback ───────────────────────────────────────────────────
@@ -132,9 +130,37 @@ function resolveSpeedAndPenalty(
     } else {
       speed = 5.0;
     }
+    speed = speed * profileMultiplier;
     flatPenalty = 0;
-    return { speed: speed * profileMultiplier, flatPenalty, bicycleFrei };
   }
+
+  // ── Apply Surface Penalties ────────────────────────────────────────────────
+  const surfaceType = getSurfaceType(edge.tags);
+  if (surfaceType === 'gravel') {
+    if (profile === 'road') {
+      speed *= 0.4; // 60% reduction
+      flatPenalty += 15;
+    } else if (profile === 'normal') {
+      speed *= 0.8; // 20% reduction
+    } else if (profile === 'slow') {
+      speed *= 0.9; // 10% reduction
+    } else if (profile === 'ebike') {
+      speed *= 0.9; // 10% reduction
+    }
+  } else if (surfaceType === 'cobblestone') {
+    if (profile === 'road') {
+      speed *= 0.6; // 40% reduction
+      flatPenalty += 10;
+    } else if (profile === 'normal') {
+      speed *= 0.75; // 25% reduction
+    } else if (profile === 'slow') {
+      speed *= 0.85; // 15% reduction
+    } else if (profile === 'ebike') {
+      speed *= 0.8; // 20% reduction
+    }
+  }
+
+  return { speed, flatPenalty, bicycleFrei };
 }
 
 /**

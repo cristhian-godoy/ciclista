@@ -13,7 +13,7 @@ import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 import { calculateDisplayCost } from './cost';
-import { hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
+import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type { CostFunction, IRouter, RouteResult } from './types';
 
 /**
@@ -240,6 +240,11 @@ export class DijkstraRouter implements IRouter {
       primary: 0,
       other: 0,
     };
+    const surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number> = {
+      paved: 0,
+      gravel: 0,
+      cobblestone: 0,
+    };
     const streetsSet = new Set<string>();
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
@@ -344,6 +349,9 @@ export class DijkstraRouter implements IRouter {
           const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
           roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
 
+          const surfaceType = getSurfaceType(edge.tags);
+          surfaceTotals[surfaceType] += edge.distance;
+
           const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
             edge.tags.highway || '',
             edge.tags,
@@ -373,6 +381,7 @@ export class DijkstraRouter implements IRouter {
       yieldCount,
       crossingCount,
       roadTypeTotals,
+      surfaceTotals,
       edges: edgesDetails,
       totalDisplayCost,
     };
@@ -584,6 +593,7 @@ export class DijkstraRouter implements IRouter {
       yieldCount: stats.yieldCount,
       crossingCount: stats.crossingCount,
       roadTypeTotals: stats.roadTypeTotals,
+      surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
     };
   }
@@ -622,6 +632,11 @@ export class DijkstraRouter implements IRouter {
           residential: 0,
           primary: 0,
           other: 0,
+        },
+        surfaceTotals: {
+          paved: 0,
+          gravel: 0,
+          cobblestone: 0,
         },
       };
     }
@@ -684,6 +699,7 @@ export class DijkstraRouter implements IRouter {
       yieldCount: stats.yieldCount,
       crossingCount: stats.crossingCount,
       roadTypeTotals: stats.roadTypeTotals,
+      surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
     };
   }

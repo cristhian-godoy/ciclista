@@ -326,3 +326,51 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     crossingSeconds: 3,
   },
 };
+
+/**
+ * Classifies an OSM surface tag (or highway fallback) into paved, gravel, or cobblestone.
+ */
+export function getSurfaceType(tags: Record<string, string>): 'paved' | 'gravel' | 'cobblestone' {
+  const surface = tags.surface;
+  if (!surface) {
+    if (tags.highway === 'track') {
+      return 'gravel';
+    }
+    return 'paved';
+  }
+
+  const pavedValues = [
+    'asphalt',
+    'concrete',
+    'paved',
+    'paving_stones',
+    'sett',
+    'concrete:lanes',
+    'concrete:plates',
+  ];
+  const gravelValues = [
+    'gravel',
+    'unpaved',
+    'compacted',
+    'fine_gravel',
+    'dirt',
+    'earth',
+    'grass',
+    'ground',
+    'mud',
+    'sand',
+  ];
+  const cobblestoneValues = ['cobblestone', 'cobblestone:flattened', 'grass_paver'];
+
+  if (pavedValues.includes(surface)) {
+    return 'paved';
+  }
+  if (gravelValues.includes(surface)) {
+    return 'gravel';
+  }
+  if (cobblestoneValues.includes(surface)) {
+    return 'cobblestone';
+  }
+
+  return 'paved';
+}

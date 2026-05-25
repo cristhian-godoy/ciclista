@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getEffectiveRoadSpeedType,
   getEffectiveSignSpeedType,
+  getSurfaceType,
   hasCycleway,
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
@@ -283,5 +284,33 @@ describe('hasCycleway', () => {
 
   it('returns false for empty tags', () => {
     expect(hasCycleway({})).toBe(false);
+  });
+});
+
+describe('getSurfaceType', () => {
+  it('correctly classifies paved surfaces', () => {
+    expect(getSurfaceType({ surface: 'asphalt' })).toBe('paved');
+    expect(getSurfaceType({ surface: 'concrete' })).toBe('paved');
+    expect(getSurfaceType({ surface: 'paving_stones' })).toBe('paved');
+  });
+
+  it('correctly classifies gravel and unpaved surfaces', () => {
+    expect(getSurfaceType({ surface: 'gravel' })).toBe('gravel');
+    expect(getSurfaceType({ surface: 'unpaved' })).toBe('gravel');
+    expect(getSurfaceType({ surface: 'compacted' })).toBe('gravel');
+  });
+
+  it('correctly classifies cobblestone surfaces', () => {
+    expect(getSurfaceType({ surface: 'cobblestone' })).toBe('cobblestone');
+    expect(getSurfaceType({ surface: 'cobblestone:flattened' })).toBe('cobblestone');
+  });
+
+  it('defaults to gravel for track highway without surface tag', () => {
+    expect(getSurfaceType({ highway: 'track' })).toBe('gravel');
+  });
+
+  it('defaults to paved for other highway types without surface tag', () => {
+    expect(getSurfaceType({ highway: 'residential' })).toBe('paved');
+    expect(getSurfaceType({})).toBe('paved');
   });
 });

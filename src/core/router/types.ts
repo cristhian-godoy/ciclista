@@ -27,6 +27,7 @@ export interface RouteResult {
   signalCount: number;
   crossingCount: number;
   roadTypeTotals: Record<string, number>;
+  surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number>;
   edges?: {
     sourceId: string;
     targetId: string;

@@ -569,3 +569,43 @@ describe('avoidBusyRoadsCost', () => {
     expect(cost).toBeCloseTo(20, 1);
   });
 });
+
+describe('Surface penalties based on BikeProfile', () => {
+  const graph: StreetGraph = { nodes: new Map() };
+
+  it('applies heavy penalties for road bike profile on gravel and cobblestone', () => {
+    const edgeGravel: GraphEdge = {
+      target: 'B',
+      distance: 100,
+      tags: { highway: 'track', surface: 'gravel' },
+    };
+    const overridesRoad: LocalOverrides = {
+      nodeDelays: new Map(),
+      nodeNotes: new Map(),
+      nodeTurns: new Map(),
+      bikeProfile: 'road',
+    };
+
+    // Without surface penalties:
+    // Base speed on track is 5.0 * 22/18 = 6.11 m/s.
+    // Gravel penalty for road bike: speed *= 0.4, flatPenalty += 15s.
+    // effective speed = 6.11 * 0.4 = 2.444 m/s.
+    // travel time = 100 / 2.444 + 15 = 40.91 + 15 = 55.91s.
+    const costRoad = standardCost('A', edgeGravel, 'B', overridesRoad, graph);
+    expect(costRoad).toBeCloseTo(55.9, 1);
+
+    const overridesNormal: LocalOverrides = {
+      nodeDelays: new Map(),
+      nodeNotes: new Map(),
+      nodeTurns: new Map(),
+      bikeProfile: 'normal',
+    };
+    // Normal bike profile on gravel:
+    // Base speed: 5.0 * 1.0 = 5.0 m/s.
+    // Gravel penalty: speed *= 0.8.
+    // effective speed = 4.0 m/s.
+    // travel time = 100 / 4.0 = 25s.
+    const costNormal = standardCost('A', edgeGravel, 'B', overridesNormal, graph);
+    expect(costNormal).toBeCloseTo(25, 1);
+  });
+});
