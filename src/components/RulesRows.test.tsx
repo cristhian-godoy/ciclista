@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
-import { GermanSign } from '../core/router/types';
+import { InfrastructureType } from '../core/router/types';
 import { RoadRow, SignRow } from './RulesRows';
 
 describe('RulesRows Components', () => {
   const mockSignConfig: SignRuleConfig = {
-    signId: GermanSign.VZ_240,
+    signId: InfrastructureType.SHARED_PATH,
     name: 'Shared Pedestrian/Cycle Path',
     description: 'Bikes and pedestrians share the lane.',
     iconCode: '🔵',

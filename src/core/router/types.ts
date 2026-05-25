@@ -61,18 +61,18 @@ export interface IRouter {
   ): RouteResult | null;
 }
 
-export const GermanSign = {
-  VZ_242_1: 'Vz_242.1',
-  VZ_239: 'Vz_239',
-  VZ_240: 'Vz_240',
-  VZ_241: 'Vz_241',
-  VZ_325_1: 'Vz_325.1',
-  VZ_244_1: 'Vz_244.1',
+export const InfrastructureType = {
+  PEDESTRIAN_ZONE: 'pedestrian_zone',
+  SIDEWALK: 'sidewalk',
+  SHARED_PATH: 'shared_path',
+  SEGREGATED_PATH: 'segregated_path',
+  LIVING_STREET: 'living_street',
+  BICYCLE_STREET: 'bicycle_street',
 } as const;
 /**
- * Badges and keys corresponding to German cycling/traffic sign codes.
+ * Generic internal routing/infrastructure concepts mapped from OSM tags.
  */
-export type GermanSign = (typeof GermanSign)[keyof typeof GermanSign];
+export type InfrastructureType = (typeof InfrastructureType)[keyof typeof InfrastructureType];
 
 export const RoadType = {
   PRIMARY: 'primary',
@@ -95,7 +95,7 @@ export type ComfortLevel = 'very_low' | 'low' | 'neutral' | 'high' | 'very_high'
  * Configuration parameters for specific traffic sign speed rules and penalties.
  */
 export interface SignRuleConfig {
-  signId: GermanSign;
+  signId: InfrastructureType;
   name: string;
   description: string;
   iconCode: string;
@@ -131,7 +131,7 @@ export interface NodeDelayConfig {
  * Aggregated configuration wrapper mapping signs, roads, and intersection node delays.
  */
 export interface RulesConfiguration {
-  signs: Record<GermanSign, SignRuleConfig>;
+  signs: Record<InfrastructureType, SignRuleConfig>;
   roads: Record<RoadType, RoadRuleConfig>;
   nodeDelays: NodeDelayConfig;
 }

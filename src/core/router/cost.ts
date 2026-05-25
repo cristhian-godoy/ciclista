@@ -8,6 +8,7 @@ import type {
   RoadRuleConfig,
   SignRuleConfig,
 } from './types';
+import { InfrastructureType } from './types';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -40,9 +41,15 @@ export function resolveRuleSpeed(
   if (!speedType) {
     if ('signId' in cfg) {
       const signId = cfg.signId;
-      if (signId === 'Vz_241' || signId === 'Vz_244.1') {
+      if (
+        signId === InfrastructureType.SEGREGATED_PATH ||
+        signId === InfrastructureType.BICYCLE_STREET
+      ) {
         speedType = 'relative';
-      } else if (signId === 'Vz_242.1' || signId === 'Vz_239') {
+      } else if (
+        signId === InfrastructureType.PEDESTRIAN_ZONE ||
+        signId === InfrastructureType.SIDEWALK
+      ) {
         speedType = 'dismount';
       } else {
         speedType = 'custom';

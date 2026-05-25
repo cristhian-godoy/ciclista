@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import {
   getEffectiveRoadSpeedType,
   getEffectiveSignSpeedType,
@@ -5,48 +7,48 @@ import {
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from './rules';
-import { GermanSign, RoadType } from './types';
+import { InfrastructureType, RoadType } from './types';
 
 describe('mapOSMToSignAndRoad', () => {
-  // ── Fahrradstraße ─────────────────────────────────────────────────────────
-  it('maps bicycle_road=yes to VZ_244_1', () => {
+  // ── Bicycle street ─────────────────────────────────────────────────────────
+  it('maps bicycle_road=yes to BICYCLE_STREET', () => {
     const r = mapOSMToSignAndRoad('residential', { bicycle_road: 'yes' });
-    expect(r.sign).toBe(GermanSign.VZ_244_1);
+    expect(r.sign).toBe(InfrastructureType.BICYCLE_STREET);
     expect(r.bicycleFrei).toBe(true);
   });
 
-  it('maps highway=cycleway to VZ_241 (segregated path)', () => {
+  it('maps highway=cycleway to SEGREGATED_PATH', () => {
     const r = mapOSMToSignAndRoad('cycleway', {});
-    expect(r.sign).toBe(GermanSign.VZ_241);
+    expect(r.sign).toBe(InfrastructureType.SEGREGATED_PATH);
     expect(r.road).toBe(RoadType.PATH_DEFAULT);
     expect(r.bicycleFrei).toBe(true);
   });
 
   // ── Living street ─────────────────────────────────────────────────────────
-  it('maps living_street to VZ_325_1', () => {
+  it('maps living_street to LIVING_STREET', () => {
     const r = mapOSMToSignAndRoad('living_street', {});
-    expect(r.sign).toBe(GermanSign.VZ_325_1);
+    expect(r.sign).toBe(InfrastructureType.LIVING_STREET);
     expect(r.road).toBe(RoadType.RESIDENTIAL);
     expect(r.bicycleFrei).toBe(true);
   });
 
   // ── Shared / segregated path ──────────────────────────────────────────────
-  it('maps path with bicycle=designated + foot=designated + segregated=yes to VZ_241', () => {
+  it('maps path with bicycle=designated + foot=designated + segregated=yes to SEGREGATED_PATH', () => {
     const r = mapOSMToSignAndRoad('path', {
       bicycle: 'designated',
       foot: 'designated',
       segregated: 'yes',
     });
-    expect(r.sign).toBe(GermanSign.VZ_241);
+    expect(r.sign).toBe(InfrastructureType.SEGREGATED_PATH);
     expect(r.bicycleFrei).toBe(true);
   });
 
-  it('maps path with bicycle=designated + foot=designated (no segregated) to VZ_240', () => {
+  it('maps path with bicycle=designated + foot=designated (no segregated) to SHARED_PATH', () => {
     const r = mapOSMToSignAndRoad('path', {
       bicycle: 'designated',
       foot: 'designated',
     });
-    expect(r.sign).toBe(GermanSign.VZ_240);
+    expect(r.sign).toBe(InfrastructureType.SHARED_PATH);
   });
 
   it('maps generic path with no bicycle tag to bicycleFrei=false', () => {
@@ -62,41 +64,41 @@ describe('mapOSMToSignAndRoad', () => {
   });
 
   // ── Pedestrian zone ───────────────────────────────────────────────────────
-  it('maps pedestrian without bicycle tag to VZ_242_1 with bicycleFrei=false', () => {
+  it('maps pedestrian without bicycle tag to PEDESTRIAN_ZONE with bicycleFrei=false', () => {
     const r = mapOSMToSignAndRoad('pedestrian', {});
-    expect(r.sign).toBe(GermanSign.VZ_242_1);
+    expect(r.sign).toBe(InfrastructureType.PEDESTRIAN_ZONE);
     expect(r.bicycleFrei).toBe(false);
   });
 
-  it('maps pedestrian with bicycle=yes to VZ_242_1 with bicycleFrei=true (Fahrräder frei)', () => {
+  it('maps pedestrian with bicycle=yes to PEDESTRIAN_ZONE with bicycleFrei=true', () => {
     const r = mapOSMToSignAndRoad('pedestrian', { bicycle: 'yes' });
-    expect(r.sign).toBe(GermanSign.VZ_242_1);
+    expect(r.sign).toBe(InfrastructureType.PEDESTRIAN_ZONE);
     expect(r.bicycleFrei).toBe(true);
   });
 
   // ── Footway / sidewalk ────────────────────────────────────────────────────
-  it('maps footway without bicycle tag to VZ_239 with bicycleFrei=false', () => {
+  it('maps footway without bicycle tag to SIDEWALK with bicycleFrei=false', () => {
     const r = mapOSMToSignAndRoad('footway', {});
-    expect(r.sign).toBe(GermanSign.VZ_239);
+    expect(r.sign).toBe(InfrastructureType.SIDEWALK);
     expect(r.bicycleFrei).toBe(false);
   });
 
-  it('maps footway with bicycle=designated to VZ_239 with bicycleFrei=true', () => {
+  it('maps footway with bicycle=designated to SIDEWALK with bicycleFrei=true', () => {
     const r = mapOSMToSignAndRoad('footway', { bicycle: 'designated' });
-    expect(r.sign).toBe(GermanSign.VZ_239);
+    expect(r.sign).toBe(InfrastructureType.SIDEWALK);
     expect(r.bicycleFrei).toBe(true);
   });
 
-  it('maps footway with both bicycle and foot designated to VZ_240/VZ_241', () => {
+  it('maps footway with both bicycle and foot designated to SHARED_PATH/SEGREGATED_PATH', () => {
     const shared = mapOSMToSignAndRoad('footway', { bicycle: 'designated', foot: 'designated' });
-    expect(shared.sign).toBe(GermanSign.VZ_240);
+    expect(shared.sign).toBe(InfrastructureType.SHARED_PATH);
 
     const segregated = mapOSMToSignAndRoad('footway', {
       bicycle: 'designated',
       foot: 'designated',
       segregated: 'yes',
     });
-    expect(segregated.sign).toBe(GermanSign.VZ_241);
+    expect(segregated.sign).toBe(InfrastructureType.SEGREGATED_PATH);
   });
 
   // ── Road classifications ──────────────────────────────────────────────────
@@ -177,7 +179,7 @@ describe('mapOSMNodeToControl', () => {
 describe('getEffectiveSignSpeedType', () => {
   it('respects existing speedType if provided', () => {
     const cfg = {
-      signId: GermanSign.VZ_240,
+      signId: InfrastructureType.SHARED_PATH,
       name: 'Test',
       description: 'Test',
       iconCode: '',
@@ -188,7 +190,7 @@ describe('getEffectiveSignSpeedType', () => {
     expect(getEffectiveSignSpeedType(cfg)).toBe('slow');
   });
 
-  it('maps VZ_241, VZ_244_1, VZ_325_1 to relative', () => {
+  it('maps SEGREGATED_PATH, BICYCLE_STREET, LIVING_STREET to relative', () => {
     const base = {
       name: '',
       description: '',
@@ -196,12 +198,18 @@ describe('getEffectiveSignSpeedType', () => {
       baseSpeedKmh: 15,
       flatPenaltySeconds: 0,
     };
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_241 })).toBe('relative');
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_244_1 })).toBe('relative');
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_325_1 })).toBe('relative');
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.SEGREGATED_PATH })).toBe(
+      'relative',
+    );
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.BICYCLE_STREET })).toBe(
+      'relative',
+    );
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.LIVING_STREET })).toBe(
+      'relative',
+    );
   });
 
-  it('maps VZ_242_1, VZ_239 to dismount', () => {
+  it('maps PEDESTRIAN_ZONE, SIDEWALK to dismount', () => {
     const base = {
       name: '',
       description: '',
@@ -209,8 +217,12 @@ describe('getEffectiveSignSpeedType', () => {
       baseSpeedKmh: 15,
       flatPenaltySeconds: 0,
     };
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_242_1 })).toBe('dismount');
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_239 })).toBe('dismount');
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.PEDESTRIAN_ZONE })).toBe(
+      'dismount',
+    );
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.SIDEWALK })).toBe(
+      'dismount',
+    );
   });
 
   it('defaults to custom for other signs', () => {
@@ -221,7 +233,9 @@ describe('getEffectiveSignSpeedType', () => {
       baseSpeedKmh: 15,
       flatPenaltySeconds: 0,
     };
-    expect(getEffectiveSignSpeedType({ ...base, signId: GermanSign.VZ_240 })).toBe('custom');
+    expect(getEffectiveSignSpeedType({ ...base, signId: InfrastructureType.SHARED_PATH })).toBe(
+      'custom',
+    );
   });
 });
 

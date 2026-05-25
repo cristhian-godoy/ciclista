@@ -12,7 +12,7 @@ import {
 } from './cost';
 import { DijkstraRouter } from './router';
 import type { NodeDelayConfig, RoadRuleConfig, SignRuleConfig } from './types';
-import { GermanSign, RoadType } from './types';
+import { InfrastructureType, RoadType } from './types';
 
 describe('resolveRuleSpeed', () => {
   it('resolves relative speed type correctly based on profile', () => {
@@ -53,7 +53,7 @@ describe('resolveRuleSpeed', () => {
 
   it('resolves fallback default speed types if speedType is undefined', () => {
     const signCfg: SignRuleConfig = {
-      signId: GermanSign.VZ_241, // Segregated path
+      signId: InfrastructureType.SEGREGATED_PATH,
       name: 'Segregated Path',
       description: '...',
       iconCode: '🚲',
@@ -63,7 +63,7 @@ describe('resolveRuleSpeed', () => {
     expect(resolveRuleSpeed(signCfg, 'ebike')).toBe(25); // relative
 
     const sidewalkCfg: SignRuleConfig = {
-      signId: GermanSign.VZ_239, // Sidewalk
+      signId: InfrastructureType.SIDEWALK,
       name: 'Sidewalk',
       description: '...',
       iconCode: '🦶',
@@ -514,7 +514,7 @@ describe('avoidBusyRoadsCost', () => {
       nodeNotes: new Map(),
       nodeTurns: new Map(),
       rulesConfig: {
-        signs: {} as Record<GermanSign, SignRuleConfig>,
+        signs: {} as Record<InfrastructureType, SignRuleConfig>,
         roads: {
           [RoadType.PRIMARY]: {
             roadId: RoadType.PRIMARY,
@@ -548,7 +548,7 @@ describe('avoidBusyRoadsCost', () => {
       nodeNotes: new Map(),
       nodeTurns: new Map(),
       rulesConfig: {
-        signs: {} as Record<GermanSign, SignRuleConfig>,
+        signs: {} as Record<InfrastructureType, SignRuleConfig>,
         roads: {
           [RoadType.PRIMARY]: {
             roadId: RoadType.PRIMARY,
