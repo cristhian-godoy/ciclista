@@ -93,7 +93,8 @@ export function getProjectionT(p: Coordinate, a: Coordinate, b: Coordinate): num
 }
 
 /**
- *
+ * Represents a reference to a specific street edge in relation to a target coordinate.
+ * Used for map snapping and nearest-edge calculations.
  */
 export interface EdgeRef {
   uId: string;

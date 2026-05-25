@@ -36,7 +36,8 @@ interface OSMRawData {
 }
 
 /**
- *
+ * Parser that processes raw OpenStreetMap data elements (nodes and ways)
+ * from the Overpass API to construct a traversable StreetGraph routing network.
  */
 export class OSMGraphParser implements IGraphParser {
   /**
