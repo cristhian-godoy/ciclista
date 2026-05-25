@@ -8,7 +8,8 @@ import type { BikeProfile, LocalOverrides } from '../core/storage/types';
 const storage = new LocalStorageProvider();
 
 /**
- *
+ * React hook that coordinates local overrides state (delays, notes, custom routing rules, bike profiles)
+ * with browser local storage and exposes unified save/clear methods.
  */
 export function useOverrides() {
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());

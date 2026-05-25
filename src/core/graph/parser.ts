@@ -40,7 +40,7 @@ interface OSMRawData {
  */
 export class OSMGraphParser implements IGraphParser {
   /**
-   *
+   * Parses raw OpenStreetMap (OSM) JSON/XML data from Overpass API into a StreetGraph structure.
    */
   parse(rawData: unknown): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
