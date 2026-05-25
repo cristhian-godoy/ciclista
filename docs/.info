@@ -1,5 +1,7 @@
 ROADMAP.md
 	The project's long-term milestone roadmap (Milestones 1 through 4).
+future-features.md
+	Milestone 5 roadmap specs for core feature additions.
 turn_penalties_design.md
 	Technical design notes for wait delays at intersection nodes.
 archive
