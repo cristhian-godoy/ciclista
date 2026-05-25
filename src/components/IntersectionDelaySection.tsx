@@ -106,7 +106,8 @@ const DELAY_FIELDS: {
 ];
 
 /**
- *
+ * Form section component for adjusting traffic infrastructure time penalties.
+ * Allows configuring delay modifiers for signals, yield signs, stops, and crossings.
  */
 export const IntersectionDelaySection: React.FC<IntersectionDelaySectionProps> = ({
   config,

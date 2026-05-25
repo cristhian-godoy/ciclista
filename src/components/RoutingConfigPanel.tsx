@@ -14,7 +14,8 @@ interface RoutingConfigPanelProps {
 }
 
 /**
- *
+ * Panel containing global configurations for routing preset selection,
+ * active bike profiles, map theme overlays, and fetching statuses.
  */
 export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   selectedPreset,

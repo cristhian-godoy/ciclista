@@ -195,7 +195,8 @@ const MapViewContent: React.FC<{
 };
 
 /**
- *
+ * Map container component that initializes the MapLibre GL instance,
+ * handles map events, and mounts interactive layer overlays.
  */
 export const MapView: React.FC<MapViewProps> = (props) => {
   return (

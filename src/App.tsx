@@ -10,7 +10,9 @@ import { useOverrides } from './hooks/useOverrides';
 import { useRoutingState } from './hooks/useRoutingState';
 
 /**
- *
+ * Main application component for the Ciclista routing dashboard.
+ * Coordinates map state, routing logic, sidebar panels, preset configurations,
+ * and local storage overrides.
  */
 export default function App() {
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');

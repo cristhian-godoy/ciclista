@@ -23,7 +23,8 @@ interface RouteStatsPanelProps {
 }
 
 /**
- *
+ * Sidebar panel displaying route statistics (distance, time, delays) and
+ * allowing users to switch between routing strategies (standard, avoid-stops, quiet-streets).
  */
 export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
   routeAlternatives,

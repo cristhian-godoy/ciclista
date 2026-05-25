@@ -9,7 +9,8 @@ interface SpeedTypeSelectorProps {
 }
 
 /**
- *
+ * Interactive segmented selector representing cycling speed options (e.g. relative, slow, custom, dismount).
+ * Displays a descriptive speed text dynamically upon selection or hover.
  */
 export const SpeedTypeSelector: React.FC<SpeedTypeSelectorProps> = ({
   value,
@@ -56,7 +57,8 @@ interface ComfortSelectorProps {
 }
 
 /**
- *
+ * Segmented button group selector representing comfort level options.
+ * Maps custom comfort scores to descriptive route planning behaviors (e.g. avoid strongly, prefer).
  */
 export const ComfortSelector: React.FC<ComfortSelectorProps> = ({ value, onChange }) => {
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
