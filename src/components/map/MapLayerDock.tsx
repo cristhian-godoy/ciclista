@@ -1,4 +1,4 @@
-import { ChevronDown, Sliders } from 'lucide-react';
+import { ChevronDown, Sliders, TrafficCone } from 'lucide-react';
 import React from 'react';
 
 import { useMapContext } from './MapContext';
@@ -68,7 +68,7 @@ export const MapLayerDock: React.FC = () => {
             }}
             onClick={() => setShowMinorControls((v) => !v)}
           >
-            <span>🚦</span>
+            <TrafficCone size={12} aria-label="Traffic Signal Icon" />
             <span>{showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}</span>
           </button>
 

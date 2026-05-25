@@ -69,12 +69,12 @@ describe('RouteStatsPanel', () => {
     );
 
     // 150s => 2m 30s
-    expect(screen.getByText('⚡ Speed')).toBeInTheDocument();
-    expect(screen.getByText('⏱️ 2m 30s')).toBeInTheDocument();
-    expect(screen.getByText('📏 600 m')).toBeInTheDocument();
+    expect(screen.getByText('Speed')).toBeInTheDocument();
+    expect(screen.getByText('2m 30s')).toBeInTheDocument();
+    expect(screen.getByText('600 m')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
 
-    expect(screen.getByText('🛑 Avoid Stops')).toBeInTheDocument();
+    expect(screen.getByText('Avoid Stops')).toBeInTheDocument();
   });
 
   it('triggers onStrategyChange when clicking another strategy card', async () => {
@@ -90,7 +90,7 @@ describe('RouteStatsPanel', () => {
       />,
     );
 
-    const avoidStopsCard = screen.getByText('🛑 Avoid Stops');
+    const avoidStopsCard = screen.getByText('Avoid Stops');
     await user.click(avoidStopsCard);
 
     expect(handleStrategyChange).toHaveBeenCalledWith('avoid-stops');

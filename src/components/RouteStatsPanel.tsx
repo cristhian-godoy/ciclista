@@ -1,4 +1,16 @@
-import { Bug, Check, ChevronDown, ChevronUp, Copy } from 'lucide-react';
+import {
+  Bug,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Copy,
+  Octagon,
+  Ruler,
+  TrafficCone,
+  Trees,
+  Zap,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RouteAlternative, RouteResult } from '../core/router/types';
@@ -72,14 +84,29 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
             const distance = alt.result.totalDistanceMeters;
             const signals = alt.result.signalCount;
 
-            const getStrategyLabel = (label: string) => {
+            const getStrategyLabel = (label: string): React.ReactNode => {
               switch (label) {
                 case 'standard':
-                  return '⚡ Speed';
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Zap size={14} aria-label="Speed Icon" />
+                      Speed
+                    </span>
+                  );
                 case 'avoid-stops':
-                  return '🛑 Avoid Stops';
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Octagon size={14} aria-label="Avoid Stops Icon" />
+                      Avoid Stops
+                    </span>
+                  );
                 case 'quiet-streets':
-                  return '🌳 Quiet Paths';
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Trees size={14} aria-label="Quiet Paths Icon" />
+                      Quiet Paths
+                    </span>
+                  );
                 default:
                   return label;
               }
@@ -154,9 +181,18 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
                     color: 'var(--text-muted)',
                   }}
                 >
-                  <span>⏱️ {formatTime(duration)}</span>
-                  <span>📏 {formatDistance(distance)}</span>
-                  <span>🚦 {signals} signals</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} aria-label="Duration Icon" />
+                    {formatTime(duration)}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Ruler size={12} aria-label="Distance Icon" />
+                    {formatDistance(distance)}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <TrafficCone size={12} aria-label="Traffic Signals Icon" />
+                    {signals} signals
+                  </span>
                 </div>
               </div>
             );

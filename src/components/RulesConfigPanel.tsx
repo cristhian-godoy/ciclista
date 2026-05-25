@@ -1,4 +1,12 @@
-import { ChevronDown, ChevronUp, RotateCcw, Settings } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  RotateCcw,
+  Route,
+  Settings,
+  TrafficCone,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
@@ -69,7 +77,10 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
           onClick={() => setSignsOpen((v) => !v)}
           aria-expanded={signsOpen}
         >
-          <span>🚦 Traffic Signs</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <TrafficCone size={13} aria-label="Traffic Signs Icon" />
+            Traffic Signs
+          </span>
           {signsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {signsOpen && (
@@ -92,7 +103,10 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
           onClick={() => setRoadsOpen((v) => !v)}
           aria-expanded={roadsOpen}
         >
-          <span>🛣️ Road Classes</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Route size={13} aria-label="Road Classes Icon" />
+            Road Classes
+          </span>
           {roadsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {roadsOpen && (
@@ -115,7 +129,10 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
           onClick={() => setIntersectionsOpen((v) => !v)}
           aria-expanded={intersectionsOpen}
         >
-          <span>⏱️ Intersections</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={13} aria-label="Intersections Icon" />
+            Intersections
+          </span>
           {intersectionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
         {intersectionsOpen && (

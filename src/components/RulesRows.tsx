@@ -1,9 +1,33 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Bike, ChevronDown, ChevronUp, Footprints, Home, Route } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from '../core/router/rules';
 import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
 import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
+
+const getIcon = (iconCode: string): React.ReactNode => {
+  switch (iconCode) {
+    case '🚶':
+      return <Footprints size={14} aria-label="Pedestrian Zone Icon" />;
+    case '🦶':
+      return <Footprints size={14} aria-label="Sidewalk Icon" />;
+    case '🚶‍♂️🚲':
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+          <Footprints size={10} aria-label="Pedestrian Icon" />
+          <Bike size={10} aria-label="Bicycle Icon" />
+        </span>
+      );
+    case '🚲':
+      return <Bike size={14} aria-label="Bicycle Icon" />;
+    case '🏘️':
+      return <Home size={14} aria-label="Living Street Icon" />;
+    case '🚲🛣️':
+      return <Bike size={14} aria-label="Bicycle Street Icon" />;
+    default:
+      return iconCode;
+  }
+};
 
 interface SignRowProps {
   config: SignRuleConfig;
@@ -25,7 +49,7 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
-        <span className="rules-item-icon">{config.iconCode}</span>
+        <span className="rules-item-icon">{getIcon(config.iconCode)}</span>
         <span className="rules-item-name">{config.name}</span>
         {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>
@@ -117,7 +141,9 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
-        <span className="rules-item-icon">🛣️</span>
+        <span className="rules-item-icon">
+          <Route size={14} aria-label="Road Icon" />
+        </span>
         <span className="rules-item-name">{config.name}</span>
         {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>

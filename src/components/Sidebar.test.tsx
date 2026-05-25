@@ -94,7 +94,7 @@ describe('Sidebar Integration', () => {
     expect(handlePresetChange).toHaveBeenCalledWith('amsterdam');
 
     // Test stats strategy card click
-    const activeRouteCard = screen.getByText('⚡ Speed', { selector: 'span' });
+    const activeRouteCard = screen.getAllByText('Speed')[0];
     await user.click(activeRouteCard);
     expect(handleStrategyChange).toHaveBeenCalledWith('standard');
   });
