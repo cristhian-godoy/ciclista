@@ -1,26 +1,21 @@
 import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
-import type { RouteAlternative } from '../../core/router/types';
-
-interface RouteAlternativesLayerProps {
-  map: maplibregl.Map;
-  routeAlternatives: RouteAlternative[];
-  activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
-  onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  shouldFitBoundsRef: React.RefObject<boolean>;
-}
+import { useMapContext } from './MapContext';
 
 /**
  *
  */
-export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
-  map,
-  routeAlternatives,
-  activeAlternativeLabel,
-  onSelectAlternative,
-  shouldFitBoundsRef,
-}) => {
+export const RouteAlternativesLayer: React.FC = () => {
+  const {
+    map,
+    routeAlternatives,
+    activeAlternativeLabel,
+    onSelectAlternative,
+    shouldFitBounds,
+    setShouldFitBounds,
+  } = useMapContext();
+
   const onSelectAlternativeRef = useRef(onSelectAlternative);
 
   useEffect(() => {
@@ -29,6 +24,7 @@ export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
 
   // Setup layers and sources
   useEffect(() => {
+    if (!map) return;
     const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
 
     strategies.forEach((strategy) => {
@@ -141,6 +137,7 @@ export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
 
   // Synchronize route lines & opacities & fitbounds
   useEffect(() => {
+    if (!map) return;
     const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
 
     strategies.forEach((strategy) => {
@@ -199,7 +196,7 @@ export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
     const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
     if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
       const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
-      if (shouldFitBoundsRef.current && coords.length > 1) {
+      if (shouldFitBounds && coords.length > 1) {
         const bounds = coords.reduce(
           (acc, val) => acc.extend(val as [number, number]),
           new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number]),
@@ -215,13 +212,10 @@ export const RouteAlternativesLayer: React.FC<RouteAlternativesLayerProps> = ({
           : 50;
         map.fitBounds(bounds, { padding, maxZoom: 16 });
 
-        // Update the ref to prevent map jumps
-        if (shouldFitBoundsRef.current) {
-          (shouldFitBoundsRef as React.MutableRefObject<boolean>).current = false;
-        }
+        setShouldFitBounds(false);
       }
     }
-  }, [map, routeAlternatives, activeAlternativeLabel, shouldFitBoundsRef]);
+  }, [map, routeAlternatives, activeAlternativeLabel, shouldFitBounds, setShouldFitBounds]);
 
   return null;
 };

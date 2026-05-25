@@ -1,17 +1,17 @@
 import maplibregl from 'maplibre-gl';
 import React, { useEffect } from 'react';
 
-interface BBoxBoundaryLayerProps {
-  map: maplibregl.Map;
-  loadedBBoxes: [number, number, number, number][];
-}
+import { useMapContext } from './MapContext';
 
 /**
  *
  */
-export const BBoxBoundaryLayer: React.FC<BBoxBoundaryLayerProps> = ({ map, loadedBBoxes }) => {
+export const BBoxBoundaryLayer: React.FC = () => {
+  const { map, loadedBBoxes } = useMapContext();
+
   // Add source on mount/map change
   useEffect(() => {
+    if (!map) return;
     if (!map.getSource('loaded-bbox')) {
       map.addSource('loaded-bbox', {
         type: 'geojson',
@@ -20,7 +20,7 @@ export const BBoxBoundaryLayer: React.FC<BBoxBoundaryLayerProps> = ({ map, loade
     }
 
     return () => {
-      if (map.getSource('loaded-bbox')) {
+      if (map && map.getSource('loaded-bbox')) {
         map.removeSource('loaded-bbox');
       }
     };
@@ -28,6 +28,7 @@ export const BBoxBoundaryLayer: React.FC<BBoxBoundaryLayerProps> = ({ map, loade
 
   // Sync loadedBBoxes into the source
   useEffect(() => {
+    if (!map) return;
     const bboxSource = map.getSource('loaded-bbox') as maplibregl.GeoJSONSource;
     if (!bboxSource) return;
 

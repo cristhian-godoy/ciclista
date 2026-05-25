@@ -1,41 +1,22 @@
 import { MapPin, ZoomIn } from 'lucide-react';
-import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
-import type { Coordinate } from '../../core/common/types';
-
-interface ContextMenuData {
-  visible: boolean;
-  x: number;
-  y: number;
-  lng: number;
-  lat: number;
-  crossingId: string | null;
-  nodeIds: string | null;
-}
-
-interface MapContextMenuProps {
-  map: maplibregl.Map;
-  contextMenu: ContextMenuData;
-  setContextMenu: React.Dispatch<React.SetStateAction<ContextMenuData>>;
-  setManagedClusterId: (id: string | null) => void;
-  setManagedNodeIds: (ids: string[]) => void;
-  onStartDrag: (coord: Coordinate | null) => void;
-  onEndDrag: (coord: Coordinate | null) => void;
-}
+import { useMapContext } from './MapContext';
 
 /**
  *
  */
-export const MapContextMenu: React.FC<MapContextMenuProps> = ({
-  map,
-  contextMenu,
-  setContextMenu,
-  setManagedClusterId,
-  setManagedNodeIds,
-  onStartDrag,
-  onEndDrag,
-}) => {
+export const MapContextMenu: React.FC = () => {
+  const {
+    map,
+    contextMenu,
+    setContextMenu,
+    setManagedClusterId,
+    setManagedNodeIds,
+    onStartDrag,
+    onEndDrag,
+  } = useMapContext();
+
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
@@ -57,7 +38,7 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({
     setManagedNodeIdsRef.current = setManagedNodeIds;
   }, [setManagedNodeIds]);
 
-  if (!contextMenu.visible) return null;
+  if (!map || !contextMenu.visible) return null;
 
   return (
     <div

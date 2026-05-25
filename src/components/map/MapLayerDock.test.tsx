@@ -2,7 +2,52 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { MapContext, MapContextType } from './MapContext';
 import { MapLayerDock } from './MapLayerDock';
+
+const defaultContextValue: MapContextType = {
+  map: null,
+  setMap: vi.fn(),
+  mapReady: false,
+  setMapReady: vi.fn(),
+  graph: null,
+  loadedBBoxes: [],
+  startCoord: null,
+  endCoord: null,
+  routeAlternatives: [],
+  activeAlternativeLabel: 'standard',
+  onSelectAlternative: vi.fn(),
+  selectedPreset: 'munich',
+  customNodeDelays: new Map(),
+  customNodeNotes: new Map(),
+  selectedNode: null,
+  onStartDrag: vi.fn(),
+  onEndDrag: vi.fn(),
+  onNodeSelect: vi.fn(),
+  onSaveNodeOverride: vi.fn(),
+  onClearNodeOverride: vi.fn(),
+  theme: 'bright',
+  shouldFitBounds: false,
+  setShouldFitBounds: vi.fn(),
+  showMinorControls: false,
+  setShowMinorControls: vi.fn(),
+  dockExpanded: true,
+  setDockExpanded: vi.fn(),
+  managedClusterId: null,
+  setManagedClusterId: vi.fn(),
+  managedNodeIds: [],
+  setManagedNodeIds: vi.fn(),
+  contextMenu: {
+    visible: false,
+    x: 0,
+    y: 0,
+    lng: 0,
+    lat: 0,
+    crossingId: null,
+    nodeIds: null,
+  },
+  setContextMenu: vi.fn(),
+};
 
 describe('MapLayerDock', () => {
   it('renders expanded mode with show/hide minor controls button', async () => {
@@ -10,13 +55,18 @@ describe('MapLayerDock', () => {
     const handleSetShowMinor = vi.fn();
     const handleSetDockExpanded = vi.fn();
 
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      showMinorControls: false,
+      setShowMinorControls: handleSetShowMinor,
+      dockExpanded: true,
+      setDockExpanded: handleSetDockExpanded,
+    };
+
     render(
-      <MapLayerDock
-        showMinorControls={false}
-        setShowMinorControls={handleSetShowMinor}
-        dockExpanded={true}
-        setDockExpanded={handleSetDockExpanded}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <MapLayerDock />
+      </MapContext.Provider>,
     );
 
     expect(screen.getByText('Map Layers')).toBeInTheDocument();
@@ -38,13 +88,18 @@ describe('MapLayerDock', () => {
     const user = userEvent.setup();
     const handleSetDockExpanded = vi.fn();
 
+    const contextValue: MapContextType = {
+      ...defaultContextValue,
+      showMinorControls: false,
+      setShowMinorControls: vi.fn(),
+      dockExpanded: false,
+      setDockExpanded: handleSetDockExpanded,
+    };
+
     render(
-      <MapLayerDock
-        showMinorControls={false}
-        setShowMinorControls={vi.fn()}
-        dockExpanded={false}
-        setDockExpanded={handleSetDockExpanded}
-      />,
+      <MapContext.Provider value={contextValue}>
+        <MapLayerDock />
+      </MapContext.Provider>,
     );
 
     expect(screen.queryByText('Map Layers')).not.toBeInTheDocument();

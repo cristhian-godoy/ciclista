@@ -1,28 +1,14 @@
 import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
-import type { Coordinate } from '../../core/common/types';
-
-interface StartEndMarkersProps {
-  map: maplibregl.Map;
-  startCoord: Coordinate | null;
-  endCoord: Coordinate | null;
-  onStartDrag: (coord: Coordinate | null) => void;
-  onEndDrag: (coord: Coordinate | null) => void;
-  shouldFitBoundsRef: React.RefObject<boolean>;
-}
+import { useMapContext } from './MapContext';
 
 /**
  *
  */
-export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
-  map,
-  startCoord,
-  endCoord,
-  onStartDrag,
-  onEndDrag,
-  shouldFitBoundsRef,
-}) => {
+export const StartEndMarkers: React.FC = () => {
+  const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds } = useMapContext();
+
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
 
@@ -53,6 +39,7 @@ export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
 
   // Dynamically manage Start Marker
   useEffect(() => {
+    if (!map) return;
     if (startCoord) {
       if (!startMarkerRef.current) {
         const startEl = document.createElement('div');
@@ -82,18 +69,14 @@ export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
         });
         startMarkerRef.current = startMarker;
 
-        if (shouldFitBoundsRef.current !== null) {
-          (shouldFitBoundsRef as React.MutableRefObject<boolean>).current = true;
-        }
+        setShouldFitBounds(true);
       } else {
         const currentMarkerLngLat = startMarkerRef.current.getLngLat();
         const diffLat = Math.abs(startCoord.lat - currentMarkerLngLat.lat);
         const diffLng = Math.abs(startCoord.lng - currentMarkerLngLat.lng);
         startMarkerRef.current.setLngLat([startCoord.lng, startCoord.lat]);
         if (diffLat > 0.0001 || diffLng > 0.0001) {
-          if (shouldFitBoundsRef.current !== null) {
-            (shouldFitBoundsRef as React.MutableRefObject<boolean>).current = true;
-          }
+          setShouldFitBounds(true);
         }
       }
     } else {
@@ -102,10 +85,11 @@ export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
         startMarkerRef.current = null;
       }
     }
-  }, [map, startCoord, shouldFitBoundsRef]);
+  }, [map, startCoord, setShouldFitBounds]);
 
   // Dynamically manage End Marker
   useEffect(() => {
+    if (!map) return;
     if (endCoord) {
       if (!endMarkerRef.current) {
         const endEl = document.createElement('div');
@@ -135,18 +119,14 @@ export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
         });
         endMarkerRef.current = endMarker;
 
-        if (shouldFitBoundsRef.current !== null) {
-          (shouldFitBoundsRef as React.MutableRefObject<boolean>).current = true;
-        }
+        setShouldFitBounds(true);
       } else {
         const currentMarkerLngLat = endMarkerRef.current.getLngLat();
         const diffLat = Math.abs(endCoord.lat - currentMarkerLngLat.lat);
         const diffLng = Math.abs(endCoord.lng - currentMarkerLngLat.lng);
         endMarkerRef.current.setLngLat([endCoord.lng, endCoord.lat]);
         if (diffLat > 0.0001 || diffLng > 0.0001) {
-          if (shouldFitBoundsRef.current !== null) {
-            (shouldFitBoundsRef as React.MutableRefObject<boolean>).current = true;
-          }
+          setShouldFitBounds(true);
         }
       }
     } else {
@@ -155,7 +135,7 @@ export const StartEndMarkers: React.FC<StartEndMarkersProps> = ({
         endMarkerRef.current = null;
       }
     }
-  }, [map, endCoord, shouldFitBoundsRef]);
+  }, [map, endCoord, setShouldFitBounds]);
 
   return null;
 };
