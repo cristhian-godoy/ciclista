@@ -56,47 +56,67 @@ export class DijkstraRouter implements IRouter {
     costFn: CostFunction,
     overrides: LocalOverrides,
   ): { destReached: boolean; previous: Map<string, string> } {
-    const distances = new Map<string, number>();
-    const previous = new Map<string, string>();
-    const visited = new Set<string>();
-    const heap = new MinHeap<string>();
+    const N = graph.nodes.size;
+    const nodeIdToInt = new Map<string, number>();
+    const intToNodeId = new Array<string>(N);
 
-    distances.set(startId, 0);
-    heap.push(startId, 0);
-
+    let idx = 0;
     for (const nodeId of graph.nodes.keys()) {
-      if (nodeId !== startId) {
-        distances.set(nodeId, Infinity);
-      }
+      nodeIdToInt.set(nodeId, idx);
+      intToNodeId[idx] = nodeId;
+      idx++;
     }
+
+    const startInt = nodeIdToInt.get(startId);
+    const endInt = nodeIdToInt.get(endId);
+
+    if (startInt === undefined || endInt === undefined) {
+      return { destReached: false, previous: new Map() };
+    }
+
+    const distances = new Float64Array(N);
+    distances.fill(Infinity);
+    distances[startInt] = 0;
+
+    const previousInt = new Int32Array(N);
+    previousInt.fill(-1);
+
+    const visited = new Uint8Array(N);
+    const heap = new MinHeap<number>();
+    heap.push(startInt, 0);
 
     let destReached = false;
 
     while (!heap.isEmpty()) {
-      const currentId = heap.pop();
-      if (!currentId) break;
+      const currentInt = heap.pop();
+      if (currentInt === undefined) break;
 
-      if (currentId === endId) {
+      if (currentInt === endInt) {
         destReached = true;
         break;
       }
 
-      if (visited.has(currentId)) continue;
-      visited.add(currentId);
+      if (visited[currentInt] === 1) continue;
+      visited[currentInt] = 1;
 
+      const currentId = intToNodeId[currentInt];
       const currentEntry = graph.nodes.get(currentId);
       if (!currentEntry) continue;
 
-      const currentDist = distances.get(currentId) || 0;
+      const currentDist = distances[currentInt];
 
       for (const edge of currentEntry.edges) {
         const neighborId = edge.target;
-        if (visited.has(neighborId)) continue;
+        const neighborInt = nodeIdToInt.get(neighborId);
+        if (neighborInt === undefined) continue;
+
+        if (visited[neighborInt] === 1) continue;
 
         let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
 
-        const parentId = previous.get(currentId);
-        if (parentId) {
+        const parentInt = previousInt[currentInt];
+        if (parentInt !== -1) {
+          const parentId = intToNodeId[parentInt];
           const parentEntry = graph.nodes.get(parentId);
           const neighborEntry = graph.nodes.get(neighborId);
           if (parentEntry && neighborEntry) {
@@ -110,11 +130,18 @@ export class DijkstraRouter implements IRouter {
 
         const altDist = currentDist + edgeCost;
 
-        if (altDist < (distances.get(neighborId) || Infinity)) {
-          distances.set(neighborId, altDist);
-          previous.set(neighborId, currentId);
-          heap.push(neighborId, altDist);
+        if (altDist < distances[neighborInt]) {
+          distances[neighborInt] = altDist;
+          previousInt[neighborInt] = currentInt;
+          heap.push(neighborInt, altDist);
         }
+      }
+    }
+
+    const previous = new Map<string, string>();
+    for (let i = 0; i < N; i++) {
+      if (previousInt[i] !== -1) {
+        previous.set(intToNodeId[i], intToNodeId[previousInt[i]]);
       }
     }
 
