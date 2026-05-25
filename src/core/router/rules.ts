@@ -1,32 +1,31 @@
 import type { RoadRuleConfig, RulesConfiguration, SignRuleConfig } from './types';
-import { GermanSign, RoadType } from './types';
+import { InfrastructureType, RoadType } from './types';
 
 /**
- * Result of mapping an OSM way's tags to German traffic sign and road classification.
+ * Result of mapping an OSM way's tags to infrastructure concept and road classification.
  */
 export interface OSMRuleMatch {
-  /** The matched German traffic sign, if any. Takes precedence over roadType for cost calculation. */
-  sign: GermanSign | null;
+  /** The matched infrastructure concept, if any. Takes precedence over roadType for cost calculation. */
+  sign: InfrastructureType | null;
   /** The matched road classification used as the speed baseline. */
   road: RoadType;
   /**
-   * True when a "Fahrräder frei" supplementary sign is detected,
-   * meaning cyclists are explicitly permitted on an otherwise restricted path.
+   * True when cyclists are explicitly permitted on an otherwise restricted path.
    */
   bicycleFrei: boolean;
 }
 
 /**
- * Maps an OSM way's highway tag and full tag set to the applicable German
- * traffic sign and road classification for cycling cost evaluation.
+ * Maps an OSM way's highway tag and full tag set to the applicable infrastructure concept
+ * and road classification for cycling cost evaluation.
  *
  * Priority order (highest to lowest):
- *   1. Explicit bicycle_road / fahrradstrasse tag → VZ 244.1
- *   2. Living street → VZ 325.1
- *   3. Shared foot+cycle path → VZ 240
- *   4. Segregated foot+cycle path → VZ 241
- *   5. Pedestrian zone → VZ 242.1
- *   6. Footway / sidewalk → VZ 239
+ *   1. Explicit bicycle_road / fahrradstrasse tag → BICYCLE_STREET
+ *   2. Living street → LIVING_STREET
+ *   3. Shared foot+cycle path → SHARED_PATH
+ *   4. Segregated foot+cycle path → SEGREGATED_PATH
+ *   5. Pedestrian zone → PEDESTRIAN_ZONE
+ *   6. Footway / sidewalk → SIDEWALK
  *   7. Road classifications (primary, secondary, residential, service, default)
  */
 export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string>): OSMRuleMatch {
@@ -34,19 +33,31 @@ export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string
   const foot = tags.foot;
   const bicycleFrei = bicycle === 'yes' || bicycle === 'designated' || bicycle === 'permissive';
 
-  // ── 1. Bicycle street (Fahrradstraße) ──────────────────────────────────────
+  // ── 1. Bicycle street ──────────────────────────────────────────────────────
   if (tags.bicycle_road === 'yes' || tags.cyclestreet === 'yes' || highway === 'bicycle_road') {
-    return { sign: GermanSign.VZ_244_1, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
+    return {
+      sign: InfrastructureType.BICYCLE_STREET,
+      road: RoadType.PATH_DEFAULT,
+      bicycleFrei: true,
+    };
   }
 
-  // ── 2. Cycleway (dedicated cycle path, no sign but best infrastructure) ────
+  // ── 2. Cycleway (dedicated cycle path) ─────────────────────────────────────
   if (highway === 'cycleway') {
-    return { sign: GermanSign.VZ_241, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
+    return {
+      sign: InfrastructureType.SEGREGATED_PATH,
+      road: RoadType.PATH_DEFAULT,
+      bicycleFrei: true,
+    };
   }
 
-  // ── 3. Living street (Verkehrsberuhigter Bereich) ─────────────────────────
+  // ── 3. Living street ──────────────────────────────────────────────────────
   if (highway === 'living_street') {
-    return { sign: GermanSign.VZ_325_1, road: RoadType.RESIDENTIAL, bicycleFrei: true };
+    return {
+      sign: InfrastructureType.LIVING_STREET,
+      road: RoadType.RESIDENTIAL,
+      bicycleFrei: true,
+    };
   }
 
   // ── 4. Path / track / footway: check for shared or segregated designation ───
@@ -57,9 +68,17 @@ export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string
       (foot === 'designated' || foot === 'yes')
     ) {
       if (segregated === 'yes') {
-        return { sign: GermanSign.VZ_241, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
+        return {
+          sign: InfrastructureType.SEGREGATED_PATH,
+          road: RoadType.PATH_DEFAULT,
+          bicycleFrei: true,
+        };
       }
-      return { sign: GermanSign.VZ_240, road: RoadType.PATH_DEFAULT, bicycleFrei: true };
+      return {
+        sign: InfrastructureType.SHARED_PATH,
+        road: RoadType.PATH_DEFAULT,
+        bicycleFrei: true,
+      };
     }
   }
 
@@ -74,12 +93,12 @@ export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string
 
   // ── 6. Pedestrian zone ────────────────────────────────────────────────────
   if (highway === 'pedestrian') {
-    return { sign: GermanSign.VZ_242_1, road: RoadType.PATH_DEFAULT, bicycleFrei };
+    return { sign: InfrastructureType.PEDESTRIAN_ZONE, road: RoadType.PATH_DEFAULT, bicycleFrei };
   }
 
   // ── 7. Footway / sidewalk ─────────────────────────────────────────────────
   if (highway === 'footway' || highway === 'steps') {
-    return { sign: GermanSign.VZ_239, road: RoadType.PATH_DEFAULT, bicycleFrei };
+    return { sign: InfrastructureType.SIDEWALK, road: RoadType.PATH_DEFAULT, bicycleFrei };
   }
 
   // ── 7. Road classifications ───────────────────────────────────────────────
@@ -161,13 +180,13 @@ export function getEffectiveSignSpeedType(
   if (cfg.speedType) return cfg.speedType;
   const signId = cfg.signId;
   if (
-    signId === GermanSign.VZ_241 ||
-    signId === GermanSign.VZ_244_1 ||
-    signId === GermanSign.VZ_325_1
+    signId === InfrastructureType.SEGREGATED_PATH ||
+    signId === InfrastructureType.BICYCLE_STREET ||
+    signId === InfrastructureType.LIVING_STREET
   ) {
     return 'relative';
   }
-  if (signId === GermanSign.VZ_242_1 || signId === GermanSign.VZ_239) {
+  if (signId === InfrastructureType.PEDESTRIAN_ZONE || signId === InfrastructureType.SIDEWALK) {
     return 'dismount';
   }
   return 'custom';
@@ -192,65 +211,65 @@ export function getEffectiveRoadSpeedType(
  */
 export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
   signs: {
-    [GermanSign.VZ_242_1]: {
-      signId: GermanSign.VZ_242_1,
+    [InfrastructureType.PEDESTRIAN_ZONE]: {
+      signId: InfrastructureType.PEDESTRIAN_ZONE,
       name: 'Pedestrian Zone',
       description:
-        'Vz 242.1 – Fußgängerzone. Cyclists must dismount unless "Fahrräder frei" is posted.',
+        'A zone designated for pedestrian use. Cyclists must dismount unless supplementary signs permit cycling.',
       iconCode: '🚶',
       baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 30,
       comfort: 'low',
     },
-    [GermanSign.VZ_239]: {
-      signId: GermanSign.VZ_239,
+    [InfrastructureType.SIDEWALK]: {
+      signId: InfrastructureType.SIDEWALK,
       name: 'Sidewalk / Footway',
       description:
-        'Vz 239 – Gehweg. Cycling forbidden unless "Fahrräder frei" supplement is present.',
+        'A walkway adjacent to roads or park paths. Cycling is generally forbidden unless explicitly allowed.',
       iconCode: '🦶',
       baseSpeedKmh: 4,
       speedType: 'dismount',
       flatPenaltySeconds: 20,
       comfort: 'low',
     },
-    [GermanSign.VZ_240]: {
-      signId: GermanSign.VZ_240,
+    [InfrastructureType.SHARED_PATH]: {
+      signId: InfrastructureType.SHARED_PATH,
       name: 'Shared Path',
       description:
-        'Vz 240 – Gemeinsamer Geh- und Radweg. Shared footway/cycleway at reduced speed.',
+        'A shared walkway and cycleway where pedestrians and cyclists mix. Reduced speed recommended.',
       iconCode: '🚶‍♂️🚲',
       baseSpeedKmh: 15,
       speedType: 'slow',
       flatPenaltySeconds: 0,
       comfort: 'high',
     },
-    [GermanSign.VZ_241]: {
-      signId: GermanSign.VZ_241,
+    [InfrastructureType.SEGREGATED_PATH]: {
+      signId: InfrastructureType.SEGREGATED_PATH,
       name: 'Segregated Path',
-      description:
-        'Vz 241 – Getrennter Geh- und Radweg. Separate tracks for pedestrians and cyclists.',
+      description: 'A path with separate parallel tracks designated for pedestrians and cyclists.',
       iconCode: '🚲',
       baseSpeedKmh: 18,
       speedType: 'relative',
       flatPenaltySeconds: 0,
       comfort: 'very_high',
     },
-    [GermanSign.VZ_325_1]: {
-      signId: GermanSign.VZ_325_1,
+    [InfrastructureType.LIVING_STREET]: {
+      signId: InfrastructureType.LIVING_STREET,
       name: 'Living Street',
       description:
-        'Vz 325.1 – Verkehrsberuhigter Bereich. Pedestrians have priority, walking speed.',
+        'A traffic-calmed residential street. Pedestrians have priority and vehicles must travel at walking pace.',
       iconCode: '🏘️',
       baseSpeedKmh: 7,
       speedType: 'relative',
       flatPenaltySeconds: 5,
       comfort: 'high',
     },
-    [GermanSign.VZ_244_1]: {
-      signId: GermanSign.VZ_244_1,
+    [InfrastructureType.BICYCLE_STREET]: {
+      signId: InfrastructureType.BICYCLE_STREET,
       name: 'Bicycle Street',
-      description: 'Vz 244.1 – Fahrradstraße. Bikes have priority, cars may use at low speed.',
+      description:
+        'A street where cyclists have priority and motor traffic is restricted or slowed.',
       iconCode: '🚲🛣️',
       baseSpeedKmh: 20,
       speedType: 'relative',

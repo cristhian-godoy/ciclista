@@ -8,7 +8,7 @@ import type {
   RulesConfiguration,
   SignRuleConfig,
 } from '../core/router/types';
-import { GermanSign, RoadType } from '../core/router/types';
+import { InfrastructureType, RoadType } from '../core/router/types';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
 
@@ -25,7 +25,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
   const [roadsOpen, setRoadsOpen] = useState(false);
   const [intersectionsOpen, setIntersectionsOpen] = useState(false);
 
-  const updateSign = (signId: GermanSign, updated: SignRuleConfig) => {
+  const updateSign = (signId: InfrastructureType, updated: SignRuleConfig) => {
     onChange({
       ...config,
       signs: { ...config.signs, [signId]: updated },

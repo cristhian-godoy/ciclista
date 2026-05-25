@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { GermanSign, RulesConfiguration } from '../router/types';
+import type { InfrastructureType, RulesConfiguration } from '../router/types';
 import { LocalStorageProvider } from './storage';
 
 describe('LocalStorageProvider', () => {
@@ -59,8 +59,8 @@ describe('LocalStorageProvider', () => {
   it('correctly saves and loads rules configuration', () => {
     const mockConfig = {
       signs: {
-        Vz_240: {
-          signId: 'Vz_240' as GermanSign,
+        shared_path: {
+          signId: 'shared_path' as InfrastructureType,
           name: 'Shared Path',
           description: 'Desc',
           iconCode: 'icon',
@@ -83,6 +83,6 @@ describe('LocalStorageProvider', () => {
     const loaded = provider.loadRulesConfig();
     expect(loaded).not.toBeNull();
     expect(loaded?.nodeDelays.signalSeconds).toBe(15);
-    expect(loaded?.signs['Vz_240']?.baseSpeedKmh).toBe(15);
+    expect(loaded?.signs['shared_path']?.baseSpeedKmh).toBe(15);
   });
 });
