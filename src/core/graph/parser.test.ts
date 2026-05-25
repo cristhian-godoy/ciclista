@@ -107,4 +107,39 @@ describe('OSMGraphParser', () => {
       expect(graph).toBeDefined();
     }).not.toThrow();
   });
+
+  it('correctly parses and converts maxspeed limits with units like mph', () => {
+    const data = {
+      elements: [
+        { type: 'node', id: 1, lat: 48.1, lon: 11.1 },
+        { type: 'node', id: 2, lat: 48.2, lon: 11.2 },
+        {
+          type: 'way',
+          id: 101,
+          nodes: [1, 2],
+          tags: { highway: 'residential', maxspeed: '10 mph' },
+        },
+        {
+          type: 'way',
+          id: 102,
+          nodes: [1, 2],
+          tags: { highway: 'residential', maxspeed: '10' },
+        },
+      ],
+    };
+
+    const graph = parser.parse(data);
+    const node1 = graph.nodes.get('1');
+    expect(node1).toBeDefined();
+
+    // Verify edge with 10 mph maxspeed (converted to km/h, then m/s: approx 4.47 m/s)
+    const edgeMph = node1?.edges.find((e) => e.speedLimit !== 5.0 && e.speedLimit > 4.0);
+    expect(edgeMph).toBeDefined();
+    expect(edgeMph?.speedLimit).toBeCloseTo(16.0934 / 3.6, 4);
+
+    // Verify edge with 10 km/h maxspeed (converted to m/s: approx 2.78 m/s)
+    const edgeKmh = node1?.edges.find((e) => e.speedLimit < 3.0);
+    expect(edgeKmh).toBeDefined();
+    expect(edgeKmh?.speedLimit).toBeCloseTo(10 / 3.6, 4);
+  });
 });

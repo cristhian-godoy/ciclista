@@ -102,8 +102,12 @@ export class OSMGraphParser implements IGraphParser {
         // Determine speed limits based on OSM tags or cycling defaults
         let speedLimit = 5.0; // Default: ~18 km/h cycling speed
         if (wayTags.maxspeed) {
-          const limitKmh = parseInt(wayTags.maxspeed);
+          const rawSpeed = wayTags.maxspeed.trim();
+          let limitKmh = parseInt(rawSpeed);
           if (!isNaN(limitKmh)) {
+            if (rawSpeed.toLowerCase().endsWith('mph')) {
+              limitKmh = limitKmh * 1.60934;
+            }
             // Speed limit in m/s (usually cars, we default lower for cyclists)
             speedLimit = Math.min(5.0, (limitKmh * 1000) / 3600);
           }
