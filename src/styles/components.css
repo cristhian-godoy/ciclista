@@ -797,3 +797,72 @@ h2 {
   color: var(--ciclista-color-brand-secondary);
   margin-top: var(--ciclista-spacing-sm);
 }
+
+/* MapLibre Navigation Control styling overrides for dark mode contrast */
+.maplibregl-ctrl-group {
+  background-color: var(--ciclista-glass-bg-base) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--ciclista-glass-border-base) !important;
+  backdrop-filter: blur(var(--ciclista-blur-radius)) !important;
+  box-shadow: var(--ciclista-shadow-sm) !important;
+}
+
+.maplibregl-ctrl-group button {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--ciclista-glass-border-base) !important;
+  color: var(--ciclista-color-text-primary) !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.maplibregl-ctrl-group button:last-child {
+  border-bottom-style: none !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: var(--ciclista-glass-bg-hover) !important;
+}
+
+/* Render clean, high-contrast text icons for zoom buttons */
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in::before,
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out::before {
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--ciclista-color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in::before {
+  content: '+';
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out::before {
+  content: '−';
+}
+
+/* Hide default icons only for zoom controls */
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  display: none;
+}
+
+/* Custom rotating compass needle using Lucide Compass SVG icon injected via JS */
+.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+  background-image: none;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon::before {
+  content: none;
+}

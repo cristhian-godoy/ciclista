@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
+import { CustomNavigationControl } from './CustomNavigationControl';
 import { useCustomMapControls } from './useCustomMapControls';
 
 interface UseMapInstanceOptions {
@@ -80,8 +81,8 @@ export const useMapInstance = ({
 
     setMap(mapInstance);
 
-    // Add navigation controls
-    mapInstance.addControl(new maplibregl.NavigationControl(), 'top-right');
+    // Add custom navigation controls
+    mapInstance.addControl(new CustomNavigationControl(), 'top-right');
 
     const container = mapContainerRef.current;
     const preventDefaultContextMenu = (e: MouseEvent) => e.preventDefault();
