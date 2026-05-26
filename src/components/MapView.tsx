@@ -118,16 +118,6 @@ const MapViewContent: React.FC<{
       return;
     }
 
-    if (!map) return;
-    const features = map.queryRenderedFeatures(e.point, {
-      layers: ['traffic-lights-cluster', 'traffic-lights-unclustered'],
-    });
-
-    // If we clicked on an intersection, do not drop a pin.
-    if (features.length > 0) {
-      return;
-    }
-
     setManagedClusterId(null);
     setManagedNodeIds([]);
     onNodeSelect(null);
@@ -136,7 +126,13 @@ const MapViewContent: React.FC<{
     const eCoord = endCoordRef.current;
     const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
 
-    if (!sCoord || (sCoord && eCoord)) {
+    // Once both pins are placed, do not re-add pins on click.
+    // They must be dragged or set via context menu instead.
+    if (sCoord && eCoord) {
+      return;
+    }
+
+    if (!sCoord) {
       onStartDrag(clickedCoord);
       onEndDrag(null);
     } else {

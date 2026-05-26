@@ -216,6 +216,7 @@ export const StreetGraphLayer: React.FC = () => {
 
     // Click handler for unclustered traffic signals
     const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const properties = feature.properties;
