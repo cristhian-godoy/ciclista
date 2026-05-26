@@ -68,6 +68,11 @@ async function evictOldCacheEntries(cache: Cache, maxItems: number) {
 /**
  * Fetch Overpass API data with client-side CacheStorage revalidation and mirror failover.
  * Implements Stale-While-Revalidate (SWR), cache TTL enforcement, and cache eviction.
+ *
+ * Note: We explicitly use the browser's native CacheStorage API (which writes to disk)
+ * instead of in-memory caching libraries like React Query or SWR. Overpass API JSON
+ * responses for entire cities can easily reach 50MB-150MB. Storing this in the JavaScript
+ * heap would cause severe memory bloat or crash the browser tab.
  */
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
   const cacheKey = new Request(

@@ -16,7 +16,7 @@ describe('DijkstraRouter', () => {
     nodeDelays: new Map(),
     nodeNotes: new Map(),
     nodeTurns: new Map(),
-    bikeProfile: 'normal',
+    bikeConfig: { id: 'normal' },
   };
 
   it('calculates optimal path between two points in mock graph', () => {

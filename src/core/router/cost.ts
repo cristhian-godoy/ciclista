@@ -1,5 +1,6 @@
 import type { GraphEdge, StreetGraph } from '../graph/types';
-import type { BikeProfile, LocalOverrides } from '../storage/types';
+import type { LocalOverrides } from '../storage/types';
+import { mapBikeConfigToImpacts } from './bike';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type {
   ComfortLevel,
@@ -20,23 +21,11 @@ function kmhToMs(kmh: number): number {
 }
 
 /**
- * Speed multiplier per bike profile relative to a "normal" 18 km/h baseline.
- * slow  = 15 km/h, normal = 18 km/h, ebike = 25 km/h.
- */
-const PROFILE_MULTIPLIER: Record<string, number> = {
-  slow: 15 / 18, // ~0.833
-  normal: 1.0,
-  ebike: 25 / 18, // ~1.389
-  road: 22 / 18, // ~1.222
-};
-
-/**
- * Resolves a SignRuleConfig or RoadRuleConfig speed to km/h based on the speedType and bike profile,
- * resolved based on the speedType and bike profile.
+ * Resolves the effective rule speed (in km/h) based on the rule configuration and the bike's base cruising speed.
  */
 export function resolveRuleSpeed(
   cfg: SignRuleConfig | RoadRuleConfig,
-  profile: BikeProfile,
+  cruisingSpeedKmh: number,
 ): number {
   let speedType = cfg.speedType;
   if (!speedType) {
@@ -62,9 +51,7 @@ export function resolveRuleSpeed(
 
   switch (speedType) {
     case 'relative':
-      if (profile === 'slow') return 15;
-      if (profile === 'ebike') return 25;
-      return 18; // normal
+      return cruisingSpeedKmh;
     case 'slow':
       return 15;
     case 'slower':
@@ -88,8 +75,8 @@ function resolveSpeedAndPenalty(
   const highway = edge.tags.highway || '';
   const { sign, road, bicycleFrei } = mapOSMToSignAndRoad(highway, edge.tags);
   const rules = overrides.rulesConfig;
-  const profile = overrides.bikeProfile ?? 'normal';
-  const profileMultiplier = PROFILE_MULTIPLIER[profile] ?? 1.0;
+  const config = overrides.bikeConfig ?? { id: 'normal' };
+  const impacts = mapBikeConfigToImpacts(config);
 
   let speed: number;
   let flatPenalty: number;
@@ -97,16 +84,16 @@ function resolveSpeedAndPenalty(
   if (rules) {
     if (sign && rules.signs && rules.signs[sign]) {
       const cfg = rules.signs[sign];
-      const speedKmh = resolveRuleSpeed(cfg, profile);
+      const speedKmh = resolveRuleSpeed(cfg, impacts.cruisingSpeedKmh);
       speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
     } else if (rules.roads && rules.roads[road]) {
       const cfg = rules.roads[road];
-      const speedKmh = resolveRuleSpeed(cfg, profile);
+      const speedKmh = resolveRuleSpeed(cfg, impacts.cruisingSpeedKmh);
       speed = kmhToMs(speedKmh);
       flatPenalty = cfg.flatPenaltySeconds;
     } else {
-      speed = kmhToMs(18) * profileMultiplier;
+      speed = kmhToMs(impacts.cruisingSpeedKmh);
       flatPenalty = 0;
     }
   } else {
@@ -130,34 +117,18 @@ function resolveSpeedAndPenalty(
     } else {
       speed = 5.0;
     }
-    speed = speed * profileMultiplier;
+    speed = speed * (impacts.cruisingSpeedKmh / 18.0);
     flatPenalty = 0;
   }
 
   // ── Apply Surface Penalties ────────────────────────────────────────────────
   const surfaceType = getSurfaceType(edge.tags);
   if (surfaceType === 'gravel') {
-    if (profile === 'road') {
-      speed *= 0.4; // 60% reduction
-      flatPenalty += 15;
-    } else if (profile === 'normal') {
-      speed *= 0.8; // 20% reduction
-    } else if (profile === 'slow') {
-      speed *= 0.9; // 10% reduction
-    } else if (profile === 'ebike') {
-      speed *= 0.9; // 10% reduction
-    }
+    speed *= impacts.surfaceModifiers.gravel.speedMultiplier;
+    flatPenalty += impacts.surfaceModifiers.gravel.flatPenalty;
   } else if (surfaceType === 'cobblestone') {
-    if (profile === 'road') {
-      speed *= 0.6; // 40% reduction
-      flatPenalty += 10;
-    } else if (profile === 'normal') {
-      speed *= 0.75; // 25% reduction
-    } else if (profile === 'slow') {
-      speed *= 0.85; // 15% reduction
-    } else if (profile === 'ebike') {
-      speed *= 0.8; // 20% reduction
-    }
+    speed *= impacts.surfaceModifiers.cobblestone.speedMultiplier;
+    flatPenalty += impacts.surfaceModifiers.cobblestone.flatPenalty;
   }
 
   return { speed, flatPenalty, bicycleFrei };

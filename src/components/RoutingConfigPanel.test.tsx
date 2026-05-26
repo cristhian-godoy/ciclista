@@ -11,8 +11,8 @@ describe('RoutingConfigPanel', () => {
         selectedPreset="munich"
         onPresetChange={vi.fn()}
         isFetchingOSM={false}
-        bikeProfile="normal"
-        onBikeProfileChange={vi.fn()}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
         theme="bright"
         onThemeChange={vi.fn()}
       />,
@@ -33,8 +33,8 @@ describe('RoutingConfigPanel', () => {
         selectedPreset="munich"
         onPresetChange={handlePresetChange}
         isFetchingOSM={false}
-        bikeProfile="normal"
-        onBikeProfileChange={vi.fn()}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
         theme="bright"
         onThemeChange={vi.fn()}
       />,
@@ -53,8 +53,8 @@ describe('RoutingConfigPanel', () => {
         selectedPreset="munich"
         onPresetChange={vi.fn()}
         isFetchingOSM={false}
-        bikeProfile="normal"
-        onBikeProfileChange={vi.fn()}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
         theme="bright"
         onThemeChange={handleThemeChange}
       />,
@@ -70,8 +70,8 @@ describe('RoutingConfigPanel', () => {
         selectedPreset="munich"
         onPresetChange={vi.fn()}
         isFetchingOSM={true}
-        bikeProfile="normal"
-        onBikeProfileChange={vi.fn()}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
         theme="bright"
         onThemeChange={vi.fn()}
       />,
@@ -89,8 +89,8 @@ describe('RoutingConfigPanel', () => {
         selectedPreset="munich"
         onPresetChange={vi.fn()}
         isFetchingOSM={false}
-        bikeProfile="normal"
-        onBikeProfileChange={handleBikeChange}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={handleBikeChange}
         theme="bright"
         onThemeChange={vi.fn()}
       />,
@@ -101,6 +101,6 @@ describe('RoutingConfigPanel', () => {
 
     const ebikeBtn = screen.getByRole('button', { name: /E-Bike/i });
     await user.click(ebikeBtn);
-    expect(handleBikeChange).toHaveBeenCalledWith('ebike');
+    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'ebike' });
   });
 });

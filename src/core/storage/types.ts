@@ -3,7 +3,16 @@ import type { RulesConfiguration } from '../router/types';
 /**
  * Available bicycle routing profiles representing different riding speeds and preferences.
  */
-export type BikeProfile = 'slow' | 'normal' | 'ebike' | 'road';
+export type BikeProfileId = 'slow' | 'normal' | 'ebike' | 'road' | 'custom';
+
+/**
+ * Bike configuration mapping user-selected bike profile properties (e.g. max speed)
+ * to physical parameters used by the router.
+ */
+export interface BikeConfig {
+  id: BikeProfileId;
+  customSpeedKmh?: number;
+}
 
 /**
  * Represents custom user configurations and overrides applied locally
@@ -14,7 +23,7 @@ export interface LocalOverrides {
   nodeNotes: Map<string, string>;
   nodeTurns: Map<string, Record<string, unknown>>;
   rulesConfig?: RulesConfiguration;
-  bikeProfile?: BikeProfile;
+  bikeConfig?: BikeConfig;
 }
 
 /**

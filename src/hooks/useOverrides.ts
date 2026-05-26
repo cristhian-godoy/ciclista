@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
 import type { RulesConfiguration } from '../core/router/types';
 import { LocalStorageProvider } from '../core/storage/storage';
-import type { BikeProfile, LocalOverrides } from '../core/storage/types';
+import type { BikeConfig, LocalOverrides } from '../core/storage/types';
 
 const storage = new LocalStorageProvider();
 
@@ -46,7 +46,7 @@ export function useOverrides() {
       nodeDelays: { ...DEFAULT_RULES_CONFIG.nodeDelays, ...(saved.nodeDelays ?? {}) },
     };
   });
-  const [bikeProfile, setBikeProfile] = useState<BikeProfile>('normal');
+  const [bikeConfig, setBikeConfig] = useState<BikeConfig>({ id: 'normal' });
 
   const loadCustomOverrides = async () => {
     const overrides = await storage.getOverrides();
@@ -82,9 +82,9 @@ export function useOverrides() {
       nodeNotes,
       nodeTurns,
       rulesConfig,
-      bikeProfile,
+      bikeConfig,
     };
-  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeProfile]);
+  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeConfig]);
 
   return {
     nodeDelays,
@@ -92,8 +92,8 @@ export function useOverrides() {
     nodeTurns,
     rulesConfig,
     setRulesConfig,
-    bikeProfile,
-    setBikeProfile,
+    bikeConfig,
+    setBikeConfig,
     currentOverrides,
     handleSaveNodeOverride,
     handleClearNodeOverride,

@@ -24,8 +24,8 @@ export default function App() {
     nodeNotes,
     rulesConfig,
     setRulesConfig,
-    bikeProfile,
-    setBikeProfile,
+    bikeConfig,
+    setBikeConfig,
     currentOverrides,
     handleSaveNodeOverride,
     handleClearNodeOverride,
@@ -126,8 +126,8 @@ export default function App() {
         onPresetChange={onPresetChange}
         rulesConfig={rulesConfig}
         onRulesChange={setRulesConfig}
-        bikeProfile={bikeProfile}
-        onBikeProfileChange={setBikeProfile}
+        bikeConfig={bikeConfig}
+        onBikeConfigChange={setBikeConfig}
         theme={theme}
         onThemeChange={setTheme}
       />

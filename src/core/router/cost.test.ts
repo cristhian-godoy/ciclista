@@ -23,9 +23,9 @@ describe('resolveRuleSpeed', () => {
       speedType: 'relative',
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed(cfg, 'slow')).toBe(15);
-    expect(resolveRuleSpeed(cfg, 'normal')).toBe(18);
-    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(25);
+    expect(resolveRuleSpeed(cfg, 15)).toBe(15);
+    expect(resolveRuleSpeed(cfg, 18)).toBe(18);
+    expect(resolveRuleSpeed(cfg, 25)).toBe(25);
   });
 
   it('resolves fixed speed types slow, slower, and dismount', () => {
@@ -35,9 +35,9 @@ describe('resolveRuleSpeed', () => {
       baseSpeedKmh: 17,
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed({ ...base, speedType: 'slow' }, 'ebike')).toBe(15);
-    expect(resolveRuleSpeed({ ...base, speedType: 'slower' }, 'ebike')).toBe(10);
-    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 'ebike')).toBe(4);
+    expect(resolveRuleSpeed({ ...base, speedType: 'slow' }, 25)).toBe(15);
+    expect(resolveRuleSpeed({ ...base, speedType: 'slower' }, 25)).toBe(10);
+    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 25)).toBe(4);
   });
 
   it('resolves custom speed type to baseSpeedKmh', () => {
@@ -48,7 +48,7 @@ describe('resolveRuleSpeed', () => {
       speedType: 'custom',
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed(cfg, 'ebike')).toBe(22);
+    expect(resolveRuleSpeed(cfg, 25)).toBe(22);
   });
 
   it('resolves fallback default speed types if speedType is undefined', () => {
@@ -60,7 +60,7 @@ describe('resolveRuleSpeed', () => {
       baseSpeedKmh: 18,
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed(signCfg, 'ebike')).toBe(25); // relative
+    expect(resolveRuleSpeed(signCfg, 25)).toBe(25); // relative
 
     const sidewalkCfg: SignRuleConfig = {
       signId: InfrastructureType.SIDEWALK,
@@ -70,7 +70,7 @@ describe('resolveRuleSpeed', () => {
       baseSpeedKmh: 5,
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed(sidewalkCfg, 'ebike')).toBe(4); // dismount
+    expect(resolveRuleSpeed(sidewalkCfg, 25)).toBe(4); // dismount
 
     const roadCfg: RoadRuleConfig = {
       roadId: RoadType.PRIMARY,
@@ -78,7 +78,7 @@ describe('resolveRuleSpeed', () => {
       baseSpeedKmh: 14,
       flatPenaltySeconds: 0,
     };
-    expect(resolveRuleSpeed(roadCfg, 'ebike')).toBe(25); // relative
+    expect(resolveRuleSpeed(roadCfg, 25)).toBe(25); // relative
   });
 });
 
@@ -171,7 +171,7 @@ describe('calculateDisplayCost', () => {
     // 120m / 5.0 m/s = 24s
     const slowOverrides: LocalOverrides = {
       ...emptyOverrides,
-      bikeProfile: 'slow',
+      bikeConfig: { id: 'slow' },
     };
     const timeSlow = calculateDisplayCost('A', edgeAB, 'B', slowOverrides, graph);
     expect(timeSlow).toBeCloseTo(24, 1);
@@ -180,7 +180,7 @@ describe('calculateDisplayCost', () => {
     // 120m / 8.333 m/s = 14.4s
     const ebikeOverrides: LocalOverrides = {
       ...emptyOverrides,
-      bikeProfile: 'ebike',
+      bikeConfig: { id: 'ebike' },
     };
     const timeEbike = calculateDisplayCost('A', edgeAB, 'B', ebikeOverrides, graph);
     expect(timeEbike).toBeCloseTo(14.4, 1);
@@ -583,22 +583,22 @@ describe('Surface penalties based on BikeProfile', () => {
       nodeDelays: new Map(),
       nodeNotes: new Map(),
       nodeTurns: new Map(),
-      bikeProfile: 'road',
+      bikeConfig: { id: 'road' },
     };
 
     // Without surface penalties:
-    // Base speed on track is 5.0 * 22/18 = 6.11 m/s.
+    // Base speed on track is 5.0 * 30/18 = 8.33 m/s.
     // Gravel penalty for road bike: speed *= 0.4, flatPenalty += 15s.
-    // effective speed = 6.11 * 0.4 = 2.444 m/s.
-    // travel time = 100 / 2.444 + 15 = 40.91 + 15 = 55.91s.
+    // effective speed = 8.333 * 0.4 = 3.333 m/s.
+    // travel time = 100 / 3.333 + 15 = 30 + 15 = 45s.
     const costRoad = standardCost('A', edgeGravel, 'B', overridesRoad, graph);
-    expect(costRoad).toBeCloseTo(55.9, 1);
+    expect(costRoad).toBeCloseTo(45, 1);
 
     const overridesNormal: LocalOverrides = {
       nodeDelays: new Map(),
       nodeNotes: new Map(),
       nodeTurns: new Map(),
-      bikeProfile: 'normal',
+      bikeConfig: { id: 'normal' },
     };
     // Normal bike profile on gravel:
     // Base speed: 5.0 * 1.0 = 5.0 m/s.
