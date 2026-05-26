@@ -104,6 +104,26 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
             </button>
           ))}
         </div>
+        {bikeConfig.id === 'custom' && (
+          <div className="ciclista-form-group config-form-group" style={{ marginTop: '8px' }}>
+            <label className="ciclista-label" htmlFor="custom-speed-input">
+              Cruising Speed (km/h)
+            </label>
+            <input
+              id="custom-speed-input"
+              type="number"
+              className="ciclista-input"
+              min={1}
+              max={100}
+              value={bikeConfig.customSpeedKmh ?? ''}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                onBikeConfigChange({ id: 'custom', customSpeedKmh: isNaN(val) ? undefined : val });
+              }}
+              placeholder="18"
+            />
+          </div>
+        )}
       </section>
     </>
   );
