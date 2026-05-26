@@ -52,8 +52,8 @@ describe('Sidebar Integration', () => {
     onPresetChange: vi.fn(),
     rulesConfig: DEFAULT_RULES_CONFIG,
     onRulesChange: vi.fn(),
-    bikeProfile: 'normal' as const,
-    onBikeProfileChange: vi.fn(),
+    bikeConfig: { id: 'normal' as const },
+    onBikeConfigChange: vi.fn(),
     theme: 'bright' as const,
     onThemeChange: vi.fn(),
   };

@@ -1,14 +1,14 @@
 import { Bike, Gauge, Layers, RefreshCw, Zap } from 'lucide-react';
 import React from 'react';
 
-import type { BikeProfile } from '../core/storage/types';
+import type { BikeConfig, BikeProfileId } from '../core/storage/types';
 
 interface RoutingConfigPanelProps {
   selectedPreset: 'munich' | 'amsterdam';
   onPresetChange: (preset: 'munich' | 'amsterdam') => void;
   isFetchingOSM: boolean;
-  bikeProfile: BikeProfile;
-  onBikeProfileChange: (profile: BikeProfile) => void;
+  bikeConfig: BikeConfig;
+  onBikeConfigChange: (config: BikeConfig) => void;
   theme: 'bright' | 'liberty' | 'dark';
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
@@ -21,8 +21,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   selectedPreset,
   onPresetChange,
   isFetchingOSM,
-  bikeProfile,
-  onBikeProfileChange,
+  bikeConfig,
+  onBikeConfigChange,
   theme,
   onThemeChange,
 }) => {
@@ -79,16 +79,17 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       <section className="ciclista-form-group">
         <label className="ciclista-label">Bike Profile</label>
         <div className="strategy-selector">
-          {(['slow', 'normal', 'ebike', 'road'] as BikeProfile[]).map((p) => (
+          {(['slow', 'normal', 'ebike', 'road', 'custom'] as BikeProfileId[]).map((p) => (
             <button
               key={p}
-              className={`strategy-btn ${bikeProfile === p ? 'active' : ''}`}
-              onClick={() => onBikeProfileChange(p)}
+              className={`strategy-btn ${bikeConfig.id === p ? 'active' : ''}`}
+              onClick={() => onBikeConfigChange({ id: p })}
             >
               {p === 'slow' && <Bike size={12} aria-label="Slow Bike Icon" />}
               {p === 'normal' && <Bike size={12} aria-label="Normal Bike Icon" />}
               {p === 'ebike' && <Zap size={12} aria-label="E-Bike Icon" />}
               {p === 'road' && <Gauge size={12} aria-label="Road Bike Icon" />}
+              {p === 'custom' && <Gauge size={12} aria-label="Custom Bike Icon" />}
               <span>
                 {p === 'slow'
                   ? 'Slow'
@@ -96,7 +97,9 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                     ? 'Normal'
                     : p === 'ebike'
                       ? 'E-Bike'
-                      : 'Road'}
+                      : p === 'road'
+                        ? 'Road'
+                        : 'Custom'}
               </span>
             </button>
           ))}

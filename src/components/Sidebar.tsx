@@ -3,7 +3,7 @@ import React from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
-import type { BikeProfile } from '../core/storage/types';
+import type { BikeConfig } from '../core/storage/types';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
@@ -21,8 +21,8 @@ interface SidebarProps {
   onPresetChange: (presetName: 'munich' | 'amsterdam') => void;
   rulesConfig: RulesConfiguration;
   onRulesChange: (config: RulesConfiguration) => void;
-  bikeProfile: BikeProfile;
-  onBikeProfileChange: (profile: BikeProfile) => void;
+  bikeConfig: BikeConfig;
+  onBikeConfigChange: (config: BikeConfig) => void;
   theme: 'bright' | 'liberty' | 'dark';
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
@@ -41,8 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onPresetChange,
   rulesConfig,
   onRulesChange,
-  bikeProfile,
-  onBikeProfileChange,
+  bikeConfig,
+  onBikeConfigChange,
   theme,
   onThemeChange,
 }) => {
@@ -63,8 +63,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           selectedPreset={selectedPreset}
           onPresetChange={onPresetChange}
           isFetchingOSM={isFetchingOSM}
-          bikeProfile={bikeProfile}
-          onBikeProfileChange={onBikeProfileChange}
+          bikeConfig={bikeConfig}
+          onBikeConfigChange={onBikeConfigChange}
           theme={theme}
           onThemeChange={onThemeChange}
         />
