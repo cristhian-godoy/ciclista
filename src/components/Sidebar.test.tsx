@@ -98,4 +98,23 @@ describe('Sidebar Integration', () => {
     await user.click(activeRouteCard);
     expect(handleStrategyChange).toHaveBeenCalledWith('standard');
   });
+
+  it('toggles collapse class and aria attributes on button click', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Sidebar {...defaultProps} />);
+
+    const toggleButton = screen.getByRole('button', { name: /collapse sidebar/i });
+    const sidebarElement = container.querySelector('.sidebar');
+
+    expect(sidebarElement).not.toHaveClass('collapsed');
+    expect(toggleButton).toHaveAttribute('aria-label', 'Collapse sidebar');
+
+    await user.click(toggleButton);
+    expect(sidebarElement).toHaveClass('collapsed');
+    expect(toggleButton).toHaveAttribute('aria-label', 'Expand sidebar');
+
+    await user.click(toggleButton);
+    expect(sidebarElement).not.toHaveClass('collapsed');
+    expect(toggleButton).toHaveAttribute('aria-label', 'Collapse sidebar');
+  });
 });

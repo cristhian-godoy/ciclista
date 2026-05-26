@@ -32,6 +32,54 @@
   transition: var(--ciclista-transition-normal);
 }
 
+.sidebar.collapsed {
+  transform: translateX(calc(-100% - var(--ciclista-spacing-md)));
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: calc(var(--ciclista-spacing-md) + 22px);
+  left: calc(380px + var(--ciclista-spacing-md) * 2);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ciclista-radius-round);
+  background-color: var(--ciclista-glass-bg-base);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--ciclista-glass-border-base);
+  color: var(--ciclista-color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--ciclista-shadow-sm);
+  transition: all var(--ciclista-transition-normal);
+  z-index: 10;
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: var(--ciclista-glass-bg-hover);
+  border-color: var(--ciclista-color-brand-main);
+  box-shadow: var(--ciclista-shadow-glow);
+  color: var(--ciclista-color-brand-main);
+}
+
+.sidebar-toggle-btn.collapsed {
+  transform: translateX(calc(-380px - var(--ciclista-spacing-md)));
+}
+
+.sidebar-toggle-btn .mobile-icon {
+  display: none;
+}
+
+.sidebar-toggle-btn .desktop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Sidebar Sections */
 .sidebar-header {
   padding: var(--ciclista-spacing-lg);
@@ -133,6 +181,29 @@
     border-bottom: none;
     border-radius: var(--ciclista-radius-lg) var(--ciclista-radius-lg) 0 0;
     box-shadow: var(--ciclista-shadow-mobile-top);
+  }
+
+  .sidebar.collapsed {
+    transform: translateY(100%);
+  }
+
+  .sidebar-toggle-btn {
+    inset: auto var(--ciclista-spacing-md) calc(45vh + var(--ciclista-spacing-md)) auto;
+    transform: translateY(0);
+  }
+
+  .sidebar-toggle-btn.collapsed {
+    transform: translateY(45vh);
+  }
+
+  .sidebar-toggle-btn .desktop-icon {
+    display: none;
+  }
+
+  .sidebar-toggle-btn .mobile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sidebar-header {
