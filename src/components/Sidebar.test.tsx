@@ -56,6 +56,12 @@ describe('Sidebar Integration', () => {
     onBikeConfigChange: vi.fn(),
     theme: 'bright' as const,
     onThemeChange: vi.fn(),
+    isNavigating: false,
+    onStartNavigation: vi.fn(),
+    onStopNavigation: vi.fn(),
+    navigationProgress: null,
+    onToggleCameraMode: vi.fn(),
+    cameraMode: 'heading-up' as const,
   };
 
   it('renders all mounted config and stats panels', () => {
