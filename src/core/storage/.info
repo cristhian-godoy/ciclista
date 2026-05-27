@@ -1,3 +1,5 @@
+cache.ts
+	Client-side CacheStorage utility with TTL eviction and SWR support.
 storage.test.ts
 	Unit tests checking localStorage serialization, loading, and clear mock events.
 storage.ts
