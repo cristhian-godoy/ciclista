@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Coordinate } from '../common/types';
-import { RouteResult } from '../router/types';
+import type { RouteResult } from '../router/types';
 import {
   buildRideStats,
   calculateBearing,
@@ -9,7 +9,7 @@ import {
   interpolatePosition,
   snapToRoute,
 } from './engine';
-import { SnappedPosition } from './types';
+import type { SnappedPosition } from './types';
 
 describe('Navigation Engine', () => {
   const route: Coordinate[] = [
