@@ -113,10 +113,10 @@ _Focus: Test the new mapping functions and migrate existing tests._
 
 _Focus: Update `.info` files and remove dead code._
 
-- [ ] **Update `.info` for `src/core/router/`**: Add description for the new `rules-impacts.ts` and `rules-impacts.test.ts` files.
+- [x] **Update `.info` for `src/core/router/`**: Add description for the new `rules-impacts.ts` and `rules-impacts.test.ts` files.
   - Follow existing `.info` format in the repository.
 
-- [ ] **Verify no dead imports**: Confirm `resolveRuleSpeed` is no longer imported anywhere. Confirm `SignRuleConfig` / `RoadRuleConfig` are no longer imported in `cost.ts` (they should only be needed by the mapping layer and the UI now).
+- [x] **Verify no dead imports**: Confirm `resolveRuleSpeed` is no longer imported anywhere. Confirm `SignRuleConfig` / `RoadRuleConfig` are no longer imported in `cost.ts` (they should only be needed by the mapping layer and the UI now).
 
 ## 📝 Notes & Open Questions
 

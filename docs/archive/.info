@@ -14,5 +14,7 @@ openfreemap-migration-plan.md
 	Migration details to OpenFreeMap styles.
 package-linting-plan.md
 	Setup details for linters and prettier.
+plan_rules_impacts_refactor.md
+	Refactor plan decoupling RulesConfiguration from algorithm cost evaluation.
 quality-and-automation-plan.md
 	Testing and continuous integration setup.
