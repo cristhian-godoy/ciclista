@@ -2,6 +2,8 @@ common
 	Shared global types and models.
 graph
 	OSM Overpass JSON data parsing and graph construction.
+navigation
+	Real-time navigation engine and position providers.
 router
 	Dijkstra pathfinding and dynamic routing cost algorithms.
 storage

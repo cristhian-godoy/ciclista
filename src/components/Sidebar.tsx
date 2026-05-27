@@ -102,6 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             routingStrategy={routingStrategy}
             onStrategyChange={onStrategyChange}
             routeResult={routeResult}
+            isNavigating={isNavigating}
           />
 
           {/* Navigation Control Panel */}

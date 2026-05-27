@@ -6,6 +6,8 @@ components
 	React UI widgets (Sidebar panels and Map canvas).
 core
 	Pure TypeScript modules (routing algorithms, parsers, and storage).
+hooks
+	Custom React hooks managing routing, navigation, and persistent overrides.
 index.css
 	CSS import entry point.
 main.tsx

@@ -1,7 +1,11 @@
+ArrivalPanel.tsx
+	Post-ride statistics summary modal shown on destination arrival.
 IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers and map layers.
+NavigationHUD.tsx
+	Floating glassmorphic head-up display showing active navigation telemetry.
 RouteComparePanel.test.tsx
 	Unit tests for route speed and comfort comparisons.
 RouteComparePanel.tsx
