@@ -163,6 +163,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
       status: 'idle',
       cameraMode: prev.cameraMode,
       snapped: null,
+      raw: null,
       progress: null,
       routeCoordinates: [],
       startTimestamp: null,

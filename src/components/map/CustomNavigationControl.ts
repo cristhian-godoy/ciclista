@@ -1,4 +1,5 @@
-import { IControl, Map } from 'maplibre-gl';
+import type { IControl } from 'maplibre-gl';
+import { Map } from 'maplibre-gl';
 
 /**
  * Custom navigation control that replaces MapLibre's built-in NavigationControl.

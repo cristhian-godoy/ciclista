@@ -10,7 +10,7 @@ import {
   standardCost,
 } from './cost';
 import { DijkstraRouter } from './router';
-import type { NodeDelayConfig } from './types';
+import type { NodeDelayConfig, RoadRuleConfig, SignRuleConfig } from './types';
 import { InfrastructureType, RoadType } from './types';
 
 describe('calculateTurnPenalty', () => {

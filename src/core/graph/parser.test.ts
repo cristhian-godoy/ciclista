@@ -133,12 +133,14 @@ describe('OSMGraphParser', () => {
     expect(node1).toBeDefined();
 
     // Verify edge with 10 mph maxspeed (converted to km/h, then m/s: approx 4.47 m/s)
-    const edgeMph = node1?.edges.find((e) => e.speedLimit !== 5.0 && e.speedLimit > 4.0);
+    const edgeMph = node1?.edges.find(
+      (e) => e.speedLimit !== undefined && e.speedLimit !== 5.0 && e.speedLimit > 4.0,
+    );
     expect(edgeMph).toBeDefined();
     expect(edgeMph?.speedLimit).toBeCloseTo(16.0934 / 3.6, 4);
 
     // Verify edge with 10 km/h maxspeed (converted to m/s: approx 2.78 m/s)
-    const edgeKmh = node1?.edges.find((e) => e.speedLimit < 3.0);
+    const edgeKmh = node1?.edges.find((e) => e.speedLimit !== undefined && e.speedLimit < 3.0);
     expect(edgeKmh).toBeDefined();
     expect(edgeKmh?.speedLimit).toBeCloseTo(10 / 3.6, 4);
   });

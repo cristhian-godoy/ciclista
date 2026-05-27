@@ -67,7 +67,7 @@ export const MapLayerDock: React.FC = () => {
               gap: '6px',
               transition: 'all 0.2s ease',
             }}
-            onClick={() => setShowMinorControls((v) => !v)}
+            onClick={() => setShowMinorControls(!showMinorControls)}
           >
             <TrafficCone size={12} aria-label="Traffic Signal Icon" />
             <span>{showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}</span>
