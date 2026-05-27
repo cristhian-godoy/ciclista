@@ -6,6 +6,10 @@ router.test.ts
 	Unit tests for finding the shortest/most comfortable path under various profiles.
 router.ts
 	Dijkstra pathfinding search algorithm using a Min-Heap queue.
+rules-impacts.test.ts
+	Unit tests verifying mapping from user config to resolved edge impacts.
+rules-impacts.ts
+	Mappers transforming user rules configuration to algorithm-facing resolved impacts.
 rules.test.ts
 	Unit tests verifying base rules configuration resolving.
 rules.ts
