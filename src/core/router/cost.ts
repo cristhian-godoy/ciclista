@@ -2,14 +2,8 @@ import type { GraphEdge, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 import { mapBikeConfigToImpacts } from './bike';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
-import type {
-  ComfortLevel,
-  CostFunction,
-  NodeDelayConfig,
-  RoadRuleConfig,
-  SignRuleConfig,
-} from './types';
-import { InfrastructureType } from './types';
+import { mapRoadConfigToImpacts, mapSignConfigToImpacts } from './rules-impacts';
+import type { ComfortLevel, CostFunction, NodeDelayConfig } from './types';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -18,50 +12,6 @@ import { InfrastructureType } from './types';
  */
 function kmhToMs(kmh: number): number {
   return kmh / 3.6;
-}
-
-/**
- * Resolves the effective rule speed (in km/h) based on the rule configuration and the bike's base cruising speed.
- */
-export function resolveRuleSpeed(
-  cfg: SignRuleConfig | RoadRuleConfig,
-  cruisingSpeedKmh: number,
-): number {
-  let speedType = cfg.speedType;
-  if (!speedType) {
-    if ('signId' in cfg) {
-      const signId = cfg.signId;
-      if (
-        signId === InfrastructureType.SEGREGATED_PATH ||
-        signId === InfrastructureType.BICYCLE_STREET
-      ) {
-        speedType = 'relative';
-      } else if (
-        signId === InfrastructureType.PEDESTRIAN_ZONE ||
-        signId === InfrastructureType.SIDEWALK
-      ) {
-        speedType = 'dismount';
-      } else {
-        speedType = 'custom';
-      }
-    } else {
-      speedType = 'relative';
-    }
-  }
-
-  switch (speedType) {
-    case 'relative':
-      return cruisingSpeedKmh;
-    case 'slow':
-      return 15;
-    case 'slower':
-      return 10;
-    case 'dismount':
-      return 4; // lock walking speed to 4 km/h
-    case 'custom':
-    default:
-      return cfg.baseSpeedKmh;
-  }
 }
 
 /**
@@ -82,16 +32,17 @@ function resolveSpeedAndPenalty(
   let flatPenalty: number;
 
   if (rules) {
-    if (sign && rules.signs && rules.signs[sign]) {
-      const cfg = rules.signs[sign];
-      const speedKmh = resolveRuleSpeed(cfg, impacts.cruisingSpeedKmh);
-      speed = kmhToMs(speedKmh);
-      flatPenalty = cfg.flatPenaltySeconds;
-    } else if (rules.roads && rules.roads[road]) {
-      const cfg = rules.roads[road];
-      const speedKmh = resolveRuleSpeed(cfg, impacts.cruisingSpeedKmh);
-      speed = kmhToMs(speedKmh);
-      flatPenalty = cfg.flatPenaltySeconds;
+    const signImpacts = mapSignConfigToImpacts(rules.signs, impacts.cruisingSpeedKmh);
+    const roadImpacts = mapRoadConfigToImpacts(rules.roads, impacts.cruisingSpeedKmh);
+
+    if (sign && signImpacts[sign]) {
+      const impact = signImpacts[sign];
+      speed = impact.effectiveSpeedMs;
+      flatPenalty = impact.flatPenaltySeconds;
+    } else if (roadImpacts[road]) {
+      const impact = roadImpacts[road];
+      speed = impact.effectiveSpeedMs;
+      flatPenalty = impact.flatPenaltySeconds;
     } else {
       speed = kmhToMs(impacts.cruisingSpeedKmh);
       flatPenalty = 0;
@@ -265,11 +216,15 @@ export const avoidBusyRoadsCost: CostFunction = (
 
   const rules = overrides.rulesConfig;
   if (rules) {
+    const config = overrides.bikeConfig ?? { id: 'normal' };
+    const bikeImpacts = mapBikeConfigToImpacts(config);
+    const signImpacts = mapSignConfigToImpacts(rules.signs, bikeImpacts.cruisingSpeedKmh);
+    const roadImpacts = mapRoadConfigToImpacts(rules.roads, bikeImpacts.cruisingSpeedKmh);
     const { sign, road } = mapOSMToSignAndRoad(highway, edge.tags);
-    if (sign && rules.signs && rules.signs[sign]) {
-      comfort = rules.signs[sign].comfort || 'neutral';
-    } else if (rules.roads && rules.roads[road]) {
-      comfort = rules.roads[road].comfort || 'neutral';
+    if (sign && signImpacts[sign]) {
+      comfort = signImpacts[sign].comfort;
+    } else if (roadImpacts[road]) {
+      comfort = roadImpacts[road].comfort;
     }
   } else {
     // Hardcoded fallback logic

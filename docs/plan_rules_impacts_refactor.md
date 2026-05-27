@@ -71,18 +71,18 @@ _Focus: Pure functions that transform user-facing config → algorithm-facing im
 
 _Focus: Replace inline `RulesConfiguration` reads and `resolveRuleSpeed()` calls with impact lookups._
 
-- [ ] **Refactor `resolveSpeedAndPenalty()`** (cost.ts L71-135): Replace the `rules.signs[sign]` / `rules.roads[road]` branches (L84-98) with resolved impact lookups.
+- [x] **Refactor `resolveSpeedAndPenalty()`** (cost.ts L71-135): Replace the `rules.signs[sign]` / `rules.roads[road]` branches (L84-98) with resolved impact lookups.
   - _Before_: Reads `SignRuleConfig` / `RoadRuleConfig`, calls `resolveRuleSpeed(cfg, impacts.cruisingSpeedKmh)`, takes `cfg.flatPenaltySeconds`.
   - _After_: Compute `RouterSignImpacts` and `RouterRoadImpacts` via the new bulk mappers (using `bikeImpacts.cruisingSpeedKmh`). Look up `signImpacts[sign]` or `roadImpacts[road]` → read `effectiveSpeedMs` and `flatPenaltySeconds` directly. No `resolveRuleSpeed()` call.
   - _Fallback path_ (L99-122, when `rules` is undefined): Remains unchanged — hardcoded fallback logic stays.
   - _Constraint_: Output values (speed, flatPenalty) must be numerically identical to preserve existing test expectations.
 
-- [ ] **Refactor `avoidBusyRoadsCost()` comfort resolution** (cost.ts L264-289): Replace direct `rules.signs[sign].comfort` / `rules.roads[road].comfort` reads with `signImpacts[sign].comfort` / `roadImpacts[road].comfort`.
+- [x] **Refactor `avoidBusyRoadsCost()` comfort resolution** (cost.ts L264-289): Replace direct `rules.signs[sign].comfort` / `rules.roads[road].comfort` reads with `signImpacts[sign].comfort` / `roadImpacts[road].comfort`.
   - _Before_: `comfort = rules.signs[sign].comfort || 'neutral'` (L270-273).
   - _After_: `comfort = signImpacts[sign].comfort` (already defaulted to `'neutral'` by the mapping function).
   - _Constraint_: The cycleway comfort override (L292-295) and fallback logic (L275-289) remain unchanged.
 
-- [ ] **Remove `resolveRuleSpeed()` export from `cost.ts`**: The function is fully replaced by `resolveSignImpact()` / `resolveRoadImpact()` in `rules-impacts.ts`. Delete the function definition (cost.ts L26-65) and remove it from exports.
+- [x] **Remove `resolveRuleSpeed()` export from `cost.ts`**: The function is fully replaced by `resolveSignImpact()` / `resolveRoadImpact()` in `rules-impacts.ts`. Delete the function definition (cost.ts L26-65) and remove it from exports.
   - _Note_: The duplicated fallback logic (cost.ts L32-49) that determines speedType for signs is already properly handled by `getEffectiveSignSpeedType()` in rules.ts — the new mapping functions use that, eliminating the duplication.
 
 ---
@@ -91,7 +91,7 @@ _Focus: Replace inline `RulesConfiguration` reads and `resolveRuleSpeed()` calls
 
 _Focus: Test the new mapping functions and migrate existing tests._
 
-- [ ] **Create `src/core/router/rules-impacts.test.ts`** (new file): Unit tests for the mapping functions.
+- [x] **Create `src/core/router/rules-impacts.test.ts`** (new file): Unit tests for the mapping functions.
   - Test `resolveSignImpact()` for each `InfrastructureType` with default `speedType` values and verify `effectiveSpeedMs`, `flatPenaltySeconds`, `comfort` match expectations.
   - Test `resolveRoadImpact()` for each `RoadType`.
   - Test with varying `cruisingSpeedKmh` (15, 18, 25, 30) to verify `relative` speed type tracks cruising speed.
@@ -100,11 +100,11 @@ _Focus: Test the new mapping functions and migrate existing tests._
   - Test bulk `mapSignConfigToImpacts()` and `mapRoadConfigToImpacts()` produce complete records.
   - Test with `DEFAULT_RULES_CONFIG` from rules.ts as a realistic integration-style input.
 
-- [ ] **Migrate `resolveRuleSpeed` tests from `cost.test.ts`**: The `describe('resolveRuleSpeed', ...)` block (cost.test.ts L17-83) tests speed resolution logic. This logic now lives in the mapping functions.
+- [x] **Migrate `resolveRuleSpeed` tests from `cost.test.ts`**: The `describe('resolveRuleSpeed', ...)` block (cost.test.ts L17-83) tests speed resolution logic. This logic now lives in the mapping functions.
   - Rewrite these as `resolveSignImpact` / `resolveRoadImpact` tests in the new test file, asserting on `effectiveSpeedMs` (converted from km/h expectations: multiply old expected km/h by `1/3.6`).
   - Remove the `resolveRuleSpeed` describe block and import from `cost.test.ts`.
 
-- [ ] **Verify all existing tests pass unchanged**: `cost.test.ts`, `rules.test.ts`, `router.test.ts`. The refactor must not change any observable cost calculation output.
+- [x] **Verify all existing tests pass unchanged**: `cost.test.ts`, `rules.test.ts`, `router.test.ts`. The refactor must not change any observable cost calculation output.
   - Run: `npx vitest run src/core/router/`
 
 ---

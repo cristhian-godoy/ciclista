@@ -7,80 +7,11 @@ import {
   avoidBusyRoadsCost,
   calculateDisplayCost,
   getDefaultNodeDelay,
-  resolveRuleSpeed,
   standardCost,
 } from './cost';
 import { DijkstraRouter } from './router';
-import type { NodeDelayConfig, RoadRuleConfig, SignRuleConfig } from './types';
+import type { NodeDelayConfig } from './types';
 import { InfrastructureType, RoadType } from './types';
-
-describe('resolveRuleSpeed', () => {
-  it('resolves relative speed type correctly based on profile', () => {
-    const cfg: RoadRuleConfig = {
-      roadId: RoadType.RESIDENTIAL,
-      name: 'Residential',
-      baseSpeedKmh: 17,
-      speedType: 'relative',
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed(cfg, 15)).toBe(15);
-    expect(resolveRuleSpeed(cfg, 18)).toBe(18);
-    expect(resolveRuleSpeed(cfg, 25)).toBe(25);
-  });
-
-  it('resolves fixed speed types slow, slower, and dismount', () => {
-    const base: RoadRuleConfig = {
-      roadId: RoadType.RESIDENTIAL,
-      name: 'Residential',
-      baseSpeedKmh: 17,
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed({ ...base, speedType: 'slow' }, 25)).toBe(15);
-    expect(resolveRuleSpeed({ ...base, speedType: 'slower' }, 25)).toBe(10);
-    expect(resolveRuleSpeed({ ...base, speedType: 'dismount' }, 25)).toBe(4);
-  });
-
-  it('resolves custom speed type to baseSpeedKmh', () => {
-    const cfg: RoadRuleConfig = {
-      roadId: RoadType.RESIDENTIAL,
-      name: 'Residential',
-      baseSpeedKmh: 22,
-      speedType: 'custom',
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed(cfg, 25)).toBe(22);
-  });
-
-  it('resolves fallback default speed types if speedType is undefined', () => {
-    const signCfg: SignRuleConfig = {
-      signId: InfrastructureType.SEGREGATED_PATH,
-      name: 'Segregated Path',
-      description: '...',
-      iconCode: '🚲',
-      baseSpeedKmh: 18,
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed(signCfg, 25)).toBe(25); // relative
-
-    const sidewalkCfg: SignRuleConfig = {
-      signId: InfrastructureType.SIDEWALK,
-      name: 'Sidewalk',
-      description: '...',
-      iconCode: '🦶',
-      baseSpeedKmh: 5,
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed(sidewalkCfg, 25)).toBe(4); // dismount
-
-    const roadCfg: RoadRuleConfig = {
-      roadId: RoadType.PRIMARY,
-      name: 'Primary Road',
-      baseSpeedKmh: 14,
-      flatPenaltySeconds: 0,
-    };
-    expect(resolveRuleSpeed(roadCfg, 25)).toBe(25); // relative
-  });
-});
 
 describe('calculateTurnPenalty', () => {
   it('returns 0 for straight traversal (no turn)', () => {
