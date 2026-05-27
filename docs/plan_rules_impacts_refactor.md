@@ -39,22 +39,22 @@ _Focus: Create the algorithm-facing types that cost functions will consume inste
 
 _Focus: Pure functions that transform user-facing config → algorithm-facing impacts. New file parallel to `bike.ts`._
 
-- [ ] **Create `src/core/router/rules-impacts.ts`** (new file): Houses all mapping functions. Follows the `bike.ts` convention of co-locating impact types re-exports and mappers.
+- [x] **Create `src/core/router/rules-impacts.ts`** (new file): Houses all mapping functions. Follows the `bike.ts` convention of co-locating impact types re-exports and mappers.
 
-- [ ] **Implement `resolveSignImpact(cfg: SignRuleConfig, cruisingSpeedKmh: number): ResolvedEdgeImpact`**: Resolves a single sign rule config into its algorithm impact.
+- [x] **Implement `resolveSignImpact(cfg: SignRuleConfig, cruisingSpeedKmh: number): ResolvedEdgeImpact`**: Resolves a single sign rule config into its algorithm impact.
   - _Internal logic_: Use `getEffectiveSignSpeedType(cfg)` from `rules.ts` to determine the speed type, then resolve to actual speed using the same `speedType → km/h` switch logic currently in `resolveRuleSpeed()` (cost.ts L52-64). Convert to m/s via `kmh / 3.6`. Default `comfort` to `'neutral'`.
   - _Key_: This function replaces the sign-specific branch of `resolveRuleSpeed()` in cost.ts. It reuses `getEffectiveSignSpeedType()` from rules.ts rather than duplicating the fallback logic that `resolveRuleSpeed()` currently has inline (cost.ts L32-49).
 
-- [ ] **Implement `resolveRoadImpact(cfg: RoadRuleConfig, cruisingSpeedKmh: number): ResolvedEdgeImpact`**: Resolves a single road rule config into its algorithm impact.
+- [x] **Implement `resolveRoadImpact(cfg: RoadRuleConfig, cruisingSpeedKmh: number): ResolvedEdgeImpact`**: Resolves a single road rule config into its algorithm impact.
   - _Internal logic_: Use `getEffectiveRoadSpeedType(cfg)` from `rules.ts`, then the same `speedType → km/h` switch, convert to m/s. Default `comfort` to `'neutral'`.
 
-- [ ] **Implement `mapSignConfigToImpacts(signs, cruisingSpeedKmh): RouterSignImpacts`**: Bulk mapper iterating `Record<InfrastructureType, SignRuleConfig>` and calling `resolveSignImpact()` per entry.
+- [x] **Implement `mapSignConfigToImpacts(signs, cruisingSpeedKmh): RouterSignImpacts`**: Bulk mapper iterating `Record<InfrastructureType, SignRuleConfig>` and calling `resolveSignImpact()` per entry.
   - _Signature_: `(signs: Record<InfrastructureType, SignRuleConfig>, cruisingSpeedKmh: number) => RouterSignImpacts`
 
-- [ ] **Implement `mapRoadConfigToImpacts(roads, cruisingSpeedKmh): RouterRoadImpacts`**: Bulk mapper iterating `Record<RoadType, RoadRuleConfig>` and calling `resolveRoadImpact()` per entry.
+- [x] **Implement `mapRoadConfigToImpacts(roads, cruisingSpeedKmh): RouterRoadImpacts`**: Bulk mapper iterating `Record<RoadType, RoadRuleConfig>` and calling `resolveRoadImpact()` per entry.
   - _Signature_: `(roads: Record<RoadType, RoadRuleConfig>, cruisingSpeedKmh: number) => RouterRoadImpacts`
 
-- [ ] **Helper: `resolveSpeedTypeToMs(speedType, baseSpeedKmh, cruisingSpeedKmh): number`**: Private helper shared by both `resolveSignImpact` and `resolveRoadImpact`.
+- [x] **Helper: `resolveSpeedTypeToMs(speedType, baseSpeedKmh, cruisingSpeedKmh): number`**: Private helper shared by both `resolveSignImpact` and `resolveRoadImpact`.
   - Absorbs the `switch(speedType)` logic from `resolveRuleSpeed()` (cost.ts L52-64) and converts the result to m/s in one step.
   - _Logic_:
     ```
