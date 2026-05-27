@@ -1,5 +1,5 @@
 import { getProjectionT, projectPointOnSegment } from '../common/geometry';
-import { Coordinate } from '../common/types';
+import type { Coordinate } from '../common/types';
 import { haversineDistance } from '../graph/parser';
 import { RouteResult } from '../router/types';
 import { NavigationProgress, RideStats, SnappedPosition } from './types';

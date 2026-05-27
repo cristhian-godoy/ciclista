@@ -1,4 +1,4 @@
-import { Coordinate } from '../common/types';
+import type { Coordinate } from '../common/types';
 
 /**
  * Valid states of the navigation tracking cycle.
