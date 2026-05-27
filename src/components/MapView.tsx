@@ -5,6 +5,7 @@ import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { NavigationState, RideStats } from '../core/navigation/types';
 import type { RouteAlternative } from '../core/router/types';
+import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { MapProvider, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
@@ -15,6 +16,7 @@ import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
 import { StartEndMarkers } from './map/StartEndMarkers';
 import { StreetGraphLayer } from './map/StreetGraphLayer';
 import { useMapInstance } from './map/useMapInstance';
+import { NavigationHUD } from './NavigationHUD';
 
 interface MapViewProps {
   graph: StreetGraph | null;
@@ -194,6 +196,9 @@ const MapViewContent: React.FC<{
           <MapLayerDock />
         </>
       )}
+
+      <NavigationHUD />
+      <ArrivalPanel />
     </div>
   );
 };

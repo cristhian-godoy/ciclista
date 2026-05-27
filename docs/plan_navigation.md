@@ -123,7 +123,7 @@ _Focus: Wire the engine and providers into React state. Single hook owns the ful
 
 _Focus: Render the rider position, control camera, and adjust route line styling during navigation._
 
-- [ ] **Create `NavigationLayer`** → `src/components/map/NavigationLayer.tsx`
+- [x] **Create `NavigationLayer`** → `src/components/map/NavigationLayer.tsx`
   - _Details_:
     - Reads `navigationState` and `isNavigating` from `useMapContext()`.
     - When `isNavigating`:
@@ -131,21 +131,21 @@ _Focus: Render the rider position, control camera, and adjust route line styling
       - Renders a `symbol` layer using a custom arrow icon (a simple triangle/chevron SVG loaded via `map.addImage`). The icon rotation is bound to `snapped.bearing` via `'icon-rotate': ['get', 'bearing']` in the layer paint properties.
       - Updates the source data on every `navigationState.snapped` change.
 
-- [ ] **Camera control** → same component
+- [x] **Camera control** → same component
   - _Details_:
     - On each snapped position update, call `map.easeTo(...)`:
       - `heading-up` mode: `center: [snapped.coordinate.lng, snapped.coordinate.lat], bearing: snapped.bearing, zoom: 17, pitch: 45, duration: 300`. This creates the "driving view" where the map rotates so the direction of travel is always up.
       - `north-up` mode: `center: [snapped.coordinate.lng, snapped.coordinate.lat], bearing: 0, zoom: 16, pitch: 0, duration: 300`. Classic top-down north-facing view.
     - Use a `useRef` for debouncing — do not call `easeTo` more than once per 250ms to avoid jank.
 
-- [ ] **Navigation route line styling** → `RouteAlternativesLayer.tsx`
+- [x] **Navigation route line styling** → `RouteAlternativesLayer.tsx`
   - _Details_:
     - When `isNavigating` is true (read from `useMapContext`):
       - Hide the non-active alternative route layers (set `line-opacity: 0` on inactive strategies).
       - Increase the active route layer `line-width` to `8` and its glow layer `line-width` to `14`, `line-opacity` to `0.35`. These thicker values provide the "navigation-grade" visual prominence.
       - Optionally split the active route into "covered" (behind the rider, dimmed) and "remaining" (ahead, full brightness) using two GeoJSON features derived from `segmentIndex` + `fractionAlongSegment`. This is a nice-to-have; at minimum, the full line in thicker style is sufficient for M4.
 
-- [ ] **Mount `NavigationLayer`** → `MapView.tsx`
+- [x] **Mount `NavigationLayer`** → `MapView.tsx`
   - _Details_:
     - Add `<NavigationLayer />` inside the `{map && mapReady && (...)}` block, after `<StartEndMarkers />`.
 
@@ -162,7 +162,7 @@ _Focus: Sidebar integration for triggering navigation, in-ride HUD overlay, and 
     - When `isNavigating`, replace the button with a "Stop Navigation" button (with `Square` icon) and display a compact progress summary (distance remaining, ETA).
     - Add a camera-mode toggle button (e.g. `Compass` icon for north-up, `Navigation2` icon for heading-up) next to the stop button.
 
-- [ ] **Navigation HUD overlay** → `src/components/NavigationHUD.tsx` [NEW]
+- [x] **Navigation HUD overlay** → `src/components/NavigationHUD.tsx` [NEW]
   - _Details_:
     - A floating overlay positioned at the top-center of the map (via CSS `position: absolute; top: 16px; left: 50%; transform: translateX(-50%);`).
     - Displays: current speed (km/h), ETA, distance remaining.
@@ -170,14 +170,14 @@ _Focus: Sidebar integration for triggering navigation, in-ride HUD overlay, and 
     - Only visible when `isNavigating`.
     - Mount in `MapView.tsx` outside the MapLibre layers, as a sibling to `<MapContextMenu />`.
 
-- [ ] **Arrival panel** → `src/components/ArrivalPanel.tsx` [NEW]
+- [x] **Arrival panel** → `src/components/ArrivalPanel.tsx` [NEW]
   - _Details_:
     - A modal/overlay displayed when `navigationState.status === 'arrived'`.
     - Renders `RideStats`: total distance, total time, average speed, max speed, traffic lights encountered, route profile used.
     - "Close" button dismisses and resets navigation state to idle (calls `stopNavigation`).
     - Reuses existing design tokens and `ciclista-glass-panel` / `ciclista-card` classes.
 
-- [ ] **Wire UI props through `App.tsx`**
+- [x] **Wire UI props through `App.tsx`**
   - _Details_:
     - Pass `isNavigating`, `onStartNavigation`, `onStopNavigation`, `navigationProgress`, `onToggleCameraMode`, `cameraMode` to `Sidebar`.
     - Pass `navigationState` and `rideStats` to `MapView` (for HUD and ArrivalPanel mounting).
@@ -188,24 +188,24 @@ _Focus: Sidebar integration for triggering navigation, in-ride HUD overlay, and 
 
 _Focus: End-to-end integration testing, CSS refinements, dev-mode UX._
 
-- [ ] **WASD controls visual indicator** → `NavigationHUD.tsx`
+- [x] **WASD controls visual indicator** → `NavigationHUD.tsx`
   - _Details_:
     - When `import.meta.env.DEV`, render a small badge or text "(WASD)" next to the speed readout so the developer knows keyboard input is active.
 
-- [ ] **Sidebar auto-collapse during navigation**
+- [x] **Sidebar auto-collapse during navigation**
   - _Details_:
     - When `startNavigation` is called, auto-collapse the sidebar (`setIsCollapsed(true)`) to maximise map viewport. This requires either lifting the `isCollapsed` state to `App.tsx` or passing a `forceCollapse` prop.
 
-- [ ] **Disable route editing during navigation**
+- [x] **Disable route editing during navigation**
   - _Details_:
     - When `isNavigating`, disable pin dragging in `StartEndMarkers.tsx` (skip marker creation or set `draggable: false`).
     - Suppress context menu route-point actions in `MapContextMenu.tsx`.
     - Disable strategy switching in `RouteStatsPanel.tsx`.
 
-- [ ] **Update `.info` files**
+- [x] **Update `.info` files**
   - _Details_: Add `.info` entries for `src/core/navigation/` directory and each new file, following the existing `tree --info` annotation pattern.
 
-- [ ] **Integration test** → `src/components/map/NavigationLayer.test.tsx`
+- [x] **Integration test** → `src/components/map/NavigationLayer.test.tsx`
   - _Details_: Mount `NavigationLayer` within a mocked `MapProvider`, verify that the GeoJSON source is updated when `navigationState.snapped` changes, and that `map.easeTo` is called with the correct bearing for each camera mode.
 
 ---

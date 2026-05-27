@@ -1,0 +1,10 @@
+engine.test.ts
+	Unit tests for route-snapping, interpolation, progress calculations, and stats.
+engine.ts
+	Pure functions for route-snapping, linear interpolation, progress calculations, and ride-completion statistics.
+position.test.ts
+	Unit tests for GPS and keyboard-based WASD position simulation providers.
+position.ts
+	GPS and keyboard-based position stream providers wrapped in a unified interface.
+types.ts
+	Type definitions for navigation telemetry, camera state, snap metrics, and ride statistics.

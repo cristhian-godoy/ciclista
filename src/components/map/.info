@@ -6,6 +6,10 @@ MapLayerDock.test.tsx
 	Unit tests for layer visibility toggling.
 MapLayerDock.tsx
 	Collapsible bottom-right dock controlling map overlay filters.
+NavigationLayer.test.tsx
+	Integration tests verifying coordinates synchronization and camera easing.
+NavigationLayer.tsx
+	Map overlay rendering snapped position marker and managing camera updates.
 NodePopup.test.tsx
 	Integration tests verifying control node override saving behavior.
 NodePopup.tsx
