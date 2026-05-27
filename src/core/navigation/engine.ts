@@ -1,8 +1,8 @@
 import { getProjectionT, projectPointOnSegment } from '../common/geometry';
 import type { Coordinate } from '../common/types';
 import { haversineDistance } from '../graph/parser';
-import { RouteResult } from '../router/types';
-import { NavigationProgress, RideStats, SnappedPosition } from './types';
+import type { RouteResult } from '../router/types';
+import type { NavigationProgress, RideStats, SnappedPosition } from './types';
 
 /**
  * Calculates the initial bearing from point A to point B on a sphere in degrees [0, 360).

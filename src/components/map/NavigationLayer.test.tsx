@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NavigationState } from '../../core/navigation/types';
+import type { NavigationState } from '../../core/navigation/types';
 import { MapContext, MapContextType } from './MapContext';
 import { NavigationLayer } from './NavigationLayer';
 

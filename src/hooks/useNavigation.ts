@@ -9,8 +9,8 @@ import {
   snapToRoute,
 } from '../core/navigation/engine';
 import { createPositionProvider } from '../core/navigation/position';
-import { NavigationProgress, NavigationState, RideStats } from '../core/navigation/types';
-import { RouteResult } from '../core/router/types';
+import type { NavigationProgress, NavigationState, RideStats } from '../core/navigation/types';
+import type { RouteResult } from '../core/router/types';
 
 interface UseNavigationProps {
   routeResult: RouteResult | null;
