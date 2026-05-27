@@ -35,6 +35,7 @@ function createArrowImage(): HTMLCanvasElement {
 export const NavigationLayer: React.FC = () => {
   const { map, navigationState, isNavigating } = useMapContext();
   const lastCameraUpdateRef = useRef<number>(0);
+  const isDev = import.meta.env.DEV;
 
   // Initialize source, layer, and images
   useEffect(() => {
@@ -71,6 +72,30 @@ export const NavigationLayer: React.FC = () => {
       });
     }
 
+    if (isDev) {
+      if (!map.getSource('nav-raw-position')) {
+        map.addSource('nav-raw-position', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+      }
+
+      if (!map.getLayer('nav-raw-position-layer')) {
+        map.addLayer({
+          id: 'nav-raw-position-layer',
+          type: 'circle',
+          source: 'nav-raw-position',
+          paint: {
+            'circle-radius': 6,
+            'circle-color': '#f43f5e',
+            'circle-opacity': 0.8,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+      }
+    }
+
     return () => {
       if (map.getLayer('nav-position-layer')) {
         map.removeLayer('nav-position-layer');
@@ -78,11 +103,17 @@ export const NavigationLayer: React.FC = () => {
       if (map.getSource('nav-position')) {
         map.removeSource('nav-position');
       }
+      if (map.getLayer('nav-raw-position-layer')) {
+        map.removeLayer('nav-raw-position-layer');
+      }
+      if (map.getSource('nav-raw-position')) {
+        map.removeSource('nav-raw-position');
+      }
       if (map.hasImage('nav-arrow')) {
         map.removeImage('nav-arrow');
       }
     };
-  }, [map]);
+  }, [map, isDev]);
 
   // Synchronize visibility state
   useEffect(() => {
@@ -91,38 +122,76 @@ export const NavigationLayer: React.FC = () => {
     if (layer) {
       map.setLayoutProperty('nav-position-layer', 'visibility', isNavigating ? 'visible' : 'none');
     }
-  }, [map, isNavigating]);
+    const rawLayer = map.getLayer('nav-raw-position-layer');
+    if (rawLayer) {
+      map.setLayoutProperty(
+        'nav-raw-position-layer',
+        'visibility',
+        isNavigating && isDev ? 'visible' : 'none',
+      );
+    }
+  }, [map, isNavigating, isDev]);
 
-  // Synchronize GeoJSON snapped point coordinates and properties
+  // Synchronize GeoJSON snapped & raw coordinates and properties
   useEffect(() => {
     if (!map) return;
     const source = map.getSource('nav-position') as maplibregl.GeoJSONSource;
-    if (!source) return;
+    const rawSource = map.getSource('nav-raw-position') as maplibregl.GeoJSONSource;
 
     if (isNavigating && navigationState.snapped) {
       const { coordinate, bearing } = navigationState.snapped;
-      source.setData({
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [coordinate.lng, coordinate.lat],
+      if (source) {
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [coordinate.lng, coordinate.lat],
+              },
+              properties: {
+                bearing,
+              },
             },
-            properties: {
-              bearing,
-            },
-          },
-        ],
-      });
+          ],
+        });
+      }
     } else {
-      source.setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
+      if (source) {
+        source.setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+      }
     }
-  }, [map, isNavigating, navigationState.snapped]);
+
+    if (isNavigating && isDev && navigationState.raw) {
+      const rawCoord = navigationState.raw;
+      if (rawSource) {
+        rawSource.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [rawCoord.lng, rawCoord.lat],
+              },
+              properties: {},
+            },
+          ],
+        });
+      }
+    } else {
+      if (rawSource) {
+        rawSource.setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+      }
+    }
+  }, [map, isNavigating, isDev, navigationState.snapped, navigationState.raw]);
 
   // Trigger camera updates debounced to 250ms to prevent jittering
   useEffect(() => {

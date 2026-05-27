@@ -40,6 +40,7 @@ export interface NavigationState {
   status: NavigationStatus;
   cameraMode: CameraMode;
   snapped: SnappedPosition | null;
+  raw: Coordinate | null;
   progress: NavigationProgress | null;
   routeCoordinates: Coordinate[];
   startTimestamp: number | null;

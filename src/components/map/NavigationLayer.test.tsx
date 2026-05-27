@@ -17,6 +17,7 @@ const mockNavigationState: NavigationState = {
     fractionAlongSegment: 0.5,
     distanceFromRawM: 2.0,
   },
+  raw: { lat: 48.13716, lng: 11.57613 },
   progress: {
     distanceCoveredM: 50,
     distanceRemainingM: 150,
@@ -35,6 +36,7 @@ const mockNavigationState: NavigationState = {
 describe('NavigationLayer', () => {
   let mockMap: any;
   let mockSource: any;
+  let mockRawSource: any;
   let defaultContextValue: MapContextType;
   let canvasContextSpy: any;
 
@@ -61,9 +63,13 @@ describe('NavigationLayer', () => {
       setData: vi.fn(),
     };
 
+    mockRawSource = {
+      setData: vi.fn(),
+    };
+
     let imageAdded = false;
-    let sourceAdded = false;
-    let layerAdded = false;
+    const sources = new Map<string, any>();
+    const layers = new Map<string, any>();
 
     mockMap = {
       hasImage: vi.fn().mockImplementation((id: string) => {
@@ -76,28 +82,24 @@ describe('NavigationLayer', () => {
         if (id === 'nav-arrow') imageAdded = false;
       }),
       getSource: vi.fn().mockImplementation((id: string) => {
-        if (id === 'nav-position') {
-          return sourceAdded ? mockSource : null;
-        }
-        return null;
+        if (id === 'nav-position' && sources.has(id)) return mockSource;
+        if (id === 'nav-raw-position' && sources.has(id)) return mockRawSource;
+        return sources.get(id) || null;
       }),
-      addSource: vi.fn().mockImplementation((id: string) => {
-        if (id === 'nav-position') sourceAdded = true;
+      addSource: vi.fn().mockImplementation((id: string, source: any) => {
+        sources.set(id, source);
       }),
       removeSource: vi.fn().mockImplementation((id: string) => {
-        if (id === 'nav-position') sourceAdded = false;
+        sources.delete(id);
       }),
       getLayer: vi.fn().mockImplementation((id: string) => {
-        if (id === 'nav-position-layer') {
-          return layerAdded ? {} : null;
-        }
-        return null;
+        return layers.get(id) || null;
       }),
       addLayer: vi.fn().mockImplementation((layer: any) => {
-        if (layer.id === 'nav-position-layer') layerAdded = true;
+        layers.set(layer.id, layer);
       }),
       removeLayer: vi.fn().mockImplementation((id: string) => {
-        if (id === 'nav-position-layer') layerAdded = false;
+        layers.delete(id);
       }),
       setLayoutProperty: vi.fn(),
       easeTo: vi.fn(),
@@ -175,6 +177,18 @@ describe('NavigationLayer', () => {
         source: 'nav-position',
       }),
     );
+
+    // Assert raw position source & layer are also added in DEV mode
+    expect(mockMap.getSource).toHaveBeenCalledWith('nav-raw-position');
+    expect(mockMap.addSource).toHaveBeenCalledWith('nav-raw-position', expect.any(Object));
+    expect(mockMap.getLayer).toHaveBeenCalledWith('nav-raw-position-layer');
+    expect(mockMap.addLayer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'nav-raw-position-layer',
+        type: 'circle',
+        source: 'nav-raw-position',
+      }),
+    );
   });
 
   it('removes resources on unmount', () => {
@@ -189,6 +203,8 @@ describe('NavigationLayer', () => {
 
     expect(mockMap.removeLayer).toHaveBeenCalledWith('nav-position-layer');
     expect(mockMap.removeSource).toHaveBeenCalledWith('nav-position');
+    expect(mockMap.removeLayer).toHaveBeenCalledWith('nav-raw-position-layer');
+    expect(mockMap.removeSource).toHaveBeenCalledWith('nav-raw-position');
     expect(mockMap.removeImage).toHaveBeenCalledWith('nav-arrow');
   });
 
@@ -199,8 +215,13 @@ describe('NavigationLayer', () => {
       </MapContext.Provider>,
     );
 
-    expect(mockMap.setLayoutProperty).toHaveBeenLastCalledWith(
+    expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
       'nav-position-layer',
+      'visibility',
+      'visible',
+    );
+    expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
+      'nav-raw-position-layer',
       'visibility',
       'visible',
     );
@@ -217,7 +238,7 @@ describe('NavigationLayer', () => {
     );
 
     expect(mockMap.setLayoutProperty).toHaveBeenLastCalledWith(
-      'nav-position-layer',
+      'nav-raw-position-layer',
       'visibility',
       'none',
     );
@@ -241,6 +262,21 @@ describe('NavigationLayer', () => {
             },
             properties: {
               bearing: 45,
+            },
+          }),
+        ],
+      }),
+    );
+
+    // Assert raw source data is also set correctly
+    expect(mockRawSource.setData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'FeatureCollection',
+        features: [
+          expect.objectContaining({
+            geometry: {
+              type: 'Point',
+              coordinates: [11.57613, 48.13716],
             },
           }),
         ],
