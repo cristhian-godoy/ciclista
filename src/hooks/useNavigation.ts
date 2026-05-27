@@ -203,8 +203,19 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
     }));
   };
 
-  // Stop provider when route coordinates or result changes
+  // Stop navigation only when the route meaningfully changes.
+  // Comparing by reference would stop navigation on every background graph refresh
+  // (e.g. cache eviction re-fetch producing a new array with identical content).
+  const routeSignatureRef = useRef<string>('');
   useEffect(() => {
+    const len = routeCoordinates.length;
+    const first = len > 0 ? `${routeCoordinates[0].lat},${routeCoordinates[0].lng}` : '';
+    const last = len > 1 ? `${routeCoordinates[len - 1].lat},${routeCoordinates[len - 1].lng}` : '';
+    const signature = `${len}:${first}:${last}`;
+
+    if (signature === routeSignatureRef.current) return;
+    routeSignatureRef.current = signature;
+
     if (state.status !== 'idle') {
       setTimeout(() => {
         stopNavigation();
