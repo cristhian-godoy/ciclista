@@ -16,6 +16,7 @@ export const MapContextMenu: React.FC = () => {
     setManagedNodeIds,
     onStartDrag,
     onEndDrag,
+    isNavigating,
   } = useMapContext();
 
   const onStartDragRef = useRef(onStartDrag);
@@ -75,30 +76,34 @@ export const MapContextMenu: React.FC = () => {
           <span>Manage Traffic Lights</span>
         </button>
       )}
-      <button
-        className="map-context-menu-item"
-        onClick={() => {
-          if (onStartDragRef.current) {
-            onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-          }
-          setContextMenu((prev) => ({ ...prev, visible: false }));
-        }}
-      >
-        <MapPin size={14} style={{ color: '#10b981' }} />
-        <span>Start Route Here</span>
-      </button>
-      <button
-        className="map-context-menu-item"
-        onClick={() => {
-          if (onEndDragRef.current) {
-            onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-          }
-          setContextMenu((prev) => ({ ...prev, visible: false }));
-        }}
-      >
-        <MapPin size={14} style={{ color: '#ef4444' }} />
-        <span>End Route Here</span>
-      </button>
+      {!isNavigating && (
+        <>
+          <button
+            className="map-context-menu-item"
+            onClick={() => {
+              if (onStartDragRef.current) {
+                onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              }
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <MapPin size={14} style={{ color: '#10b981' }} />
+            <span>Start Route Here</span>
+          </button>
+          <button
+            className="map-context-menu-item"
+            onClick={() => {
+              if (onEndDragRef.current) {
+                onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              }
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <MapPin size={14} style={{ color: '#ef4444' }} />
+            <span>End Route Here</span>
+          </button>
+        </>
+      )}
     </div>
   );
 };

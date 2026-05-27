@@ -8,7 +8,8 @@ import { useMapContext } from './MapContext';
  * start (origin) and end (destination) pin markers on the map canvas.
  */
 export const StartEndMarkers: React.FC = () => {
-  const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds } = useMapContext();
+  const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds, isNavigating } =
+    useMapContext();
 
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -37,7 +38,11 @@ export const StartEndMarkers: React.FC = () => {
       }
     };
   }, []);
-
+  // Synchronize draggable option when navigation starts/stops
+  useEffect(() => {
+    startMarkerRef.current?.setDraggable(!isNavigating);
+    endMarkerRef.current?.setDraggable(!isNavigating);
+  }, [isNavigating]);
   // Dynamically manage Start Marker
   useEffect(() => {
     if (!map) return;
@@ -60,7 +65,7 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.fontFamily = 'inherit';
         startEl.innerHTML = 'A';
 
-        const startMarker = new maplibregl.Marker({ element: startEl, draggable: true })
+        const startMarker = new maplibregl.Marker({ element: startEl, draggable: !isNavigating })
           .setLngLat([startCoord.lng, startCoord.lat])
           .addTo(map);
 
@@ -86,7 +91,7 @@ export const StartEndMarkers: React.FC = () => {
         startMarkerRef.current = null;
       }
     }
-  }, [map, startCoord, setShouldFitBounds]);
+  }, [map, startCoord, setShouldFitBounds, isNavigating]);
 
   // Dynamically manage End Marker
   useEffect(() => {
@@ -110,7 +115,7 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.fontFamily = 'inherit';
         endEl.innerHTML = 'B';
 
-        const endMarker = new maplibregl.Marker({ element: endEl, draggable: true })
+        const endMarker = new maplibregl.Marker({ element: endEl, draggable: !isNavigating })
           .setLngLat([endCoord.lng, endCoord.lat])
           .addTo(map);
 
@@ -136,7 +141,7 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current = null;
       }
     }
-  }, [map, endCoord, setShouldFitBounds]);
+  }, [map, endCoord, setShouldFitBounds, isNavigating]);
 
   return null;
 };
