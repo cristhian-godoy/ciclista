@@ -120,6 +120,7 @@ export interface RoadRuleConfig {
 
 /**
  * Configured average crossing wait times for signals, yield signs, stops, and zebra crossings.
+ * Serves as both user-config and algorithm-impact as it contains direct numerical values.
  */
 export interface NodeDelayConfig {
   signalSeconds: number;
@@ -127,6 +128,25 @@ export interface NodeDelayConfig {
   stopSeconds: number;
   crossingSeconds: number;
 }
+
+/**
+ * Resolved numerical metrics for a single map feature used during cost calculations.
+ */
+export interface ResolvedEdgeImpact {
+  effectiveSpeedMs: number;
+  flatPenaltySeconds: number;
+  comfort: ComfortLevel;
+}
+
+/**
+ * Resolved edge impacts mapped by infrastructure type.
+ */
+export type RouterSignImpacts = Record<InfrastructureType, ResolvedEdgeImpact>;
+
+/**
+ * Resolved edge impacts mapped by road classification.
+ */
+export type RouterRoadImpacts = Record<RoadType, ResolvedEdgeImpact>;
 
 /**
  * Aggregated configuration wrapper mapping signs, roads, and intersection node delays.
