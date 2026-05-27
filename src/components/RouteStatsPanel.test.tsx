@@ -65,6 +65,7 @@ describe('RouteStatsPanel', () => {
         routingStrategy="standard"
         onStrategyChange={vi.fn()}
         routeResult={mockRouteResult}
+        isNavigating={false}
       />,
     );
 
@@ -87,6 +88,7 @@ describe('RouteStatsPanel', () => {
         routingStrategy="standard"
         onStrategyChange={handleStrategyChange}
         routeResult={mockRouteResult}
+        isNavigating={false}
       />,
     );
 
@@ -104,6 +106,7 @@ describe('RouteStatsPanel', () => {
         routingStrategy="standard"
         onStrategyChange={vi.fn()}
         routeResult={mockRouteResult}
+        isNavigating={false}
       />,
     );
 
@@ -114,5 +117,25 @@ describe('RouteStatsPanel', () => {
 
     expect(screen.getByText('1. Main Street')).toBeInTheDocument();
     expect(screen.getByText('2. Side Street')).toBeInTheDocument();
+  });
+
+  it('does not trigger onStrategyChange when clicking strategies while navigating', async () => {
+    const user = userEvent.setup();
+    const handleStrategyChange = vi.fn();
+
+    render(
+      <RouteStatsPanel
+        routeAlternatives={mockAlternatives}
+        routingStrategy="standard"
+        onStrategyChange={handleStrategyChange}
+        routeResult={mockRouteResult}
+        isNavigating={true}
+      />,
+    );
+
+    const avoidStopsCard = screen.getByText('Avoid Stops');
+    await user.click(avoidStopsCard);
+
+    expect(handleStrategyChange).not.toHaveBeenCalled();
   });
 });

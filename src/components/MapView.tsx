@@ -9,6 +9,7 @@ import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { MapProvider, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
+import { NavigationLayer } from './map/NavigationLayer';
 import { NodePopup } from './map/NodePopup';
 import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
 import { StartEndMarkers } from './map/StartEndMarkers';
@@ -187,6 +188,7 @@ const MapViewContent: React.FC<{
           <RouteAlternativesLayer />
           <BBoxBoundaryLayer />
           <StartEndMarkers />
+          <NavigationLayer />
           <NodePopup key={selectedNode?.id} />
           <MapContextMenu />
           <MapLayerDock />

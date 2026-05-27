@@ -15,6 +15,7 @@ export const RouteAlternativesLayer: React.FC = () => {
     onSelectAlternative,
     shouldFitBounds,
     setShouldFitBounds,
+    isNavigating,
   } = useMapContext();
 
   const onSelectAlternativeRef = useRef(onSelectAlternative);
@@ -168,14 +169,20 @@ export const RouteAlternativesLayer: React.FC = () => {
         });
       }
 
-      // Update styling dynamically based on active selection
+      // Update styling dynamically based on active selection & navigation mode
       const isActive = activeAlternativeLabel === strategy;
+      const opacity = isNavigating ? (isActive ? 1.0 : 0.0) : isActive ? 1.0 : 0.4;
+      const width = isNavigating ? (isActive ? 8 : 4) : isActive ? 6 : 4;
+      const glowOpacity = isNavigating ? (isActive ? 0.35 : 0.0) : isActive ? 0.3 : 0.0;
+      const glowWidth = isNavigating ? (isActive ? 14 : 9) : isActive ? 9 : 9;
+
       if (map.getLayer(`route-path-layer-${strategy}`)) {
-        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', isActive ? 1.0 : 0.4);
-        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', isActive ? 6 : 4);
+        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', opacity);
+        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', width);
       }
       if (map.getLayer(`route-path-glow-${strategy}`)) {
-        map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', isActive ? 0.3 : 0.0);
+        map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', glowOpacity);
+        map.setPaintProperty(`route-path-glow-${strategy}`, 'line-width', glowWidth);
       }
 
       // Bring active layer to front (under the traffic lights layer)
@@ -197,7 +204,7 @@ export const RouteAlternativesLayer: React.FC = () => {
     const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
     if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
       const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
-      if (shouldFitBounds && coords.length > 1) {
+      if (shouldFitBounds && coords.length > 1 && !isNavigating) {
         const bounds = coords.reduce(
           (acc, val) => acc.extend(val as [number, number]),
           new maplibregl.LngLatBounds(coords[0] as [number, number], coords[0] as [number, number]),
@@ -216,7 +223,14 @@ export const RouteAlternativesLayer: React.FC = () => {
         setShouldFitBounds(false);
       }
     }
-  }, [map, routeAlternatives, activeAlternativeLabel, shouldFitBounds, setShouldFitBounds]);
+  }, [
+    map,
+    routeAlternatives,
+    activeAlternativeLabel,
+    shouldFitBounds,
+    setShouldFitBounds,
+    isNavigating,
+  ]);
 
   return null;
 };

@@ -20,6 +20,7 @@ interface RouteStatsPanelProps {
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   routeResult: RouteResult | null;
+  isNavigating: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
   routingStrategy,
   onStrategyChange,
   routeResult,
+  isNavigating,
 }) => {
   const [showDebug, setShowDebug] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -117,26 +119,28 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
               <div
                 key={alt.label}
                 className={`alternative-card ${isActive ? 'active' : ''}`}
-                onClick={() =>
-                  onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets')
-                }
+                onClick={() => {
+                  if (isNavigating) return;
+                  onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets');
+                }}
                 style={{
                   padding: '10px 12px',
                   borderRadius: '8px',
                   background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-secondary)',
                   border: `1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                  cursor: 'pointer',
+                  cursor: isNavigating ? 'default' : 'pointer',
                   transition: 'var(--transition-fast)',
                   boxShadow: isActive ? 'var(--shadow-glow)' : 'none',
+                  opacity: isNavigating && !isActive ? 0.5 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) {
+                  if (!isActive && !isNavigating) {
                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive) {
+                  if (!isActive && !isNavigating) {
                     e.currentTarget.style.borderColor = 'var(--border-color)';
                     e.currentTarget.style.background = 'var(--bg-secondary)';
                   }
