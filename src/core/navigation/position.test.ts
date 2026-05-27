@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Coordinate } from '../common/types';
+import type { Coordinate } from '../common/types';
 import { createGeoProvider, createWASDProvider } from './position';
 
 describe('Position Providers', () => {

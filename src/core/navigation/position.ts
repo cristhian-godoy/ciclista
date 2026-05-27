@@ -1,4 +1,4 @@
-import { Coordinate } from '../common/types';
+import type { Coordinate } from '../common/types';
 
 /**
  * Unified interface for coordinate emission streams across real and simulated sources.

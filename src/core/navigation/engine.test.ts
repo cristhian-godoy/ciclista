@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Coordinate } from '../common/types';
+import type { Coordinate } from '../common/types';
 import { RouteResult } from '../router/types';
 import {
   buildRideStats,

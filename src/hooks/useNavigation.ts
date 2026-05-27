@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { Coordinate } from '../core/common/types';
+import type { Coordinate } from '../core/common/types';
 import {
   buildRideStats,
   calculateBearing,
