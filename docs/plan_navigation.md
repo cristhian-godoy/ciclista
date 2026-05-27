@@ -73,19 +73,19 @@ _Focus: Define all data structures and implement the route-snapping / progress-t
 
 _Focus: Abstract the coordinate source behind a common interface so the navigation engine is agnostic to input method._
 
-- [ ] **Define provider interface** → `src/core/navigation/position.ts`
+- [x] **Define provider interface** → `src/core/navigation/position.ts`
   - _Details_:
     - `PositionProvider` interface: `{ start(): void; stop(): void; onPosition: (cb: (coord: Coordinate, timestamp: number) => void) => void; }`.
     - `createGeoProvider(options?: PositionAccuracyOptions): PositionProvider` — wraps `navigator.geolocation.watchPosition` with `enableHighAccuracy: true`. On permission denied, emits an error event (TBD via callback or throw). Filters out positions where `coords.accuracy > 50m` to reject low-quality fixes.
     - `createWASDProvider(initialCoord: Coordinate, speedMPerTick?: number): PositionProvider` — listens to `keydown`/`keyup` on `window`. W/S move along current bearing, A/D rotate bearing ±5°/tick. Emits position ticks via `requestAnimationFrame`. Default speed: ~8 m/s (≈29 km/h cycling speed). The provider maintains its own internal `{lat, lng, bearing}` state and emits `Coordinate` on every animation frame while keys are held.
     - Export a factory: `createPositionProvider(mode: 'gps' | 'dev'): PositionProvider`. In dev (`import.meta.env.DEV`), default to `'dev'`; in production, default to `'gps'`.
 
-- [ ] **GPS permission handling** → same file
+- [x] **GPS permission handling** → same file
   - _Details_:
     - Before calling `watchPosition`, call `navigator.permissions.query({ name: 'geolocation' })` to check state. If `'denied'`, surface error through a callback without calling `watchPosition`.
     - The provider should accept an `onError: (err: GeolocationPositionError) => void` callback.
 
-- [ ] **Unit tests** → `src/core/navigation/position.test.ts`
+- [x] **Unit tests** → `src/core/navigation/position.test.ts`
   - _Details_: Test WASD provider with synthetic keydown events. Verify coordinate deltas correspond to expected direction/speed. GPS provider tests can verify that `watchPosition` is called with correct options (mock `navigator.geolocation`).
 
 ---
