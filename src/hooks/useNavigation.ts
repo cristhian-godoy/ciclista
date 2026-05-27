@@ -25,6 +25,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
     status: 'idle',
     cameraMode: 'heading-up',
     snapped: null,
+    raw: null,
     progress: null,
     routeCoordinates: [],
     startTimestamp: null,
@@ -79,6 +80,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
       status: 'active',
       cameraMode: prev.cameraMode,
       snapped: initialSnapped,
+      raw: initialCoord,
       progress: initialProgress,
       routeCoordinates,
       startTimestamp,
@@ -137,6 +139,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
         return {
           ...curr,
           snapped: smoothed,
+          raw: coord,
           progress,
         };
       });
