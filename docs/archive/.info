@@ -6,6 +6,8 @@ code-cleanup.md
 	DRY and refactoring checklist.
 further-improvements.md
 	Completed roadmaps for Milestones 1 through 4.
+housekeeping-plan.md
+	Codebase housekeeping plan to decouple API caching and audit documentation.
 german_traffic_signs_checklist.md
 	German Traffic Signs & Rules integration roadmap checklist.
 implementation_plan.md

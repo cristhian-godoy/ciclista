@@ -19,7 +19,7 @@ _Focus: Move heavy technical implementations out of the core domain logic folder
 
 _Focus: Eliminate flowery "AI-speak" and optimize linting constraints._
 
-- [ ] **Refine ESLint JSDoc Rules**:
+- [x] **Refine ESLint JSDoc Rules**:
   - _Details_: Review the secondary JSDoc rule that forbids empty JSDocs. Ensure that we aren't forcing the AI to generate meaningless filler comments just to satisfy the linter for internal functions.
-- [ ] **Audit Existing Comments**:
+- [x] **Audit Existing Comments**:
   - _Details_: Do a sweep of the codebase (like `.info` files and component headers) to remove overly dramatic terminology ("tailored orchestrator", "cyberpunk dark hues") and replace it with objective, technical descriptions as mandated by the new `.agents/rules`.

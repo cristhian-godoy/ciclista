@@ -3,4 +3,4 @@ components.css
 layout.css
 	Full-viewport grid and flex layouts containing floating sidebar overlays.
 variables.css
-	Global CSS style values, cyberpunk dark hues, blurs, and typography.
+	Global CSS custom properties, theme colors, blurs, and typography.
