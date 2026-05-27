@@ -10,7 +10,7 @@ Decouple `RulesConfiguration` (user-facing, UI/storage) from algorithm-facing ty
 
 _Focus: Create the algorithm-facing types that cost functions will consume instead of reading `RulesConfiguration` directly._
 
-- [ ] **Create `ResolvedEdgeImpact` interface**: The resolved output for a single sign or road rule. Contains only what the algorithm needs.
+- [x] **Create `ResolvedEdgeImpact` interface**: The resolved output for a single sign or road rule. Contains only what the algorithm needs.
   - _File_: `src/core/router/types.ts` (alongside existing `SignRuleConfig`, `RoadRuleConfig`)
   - _Shape_:
     ```ts
@@ -23,15 +23,15 @@ _Focus: Create the algorithm-facing types that cost functions will consume inste
   - `effectiveSpeedMs` is the fully resolved speed in m/s (no more `speedType` interpretation at cost-calculation time).
   - `comfort` defaults to `'neutral'` if unset in the source config.
 
-- [ ] **Create `RouterSignImpacts` type alias**: A `Record<InfrastructureType, ResolvedEdgeImpact>` mapping each infrastructure concept to its resolved impact.
+- [x] **Create `RouterSignImpacts` type alias**: A `Record<InfrastructureType, ResolvedEdgeImpact>` mapping each infrastructure concept to its resolved impact.
   - _File_: `src/core/router/types.ts`
   - _Shape_: `type RouterSignImpacts = Record<InfrastructureType, ResolvedEdgeImpact>;`
 
-- [ ] **Create `RouterRoadImpacts` type alias**: A `Record<RoadType, ResolvedEdgeImpact>` mapping each road classification to its resolved impact.
+- [x] **Create `RouterRoadImpacts` type alias**: A `Record<RoadType, ResolvedEdgeImpact>` mapping each road classification to its resolved impact.
   - _File_: `src/core/router/types.ts`
   - _Shape_: `type RouterRoadImpacts = Record<RoadType, ResolvedEdgeImpact>;`
 
-- [ ] **`NodeDelayConfig` — no change needed**: It already contains resolved numerical seconds with no interpretation layer. Document this decision with a brief comment in `types.ts` noting it already serves as both user-config and algorithm-impact.
+- [x] **`NodeDelayConfig` — no change needed**: It already contains resolved numerical seconds with no interpretation layer. Document this decision with a brief comment in `types.ts` noting it already serves as both user-config and algorithm-impact.
 
 ---
 
