@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
 import type { RouteAlternative } from './core/router/types';
+import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
 import { useRoutingState } from './hooks/useRoutingState';
@@ -112,6 +113,11 @@ export default function App() {
     return active ? active.result : null;
   }, [routeAlternatives, routingStrategy]);
 
+  const navigation = useNavigation({
+    routeResult,
+    routeCoordinates: routeResult?.coordinates ?? [],
+  });
+
   return (
     <div className="app-container">
       <Sidebar
@@ -130,6 +136,12 @@ export default function App() {
         onBikeConfigChange={setBikeConfig}
         theme={theme}
         onThemeChange={setTheme}
+        isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
+        onStartNavigation={navigation.startNavigation}
+        onStopNavigation={navigation.stopNavigation}
+        navigationProgress={navigation.state.progress}
+        onToggleCameraMode={navigation.toggleCameraMode}
+        cameraMode={navigation.state.cameraMode}
       />
       <MapView
         graph={graph}
@@ -150,6 +162,10 @@ export default function App() {
         onClearNodeOverride={handleClearNodeOverride}
         onMapBoundsChange={handleMapBoundsChange}
         theme={theme}
+        navigationState={navigation.state}
+        isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
+        rideStats={navigation.rideStats}
+        onStopNavigation={navigation.stopNavigation}
       />
     </div>
   );

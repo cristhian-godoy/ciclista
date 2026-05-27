@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
+import type { NavigationState, RideStats } from '../core/navigation/types';
 import type { RouteAlternative } from '../core/router/types';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { MapProvider, useMapContext } from './map/MapContext';
@@ -33,6 +34,10 @@ interface MapViewProps {
   onClearNodeOverride: (nodeId: string) => void;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
   theme: 'bright' | 'liberty' | 'dark';
+  navigationState: NavigationState;
+  isNavigating: boolean;
+  rideStats: RideStats | null;
+  onStopNavigation: () => void;
 }
 
 const MapViewContent: React.FC<{
@@ -55,6 +60,7 @@ const MapViewContent: React.FC<{
     setDockExpanded,
     startCoord,
     endCoord,
+    isNavigating,
   } = useMapContext();
 
   const startCoordRef = useRef(startCoord);
@@ -114,7 +120,7 @@ const MapViewContent: React.FC<{
   const handleClick = (e: maplibregl.MapMouseEvent) => {
     setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 
-    if (e.defaultPrevented) {
+    if (e.defaultPrevented || isNavigating) {
       return;
     }
 

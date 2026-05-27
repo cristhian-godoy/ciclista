@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
+import type { NavigationState, RideStats } from '../../core/navigation/types';
 import type { RouteAlternative } from '../../core/router/types';
 
 /**
@@ -63,6 +64,12 @@ export interface MapContextType {
   // Context menu state
   contextMenu: ContextMenuData;
   setContextMenu: React.Dispatch<React.SetStateAction<ContextMenuData>>;
+
+  // Navigation states
+  navigationState: NavigationState;
+  isNavigating: boolean;
+  rideStats: RideStats | null;
+  onStopNavigation: () => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -86,6 +93,10 @@ interface MapProviderProps {
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
+  navigationState: NavigationState;
+  isNavigating: boolean;
+  rideStats: RideStats | null;
+  onStopNavigation: () => void;
   children: React.ReactNode;
 }
 
@@ -113,6 +124,10 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   onSaveNodeOverride,
   onClearNodeOverride,
   theme,
+  navigationState,
+  isNavigating,
+  rideStats,
+  onStopNavigation,
   children,
 }) => {
   const [map, setMap] = useState<maplibregl.Map | null>(null);
@@ -168,6 +183,10 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         setManagedNodeIds,
         contextMenu,
         setContextMenu,
+        navigationState,
+        isNavigating,
+        rideStats,
+        onStopNavigation,
       }}
     >
       {children}

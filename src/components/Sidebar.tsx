@@ -1,7 +1,18 @@
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Navigation } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Compass,
+  Navigation,
+  Navigation2,
+  Play,
+  Square,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
+import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
 import type { BikeConfig } from '../core/storage/types';
 import { RouteComparePanel } from './RouteComparePanel';
@@ -25,6 +36,12 @@ interface SidebarProps {
   onBikeConfigChange: (config: BikeConfig) => void;
   theme: 'bright' | 'liberty' | 'dark';
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
+  isNavigating: boolean;
+  onStartNavigation: () => void;
+  onStopNavigation: () => void;
+  navigationProgress: NavigationProgress | null;
+  onToggleCameraMode: () => void;
+  cameraMode: CameraMode;
 }
 
 /**
@@ -45,6 +62,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onBikeConfigChange,
   theme,
   onThemeChange,
+  isNavigating,
+  onStartNavigation,
+  onStopNavigation,
+  navigationProgress,
+  onToggleCameraMode,
+  cameraMode,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -80,6 +103,100 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onStrategyChange={onStrategyChange}
             routeResult={routeResult}
           />
+
+          {/* Navigation Control Panel */}
+          {routeResult !== null && (
+            <div className="ciclista-card" style={{ marginTop: '16px', padding: '16px' }}>
+              {!isNavigating ? (
+                <button
+                  className="ciclista-btn ciclista-btn--primary"
+                  onClick={() => {
+                    setIsCollapsed(true);
+                    onStartNavigation();
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Play size={16} />
+                  Start Navigation
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Active Navigation</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="ciclista-btn ciclista-btn--secondary"
+                        onClick={onToggleCameraMode}
+                        title={`Toggle camera mode (current: ${cameraMode})`}
+                        style={{ padding: '6px 10px' }}
+                      >
+                        {cameraMode === 'north-up' ? (
+                          <Compass size={16} />
+                        ) : (
+                          <Navigation2 size={16} />
+                        )}
+                      </button>
+                      <button
+                        className="ciclista-btn ciclista-btn--danger"
+                        onClick={onStopNavigation}
+                        style={{ padding: '6px 10px' }}
+                        title="Stop Navigation"
+                      >
+                        <Square size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  {navigationProgress && (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '8px',
+                        opacity: 0.9,
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}
+                        >
+                          Remaining
+                        </div>
+                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                          {navigationProgress.distanceRemainingM >= 1000
+                            ? `${(navigationProgress.distanceRemainingM / 1000).toFixed(1)} km`
+                            : `${Math.round(navigationProgress.distanceRemainingM)} m`}
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}
+                        >
+                          ETA
+                        </div>
+                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                          {Math.floor(navigationProgress.etaSeconds / 60) > 0
+                            ? `${Math.floor(navigationProgress.etaSeconds / 60)}m ${Math.round(navigationProgress.etaSeconds % 60)}s`
+                            : `${Math.round(navigationProgress.etaSeconds)}s`}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Section 3: Road Rules Configuration */}
           <RulesConfigPanel config={rulesConfig} onChange={onRulesChange} />

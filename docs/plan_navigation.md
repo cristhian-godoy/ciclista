@@ -94,7 +94,7 @@ _Focus: Abstract the coordinate source behind a common interface so the navigati
 
 _Focus: Wire the engine and providers into React state. Single hook owns the full lifecycle._
 
-- [ ] **Implement `useNavigation` hook** → `src/hooks/useNavigation.ts`
+- [x] **Implement `useNavigation` hook** → `src/hooks/useNavigation.ts`
   - _Details_:
     - Accepts: `{ routeResult: RouteResult | null; routeCoordinates: Coordinate[] }`.
     - Returns: `{ state: NavigationState; startNavigation: () => void; stopNavigation: () => void; pauseNavigation: () => void; resumeNavigation: () => void; toggleCameraMode: () => void; rideStats: RideStats | null; }`.
@@ -104,14 +104,14 @@ _Focus: Wire the engine and providers into React state. Single hook owns the ful
     - Internal `useRef` for the provider instance and the animation-frame-based smoothing loop. Cleanup in `useEffect` return.
     - Expose `cameraMode` so map layer can read it.
 
-- [ ] **Integrate into `App.tsx`**
+- [x] **Integrate into `App.tsx`**
   - _Details_:
     - Call `useNavigation({ routeResult, routeCoordinates: routeResult?.coordinates ?? [] })`.
     - Derive `routeCoordinates` from the active `routeResult`.
     - Pass `navigation.state`, `navigation.startNavigation`, `navigation.stopNavigation`, `navigation.toggleCameraMode`, and `navigation.rideStats` down to `Sidebar` and `MapView` via props.
     - Add `isNavigating: boolean` convenience derived from `state.status === 'active' || state.status === 'paused'`.
 
-- [ ] **Extend `MapViewProps` and `MapContextType`**
+- [x] **Extend `MapViewProps` and `MapContextType`**
   - _Details_:
     - Add to `MapViewProps`: `navigationState: NavigationState; isNavigating: boolean;`.
     - Add to `MapContextType` / `MapProvider`: `navigationState: NavigationState; isNavigating: boolean;`.
@@ -155,7 +155,7 @@ _Focus: Render the rider position, control camera, and adjust route line styling
 
 _Focus: Sidebar integration for triggering navigation, in-ride HUD overlay, and post-ride statistics._
 
-- [ ] **"Start Navigation" button in Sidebar** → modify `Sidebar.tsx`
+- [x] **"Start Navigation" button in Sidebar** → modify `Sidebar.tsx`
   - _Details_:
     - Accept new props: `isNavigating: boolean; onStartNavigation: () => void; onStopNavigation: () => void; navigationProgress: NavigationProgress | null; onToggleCameraMode: () => void; cameraMode: CameraMode;`.
     - Render a "Start Navigation" button (e.g. with a `Play` Lucide icon) below the `RouteStatsPanel` when `routeResult !== null && !isNavigating`. Button calls `onStartNavigation`.
