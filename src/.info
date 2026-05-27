@@ -7,7 +7,7 @@ components
 core
 	Pure TypeScript modules (routing algorithms, parsers, and storage).
 index.css
-	Tailored CSS imports orchestrator.
+	CSS import entry point.
 main.tsx
 	React document bootstrapper.
 styles

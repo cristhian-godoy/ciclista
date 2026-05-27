@@ -36,7 +36,16 @@ export default defineConfig([
       'jsdoc/require-description': [
         'error',
         {
-          contexts: ['any'],
+          contexts: [
+            'ClassDeclaration',
+            'MethodDefinition',
+            'TSInterfaceDeclaration',
+            'TSTypeAliasDeclaration',
+            'TSEnumDeclaration',
+            'ExportNamedDeclaration > FunctionDeclaration',
+            'ExportDefaultDeclaration > FunctionDeclaration',
+            'ExportNamedDeclaration > VariableDeclarator > ArrowFunctionExpression',
+          ],
         },
       ],
       'jsdoc/require-jsdoc': [
