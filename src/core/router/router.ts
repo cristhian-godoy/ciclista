@@ -113,7 +113,7 @@ export class DijkstraRouter implements IRouter {
 
     while (!heap.isEmpty()) {
       const currentInt = heap.pop();
-      if (currentInt === undefined) break;
+      if (currentInt === null) break;
 
       if (currentInt === endInt) {
         destReached = true;
@@ -222,6 +222,7 @@ export class DijkstraRouter implements IRouter {
     yieldCount: number;
     crossingCount: number;
     roadTypeTotals: Record<string, number>;
+    surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number>;
     edges: NonNullable<RouteResult['edges']>;
     totalDisplayCost: number;
   } {

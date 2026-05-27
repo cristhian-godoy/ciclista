@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { render } from '@testing-library/react';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NavigationState } from '../../core/navigation/types';
-import { MapContext, MapContextType } from './MapContext';
+import type { MapContextType } from './MapContext';
+import { MapContext } from './MapContext';
 import { NavigationLayer } from './NavigationLayer';
 
 const mockNavigationState: NavigationState = {

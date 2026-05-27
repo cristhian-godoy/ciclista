@@ -20,6 +20,7 @@ describe('Sidebar Integration', () => {
         yieldCount: 0,
         crossingCount: 0,
         roadTypeTotals: {},
+        surfaceTotals: { paved: 600, gravel: 0, cobblestone: 0 },
         coordinates: [],
         edges: [],
       },
@@ -36,6 +37,7 @@ describe('Sidebar Integration', () => {
     yieldCount: 0,
     crossingCount: 0,
     roadTypeTotals: {},
+    surfaceTotals: { paved: 600, gravel: 0, cobblestone: 0 },
     coordinates: [],
     edges: [],
   };

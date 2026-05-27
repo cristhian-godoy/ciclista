@@ -24,7 +24,7 @@ describe('fetchWithCacheAndFallback', () => {
     };
 
     mockCaches = {
-      open: vi.fn(async () => mockCache),
+      open: vi.fn(async () => mockCache as Cache),
     };
 
     vi.stubGlobal('caches', mockCaches);

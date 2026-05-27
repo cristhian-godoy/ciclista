@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MapContext, MapContextType } from './MapContext';
+import type { MapContextType } from './MapContext';
+import { MapContext } from './MapContext';
 import { MapLayerDock } from './MapLayerDock';
 
 const defaultContextValue: MapContextType = {
@@ -47,6 +48,18 @@ const defaultContextValue: MapContextType = {
     nodeIds: null,
   },
   setContextMenu: vi.fn(),
+  navigationState: {
+    status: 'idle',
+    cameraMode: 'heading-up',
+    snapped: null,
+    raw: null,
+    progress: null,
+    routeCoordinates: [],
+    startTimestamp: null,
+  },
+  isNavigating: false,
+  rideStats: null,
+  onStopNavigation: vi.fn(),
 };
 
 describe('MapLayerDock', () => {

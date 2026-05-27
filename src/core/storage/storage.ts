@@ -84,7 +84,7 @@ export class LocalStorageProvider implements IStorageProvider {
       logger.error('Failed to load overrides from localStorage:', e);
       this.overridesCache = {};
     }
-    return this.overridesCache;
+    return this.overridesCache || {};
   }
 
   /**

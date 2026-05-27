@@ -4,7 +4,8 @@ import maplibregl from 'maplibre-gl';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { GraphNode } from '../../core/graph/types';
-import { MapContext, MapContextType } from './MapContext';
+import type { MapContextType } from './MapContext';
+import { MapContext } from './MapContext';
 import { NodePopup } from './NodePopup';
 
 const defaultContextValue: MapContextType = {
@@ -49,6 +50,18 @@ const defaultContextValue: MapContextType = {
     nodeIds: null,
   },
   setContextMenu: vi.fn(),
+  navigationState: {
+    status: 'idle',
+    cameraMode: 'heading-up',
+    snapped: null,
+    raw: null,
+    progress: null,
+    routeCoordinates: [],
+    startTimestamp: null,
+  },
+  isNavigating: false,
+  rideStats: null,
+  onStopNavigation: vi.fn(),
 };
 
 describe('NodePopup', () => {
