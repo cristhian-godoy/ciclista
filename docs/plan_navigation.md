@@ -46,25 +46,25 @@ _Focus: Define all data structures and implement the route-snapping / progress-t
     - `RideStats`: `{ totalDistanceM: number; totalTimeSeconds: number; averageSpeedKmh: number; maxSpeedKmh: number; trafficLightsEncountered: number; routeProfile: string; }`. Displayed on arrival.
     - `DetourRequest` (stub): `{ currentPosition: Coordinate; remainingRoute: Coordinate[]; reason: 'off_route' | 'user_requested'; }`. Exported but unused — reserves the API surface for future rerouting.
 
-- [ ] **Implement route snapping** → `src/core/navigation/engine.ts`
+- [x] **Implement route snapping** → `src/core/navigation/engine.ts`
   - _Details_:
     - `snapToRoute(raw: Coordinate, routeCoords: Coordinate[], hint: { lastSegmentIndex: number }): SnappedPosition`. Uses `projectPointOnSegment` from `core/common/geometry.ts`. The `hint` parameter enables a **forward-search optimisation**: start scanning from the last known segment and search forward up to N segments (e.g. 10) before falling back to a full polyline scan. This prevents O(n) scans per GPS tick.
     - The bearing at the snapped point is computed from the segment vector direction (reuse or inline a bearing formula consistent with `core/common/geo.ts` patterns).
 
-- [ ] **Implement GPS interpolation / smoothing** → same file, `engine.ts`
+- [x] **Implement GPS interpolation / smoothing** → same file, `engine.ts`
   - _Details_:
     - `interpolatePosition(previous: SnappedPosition, current: SnappedPosition, alpha: number): SnappedPosition`. Linear interpolation along the route polyline between two snapped points. `alpha` ∈ [0, 1] is a smoothing factor (e.g. 0.3 for responsive but dampened movement). This is an exponential moving average (EMA) applied on the `segmentIndex + fractionAlongSegment` 1-D parameter space, not on raw lat/lng, so the interpolated point always stays on the route line.
     - If the raw GPS jumps backwards along the route (negative delta), clamp to the previous position to avoid the marker "rewinding".
 
-- [ ] **Implement progress calculation** → same file, `engine.ts`
+- [x] **Implement progress calculation** → same file, `engine.ts`
   - _Details_:
     - `computeProgress(snapped: SnappedPosition, routeCoords: Coordinate[], startTimestamp: number, currentTimestamp: number): NavigationProgress`. Sums segment distances up to `segmentIndex` plus the fractional part. `etaSeconds` is derived from `distanceRemainingM / averageSpeedKmh` with a floor clamp using the route's `totalDurationSeconds` as a sanity bound.
 
-- [ ] **Implement ride-stats builder** → same file, `engine.ts`
+- [x] **Implement ride-stats builder** → same file, `engine.ts`
   - _Details_:
     - `buildRideStats(progress: NavigationProgress, route: RouteResult, maxSpeedKmh: number): RideStats`. Pure function that assembles the stats object from accumulated values.
 
-- [ ] **Unit tests** → `src/core/navigation/engine.test.ts`
+- [x] **Unit tests** → `src/core/navigation/engine.test.ts`
   - _Details_: Test the four exported functions with deterministic coordinate arrays. Cover: straight-line route, L-shaped route, U-turn suppression, backward-jump clamping, arrival detection (snapped at last segment with fraction ≈ 1.0), and hint-based search acceleration. Test `interpolatePosition` with alpha = 0 (no smoothing), alpha = 1 (full snap), and intermediate values. No mocks needed — all pure functions.
 
 ---
