@@ -36,7 +36,7 @@ All navigation types live in `core/navigation/types.ts`. The engine is a pure-fu
 
 _Focus: Define all data structures and implement the route-snapping / progress-tracking algorithms as pure functions with no framework dependency._
 
-- [ ] **Define navigation types** → `src/core/navigation/types.ts`
+- [x] **Define navigation types** → `src/core/navigation/types.ts`
   - _Details_:
     - `NavigationStatus`: union `'idle' | 'active' | 'paused' | 'arrived'`.
     - `CameraMode`: union `'north-up' | 'heading-up'`.
