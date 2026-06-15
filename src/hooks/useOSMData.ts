@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { fetchWithCacheAndFallback } from '../core/api/overpass';
-import { MAP_CONFIG } from '../core/common/constants';
+import { API_CONFIG, MAP_CONFIG } from '../core/common/constants';
 import { calculateBoundingBox, isInsideLoadedArea } from '../core/common/geo';
 import { logger } from '../core/common/logger';
 import type { Coordinate } from '../core/common/types';
@@ -99,7 +99,7 @@ export function useOSMData({
       // 3. Node Filtering: Keeps only nodes representing controls (traffic signals, stops, yields, crossings),
       //    micro-frictions (bollards, cycle barriers, gates, blocks, kerbs), and railway tram crossings.
       const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
-[out:json][timeout:25];
+[out:json][timeout:${API_CONFIG.QUERY_TIMEOUT_SECONDS}];
 way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|proposed|construction|abandoned|steps"]
    ["access"!~"no|private"]
    (${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})->.ways;
@@ -153,24 +153,6 @@ out body;`;
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Auto-fetch map area matching default preset on startup
-      const presetConfig = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
-      const initialBBox: [number, number, number, number] = [
-        presetConfig.center.lat - presetConfig.latMargin,
-        presetConfig.center.lng - presetConfig.lngMargin,
-        presetConfig.center.lat + presetConfig.latMargin,
-        presetConfig.center.lng + presetConfig.lngMargin,
-      ];
-      handleFetchOSM(initialBBox, false, true);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
     if (!startCoord || !endCoord) return;
@@ -208,16 +190,10 @@ out body;`;
   // Handler for preset selections
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-
-    // Fetch fresh non-merged area for the new preset city center
-    const presetConfig = MAP_CONFIG.PRESETS[preset];
-    const newBBox: [number, number, number, number] = [
-      presetConfig.center.lat - presetConfig.latMargin,
-      presetConfig.center.lng - presetConfig.lngMargin,
-      presetConfig.center.lat + presetConfig.latMargin,
-      presetConfig.center.lng + presetConfig.lngMargin,
-    ];
-    handleFetchOSM(newBBox, false, false);
+    // Clear graph and loaded bounds. Once the map transitions to the new center,
+    // the map's moveend event will automatically trigger dynamic fetch of the viewport.
+    setGraph(null);
+    setLoadedBBoxes([]);
   };
 
   // Handler to load OSM data as one moves through the map

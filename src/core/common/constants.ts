@@ -8,7 +8,7 @@ export const API_CONFIG = {
     'https://overpass.osm.ch/api/interpreter',
   ],
   CACHE_NAME: 'overpass-cache-v1',
-  QUERY_TIMEOUT_SECONDS: 25,
+  QUERY_TIMEOUT_SECONDS: 50,
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
   CACHE_MAX_ITEMS: 200,
 } as const;
@@ -17,13 +17,9 @@ export const MAP_CONFIG = {
   PRESETS: {
     munich: {
       center: { lat: 48.13715, lng: 11.5754 },
-      latMargin: 0.007,
-      lngMargin: 0.01,
     },
     amsterdam: {
       center: { lat: 52.3725, lng: 4.89 },
-      latMargin: 0.007,
-      lngMargin: 0.01,
     },
   },
   DEFAULT_PRESET: 'munich' as const,

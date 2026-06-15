@@ -1,5 +1,5 @@
 import type { StreetGraph } from '../graph/types';
-import { MAP_CONFIG, ROUTING_CONFIG } from './constants';
+import { ROUTING_CONFIG } from './constants';
 import { findNearestEdge } from './geometry';
 import type { Coordinate } from './types';
 
@@ -12,13 +12,9 @@ export function calculateBoundingBox(
   c2: Coordinate | null,
 ): [number, number, number, number] {
   if (!c1 || !c2) {
-    const preset = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
-    return [
-      preset.center.lat - preset.latMargin,
-      preset.center.lng - preset.lngMargin,
-      preset.center.lat + preset.latMargin,
-      preset.center.lng + preset.lngMargin,
-    ];
+    const fallbackLat = c1?.lat ?? c2?.lat ?? 48.13715;
+    const fallbackLng = c1?.lng ?? c2?.lng ?? 11.5754;
+    return [fallbackLat - 0.007, fallbackLng - 0.01, fallbackLat + 0.007, fallbackLng + 0.01];
   }
 
   const minLat = Math.min(c1.lat, c2.lat);
@@ -29,10 +25,9 @@ export function calculateBoundingBox(
   const latSpan = maxLat - minLat;
   const lngSpan = maxLng - minLng;
 
-  const defaultPreset = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
-  // Generous padding: 30% of route span, or at least configured margins to allow alternate paths
-  const latMargin = Math.max(latSpan * 0.3, defaultPreset.latMargin);
-  const lngMargin = Math.max(lngSpan * 0.3, defaultPreset.lngMargin);
+  // Generous padding: 30% of route span, or at least minimum fallback margins (0.007 / 0.01)
+  const latMargin = Math.max(latSpan * 0.3, 0.007);
+  const lngMargin = Math.max(lngSpan * 0.3, 0.01);
 
   return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
 }
