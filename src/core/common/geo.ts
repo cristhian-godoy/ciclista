@@ -63,3 +63,46 @@ export function snapCoordinateToEdge(coord: Coordinate, graph: StreetGraph | nul
   }
   return coord;
 }
+
+/**
+ * Represents a geographical grid cell index for spatial partitioning.
+ */
+export interface GridCell {
+  latIdx: number;
+  lngIdx: number;
+}
+
+export const GRID_CONFIG = {
+  CELL_SIZE_LAT: 0.015,
+  CELL_SIZE_LNG: 0.02,
+} as const;
+
+/**
+ * Calculates all grid cells intersecting a given bounding box.
+ */
+export function getGridCellsForBBox(bbox: [number, number, number, number]): GridCell[] {
+  const [minLat, minLng, maxLat, maxLng] = bbox;
+  const startLatIdx = Math.floor(minLat / GRID_CONFIG.CELL_SIZE_LAT);
+  const endLatIdx = Math.floor(maxLat / GRID_CONFIG.CELL_SIZE_LAT);
+  const startLngIdx = Math.floor(minLng / GRID_CONFIG.CELL_SIZE_LNG);
+  const endLngIdx = Math.floor(maxLng / GRID_CONFIG.CELL_SIZE_LNG);
+
+  const cells: GridCell[] = [];
+  for (let latIdx = startLatIdx; latIdx <= endLatIdx; latIdx++) {
+    for (let lngIdx = startLngIdx; lngIdx <= endLngIdx; lngIdx++) {
+      cells.push({ latIdx, lngIdx });
+    }
+  }
+  return cells;
+}
+
+/**
+ * Returns the exact bounding box for a specific grid cell.
+ */
+export function getBBoxForGridCell(cell: GridCell): [number, number, number, number] {
+  const minLat = parseFloat((cell.latIdx * GRID_CONFIG.CELL_SIZE_LAT).toFixed(6));
+  const minLng = parseFloat((cell.lngIdx * GRID_CONFIG.CELL_SIZE_LNG).toFixed(6));
+  const maxLat = parseFloat(((cell.latIdx + 1) * GRID_CONFIG.CELL_SIZE_LAT).toFixed(6));
+  const maxLng = parseFloat(((cell.lngIdx + 1) * GRID_CONFIG.CELL_SIZE_LNG).toFixed(6));
+  return [minLat, minLng, maxLat, maxLng];
+}

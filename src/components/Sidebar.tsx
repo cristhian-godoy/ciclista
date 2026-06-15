@@ -15,6 +15,7 @@ import type { Coordinate } from '../core/common/types';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
 import type { BikeConfig } from '../core/storage/types';
+import { DataSaverPanel } from './DataSaverPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
@@ -95,6 +96,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             theme={theme}
             onThemeChange={onThemeChange}
           />
+
+          <DataSaverPanel />
 
           {/* Section 2: Route Alternatives Selector & Stats */}
           <RouteStatsPanel

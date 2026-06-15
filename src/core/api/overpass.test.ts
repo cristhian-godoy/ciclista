@@ -9,6 +9,9 @@ describe('fetchWithCacheAndFallback', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
     store = new Map<string, Response>();
 
     mockCache = {
@@ -35,6 +38,7 @@ describe('fetchWithCacheAndFallback', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       status: 200,
       ok: true,
+      text: async () => JSON.stringify(mockJson),
       json: async () => mockJson,
     });
     vi.stubGlobal('fetch', mockFetch);
@@ -71,8 +75,8 @@ describe('fetchWithCacheAndFallback', () => {
     const cacheKey =
       'https://overpass-interpreter-cache/?query=%5Bout%3Ajson%5D%3B%20node(1)%3B%20out%3B';
 
-    // Set old cached response with a timestamp 2 days ago
-    const staleTime = Date.now() - 48 * 60 * 60 * 1000;
+    // Set old cached response with a timestamp 40 days ago (older than new 30-day TTL)
+    const staleTime = Date.now() - 40 * 24 * 60 * 60 * 1000;
     const cachedResponse = new Response(JSON.stringify(mockOldJson), {
       headers: {
         'Content-Type': 'application/json',
@@ -84,6 +88,7 @@ describe('fetchWithCacheAndFallback', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       status: 200,
       ok: true,
+      text: async () => JSON.stringify(mockNewJson),
       json: async () => mockNewJson,
     });
     vi.stubGlobal('fetch', mockFetch);
