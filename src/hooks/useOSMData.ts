@@ -153,18 +153,6 @@ out body;`;
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Auto-fetch map area matching default start/end pins on startup
-      const initialBBox = calculateBoundingBox(startCoord, endCoord);
-      handleFetchOSM(initialBBox, false, true);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
     if (!startCoord || !endCoord) return;
