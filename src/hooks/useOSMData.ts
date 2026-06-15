@@ -2,12 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { fetchWithCacheAndFallback } from '../core/api/overpass';
 import { MAP_CONFIG } from '../core/common/constants';
-import {
-  calculateBoundingBox,
-  getBBoxForGridCell,
-  getGridCellsForBBox,
-  isInsideLoadedArea,
-} from '../core/common/geo';
+import { calculateBoundingBox, isInsideLoadedArea } from '../core/common/geo';
 import { logger } from '../core/common/logger';
 import type { Coordinate } from '../core/common/types';
 import { OSMGraphParser } from '../core/graph/parser';
@@ -42,7 +37,6 @@ export function useOSMData({
 }: UseOSMDataProps) {
   const [graph, setGraph] = useState<StreetGraph | null>(null);
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
-  const [loadedCells, setLoadedCells] = useState<string[]>([]);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const boundsChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -60,20 +54,6 @@ export function useOSMData({
     merge = false,
     silent = false,
   ) => {
-    // Get cells that intersect the requested bbox
-    const intersectingCells = getGridCellsForBBox(bbox);
-
-    // Identify which of these are not yet loaded
-    const cellsToFetch = merge
-      ? intersectingCells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`))
-      : intersectingCells;
-
-    // If all cells are already loaded in memory, return early to save network / CPU
-    if (cellsToFetch.length === 0) {
-      logger.log('All requested grid cells are already loaded in memory.');
-      return;
-    }
-
     // Cellular data saving check
     if (getConnectionType() === 'cellular' && isDataSaverActive() && !isCellularDownloadAllowed()) {
       if (silent) {
@@ -100,30 +80,24 @@ export function useOSMData({
       setSelectedNode(null); // Clear selected signal node
       setGraph(null); // Clear previous graph during load to prevent "phantom roads"
       setLoadedBBoxes([]);
-      setLoadedCells([]);
     }
 
     try {
-      logger.log(`Fetching ${cellsToFetch.length} grid cells sequentially from Overpass...`);
-
-      const parsedGraphs: StreetGraph[] = [];
-      for (const cell of cellsToFetch) {
-        const cellBBox = getBBoxForGridCell(cell);
-        // Standard, fast, optimized single-cell query conforming to original query structure.
-        // DESIGN DECISIONS & OPTIMIZATIONS:
-        // 1. Bandwidth Savings: By fetching ways with 'out geom' (inline geometries) and requesting
-        //    only tagged nodes of interest, the node payload drops from 6,000+ to ~500 nodes per chunk.
-        //    Untagged nodes are resolved directly from way geometry, saving 75-80% of data.
-        // 2. Path Filtering: Motorways, trunks, proposed, construction, and steps are blacklisted.
-        //    General access 'no' and 'private' are blacklisted. We do not blacklist 'bicycle=no' because
-        //    cyclists can legally push or dismount their bikes on footways/pedestrian areas.
-        // 3. Node Filtering: Keeps only nodes representing controls (traffic signals, stops, yields, crossings),
-        //    micro-frictions (bollards, cycle barriers, gates, blocks, kerbs), and railway tram crossings.
-        const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
+      // Standard, fast, optimized bounding box query.
+      // DESIGN DECISIONS & OPTIMIZATIONS:
+      // 1. Bandwidth Savings: By fetching ways with 'out geom' (inline geometries) and requesting
+      //    only tagged nodes of interest, the node payload drops from 6,000+ to ~500 nodes per viewport.
+      //    Untagged nodes are resolved directly from way geometry, saving 75-80% of data.
+      // 2. Path Filtering: Motorways, trunks, proposed, construction, and steps are blacklisted.
+      //    General access 'no' and 'private' are blacklisted. We do not blacklist 'bicycle=no' because
+      //    cyclists can legally push or dismount their bikes on footways/pedestrian areas.
+      // 3. Node Filtering: Keeps only nodes representing controls (traffic signals, stops, yields, crossings),
+      //    micro-frictions (bollards, cycle barriers, gates, blocks, kerbs), and railway tram crossings.
+      const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
 [out:json][timeout:25];
 way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|proposed|construction|abandoned|steps"]
    ["access"!~"no|private"]
-   (${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]})->.ways;
+   (${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})->.ways;
 (.ways;);
 out geom;
 (
@@ -134,33 +108,14 @@ out geom;
 );
 out body;`;
 
-        const data = await fetchWithCacheAndFallback(query);
-        const elements =
-          data && typeof data === 'object' && 'elements' in data
-            ? (data as Record<string, unknown>).elements
-            : null;
-        const hasElements = Array.isArray(elements) && elements.length > 0;
-        const parsed = hasElements ? parser.parse(data) : { nodes: new Map() };
-        parsedGraphs.push(parsed);
-      }
-
-      // Merge all fetched graphs
-      let combinedNewGraph = parsedGraphs[0];
-      for (let i = 1; i < parsedGraphs.length; i++) {
-        combinedNewGraph = mergeGraphs(combinedNewGraph, parsedGraphs[i]);
-      }
-
-      const newCellKeys = cellsToFetch.map((c) => `${c.latIdx}_${c.lngIdx}`);
-      const newCellBBoxes = cellsToFetch.map(getBBoxForGridCell);
-
+      const data = await fetchWithCacheAndFallback(query);
+      const parsedGraph = parser.parse(data);
       if (merge) {
-        setGraph((prev) => (prev ? mergeGraphs(prev, combinedNewGraph) : combinedNewGraph));
-        setLoadedCells((prev) => [...prev, ...newCellKeys]);
-        setLoadedBBoxes((prev) => [...prev, ...newCellBBoxes]);
+        setGraph((prev) => (prev ? mergeGraphs(prev, parsedGraph) : parsedGraph));
+        setLoadedBBoxes((prev) => [...prev, bbox]);
       } else {
-        setGraph(combinedNewGraph);
-        setLoadedCells(newCellKeys);
-        setLoadedBBoxes(newCellBBoxes);
+        setGraph(parsedGraph);
+        setLoadedBBoxes([bbox]);
       }
     } catch (e: unknown) {
       logger.error('Failed to retrieve OSM network data:', e);
@@ -236,7 +191,6 @@ out body;`;
   // Handler for preset selections
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-    setLoadedCells([]); // Reset loaded cells cache
 
     // Fetch fresh non-merged area for the new preset city center
     const presetConfig = MAP_CONFIG.PRESETS[preset];
@@ -269,13 +223,6 @@ out body;`;
       });
 
       if (!isContained) {
-        // Find cells intersecting the viewport
-        const cells = getGridCellsForBBox(viewportBBox);
-        const unloaded = cells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`));
-
-        // If all intersecting cells are already loaded in memory, no need to trigger handleFetchOSM
-        if (unloaded.length === 0) return;
-
         // Calculate a padded bounding box around the viewport to make queries less frequent
         const latSpan = viewportBBox[2] - viewportBBox[0];
         const lngSpan = viewportBBox[3] - viewportBBox[1];
