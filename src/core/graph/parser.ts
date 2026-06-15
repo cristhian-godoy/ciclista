@@ -26,6 +26,7 @@ interface OSMElement {
   lon?: number;
   tags?: Record<string, string>;
   nodes?: number[];
+  geometry?: { lat: number; lon: number }[];
 }
 
 /**
@@ -42,6 +43,11 @@ interface OSMRawData {
 export class OSMGraphParser implements IGraphParser {
   /**
    * Parses raw OpenStreetMap (OSM) JSON/XML data from Overpass API into a StreetGraph structure.
+   * Extracts nodes and ways, building an adjacency list mapping nodes and bidirectional/unidirectional edges.
+   * Supports way geometries when standalone node coordinate elements are omitted from the payload.
+   *
+   * @param rawData - The raw Overpass JSON response object.
+   * @returns A parsed StreetGraph object.
    */
   parse(rawData: unknown): StreetGraph {
     const graph: StreetGraph = { nodes: new Map() };
@@ -54,22 +60,55 @@ export class OSMGraphParser implements IGraphParser {
 
     const tempNodes = new Map<string, GraphNode>();
 
-    // 1. First pass: Collect all node coordinates and tags
+    // 1. First pass: Collect all node coordinates and tags from node elements,
+    // and also populate coordinates from way geometry arrays to avoid downloading untagged nodes.
     for (const el of data.elements) {
-      if (
-        el &&
-        typeof el === 'object' &&
-        el.type === 'node' &&
-        el.id !== undefined &&
-        el.id !== null
-      ) {
+      if (!el || typeof el !== 'object') continue;
+      if (el.type === 'node' && el.id !== undefined && el.id !== null) {
         const idStr = el.id.toString();
-        tempNodes.set(idStr, {
-          id: idStr,
-          lat: typeof el.lat === 'number' ? el.lat : 0,
-          lng: typeof el.lon === 'number' ? el.lon : 0,
-          tags: el.tags && typeof el.tags === 'object' ? el.tags : {},
-        });
+        const existing = tempNodes.get(idStr);
+        const lat = typeof el.lat === 'number' ? el.lat : 0;
+        const lng = typeof el.lon === 'number' ? el.lon : 0;
+
+        if (existing) {
+          existing.tags = el.tags && typeof el.tags === 'object' ? el.tags : {};
+          if (lat !== 0 || lng !== 0) {
+            existing.lat = lat;
+            existing.lng = lng;
+          }
+        } else {
+          tempNodes.set(idStr, {
+            id: idStr,
+            lat,
+            lng,
+            tags: el.tags && typeof el.tags === 'object' ? el.tags : {},
+          });
+        }
+      } else if (el.type === 'way' && Array.isArray(el.nodes) && Array.isArray(el.geometry)) {
+        for (let i = 0; i < el.nodes.length; i++) {
+          const nodeId = el.nodes[i];
+          if (nodeId === undefined || nodeId === null) continue;
+          const nodeGeo = el.geometry[i];
+          if (!nodeGeo || typeof nodeGeo !== 'object') continue;
+          const idStr = nodeId.toString();
+
+          const existing = tempNodes.get(idStr);
+          const lat = typeof nodeGeo.lat === 'number' ? nodeGeo.lat : 0;
+          const lng = typeof nodeGeo.lon === 'number' ? nodeGeo.lon : 0;
+          if (!existing) {
+            tempNodes.set(idStr, {
+              id: idStr,
+              lat,
+              lng,
+              tags: {},
+            });
+          } else {
+            if (existing.lat === 0 && existing.lng === 0) {
+              existing.lat = lat;
+              existing.lng = lng;
+            }
+          }
+        }
       }
     }
 

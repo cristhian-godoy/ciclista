@@ -111,11 +111,15 @@ export function useOSMData({
         const cellBBox = getBBoxForGridCell(cell);
         // Standard, fast, optimized single-cell query conforming to original query structure
         const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
-[out:json][timeout:25];(
-  way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps|footway|pedestrian"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]});
-  way["highway"="footway"]["bicycle"]["bicycle"!="no"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]});
-  way["highway"="pedestrian"]["bicycle"]["bicycle"!="no"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]});
-);out body;>;out body qt;`;
+[out:json][timeout:25];
+way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]})->.ways;
+(.ways;);
+out geom;
+(
+  node(w.ways)["highway"];
+  node(w.ways)["crossing"];
+);
+out body;`;
 
         const data = await fetchWithCacheAndFallback(query);
         const elements =

@@ -84,6 +84,41 @@ describe('OSMGraphParser', () => {
     expect(graph.nodes.size).toBe(0);
   });
 
+  it('correctly parses ways with geometry fallback and minimal tagged nodes', () => {
+    const data = {
+      elements: [
+        {
+          type: 'way',
+          id: 101,
+          nodes: [1, 2],
+          geometry: [
+            { lat: 48.1, lon: 11.1 },
+            { lat: 48.2, lon: 11.2 },
+          ],
+          tags: { highway: 'residential', name: 'Geometry Street' },
+        },
+        {
+          type: 'node',
+          id: 1,
+          lat: 0, // Should be resolved from way geometry
+          lon: 0, // Should be resolved from way geometry
+          tags: { highway: 'traffic_signals' },
+        },
+      ],
+    };
+    const graph = parser.parse(data);
+    expect(graph.nodes.size).toBe(2);
+
+    const node1 = graph.nodes.get('1');
+    expect(node1).toBeDefined();
+    expect(node1?.node.lat).toBe(48.1);
+    expect(node1?.node.tags.highway).toBe('traffic_signals');
+
+    const node2 = graph.nodes.get('2');
+    expect(node2).toBeDefined();
+    expect(node2?.node.lat).toBe(48.2);
+  });
+
   it('gracefully handles missing fields and invalid types in element properties', () => {
     const badData = {
       elements: [
