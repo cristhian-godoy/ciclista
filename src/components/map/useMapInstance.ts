@@ -3,6 +3,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
+import { fetchFilteredStyle } from '../../core/api/style';
+import { logger } from '../../core/common/logger';
 import { CustomNavigationControl } from './CustomNavigationControl';
 import { useCustomMapControls } from './useCustomMapControls';
 
@@ -69,48 +71,14 @@ export const useMapInstance = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Parse initial coordinates/zoom from query parameters or hash
-    let initialCenter: [number, number] | undefined;
-    let initialZoom = 14.5;
-
-    const params = new URLSearchParams(window.location.search);
-    const queryLat = parseFloat(params.get('lat') || '');
-    const queryLng = parseFloat(params.get('lng') || params.get('lon') || '');
-    const queryZoom = parseFloat(params.get('zoom') || '');
-
-    if (!isNaN(queryLat) && !isNaN(queryLng)) {
-      initialCenter = [queryLng, queryLat];
-      if (!isNaN(queryZoom)) {
-        initialZoom = queryZoom;
-      }
-    } else {
-      const hash = window.location.hash;
-      if (hash.startsWith('#')) {
-        const parts = hash.substring(1).split('/');
-        if (parts.length >= 3) {
-          const hashZoom = parseFloat(parts[0]);
-          const hashLat = parseFloat(parts[1]);
-          const hashLng = parseFloat(parts[2]);
-          if (!isNaN(hashLat) && !isNaN(hashLng)) {
-            initialCenter = [hashLng, hashLat];
-            if (!isNaN(hashZoom)) {
-              initialZoom = hashZoom;
-            }
-          }
-        }
-      }
-    }
-
-    // Use OpenFreeMap vector style URL
+    // Use an empty style object initially to prevent downloading sprites/resources early
     const mapInstance = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: `https://tiles.openfreemap.org/styles/${theme}`,
-      center:
-        initialCenter || (selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725]),
-      zoom: initialZoom,
+      style: { version: 8, sources: {}, layers: [] },
+      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725],
+      zoom: 14.5,
       dragRotate: false,
       pitchWithRotate: false,
-      hash: true,
     });
 
     setMap(mapInstance);
@@ -194,23 +162,41 @@ export const useMapInstance = ({
       }
     });
 
-    mapInstance.on('load', () => {
-      setMapReady(true);
-      // Trigger initial bounds change dynamically on startup to populate paths based on actual viewport
-      const bounds = mapInstance.getBounds();
-      const zoom = mapInstance.getZoom();
-      const bbox: [number, number, number, number] = [
-        bounds.getSouth(),
-        bounds.getWest(),
-        bounds.getNorth(),
-        bounds.getEast(),
-      ];
-      if (onMapBoundsChangeRef.current) {
-        onMapBoundsChangeRef.current(bbox, zoom);
+    let isCancelled = false;
+
+    const loadInitialStyle = async () => {
+      try {
+        const cleanStyle = await fetchFilteredStyle(theme);
+        if (isCancelled) return;
+
+        mapInstance.once('style.load', () => {
+          if (isCancelled) return;
+          setMapReady(true);
+
+          // Trigger initial bounds change dynamically on startup to populate paths based on actual viewport
+          const bounds = mapInstance.getBounds();
+          const zoom = mapInstance.getZoom();
+          const bbox: [number, number, number, number] = [
+            bounds.getSouth(),
+            bounds.getWest(),
+            bounds.getNorth(),
+            bounds.getEast(),
+          ];
+          if (onMapBoundsChangeRef.current) {
+            onMapBoundsChangeRef.current(bbox, zoom);
+          }
+        });
+
+        mapInstance.setStyle(cleanStyle);
+      } catch (err) {
+        logger.error('Failed to load initial filtered map style:', err);
       }
-    });
+    };
+
+    loadInitialStyle();
 
     return () => {
+      isCancelled = true;
       if (container) {
         container.removeEventListener('contextmenu', preventDefaultContextMenu);
       }
@@ -255,16 +241,28 @@ export const useMapInstance = ({
     }
 
     setMapReady(false);
+    let isCancelled = false;
 
-    const handleStyleLoad = () => {
-      setMapReady(true);
+    const updateThemeStyle = async () => {
+      try {
+        const cleanStyle = await fetchFilteredStyle(theme);
+        if (isCancelled) return;
+
+        const handleStyleLoad = () => {
+          setMapReady(true);
+        };
+
+        map.once('style.load', handleStyleLoad);
+        map.setStyle(cleanStyle);
+      } catch (err) {
+        logger.error('Failed to update map style for theme:', err);
+      }
     };
 
-    map.on('style.load', handleStyleLoad);
-    map.setStyle(`https://tiles.openfreemap.org/styles/${theme}`);
+    updateThemeStyle();
 
     return () => {
-      map.off('style.load', handleStyleLoad);
+      isCancelled = true;
     };
   }, [theme, map]);
 
