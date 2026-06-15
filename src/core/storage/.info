@@ -1,5 +1,7 @@
 cache.ts
 	Client-side CacheStorage utility with TTL eviction and SWR support.
+dataUsage.ts
+	Data usage tracking utility and cellular connectivity / data saver mode state manager.
 storage.test.ts
 	Unit tests checking localStorage serialization, loading, and clear mock events.
 storage.ts

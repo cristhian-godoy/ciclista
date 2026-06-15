@@ -1,6 +1,7 @@
 import { API_CONFIG } from '../common/constants';
 import { logger } from '../common/logger';
 import { fetchWithCache } from '../storage/cache';
+import { addDataUsage } from '../storage/dataUsage';
 
 /**
  * Helper to fetch Overpass query data by iterating over configured mirrors.
@@ -20,7 +21,14 @@ async function fetchFromMirrors(query: string): Promise<unknown> {
         throw new Error(`Mirror ${baseUrl} returned error status: ${response.status}`);
       }
 
-      return await response.json();
+      const text = await response.text();
+      try {
+        const bytes = new Blob([text]).size;
+        addDataUsage(bytes, false);
+      } catch (e) {
+        logger.warn('Failed to calculate downloaded response size:', e);
+      }
+      return JSON.parse(text);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       logger.warn(`Failed to fetch from ${baseUrl}:`, errorMsg);

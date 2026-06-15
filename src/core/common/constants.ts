@@ -1,15 +1,15 @@
 export const API_CONFIG = {
   OVERPASS_MIRRORS: [
+    'https://overpass.osm.ch/api/interpreter',
     'https://overpass-api.de/api/interpreter',
     'https://lz4.overpass-api.de/api/interpreter',
     'https://z.overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.osm.ch/api/interpreter',
   ],
   CACHE_NAME: 'overpass-cache-v1',
   QUERY_TIMEOUT_SECONDS: 25,
-  CACHE_TTL_MS: 24 * 60 * 60 * 1000, // 24 hours
-  CACHE_MAX_ITEMS: 20,
+  CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
+  CACHE_MAX_ITEMS: 200,
 } as const;
 
 export const MAP_CONFIG = {

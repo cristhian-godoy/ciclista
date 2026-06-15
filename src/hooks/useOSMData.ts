@@ -2,12 +2,23 @@ import { useEffect, useState } from 'react';
 
 import { fetchWithCacheAndFallback } from '../core/api/overpass';
 import { MAP_CONFIG } from '../core/common/constants';
-import { calculateBoundingBox, isInsideLoadedArea } from '../core/common/geo';
+import {
+  calculateBoundingBox,
+  getBBoxForGridCell,
+  getGridCellsForBBox,
+  isInsideLoadedArea,
+} from '../core/common/geo';
 import { logger } from '../core/common/logger';
 import type { Coordinate } from '../core/common/types';
 import { OSMGraphParser } from '../core/graph/parser';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
 import { mergeGraphs } from '../core/graph/utils';
+import {
+  getConnectionType,
+  isCellularDownloadAllowed,
+  isDataSaverActive,
+  setCellularDownloadAllowed,
+} from '../core/storage/dataUsage';
 
 const parser = new OSMGraphParser();
 
@@ -31,6 +42,7 @@ export function useOSMData({
 }: UseOSMDataProps) {
   const [graph, setGraph] = useState<StreetGraph | null>(null);
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
+  const [loadedCells, setLoadedCells] = useState<string[]>([]);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
 
   // Overpass API fetching implementation
@@ -39,25 +51,85 @@ export function useOSMData({
     merge = false,
     silent = false,
   ) => {
+    // Get cells that intersect the requested bbox
+    const intersectingCells = getGridCellsForBBox(bbox);
+
+    // Identify which of these are not yet loaded
+    const cellsToFetch = merge
+      ? intersectingCells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`))
+      : intersectingCells;
+
+    // If all cells are already loaded in memory, return early to save network / CPU
+    if (cellsToFetch.length === 0) {
+      logger.log('All requested grid cells are already loaded in memory.');
+      return;
+    }
+
+    // Cellular data saving check
+    if (getConnectionType() === 'cellular' && isDataSaverActive() && !isCellularDownloadAllowed()) {
+      if (silent) {
+        logger.log('Silent auto-fetch skipped to save cellular data (Data Saver active).');
+        return;
+      }
+      const confirmed = window.confirm(
+        'Ciclista is running on cellular data with Data Saver active. Loading the street network will use mobile data. Do you want to download?',
+      );
+      if (!confirmed) {
+        if (graph === null && !merge) {
+          logger.warn('Initial download declined. Loading mock fallback graph.');
+          const mockGraph = parser.parse(null);
+          setGraph(mockGraph);
+          setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
+        }
+        return;
+      }
+      setCellularDownloadAllowed(true);
+    }
+
     setIsFetchingOSM(true);
     if (!merge) {
       setSelectedNode(null); // Clear selected signal node
       setGraph(null); // Clear previous graph during load to prevent "phantom roads"
       setLoadedBBoxes([]);
+      setLoadedCells([]);
     }
 
     try {
-      // Overpass QL query template for bikeable paths (highways) within bounding box
-      const query = `[out:json][timeout:25];(way["highway"](${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]}););out body;>;out body qt;`;
+      logger.log(`Fetching ${cellsToFetch.length} grid cells sequentially from Overpass...`);
 
-      const data = await fetchWithCacheAndFallback(query);
-      const parsedGraph = parser.parse(data);
+      const parsedGraphs: StreetGraph[] = [];
+      for (const cell of cellsToFetch) {
+        const cellBBox = getBBoxForGridCell(cell);
+        // Standard, fast, optimized single-cell query conforming to original query structure
+        const query = `[out:json][timeout:25];(way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]}););out body;>;out body qt;`;
+
+        const data = await fetchWithCacheAndFallback(query);
+        const elements =
+          data && typeof data === 'object' && 'elements' in data
+            ? (data as Record<string, unknown>).elements
+            : null;
+        const hasElements = Array.isArray(elements) && elements.length > 0;
+        const parsed = hasElements ? parser.parse(data) : { nodes: new Map() };
+        parsedGraphs.push(parsed);
+      }
+
+      // Merge all fetched graphs
+      let combinedNewGraph = parsedGraphs[0];
+      for (let i = 1; i < parsedGraphs.length; i++) {
+        combinedNewGraph = mergeGraphs(combinedNewGraph, parsedGraphs[i]);
+      }
+
+      const newCellKeys = cellsToFetch.map((c) => `${c.latIdx}_${c.lngIdx}`);
+      const newCellBBoxes = cellsToFetch.map(getBBoxForGridCell);
+
       if (merge) {
-        setGraph((prev) => (prev ? mergeGraphs(prev, parsedGraph) : parsedGraph));
-        setLoadedBBoxes((prev) => [...prev, bbox]);
+        setGraph((prev) => (prev ? mergeGraphs(prev, combinedNewGraph) : combinedNewGraph));
+        setLoadedCells((prev) => [...prev, ...newCellKeys]);
+        setLoadedBBoxes((prev) => [...prev, ...newCellBBoxes]);
       } else {
-        setGraph(parsedGraph);
-        setLoadedBBoxes([bbox]);
+        setGraph(combinedNewGraph);
+        setLoadedCells(newCellKeys);
+        setLoadedBBoxes(newCellBBoxes);
       }
     } catch (e: unknown) {
       logger.error('Failed to retrieve OSM network data:', e);
@@ -71,9 +143,8 @@ export function useOSMData({
           onFetchFallback();
         }
       } else {
-        // Restore the previous valid graph and bounding box
+        // Restore the previous valid graph
         setGraph(graph);
-        setLoadedBBoxes(loadedBBoxes);
       }
 
       if (!silent) {
@@ -134,6 +205,7 @@ export function useOSMData({
   // Handler for preset selections
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
+    setLoadedCells([]); // Reset loaded cells cache
 
     // Fetch fresh non-merged area for the new preset city center
     const presetConfig = MAP_CONFIG.PRESETS[preset];
@@ -161,6 +233,13 @@ export function useOSMData({
     });
 
     if (!isContained) {
+      // Find cells intersecting the viewport
+      const cells = getGridCellsForBBox(viewportBBox);
+      const unloaded = cells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`));
+
+      // If all intersecting cells are already loaded in memory, no need to trigger handleFetchOSM
+      if (unloaded.length === 0) return;
+
       // Calculate a padded bounding box around the viewport to make queries less frequent
       const latSpan = viewportBBox[2] - viewportBBox[0];
       const lngSpan = viewportBBox[3] - viewportBBox[1];

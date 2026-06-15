@@ -1,5 +1,7 @@
 ArrivalPanel.tsx
 	Post-ride statistics summary modal shown on destination arrival.
+DataSaverPanel.tsx
+	Visual widgets for tracking data usage and adjusting cellular caching constraints.
 IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 MapView.tsx

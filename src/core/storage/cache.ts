@@ -1,5 +1,6 @@
 import { API_CONFIG } from '../common/constants';
 import { logger } from '../common/logger';
+import { addDataUsage, isDataSaverActive } from './dataUsage';
 
 /**
  * Evicts oldest entries in the cache if the count exceeds the configured maximum.
@@ -58,10 +59,28 @@ export async function fetchWithCache<T>(
       cachedData = (await cachedResponse.json()) as T;
       if (Date.now() - timestamp < ttl) {
         logger.log('Serving fresh Overpass query from CacheStorage.');
+        try {
+          const size = new Blob([JSON.stringify(cachedData)]).size;
+          addDataUsage(size, true);
+        } catch (e) {
+          logger.warn('Failed to estimate cached data size:', e);
+        }
         return cachedData;
       } else {
-        logger.log('Cache entry is stale. Triggering background revalidation (SWR).');
         isStale = true;
+        if (isDataSaverActive()) {
+          logger.log(
+            'Cache entry is stale, but Data Saver is active. Serving stale data to save bandwidth.',
+          );
+          try {
+            const size = new Blob([JSON.stringify(cachedData)]).size;
+            addDataUsage(size, true);
+          } catch (e) {
+            logger.warn('Failed to estimate cached data size:', e);
+          }
+          return cachedData;
+        }
+        logger.log('Cache entry is stale. Triggering background revalidation (SWR).');
       }
     }
   } catch (e) {
@@ -92,6 +111,12 @@ export async function fetchWithCache<T>(
   };
 
   if (isStale && cachedData) {
+    try {
+      const size = new Blob([JSON.stringify(cachedData)]).size;
+      addDataUsage(size, true);
+    } catch (e) {
+      logger.warn('Failed to estimate cached data size:', e);
+    }
     revalidate().catch(() => {});
     return cachedData;
   }
