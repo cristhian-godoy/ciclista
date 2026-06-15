@@ -22,3 +22,5 @@ tsconfig.node.json
 	TypeScript configuration for the Vite/Node environment.
 vite.config.ts
 	Vite environment and build configurations.
+LICENSE
+	MIT License and copyright notice.

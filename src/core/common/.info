@@ -1,2 +1,12 @@
 types.ts
 	Shared common coordinates and base types.
+MinHeap.ts
+	Min-Heap queue implementation for pathfinding algorithms.
+constants.ts
+	Global application and routing configuration constants.
+geo.ts
+	Geographic coordinate mathematical utilities.
+geometry.ts
+	Geometry calculations and spatial helper functions.
+logger.ts
+	Application logger for debugging and telemetry.

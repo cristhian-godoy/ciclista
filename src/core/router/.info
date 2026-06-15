@@ -16,3 +16,7 @@ rules.ts
 	Rules processor evaluating weight modifiers for road types and traffic signs.
 types.ts
 	Routing strategies interfaces, rules, presets, and route alternative structures.
+bike.ts
+	Bike profiles configuration and base routing speed modifier mappings.
+router.worker.ts
+	Web worker wrapping Dijkstra pathfinding to offload main thread.
