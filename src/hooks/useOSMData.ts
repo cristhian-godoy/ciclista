@@ -39,6 +39,11 @@ export function useOSMData({
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const boundsChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadedBBoxesRef = useRef<[number, number, number, number][]>([]);
+
+  useEffect(() => {
+    loadedBBoxesRef.current = loadedBBoxes;
+  }, [loadedBBoxes]);
 
   useEffect(() => {
     return () => {
@@ -213,7 +218,7 @@ out body;`;
 
     boundsChangeTimeoutRef.current = setTimeout(() => {
       // Check if the current viewport is fully contained within our already loaded bounds
-      const isContained = loadedBBoxes.some((bbox) => {
+      const isContained = loadedBBoxesRef.current.some((bbox) => {
         return (
           viewportBBox[0] >= bbox[0] &&
           viewportBBox[1] >= bbox[1] &&
