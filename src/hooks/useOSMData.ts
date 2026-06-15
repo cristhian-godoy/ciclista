@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { fetchWithCacheAndFallback } from '../core/api/overpass';
 import { MAP_CONFIG } from '../core/common/constants';
@@ -44,6 +44,15 @@ export function useOSMData({
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
   const [loadedCells, setLoadedCells] = useState<string[]>([]);
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
+  const boundsChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (boundsChangeTimeoutRef.current) {
+        clearTimeout(boundsChangeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Overpass API fetching implementation
   const handleFetchOSM = async (
@@ -101,7 +110,8 @@ export function useOSMData({
       for (const cell of cellsToFetch) {
         const cellBBox = getBBoxForGridCell(cell);
         // Standard, fast, optimized single-cell query conforming to original query structure
-        const query = `[out:json][timeout:25];(way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]}););out body;>;out body qt;`;
+        const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
+[out:json][timeout:25];(way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]}););out body;>;out body qt;`;
 
         const data = await fetchWithCacheAndFallback(query);
         const elements =
@@ -222,39 +232,45 @@ export function useOSMData({
   const handleMapBoundsChange = (viewportBBox: [number, number, number, number], zoom: number) => {
     if (zoom < 13 || isFetchingOSM) return;
 
-    // Check if the current viewport is fully contained within our already loaded bounds
-    const isContained = loadedBBoxes.some((bbox) => {
-      return (
-        viewportBBox[0] >= bbox[0] &&
-        viewportBBox[1] >= bbox[1] &&
-        viewportBBox[2] <= bbox[2] &&
-        viewportBBox[3] <= bbox[3]
-      );
-    });
-
-    if (!isContained) {
-      // Find cells intersecting the viewport
-      const cells = getGridCellsForBBox(viewportBBox);
-      const unloaded = cells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`));
-
-      // If all intersecting cells are already loaded in memory, no need to trigger handleFetchOSM
-      if (unloaded.length === 0) return;
-
-      // Calculate a padded bounding box around the viewport to make queries less frequent
-      const latSpan = viewportBBox[2] - viewportBBox[0];
-      const lngSpan = viewportBBox[3] - viewportBBox[1];
-
-      // Pad by 20% on all sides
-      const paddedBBox: [number, number, number, number] = [
-        viewportBBox[0] - latSpan * 0.2,
-        viewportBBox[1] - lngSpan * 0.2,
-        viewportBBox[2] + latSpan * 0.2,
-        viewportBBox[3] + lngSpan * 0.2,
-      ];
-
-      logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
-      handleFetchOSM(paddedBBox, true, true); // merge = true, silent = true
+    if (boundsChangeTimeoutRef.current) {
+      clearTimeout(boundsChangeTimeoutRef.current);
     }
+
+    boundsChangeTimeoutRef.current = setTimeout(() => {
+      // Check if the current viewport is fully contained within our already loaded bounds
+      const isContained = loadedBBoxes.some((bbox) => {
+        return (
+          viewportBBox[0] >= bbox[0] &&
+          viewportBBox[1] >= bbox[1] &&
+          viewportBBox[2] <= bbox[2] &&
+          viewportBBox[3] <= bbox[3]
+        );
+      });
+
+      if (!isContained) {
+        // Find cells intersecting the viewport
+        const cells = getGridCellsForBBox(viewportBBox);
+        const unloaded = cells.filter((c) => !loadedCells.includes(`${c.latIdx}_${c.lngIdx}`));
+
+        // If all intersecting cells are already loaded in memory, no need to trigger handleFetchOSM
+        if (unloaded.length === 0) return;
+
+        // Calculate a padded bounding box around the viewport to make queries less frequent
+        const latSpan = viewportBBox[2] - viewportBBox[0];
+        const lngSpan = viewportBBox[3] - viewportBBox[1];
+
+        // Pad by 20% on all sides
+        const paddedBBox: [number, number, number, number] = [
+          viewportBBox[0] - latSpan * 0.2,
+          viewportBBox[1] - lngSpan * 0.2,
+          viewportBBox[2] + latSpan * 0.2,
+          viewportBBox[3] + lngSpan * 0.2,
+        ];
+
+        logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
+        handleFetchOSM(paddedBBox, true, true); // merge = true, silent = true
+      }
+    }, 1000);
   };
 
   return {
