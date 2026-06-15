@@ -112,11 +112,15 @@ export function useOSMData({
         // Standard, fast, optimized single-cell query conforming to original query structure
         const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
 [out:json][timeout:25];
-way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps"](${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]})->.ways;
+way["highway"]["highway"!~"motorway|motorway_link|proposed|construction|abandoned|steps|bus_stop|platform|raceway|bridleway|corridor|elevator|escalator"]
+   ["bicycle"!="no"]
+   ["access"!="no"]
+   ["footway"!="sidewalk"]
+   (${cellBBox[0]},${cellBBox[1]},${cellBBox[2]},${cellBBox[3]})->.ways;
 (.ways;);
 out geom;
 (
-  node(w.ways)["highway"];
+  node(w.ways)["highway"]["highway"!~"bus_stop|platform|turning_circle|street_lamp|passing_place|motorway_junction"];
   node(w.ways)["crossing"];
 );
 out body;`;
