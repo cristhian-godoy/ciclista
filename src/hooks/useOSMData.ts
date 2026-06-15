@@ -154,11 +154,14 @@ out body;`;
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       // Auto-fetch map area matching default start/end pins on startup
       const initialBBox = calculateBoundingBox(startCoord, endCoord);
       handleFetchOSM(initialBBox, false, true);
     }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -186,9 +189,12 @@ out body;`;
         'Coordinates changed outside current map bounds. Fetching expanded region:',
         newBBox,
       );
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         handleFetchOSM(newBBox, true, false);
       }, 0);
+      return () => {
+        clearTimeout(timer);
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCoord, endCoord, loadedBBoxes, isFetchingOSM]);
