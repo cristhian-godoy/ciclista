@@ -22,3 +22,9 @@ StreetGraphLayer.tsx
 	Layer rendering GeoJSON streets network and clustered traffic signals.
 useMapInstance.ts
 	React hook managing map container lifetime and basic handlers.
+CustomNavigationControl.ts
+	Custom navigation control replacing MapLibre's built-in NavigationControl.
+MapContext.tsx
+	MapProvider component hosting state and operations for map subcomponents.
+useCustomMapControls.ts
+	React hook for injecting custom zoom and compass map controls.

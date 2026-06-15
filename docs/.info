@@ -2,7 +2,9 @@ ROADMAP.md
 	The project's long-term milestone roadmap (Milestones 1 through 4).
 future-features.md
 	Milestone 5 roadmap specs for core feature additions.
-turn_penalties_design.md
-	Technical design notes for wait delays at intersection nodes.
 archive
 	Directory containing completed plans and checklists.
+plan_navigation.md
+	Technical plan and breakdown for real-time navigation system.
+plan_template.md
+	Markdown template for creating new feature implementation plans.

@@ -20,3 +20,7 @@ plan_rules_impacts_refactor.md
 	Refactor plan decoupling RulesConfiguration from algorithm cost evaluation.
 quality-and-automation-plan.md
 	Testing and continuous integration setup.
+improve-docs.md
+	Documentation improvement and restructuring plan.
+turn_penalties_design.md
+	Technical design notes for wait delays at intersection nodes.

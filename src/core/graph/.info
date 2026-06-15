@@ -8,3 +8,7 @@ parser.ts
 	OSM Overpass JSON graph parser and builder.
 types.ts
 	OSM raw data shapes, node representation, and street graph type definitions.
+utils.test.ts
+	Unit tests for graph merging utility functions.
+utils.ts
+	Street graph merging and processing utility functions.
