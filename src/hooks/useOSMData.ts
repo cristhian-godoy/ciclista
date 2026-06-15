@@ -153,6 +153,24 @@ out body;`;
     }
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Auto-fetch map area matching default preset on startup
+      const presetConfig = MAP_CONFIG.PRESETS[MAP_CONFIG.DEFAULT_PRESET];
+      const initialBBox: [number, number, number, number] = [
+        presetConfig.center.lat - presetConfig.latMargin,
+        presetConfig.center.lng - presetConfig.lngMargin,
+        presetConfig.center.lat + presetConfig.latMargin,
+        presetConfig.center.lng + presetConfig.lngMargin,
+      ];
+      handleFetchOSM(initialBBox, false, true);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
     if (!startCoord || !endCoord) return;
