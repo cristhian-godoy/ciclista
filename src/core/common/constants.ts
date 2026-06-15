@@ -16,13 +16,13 @@ export const MAP_CONFIG = {
   PRESETS: {
     munich: {
       center: { lat: 48.13715, lng: 11.5754 },
-      latMargin: 0.015,
-      lngMargin: 0.02,
+      latMargin: 0.007,
+      lngMargin: 0.01,
     },
     amsterdam: {
       center: { lat: 52.3725, lng: 4.89 },
-      latMargin: 0.015,
-      lngMargin: 0.02,
+      latMargin: 0.007,
+      lngMargin: 0.01,
     },
   },
   DEFAULT_PRESET: 'munich' as const,
