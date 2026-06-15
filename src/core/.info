@@ -1,3 +1,5 @@
+api
+	External API clients (Overpass API and MapLibre stylesheets).
 common
 	Shared global types and models.
 graph

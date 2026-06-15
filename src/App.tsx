@@ -16,40 +16,7 @@ import { useRoutingState } from './hooks/useRoutingState';
  * and local storage overrides.
  */
 export default function App() {
-  const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>(() => {
-    let lat: number | undefined;
-    let lng: number | undefined;
-
-    const params = new URLSearchParams(window.location.search);
-    const queryLat = parseFloat(params.get('lat') || '');
-    const queryLng = parseFloat(params.get('lng') || params.get('lon') || '');
-    if (!isNaN(queryLat) && !isNaN(queryLng)) {
-      lat = queryLat;
-      lng = queryLng;
-    } else {
-      const hash = window.location.hash;
-      if (hash.startsWith('#')) {
-        const parts = hash.substring(1).split('/');
-        if (parts.length >= 3) {
-          const hashLat = parseFloat(parts[1]);
-          const hashLng = parseFloat(parts[2]);
-          if (!isNaN(hashLat) && !isNaN(hashLng)) {
-            lat = hashLat;
-            lng = hashLng;
-          }
-        }
-      }
-    }
-
-    if (lat !== undefined && lng !== undefined) {
-      // Find the closest preset based on distance
-      const distToMunich = Math.hypot(lat - 48.13715, lng - 11.5754);
-      const distToAmsterdam = Math.hypot(lat - 52.3725, lng - 4.89);
-      return distToMunich < distToAmsterdam ? 'munich' : 'amsterdam';
-    }
-
-    return 'munich';
-  });
+  const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
 
   // Load custom storage overrides state and rules config using the custom hook

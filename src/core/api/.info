@@ -1,0 +1,8 @@
+overpass.test.ts
+	Unit tests verifying Overpass API query fetches and cache hit/miss behavior.
+overpass.ts
+	Mirror-fallback Overpass API query fetching with stale-while-revalidate client cache.
+style.test.ts
+	Unit tests checking map stylesheet layer filtering and POI removal logic.
+style.ts
+	MapLibre theme style fetcher with programmatic POI layer removal and CacheStorage support.
