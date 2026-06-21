@@ -24,3 +24,8 @@ improve-docs.md
 	Documentation improvement and restructuring plan.
 turn_penalties_design.md
 	Technical design notes for wait delays at intersection nodes.
+plan_chunked_caching.md
+	Implementation details for chunked geographical local caching.
+plan_debounced_fetching_queue.md
+	Implementation plan for debounced Overpass API requests and dynamic fetching queue.
+
