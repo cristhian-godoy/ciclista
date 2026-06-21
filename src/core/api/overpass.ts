@@ -49,6 +49,10 @@ async function fetchFromMirrors(query: string): Promise<unknown> {
  * heap would cause severe memory bloat or crash the browser tab.
  */
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {
-  const cacheKeyUrl = `https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}`;
+  const match = query.match(
+    /\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/,
+  );
+  const bboxParam = match ? `&bbox=${match[1]},${match[2]},${match[3]},${match[4]}` : '';
+  const cacheKeyUrl = `https://overpass-interpreter-cache/?query=${encodeURIComponent(query)}${bboxParam}`;
   return fetchWithCache(cacheKeyUrl, () => fetchFromMirrors(query));
 }
