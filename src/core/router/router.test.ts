@@ -112,4 +112,46 @@ describe('DijkstraRouter', () => {
       }
     }).not.toThrow();
   });
+
+  it('populates alternativeEvaluations correctly without tracing back to start', () => {
+    const start: Coordinate = { lat: 48.13715, lng: 11.5754 }; // Home (Marienplatz)
+    const end: Coordinate = { lat: 48.135, lng: 11.582 }; // Office (Isartor)
+
+    const result = router.findRoute(graph, start, end, standardCost, defaultOverrides);
+
+    expect(result).not.toBeNull();
+    if (result && result.alternativeEvaluations) {
+      // Find a node that has at least one alternative evaluation
+      const entries = Object.entries(result.alternativeEvaluations);
+      const entryWithAlternatives = entries.find(([nodeId, evals]) => {
+        const pathIndex = result.pathNodeIds.indexOf(nodeId);
+        const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
+        return evals.some((ev) => ev.targetId !== nextNodeOnPath && ev.altCoordinates);
+      });
+
+      expect(entryWithAlternatives).toBeDefined();
+      if (entryWithAlternatives) {
+        const [nodeId, evals] = entryWithAlternatives;
+        const pathIndex = result.pathNodeIds.indexOf(nodeId);
+        const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
+        const alternativeEval = evals.find(
+          (ev) => ev.targetId !== nextNodeOnPath && ev.altCoordinates,
+        );
+
+        expect(alternativeEval).toBeDefined();
+        if (alternativeEval && alternativeEval.altCoordinates) {
+          // The alternative path should start at the clicked node or the alternative target
+          // It should NOT start at the virtual start node 'virtual-start'
+          const firstCoord = alternativeEval.altCoordinates[0];
+          const startNode = graph.nodes.get(nodeId)?.node;
+          expect(startNode).toBeDefined();
+          if (startNode) {
+            // It should be equal to the selected/clicked node
+            expect(firstCoord.lat).toBeCloseTo(startNode.lat, 5);
+            expect(firstCoord.lng).toBeCloseTo(startNode.lng, 5);
+          }
+        }
+      }
+    }
+  });
 });
