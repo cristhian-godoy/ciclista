@@ -151,6 +151,9 @@ describe('NavigationLayer', () => {
       isNavigating: true,
       rideStats: null,
       onStopNavigation: vi.fn(),
+      isInspectorModeActive: false,
+      selectedNodeId: null,
+      setSelectedNodeId: vi.fn(),
     };
   });
 
