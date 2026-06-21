@@ -185,6 +185,18 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   /**
+   * Saves custom turn overrides for a specific node to localStorage.
+   */
+  async saveNodeTurns(nodeId: string, turns: Record<string, SemanticTurnType>): Promise<void> {
+    const raw = this.loadRawData();
+    if (!raw[nodeId] || typeof raw[nodeId] !== 'object') {
+      raw[nodeId] = {};
+    }
+    raw[nodeId].turns = turns;
+    this.saveRawData(raw);
+  }
+
+  /**
    * Removes all local storage overrides (delays and notes) associated with a specific node.
    */
   async clearNodeOverrides(nodeId: string): Promise<void> {

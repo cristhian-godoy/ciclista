@@ -1,7 +1,37 @@
 import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { getTurnDetails } from '../../core/common/geometry';
+import type { SemanticTurnType } from '../../core/router/types';
 import { useMapContext } from './MapContext';
+
+function getBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
+  const lat1 = (from.lat * Math.PI) / 180;
+  const lat2 = (to.lat * Math.PI) / 180;
+  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+
+  let brng = (Math.atan2(y, x) * 180) / Math.PI;
+  brng = (brng + 360) % 360;
+  return brng;
+}
+
+function getCompassDirection(bearing: number): string {
+  const directions = [
+    'Northbound',
+    'Northeastbound',
+    'Eastbound',
+    'Southeastbound',
+    'Southbound',
+    'Southwestbound',
+    'Westbound',
+    'Northwestbound',
+  ];
+  const index = Math.round(bearing / 45) % 8;
+  return directions[index];
+}
 
 /**
  * Glassmorphic popup modal that displays details for a selected street intersection node,
@@ -14,9 +44,12 @@ export const NodePopup: React.FC = () => {
     onNodeSelect,
     customNodeDelays,
     customNodeNotes,
+    customNodeTurns,
     onSaveNodeOverride,
+    onSaveNodeTurns,
     onClearNodeOverride,
     setDockExpanded,
+    graph,
   } = useMapContext();
 
   const getDefaultBaseDelay = (tags: Record<string, string>): number => {
@@ -44,6 +77,11 @@ export const NodePopup: React.FC = () => {
   const [nodeNotes, setNodeNotes] = useState<string>(() => {
     if (!selectedNode) return '';
     return customNodeNotes.get(selectedNode.id) ?? '';
+  });
+
+  const [nodeTurns, setNodeTurns] = useState<Record<string, SemanticTurnType>>(() => {
+    if (!selectedNode || !customNodeTurns) return {};
+    return customNodeTurns.get(selectedNode.id) ?? {};
   });
 
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(() => {
@@ -190,6 +228,9 @@ export const NodePopup: React.FC = () => {
   const handleSaveNode = () => {
     if (selectedNode && onSaveNodeOverrideRef.current) {
       onSaveNodeOverrideRef.current(selectedNode.id, nodeDelay, nodeNotes);
+      if (onSaveNodeTurns) {
+        onSaveNodeTurns(selectedNode.id, nodeTurns);
+      }
       if (onNodeSelectRef.current) {
         onNodeSelectRef.current(null);
       }
@@ -205,6 +246,65 @@ export const NodePopup: React.FC = () => {
     }
   };
 
+  // Precompute maneuvers
+  const maneuvers = React.useMemo(() => {
+    const list: {
+      fromNodeId: string;
+      fromStreetName: string;
+      toNodeId: string;
+      toStreetName: string;
+      direction: 'left' | 'right' | 'u-turn' | 'straight';
+      incomingDir: string;
+      outgoingDir: string;
+    }[] = [];
+
+    if (graph && selectedNode) {
+      const currentNodeId = selectedNode.id;
+      const currentNodeEntry = graph.nodes.get(currentNodeId);
+      if (currentNodeEntry) {
+        const outgoingEdges = currentNodeEntry.edges;
+
+        const incomingEdges: { sourceId: string; streetName: string }[] = [];
+        for (const [sourceId, entry] of graph.nodes.entries()) {
+          if (sourceId === currentNodeId) continue;
+          for (const edge of entry.edges) {
+            if (edge.target === currentNodeId) {
+              incomingEdges.push({
+                sourceId,
+                streetName: edge.name || edge.tags.name || 'Unnamed Street',
+              });
+            }
+          }
+        }
+
+        for (const incoming of incomingEdges) {
+          for (const outgoing of outgoingEdges) {
+            if (incoming.sourceId === outgoing.target) continue;
+
+            const pNode = graph.nodes.get(incoming.sourceId)?.node;
+            const nNode = graph.nodes.get(outgoing.target)?.node;
+
+            if (pNode && nNode) {
+              const details = getTurnDetails(pNode, selectedNode, nNode);
+              const incomingBearing = getBearing(pNode, selectedNode);
+              const outgoingBearing = getBearing(selectedNode, nNode);
+              list.push({
+                fromNodeId: incoming.sourceId,
+                fromStreetName: incoming.streetName,
+                toNodeId: outgoing.target,
+                toStreetName: outgoing.name || outgoing.tags.name || 'Unnamed Street',
+                direction: details.direction,
+                incomingDir: getCompassDirection(incomingBearing),
+                outgoingDir: getCompassDirection(outgoingBearing),
+              });
+            }
+          }
+        }
+      }
+    }
+    return list;
+  }, [graph, selectedNode]);
+
   if (!selectedNode || !popupPos) return null;
 
   const controlType = getControlType(selectedNode.tags);
@@ -218,6 +318,9 @@ export const NodePopup: React.FC = () => {
         top: `${popupPos.y}px`,
         transform: 'translate(-50%, -100%) translateY(-15px)',
         zIndex: 10,
+        maxHeight: '400px',
+        overflowY: 'auto',
+        width: '300px',
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -328,6 +431,101 @@ export const NodePopup: React.FC = () => {
           style={{ padding: '6px 8px', fontSize: '0.8rem' }}
         />
       </div>
+
+      {maneuvers.length > 0 && (
+        <div style={{ marginBottom: '10px' }}>
+          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>
+            Turn Overrides
+          </div>
+          <div
+            style={{
+              maxHeight: '150px',
+              overflowY: 'auto',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '4px',
+              background: 'rgba(0, 0, 0, 0.2)',
+              padding: '4px',
+            }}
+          >
+            {maneuvers.map((m) => {
+              const compositeKey = `${m.fromNodeId}->${m.toNodeId}`;
+              const activeVal = nodeTurns[compositeKey] || 'default';
+
+              return (
+                <div
+                  key={compositeKey}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '6px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                    fontSize: '0.68rem',
+                    gap: '4px',
+                  }}
+                >
+                  <div style={{ color: 'var(--text-secondary)', lineHeight: '1.3' }}>
+                    From <strong>{m.fromStreetName}</strong> ({m.incomingDir})
+                    <br />
+                    To <strong>{m.toStreetName}</strong> ({m.outgoingDir} -{' '}
+                    {m.direction === 'left'
+                      ? 'Left Turn'
+                      : m.direction === 'right'
+                        ? 'Right Turn'
+                        : m.direction === 'u-turn'
+                          ? 'U-Turn'
+                          : 'Straight'}
+                    )
+                  </div>
+                  <select
+                    value={activeVal}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNodeTurns((prev) => {
+                        const updated = { ...prev };
+                        if (val === 'default') {
+                          delete updated[compositeKey];
+                        } else {
+                          updated[compositeKey] = val as SemanticTurnType;
+                        }
+                        return updated;
+                      });
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px',
+                      color: 'var(--text-primary)',
+                      padding: '2px 4px',
+                      fontSize: '0.65rem',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="default" style={{ background: '#111' }}>
+                      Default
+                    </option>
+                    <option value="left_turn" style={{ background: '#111' }}>
+                      Direct Left Turn
+                    </option>
+                    <option value="right_turn" style={{ background: '#111' }}>
+                      Direct Right Turn
+                    </option>
+                    <option value="green_arrow_right" style={{ background: '#111' }}>
+                      Green Arrow Right Turn
+                    </option>
+                    <option value="indirect_left" style={{ background: '#111' }}>
+                      Indirect Left Turn
+                    </option>
+                    <option value="u_turn" style={{ background: '#111' }}>
+                      U-Turn
+                    </option>
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Collapsible/Scrollable OSM Info Section */}
       <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>

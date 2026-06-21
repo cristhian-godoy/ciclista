@@ -34,12 +34,14 @@ export default function App() {
   const {
     nodeDelays,
     nodeNotes,
+    nodeTurns,
     rulesConfig,
     setRulesConfig,
     bikeConfig,
     setBikeConfig,
     currentOverrides,
     handleSaveNodeOverride,
+    handleSaveNodeTurns,
     handleClearNodeOverride,
   } = useOverrides();
 
@@ -176,11 +178,13 @@ export default function App() {
         selectedPreset={selectedPreset}
         customNodeDelays={nodeDelays}
         customNodeNotes={nodeNotes}
+        customNodeTurns={nodeTurns}
         selectedNode={selectedNode}
         onStartDrag={handleStartDrag}
         onEndDrag={handleEndDrag}
         onNodeSelect={setSelectedNode}
         onSaveNodeOverride={handleSaveNodeOverride}
+        onSaveNodeTurns={handleSaveNodeTurns}
         onClearNodeOverride={handleClearNodeOverride}
         onMapBoundsChange={handleMapBoundsChange}
         theme={theme}

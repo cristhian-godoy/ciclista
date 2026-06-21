@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState } from 'react';
 import type { Coordinate } from '../../core/common/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
-import type { RouteAlternative } from '../../core/router/types';
+import type { RouteAlternative, SemanticTurnType } from '../../core/router/types';
 
 /**
  * Context menu display state structure.
@@ -37,11 +37,13 @@ export interface MapContextType {
   selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
+  customNodeTurns: Map<string, Record<string, SemanticTurnType>>;
   selectedNode: GraphNode | null;
   onStartDrag: (coord: Coordinate | null) => void;
   onEndDrag: (coord: Coordinate | null) => void;
   onNodeSelect: (node: GraphNode | null) => void;
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
+  onSaveNodeTurns: (nodeId: string, turns: Record<string, SemanticTurnType>) => void;
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
 
@@ -92,11 +94,13 @@ interface MapProviderProps {
   selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
+  customNodeTurns: Map<string, Record<string, SemanticTurnType>>;
   selectedNode: GraphNode | null;
   onStartDrag: (coord: Coordinate | null) => void;
   onEndDrag: (coord: Coordinate | null) => void;
   onNodeSelect: (node: GraphNode | null) => void;
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
+  onSaveNodeTurns: (nodeId: string, turns: Record<string, SemanticTurnType>) => void;
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
   isInspectorModeActive: boolean;
@@ -128,11 +132,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   selectedPreset,
   customNodeDelays,
   customNodeNotes,
+  customNodeTurns,
   selectedNode,
   onStartDrag,
   onEndDrag,
   onNodeSelect,
   onSaveNodeOverride,
+  onSaveNodeTurns,
   onClearNodeOverride,
   theme,
   isInspectorModeActive,
@@ -180,11 +186,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         selectedPreset,
         customNodeDelays,
         customNodeNotes,
+        customNodeTurns,
         selectedNode,
         onStartDrag,
         onEndDrag,
         onNodeSelect,
         onSaveNodeOverride,
+        onSaveNodeTurns,
         onClearNodeOverride,
         theme,
         isInspectorModeActive,
