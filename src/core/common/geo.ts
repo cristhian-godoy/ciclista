@@ -1,6 +1,7 @@
 import type { StreetGraph } from '../graph/types';
-import { ROUTING_CONFIG } from './constants';
+import { CHUNK_CONFIG, ROUTING_CONFIG } from './constants';
 import { findNearestEdge } from './geometry';
+import { logger } from './logger';
 import type { Coordinate } from './types';
 
 // Helper to compute a bounding box enclosing two coordinates with padding
@@ -100,4 +101,91 @@ export function getBBoxForGridCell(cell: GridCell): [number, number, number, num
   const maxLat = parseFloat(((cell.latIdx + 1) * GRID_CONFIG.CELL_SIZE_LAT).toFixed(6));
   const maxLng = parseFloat(((cell.lngIdx + 1) * GRID_CONFIG.CELL_SIZE_LNG).toFixed(6));
   return [minLat, minLng, maxLat, maxLng];
+}
+
+/**
+ * Translates a latitude and longitude coordinate into a chunk ID.
+ */
+export function coordToChunkId(lat: number, lng: number): string {
+  const latIdx = Math.floor(lat / CHUNK_CONFIG.SIZE_LAT);
+  const lngIdx = Math.floor(lng / CHUNK_CONFIG.SIZE_LNG);
+  return `${latIdx},${lngIdx}`;
+}
+
+/**
+ * Calculates the bounding box for a specific chunk ID.
+ */
+export function getChunkBBox(chunkId: string): [number, number, number, number] {
+  const [latIdxStr, lngIdxStr] = chunkId.split(',');
+  const latIdx = parseInt(latIdxStr, 10);
+  const lngIdx = parseInt(lngIdxStr, 10);
+  const minLat = latIdx * CHUNK_CONFIG.SIZE_LAT;
+  const minLng = lngIdx * CHUNK_CONFIG.SIZE_LNG;
+  const maxLat = (latIdx + 1) * CHUNK_CONFIG.SIZE_LAT;
+  const maxLng = (lngIdx + 1) * CHUNK_CONFIG.SIZE_LNG;
+  return [
+    parseFloat(minLat.toFixed(6)),
+    parseFloat(minLng.toFixed(6)),
+    parseFloat(maxLat.toFixed(6)),
+    parseFloat(maxLng.toFixed(6)),
+  ];
+}
+
+/**
+ * Translates a bounding box into a list of chunk IDs that intersect it.
+ * Returns an empty array if the requested area exceeds the chunk loading limit.
+ */
+export function getChunksInBBox(bbox: [number, number, number, number]): string[] {
+  const [minLat, minLng, maxLat, maxLng] = bbox;
+  const startLatIdx = Math.floor(minLat / CHUNK_CONFIG.SIZE_LAT);
+  const endLatIdx = Math.floor(maxLat / CHUNK_CONFIG.SIZE_LAT);
+  const startLngIdx = Math.floor(minLng / CHUNK_CONFIG.SIZE_LNG);
+  const endLngIdx = Math.floor(maxLng / CHUNK_CONFIG.SIZE_LNG);
+
+  const numLat = endLatIdx - startLatIdx + 1;
+  const numLng = endLngIdx - startLngIdx + 1;
+  const totalChunks = numLat * numLng;
+
+  if (totalChunks > CHUNK_CONFIG.MAX_CHUNKS_LIMIT) {
+    logger.warn(
+      `Requested area contains ${totalChunks} chunks, exceeding limit of ${CHUNK_CONFIG.MAX_CHUNKS_LIMIT}.`,
+    );
+    return [];
+  }
+
+  const chunkIds: string[] = [];
+  for (let latIdx = startLatIdx; latIdx <= endLatIdx; latIdx++) {
+    for (let lngIdx = startLngIdx; lngIdx <= endLngIdx; lngIdx++) {
+      chunkIds.push(`${latIdx},${lngIdx}`);
+    }
+  }
+  return chunkIds;
+}
+
+/**
+ * Computes the minimal bounding box encompassing all provided chunk IDs.
+ */
+export function mergeChunksToBBox(chunkIds: string[]): [number, number, number, number] {
+  if (chunkIds.length === 0) {
+    return [0, 0, 0, 0];
+  }
+  let globalMinLat = Infinity;
+  let globalMinLng = Infinity;
+  let globalMaxLat = -Infinity;
+  let globalMaxLng = -Infinity;
+
+  for (const chunkId of chunkIds) {
+    const [minLat, minLng, maxLat, maxLng] = getChunkBBox(chunkId);
+    if (minLat < globalMinLat) globalMinLat = minLat;
+    if (minLng < globalMinLng) globalMinLng = minLng;
+    if (maxLat > globalMaxLat) globalMaxLat = maxLat;
+    if (maxLng > globalMaxLng) globalMaxLng = maxLng;
+  }
+
+  return [
+    parseFloat(globalMinLat.toFixed(6)),
+    parseFloat(globalMinLng.toFixed(6)),
+    parseFloat(globalMaxLat.toFixed(6)),
+    parseFloat(globalMaxLng.toFixed(6)),
+  ];
 }
