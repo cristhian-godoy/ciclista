@@ -88,7 +88,7 @@ export function convertGraphToGeoJSON(
     }
   });
 
-  // Cluster them (BFS grouping within 35 meters)
+  // Cluster them (BFS grouping within 35 meters using Spatial Hashing for O(N) performance)
   const visited = new Set<string>();
   const crossings: {
     id: string;
@@ -99,6 +99,20 @@ export function convertGraphToGeoJSON(
     hasCustomDelay: boolean;
   }[] = [];
 
+  const CELL_SIZE = 0.000315; // roughly 35 meters in degrees
+  const grid = new Map<string, typeof controlNodes>();
+  for (const node of controlNodes) {
+    const r = Math.floor(node.lat / CELL_SIZE);
+    const c = Math.floor(node.lng / CELL_SIZE);
+    const key = `${r},${c}`;
+    let cell = grid.get(key);
+    if (!cell) {
+      cell = [];
+      grid.set(key, cell);
+    }
+    cell.push(node);
+  }
+
   for (const node of controlNodes) {
     if (visited.has(node.id)) continue;
 
@@ -108,12 +122,22 @@ export function convertGraphToGeoJSON(
     const queue = [node];
     while (queue.length > 0) {
       const current = queue.shift()!;
-      for (const other of controlNodes) {
-        if (visited.has(other.id)) continue;
-        if (getDistance(current.lat, current.lng, other.lat, other.lng) <= 35) {
-          visited.add(other.id);
-          clusterNodes.push(other);
-          queue.push(other);
+      const r = Math.floor(current.lat / CELL_SIZE);
+      const c = Math.floor(current.lng / CELL_SIZE);
+
+      // Check 9 neighboring cells
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const cell = grid.get(`${r + dr},${c + dc}`);
+          if (!cell) continue;
+          for (const other of cell) {
+            if (visited.has(other.id)) continue;
+            if (getDistance(current.lat, current.lng, other.lat, other.lng) <= 35) {
+              visited.add(other.id);
+              clusterNodes.push(other);
+              queue.push(other);
+            }
+          }
         }
       }
     }

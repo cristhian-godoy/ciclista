@@ -8,7 +8,7 @@ import type { StreetGraph } from './types';
  * @returns The merged street graph containing nodes and edges from both.
  */
 export const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
-  const mergedNodes = new Map(g1.nodes);
+  const mergedNodes = g1.nodes; // Mutate in-place to avoid massive GC and CPU cost
 
   for (const [key, val] of g2.nodes.entries()) {
     const existing = mergedNodes.get(key);
@@ -21,14 +21,14 @@ export const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
 
       const newEdges = val.edges.filter((e) => !targets.has(e.target));
       if (newEdges.length > 0) {
-        mergedNodes.set(key, {
-          ...existing,
-          edges: [...existingEdges, ...newEdges],
-        });
+        // Mutate existing entry instead of replacing it
+        existing.edges.push(...newEdges);
       }
     } else {
       mergedNodes.set(key, val);
     }
   }
+
+  // Return a new wrapper object to trigger React state updates, but reuse the Map
   return { nodes: mergedNodes };
 };
