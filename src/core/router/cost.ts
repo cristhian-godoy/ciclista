@@ -397,6 +397,7 @@ export function evaluateEdge(
   }[] = [];
 
   // 1. Turn Penalties
+  // 1. Turn Penalties
   if (turnPenalty && turnPenalty > 0) {
     let turnName = 'Turn Penalty';
     if (parentNodeId) {
@@ -404,10 +405,24 @@ export function evaluateEdge(
       const cNode = graph.nodes.get(sourceId)?.node;
       const nNode = graph.nodes.get(targetId)?.node;
       if (pNode && cNode && nNode) {
-        const details = getTurnDetails(pNode, cNode, nNode);
-        if (details.direction === 'left') turnName = 'Left Turn Penalty';
-        else if (details.direction === 'right') turnName = 'Right Turn Penalty';
-        else if (details.direction === 'u-turn') turnName = 'U-Turn Penalty';
+        const nodeOverride = overrides.nodeTurns.get(sourceId);
+        let overrideType: string | undefined;
+        if (nodeOverride) {
+          const compositeKey = `${parentNodeId}->${targetId}`;
+          overrideType = nodeOverride[compositeKey];
+        }
+
+        if (overrideType === 'green_arrow_right') turnName = 'Green Arrow Right Turn Penalty';
+        else if (overrideType === 'indirect_left') turnName = 'Indirect Left Turn Penalty';
+        else if (overrideType === 'right_turn') turnName = 'Right Turn Penalty';
+        else if (overrideType === 'left_turn') turnName = 'Left Turn Penalty';
+        else if (overrideType === 'u_turn') turnName = 'U-Turn Penalty';
+        else {
+          const details = getTurnDetails(pNode, cNode, nNode);
+          if (details.direction === 'left') turnName = 'Left Turn Penalty';
+          else if (details.direction === 'right') turnName = 'Right Turn Penalty';
+          else if (details.direction === 'u-turn') turnName = 'U-Turn Penalty';
+        }
       }
     } else if (turnPenalty >= 25) {
       turnName = 'U-Turn Penalty';
