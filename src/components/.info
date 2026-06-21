@@ -1,5 +1,9 @@
 ArrivalPanel.tsx
 	Post-ride statistics summary modal shown on destination arrival.
+AttributionPanel.test.tsx
+	Unit tests for AttributionPanel collapsed/expanded states.
+AttributionPanel.tsx
+	Accordion-style panel displaying third-party licensing and attributions.
 DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
 IntersectionDelaySection.tsx

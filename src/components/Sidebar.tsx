@@ -15,6 +15,7 @@ import type { Coordinate } from '../core/common/types';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
 import type { BikeConfig } from '../core/storage/types';
+import { AttributionPanel } from './AttributionPanel';
 import { DataSaverPanel } from './DataSaverPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
@@ -211,6 +212,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             activeAlternativeLabel={routingStrategy}
             onSelectAlternative={onStrategyChange}
           />
+
+          <AttributionPanel />
         </div>
 
         <div className="sidebar-footer">
