@@ -1,5 +1,5 @@
 import { logger } from '../common/logger';
-import type { RulesConfiguration } from '../router/types';
+import type { RulesConfiguration, SemanticTurnType } from '../router/types';
 import type { IStorageProvider, LocalOverrides } from './types';
 
 /**
@@ -15,7 +15,7 @@ export class LocalStorageProvider implements IStorageProvider {
   // In-memory cache for overrides data to avoid parse/stringify on every operation
   private overridesCache: Record<
     string,
-    { delay?: number; notes?: string; turns?: Record<string, unknown> }
+    { delay?: number; notes?: string; turns?: Record<string, SemanticTurnType> }
   > | null = null;
 
   // Timer reference for the debounced write
@@ -134,7 +134,7 @@ export class LocalStorageProvider implements IStorageProvider {
     const raw = this.loadRawData();
     const nodeDelays = new Map<string, number>();
     const nodeNotes = new Map<string, string>();
-    const nodeTurns = new Map<string, Record<string, unknown>>();
+    const nodeTurns = new Map<string, Record<string, SemanticTurnType>>();
 
     Object.entries(raw).forEach(([nodeId, item]) => {
       if (item && typeof item === 'object') {

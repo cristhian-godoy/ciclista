@@ -325,6 +325,13 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     stopSeconds: 8,
     crossingSeconds: 3,
   },
+  turns: {
+    rightTurnPenaltySeconds: 1,
+    leftTurnPenaltySeconds: 4,
+    greenArrowRightTurnSeconds: 0,
+    indirectLeftTurnSeconds: 15,
+    uTurnPenaltySeconds: 30,
+  },
 };
 
 /**
