@@ -170,6 +170,35 @@
   right: 5px !important;
 }
 
+/* Glassmorphic Hover Popup for Inspector alternatives */
+.inspector-hover-popup .maplibregl-popup-content {
+  background: var(--ciclista-glass-bg-base) !important;
+  backdrop-filter: blur(var(--ciclista-blur-radius)) !important;
+  backdrop-filter: blur(var(--ciclista-blur-radius)) !important;
+  color: var(--ciclista-color-text-primary) !important;
+  border: 1px solid var(--ciclista-glass-border-base) !important;
+  border-radius: var(--ciclista-radius-sm) !important;
+  box-shadow: var(--ciclista-shadow-md) !important;
+  padding: var(--ciclista-spacing-sm) !important;
+  font-family: inherit;
+}
+
+.inspector-hover-popup .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--ciclista-glass-bg-base) !important;
+}
+
+.inspector-hover-popup .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--ciclista-glass-bg-base) !important;
+}
+
+.inspector-hover-popup .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--ciclista-glass-bg-base) !important;
+}
+
+.inspector-hover-popup .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--ciclista-glass-bg-base) !important;
+}
+
 /* Responsive / Mobile Layout Adjustments */
 @media (width <= 768px) {
   .sidebar {

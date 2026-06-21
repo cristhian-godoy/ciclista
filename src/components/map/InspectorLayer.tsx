@@ -170,7 +170,7 @@ export const InspectorLayer: React.FC = () => {
           let contentHtml = '';
           if (hoveredEval.targetId === nextNodeId) {
             contentHtml = `
-              <div style="padding: 6px; font-family: sans-serif; font-size: 11px; line-height: 1.4; color: #fff; background: var(--ciclista-color-surface-elevated, #1e293b); border-radius: 4px; border: 1px solid var(--ciclista-glass-border-base, rgba(255,255,255,0.08));">
+              <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
                 <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #10b981;">
                   ${hoveredEval.name} (Chosen Path)
                 </div>
@@ -189,7 +189,7 @@ export const InspectorLayer: React.FC = () => {
             const distSign = distDiff >= 0 ? `+${distDiff}` : `${distDiff}`;
 
             contentHtml = `
-              <div style="padding: 6px; font-family: sans-serif; font-size: 11px; line-height: 1.4; color: #fff; background: var(--ciclista-color-surface-elevated, #1e293b); border-radius: 4px; border: 1px solid var(--ciclista-glass-border-base, rgba(255,255,255,0.08));">
+              <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
                 <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #ef4444;">
                   ${hoveredEval.name}
                 </div>
