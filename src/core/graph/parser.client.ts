@@ -23,7 +23,7 @@ function getWorker(): Worker | null {
         type: 'module',
       });
       worker.onmessage = (e) => {
-        const { requestId, nodesEntries, error } = e.data;
+        const { requestId, serializedNodes, error } = e.data;
         const pending = pendingRequests.get(requestId);
         if (!pending) return;
         pendingRequests.delete(requestId);
@@ -31,6 +31,7 @@ function getWorker(): Worker | null {
         if (error) {
           pending.reject(new Error(error));
         } else {
+          const nodesEntries = JSON.parse(serializedNodes);
           const graph: StreetGraph = {
             nodes: new Map(nodesEntries),
           };

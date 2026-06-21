@@ -8,7 +8,8 @@ self.onmessage = (e: MessageEvent) => {
   try {
     const graph = parser.parse(rawData);
     const nodesEntries = Array.from(graph.nodes.entries());
-    self.postMessage({ requestId, nodesEntries });
+    const serializedNodes = JSON.stringify(nodesEntries);
+    self.postMessage({ requestId, serializedNodes });
   } catch (error) {
     self.postMessage({ requestId, error: String(error) });
   }
