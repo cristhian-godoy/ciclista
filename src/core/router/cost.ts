@@ -1,3 +1,4 @@
+import { getTurnDetails } from '../common/geometry';
 import type { GraphEdge, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 import { mapBikeConfigToImpacts } from './bike';
@@ -307,6 +308,7 @@ export function evaluateEdge(
   graph: StreetGraph,
   costFn?: CostFunction,
   turnPenalty?: number,
+  parentNodeId?: string,
 ): AlternativeEdgeEvaluation {
   const {
     speed: effectiveSpeedMs,
@@ -387,6 +389,97 @@ export function evaluateEdge(
     }
   }
 
+  // Construct detailed rule penalties list
+  const rulePenalties: {
+    name: string;
+    value: number;
+    type: 'turn' | 'node_delay' | 'surface' | 'road_class' | 'restriction' | 'service';
+  }[] = [];
+
+  // 1. Turn Penalties
+  if (turnPenalty && turnPenalty > 0) {
+    let turnName = 'Turn Penalty';
+    if (parentNodeId) {
+      const pNode = graph.nodes.get(parentNodeId)?.node;
+      const cNode = graph.nodes.get(sourceId)?.node;
+      const nNode = graph.nodes.get(targetId)?.node;
+      if (pNode && cNode && nNode) {
+        const details = getTurnDetails(pNode, cNode, nNode);
+        if (details.direction === 'left') turnName = 'Left Turn Penalty';
+        else if (details.direction === 'right') turnName = 'Right Turn Penalty';
+        else if (details.direction === 'u-turn') turnName = 'U-Turn Penalty';
+      }
+    } else if (turnPenalty >= 25) {
+      turnName = 'U-Turn Penalty';
+    }
+    rulePenalties.push({ name: turnName, value: turnPenalty, type: 'turn' });
+  }
+
+  // 2. Control Node Delays
+  if (nodeDelaySeconds > 0) {
+    let nodeName = 'Intersection Delay';
+    if (nodeDelayType === 'signal') nodeName = 'Traffic Signal Delay';
+    else if (nodeDelayType === 'stop') nodeName = 'Stop Sign Delay';
+    else if (nodeDelayType === 'yield') nodeName = 'Yield Sign Delay';
+    else if (nodeDelayType === 'crossing') nodeName = 'Zebra Crossing Delay';
+    else if (nodeDelayType === 'custom') nodeName = 'Custom Delay Override';
+    rulePenalties.push({ name: nodeName, value: nodeDelaySeconds, type: 'node_delay' });
+  }
+
+  // 3. Stop fatigue penalty in avoidStoppingCost
+  if (costFn && costFn.name === 'avoidStoppingCost' && nodeDelaySeconds > 0) {
+    const customDelay = overrides.nodeDelays.get(targetId);
+    if (customDelay !== undefined) {
+      rulePenalties.push({ name: 'Stop Fatigue Penalty', value: 10, type: 'node_delay' });
+    } else {
+      const targetNode = graph.nodes.get(targetId)?.node;
+      const tags = targetNode?.tags || {};
+      const controlType = mapOSMNodeToControl(tags);
+      const baseStopPenalty = controlType === 'signal' || controlType === 'stop' ? 45 : 25;
+      rulePenalties.push({
+        name: 'Stop Avoidance Penalty',
+        value: baseStopPenalty,
+        type: 'node_delay',
+      });
+    }
+  }
+
+  // 4. Flat penalty (surface flat penalties or sign flat penalties)
+  if (flatPenalty > 0) {
+    if (surfaceType === 'gravel' || surfaceType === 'cobblestone') {
+      rulePenalties.push({
+        name: `Surface Penalty (${surfaceType})`,
+        value: flatPenalty,
+        type: 'surface',
+      });
+    } else {
+      rulePenalties.push({
+        name: 'Road Infrastructure Penalty',
+        value: flatPenalty,
+        type: 'road_class',
+      });
+    }
+  }
+
+  // 5. Service road delay
+  if (highway === 'service') {
+    if (edge.tags.service === 'parking_aisle' || edge.tags.service === 'driveway') {
+      rulePenalties.push({ name: 'Parking Aisle Delay', value: 30, type: 'service' });
+    } else {
+      rulePenalties.push({ name: 'Service Road Delay', value: 5, type: 'service' });
+    }
+  }
+
+  // 6. Restriction Penalty
+  if (isRestricted) {
+    const addedPenalty = (displayCostSeconds + 60) * 4.0 - displayCostSeconds;
+    rulePenalties.push({
+      name: 'Bicycles Prohibited (Footway)',
+      value: addedPenalty,
+      type: 'restriction',
+    });
+  }
+
   return {
     targetId,
     name: edge.name || 'Unnamed Street',
@@ -406,5 +499,6 @@ export function evaluateEdge(
     nodeDelaySeconds,
     nodeDelayType,
     restrictionReason,
+    rulePenalties,
   };
 }
