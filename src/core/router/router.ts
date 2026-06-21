@@ -12,7 +12,7 @@ import type { Coordinate } from '../common/types';
 import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
-import { calculateDisplayCost, evaluateEdge } from './cost';
+import { calculateDisplayCost, evaluateEdge, standardCost } from './cost';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type { AlternativeEdgeEvaluation, CostFunction, IRouter, RouteResult } from './types';
 

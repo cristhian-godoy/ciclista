@@ -68,6 +68,8 @@ describe('Sidebar Integration', () => {
     selectedNodeId: null,
     onToggleInspectorMode: vi.fn(),
     onSelectNodeId: vi.fn(),
+    selectedAlternativeTargetId: null,
+    setSelectedAlternativeTargetId: vi.fn(),
   };
 
   it('renders all mounted config and stats panels', () => {
