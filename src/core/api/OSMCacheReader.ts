@@ -1,10 +1,10 @@
 import { API_CONFIG } from '../common/constants';
-import { getChunkBBox } from '../common/geo';
+import { getChunkBBox, getChunksInBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import { parseInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
-import { getValidCacheEntries } from '../storage/cache';
+import { getValidCacheEntries, type ValidCacheEntry } from '../storage/cache';
 import { addDataUsage } from '../storage/dataUsage';
 
 /**
@@ -66,6 +66,8 @@ export class OSMCacheReader {
       const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
 
       const urlToChunkIds = new Map<string, string[]>();
+      const urlToEntry = new Map<string, ValidCacheEntry>();
+
       for (const chunkId of cachedChunkIds) {
         const chunkBBox = getChunkBBox(chunkId);
         const entry = validCache.find((e) => this.isBBoxContained(chunkBBox, e.bbox));
@@ -73,6 +75,7 @@ export class OSMCacheReader {
           const list = urlToChunkIds.get(entry.url) || [];
           list.push(chunkId);
           urlToChunkIds.set(entry.url, list);
+          urlToEntry.set(entry.url, entry);
         } else {
           missingChunkIds.push(chunkId);
         }
@@ -92,7 +95,16 @@ export class OSMCacheReader {
             const data = JSON.parse(text);
             const parsed = await parseInWorker(data);
             mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
-            loadedChunkIds.push(...chunkIds);
+
+            // Mark all chunks covered by this cached request as loaded,
+            // so we don't re-parse this huge file on the next minor pan
+            const entry = urlToEntry.get(url);
+            if (entry) {
+              const allCoveredChunks = getChunksInBBox(entry.bbox);
+              loadedChunkIds.push(...allCoveredChunks);
+            } else {
+              loadedChunkIds.push(...chunkIds);
+            }
 
             // Yield the main thread to allow MapLibre to render vector tiles and prevent stuttering
             await new Promise((resolve) => setTimeout(resolve, 0));
