@@ -866,3 +866,91 @@ h2 {
 .maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon::before {
   content: none;
 }
+
+/* ─── Attribution Panel ─────────────────────────────────────────── */
+
+.attribution-panel {
+  gap: var(--ciclista-spacing-xs);
+}
+
+.attribution-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-text-primary);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color var(--ciclista-transition-fast);
+}
+
+.attribution-panel-header:hover {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.attribution-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.attribution-icon {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.attribution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+.attribution-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid rgb(255 255 255 / 4%);
+  padding-bottom: 8px;
+}
+
+.attribution-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.attribution-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.attribution-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+  text-decoration: none;
+  transition: color var(--ciclista-transition-fast);
+}
+
+.attribution-link:hover {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.attribution-license {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--ciclista-color-text-muted);
+}
+
+.attribution-desc {
+  font-size: 0.7rem;
+  color: var(--ciclista-color-text-muted);
+  line-height: 1.35;
+  margin: 0;
+}
