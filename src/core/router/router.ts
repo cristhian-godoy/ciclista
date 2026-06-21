@@ -262,6 +262,74 @@ export class DijkstraRouter implements IRouter {
     let lastStopNode: { lat: number; lng: number } | null = null;
     let lastCrossingNode: { lat: number; lng: number } | null = null;
 
+    // Precompute remaining metrics along the chosen path from each index
+    const remainingDurations = new Array<number>(pathNodeIds.length).fill(0);
+    const remainingDistances = new Array<number>(pathNodeIds.length).fill(0);
+    const remainingSignals = new Array<number>(pathNodeIds.length).fill(0);
+
+    let accumulatedDistance = 0;
+    let accumulatedDuration = 0;
+    let accumulatedSignals = 0;
+
+    for (let k = pathNodeIds.length - 1; k >= 0; k--) {
+      const nodeId = pathNodeIds[k];
+      let nNode: GraphNode | undefined;
+      let curEdges: GraphEdge[] = [];
+      if (virtualConfig && nodeId === 'virtual-start') {
+        nNode = virtualConfig.startNode;
+        curEdges = virtualConfig.startEdges;
+      } else if (virtualConfig && nodeId === 'virtual-end') {
+        nNode = virtualConfig.endNode;
+        curEdges = [];
+      } else {
+        const entry = graph.nodes.get(nodeId);
+        if (entry) {
+          nNode = entry.node;
+          curEdges = entry.edges;
+          if (virtualConfig) {
+            const extraEdge = virtualConfig.endVirtualEdges.get(nodeId);
+            if (extraEdge) curEdges = [...curEdges, extraEdge];
+          }
+        }
+      }
+
+      if (nNode) {
+        const nodeTags = nNode.tags || {};
+        if (mapOSMNodeToControl(nodeTags) === 'signal') {
+          accumulatedSignals++;
+        }
+
+        if (k < pathNodeIds.length - 1) {
+          const nextNodeId = pathNodeIds[k + 1];
+          const edge = curEdges.find((e) => e.target === nextNodeId);
+          if (edge) {
+            accumulatedDistance += edge.distance;
+            accumulatedDuration += calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
+
+            if (k > 0) {
+              const parentId = pathNodeIds[k - 1];
+              let pNode: GraphNode | undefined;
+              if (virtualConfig && parentId === 'virtual-start') {
+                pNode = virtualConfig.startNode;
+              } else if (virtualConfig && parentId === 'virtual-end') {
+                pNode = virtualConfig.endNode;
+              } else {
+                pNode = graph.nodes.get(parentId)?.node;
+              }
+              const nextNNode = graph.nodes.get(nextNodeId)?.node;
+              if (pNode && nextNNode) {
+                accumulatedDuration += calculateTurnPenalty(pNode, nNode, nextNNode);
+              }
+            }
+          }
+        }
+      }
+
+      remainingDistances[k] = accumulatedDistance;
+      remainingDurations[k] = accumulatedDuration;
+      remainingSignals[k] = accumulatedSignals;
+    }
+
     for (let i = 0; i < pathNodeIds.length; i++) {
       const nodeId = pathNodeIds[i];
       let currentNode: GraphNode | undefined;
@@ -445,6 +513,10 @@ export class DijkstraRouter implements IRouter {
             evaluation.altDistanceMeters = altDistanceMeters;
             evaluation.altSignalCount = altSignalCount;
           }
+
+          evaluation.chosenRemainingDuration = remainingDurations[i];
+          evaluation.chosenRemainingDistance = remainingDistances[i];
+          evaluation.chosenRemainingSignals = remainingSignals[i];
 
           evals.push(evaluation);
         }
