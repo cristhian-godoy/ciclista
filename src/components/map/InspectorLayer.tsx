@@ -175,6 +175,34 @@ export const InspectorLayer: React.FC = () => {
           const chosenRemainingSignals =
             hoveredEval.chosenRemainingSignals ?? chosenEval?.chosenRemainingSignals ?? 0;
 
+          let penaltiesHtml = '';
+          if (hoveredEval.rulePenalties && hoveredEval.rulePenalties.length > 0) {
+            const listItems = hoveredEval.rulePenalties
+              .map((p) => {
+                let badgeColor = '#ea580c';
+                if (p.type === 'restriction') badgeColor = '#ef4444';
+                else if (p.type === 'node_delay') badgeColor = '#3b82f6';
+                else if (p.type === 'surface') badgeColor = '#ec4899';
+                else if (p.type === 'road_class') badgeColor = '#6366f1';
+                else if (p.type === 'service') badgeColor = '#a855f7';
+
+                return `<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: 10px;">
+                  <span style="color: rgba(255,255,255,0.7); display: inline-flex; align-items: center; gap: 4px;">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${badgeColor};"></span>
+                    ${p.name}
+                  </span>
+                  <span style="font-weight: bold; color: ${badgeColor};">+${Math.round(p.value)}s</span>
+                </div>`;
+              })
+              .join('');
+            penaltiesHtml = `
+              <div style="margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                <div style="font-weight: 600; font-size: 10px; color: var(--ciclista-color-text-secondary); margin-bottom: 2px;">Active Rules:</div>
+                ${listItems}
+              </div>
+            `;
+          }
+
           let contentHtml: string;
           if (isChosen) {
             contentHtml = `
@@ -187,6 +215,7 @@ export const InspectorLayer: React.FC = () => {
                 <div><strong>Remaining Signals:</strong> ${chosenRemainingSignals}</div>
                 <div><strong>Speed:</strong> ${hoveredEval.effectiveSpeedKmh.toFixed(1)} km/h</div>
                 <div><strong>Comfort:</strong> ${hoveredEval.comfort}</div>
+                ${penaltiesHtml}
               </div>
             `;
           } else {
@@ -213,6 +242,7 @@ export const InspectorLayer: React.FC = () => {
                 <div><strong>Total Signals:</strong> ${signalsSign}</div>
                 <div><strong>Speed:</strong> ${hoveredEval.effectiveSpeedKmh.toFixed(1)} km/h</div>
                 <div><strong>Comfort:</strong> ${hoveredEval.comfort}</div>
+                ${penaltiesHtml}
               </div>
             `;
           }
