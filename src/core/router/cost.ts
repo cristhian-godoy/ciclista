@@ -3,7 +3,12 @@ import type { LocalOverrides } from '../storage/types';
 import { mapBikeConfigToImpacts } from './bike';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import { mapRoadConfigToImpacts, mapSignConfigToImpacts } from './rules-impacts';
-import type { ComfortLevel, CostFunction, NodeDelayConfig } from './types';
+import type {
+  AlternativeEdgeEvaluation,
+  ComfortLevel,
+  CostFunction,
+  NodeDelayConfig,
+} from './types';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -289,4 +294,94 @@ export function calculateDisplayCost(
   }
 
   return cost;
+}
+
+/**
+ * Cohesive, stateless utility function that calculates the detailed impact breakdown for any generic edge.
+ */
+export function evaluateEdge(
+  sourceId: string,
+  edge: GraphEdge,
+  targetId: string,
+  overrides: LocalOverrides,
+  graph: StreetGraph,
+  costFn?: CostFunction,
+): AlternativeEdgeEvaluation {
+  const {
+    speed: effectiveSpeedMs,
+    flatPenalty,
+    bicycleFrei,
+  } = resolveSpeedAndPenalty(edge, overrides);
+  const highway = edge.tags.highway || '';
+  const { sign, road } = mapOSMToSignAndRoad(highway, edge.tags);
+  const isCycleway = hasCycleway(edge.tags);
+
+  const config = overrides.bikeConfig ?? { id: 'normal' };
+  const impacts = mapBikeConfigToImpacts(config);
+
+  const surfaceType = getSurfaceType(edge.tags);
+  let baseSpeedMs = effectiveSpeedMs;
+  if (surfaceType === 'gravel') {
+    baseSpeedMs /= impacts.surfaceModifiers.gravel.speedMultiplier;
+  } else if (surfaceType === 'cobblestone') {
+    baseSpeedMs /= impacts.surfaceModifiers.cobblestone.speedMultiplier;
+  }
+
+  const baseSpeedKmh = baseSpeedMs * 3.6;
+  const effectiveSpeedKmh = effectiveSpeedMs * 3.6;
+
+  // Resolve Comfort Level
+  let comfort: ComfortLevel = 'neutral';
+  const rules = overrides.rulesConfig;
+  if (rules) {
+    const signImpacts = mapSignConfigToImpacts(rules.signs, impacts.cruisingSpeedKmh);
+    const roadImpacts = mapRoadConfigToImpacts(rules.roads, impacts.cruisingSpeedKmh);
+    if (sign && signImpacts[sign]) {
+      comfort = signImpacts[sign].comfort;
+    } else if (roadImpacts[road]) {
+      comfort = roadImpacts[road].comfort;
+    }
+  } else {
+    if (highway === 'cycleway') {
+      comfort = 'very_high';
+    } else if (['footway', 'pedestrian', 'path'].includes(highway)) {
+      comfort = 'high';
+    } else if (['primary', 'primary_link'].includes(highway)) {
+      comfort = isCycleway ? 'neutral' : 'very_low';
+    } else if (['secondary', 'secondary_link'].includes(highway)) {
+      comfort = isCycleway ? 'neutral' : 'low';
+    } else if (['tertiary', 'tertiary_link'].includes(highway)) {
+      comfort = isCycleway ? 'high' : 'low';
+    } else if (highway === 'residential' || highway === 'living_street') {
+      comfort = 'high';
+    }
+  }
+
+  if (isCycleway && ['very_low', 'low', 'neutral'].includes(comfort)) {
+    comfort = 'high';
+  }
+
+  const isRestricted = ['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei;
+
+  const displayCostSeconds = calculateDisplayCost(sourceId, edge, targetId, overrides, graph);
+  const routingWeight = costFn
+    ? costFn(sourceId, edge, targetId, overrides, graph)
+    : standardCost(sourceId, edge, targetId, overrides, graph);
+
+  return {
+    targetId,
+    name: edge.name || 'Unnamed Street',
+    distance: edge.distance,
+    highway,
+    baseSpeedKmh,
+    effectiveSpeedKmh,
+    surface: surfaceType,
+    flatPenaltySeconds: flatPenalty,
+    comfort,
+    matchedSign: sign,
+    matchedRoad: road,
+    routingWeight,
+    displayCostSeconds,
+    isRestricted,
+  };
 }
