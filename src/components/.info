@@ -8,6 +8,8 @@ DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
 IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
+InspectorPanel.tsx
+	Panel displaying side-by-side comparison of chosen routing edge vs alternatives.
 MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers and map layers.
 NavigationHUD.tsx

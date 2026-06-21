@@ -17,6 +17,7 @@ import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/
 import type { BikeConfig } from '../core/storage/types';
 import { AttributionPanel } from './AttributionPanel';
 import { DataSaverPanel } from './DataSaverPanel';
+import { InspectorPanel } from './InspectorPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
@@ -44,6 +45,10 @@ interface SidebarProps {
   navigationProgress: NavigationProgress | null;
   onToggleCameraMode: () => void;
   cameraMode: CameraMode;
+  isInspectorModeActive: boolean;
+  selectedNodeId: string | null;
+  onToggleInspectorMode: () => void;
+  onSelectNodeId: (id: string | null) => void;
 }
 
 /**
@@ -70,6 +75,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   navigationProgress,
   onToggleCameraMode,
   cameraMode,
+  isInspectorModeActive,
+  selectedNodeId,
+  onToggleInspectorMode,
+  onSelectNodeId,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -108,6 +117,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
             routeResult={routeResult}
             isNavigating={isNavigating}
           />
+
+          {/* Inspector Mode Toggle and Details Panel */}
+          {routeResult !== null && !isNavigating && (
+            <>
+              <div className="ciclista-card" style={{ marginTop: '16px', padding: '16px' }}>
+                <button
+                  className={`ciclista-btn ${
+                    isInspectorModeActive ? 'ciclista-btn--primary' : 'ciclista-btn--secondary'
+                  }`}
+                  onClick={onToggleInspectorMode}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span>🔍</span>
+                  {isInspectorModeActive ? 'Deactivate Inspector' : 'Activate Inspector'}
+                </button>
+              </div>
+
+              {isInspectorModeActive &&
+                selectedNodeId &&
+                routeResult.alternativeEvaluations?.[selectedNodeId] && (
+                  <InspectorPanel
+                    selectedNodeId={selectedNodeId}
+                    evaluations={routeResult.alternativeEvaluations[selectedNodeId]}
+                    nextNodeId={
+                      routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
+                    }
+                    onClose={() => onSelectNodeId(null)}
+                  />
+                )}
+            </>
+          )}
 
           {/* Navigation Control Panel */}
           {routeResult !== null && (

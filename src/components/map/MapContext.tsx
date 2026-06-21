@@ -45,6 +45,10 @@ export interface MapContextType {
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
 
+  isInspectorModeActive: boolean;
+  selectedNodeId: string | null;
+  setSelectedNodeId: (id: string | null) => void;
+
   // Declarative camera fitting state
   shouldFitBounds: boolean;
   setShouldFitBounds: (val: boolean) => void;
@@ -93,6 +97,9 @@ interface MapProviderProps {
   onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
+  isInspectorModeActive: boolean;
+  selectedNodeId: string | null;
+  setSelectedNodeId: (id: string | null) => void;
   navigationState: NavigationState;
   isNavigating: boolean;
   rideStats: RideStats | null;
@@ -124,6 +131,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   onSaveNodeOverride,
   onClearNodeOverride,
   theme,
+  isInspectorModeActive,
+  selectedNodeId,
+  setSelectedNodeId,
   navigationState,
   isNavigating,
   rideStats,
@@ -171,6 +181,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onSaveNodeOverride,
         onClearNodeOverride,
         theme,
+        isInspectorModeActive,
+        selectedNodeId,
+        setSelectedNodeId,
         shouldFitBounds,
         setShouldFitBounds,
         showMinorControls,
