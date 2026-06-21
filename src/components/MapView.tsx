@@ -7,6 +7,7 @@ import type { NavigationState, RideStats } from '../core/navigation/types';
 import type { RouteAlternative } from '../core/router/types';
 import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
+import { InspectorLayer } from './map/InspectorLayer';
 import { MapProvider, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
@@ -37,6 +38,9 @@ interface MapViewProps {
   onClearNodeOverride: (nodeId: string) => void;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
   theme: 'bright' | 'liberty' | 'dark';
+  isInspectorModeActive: boolean;
+  selectedNodeId: string | null;
+  setSelectedNodeId: (id: string | null) => void;
   navigationState: NavigationState;
   isNavigating: boolean;
   rideStats: RideStats | null;
@@ -191,6 +195,7 @@ const MapViewContent: React.FC<{
           <BBoxBoundaryLayer />
           <StartEndMarkers />
           <NavigationLayer />
+          <InspectorLayer />
           <NodePopup key={selectedNode?.id} />
           <MapContextMenu />
           <MapLayerDock />

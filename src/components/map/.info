@@ -6,6 +6,8 @@ MapLayerDock.test.tsx
 	Unit tests for layer visibility toggling.
 MapLayerDock.tsx
 	Collapsible bottom-right dock controlling map overlay filters.
+InspectorLayer.tsx
+	Map overlay rendering clickable route nodes and divergent alternative path segments in inspector mode.
 NavigationLayer.test.tsx
 	Integration tests verifying coordinates synchronization and camera easing.
 NavigationLayer.tsx

@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
 import type { RouteAlternative } from './core/router/types';
+import { useInspectorMode } from './hooks/useInspectorMode';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
@@ -18,6 +19,14 @@ import { useRoutingState } from './hooks/useRoutingState';
 export default function App() {
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
+
+  const {
+    isInspectorModeActive,
+    selectedNodeId,
+    setSelectedNodeId,
+    toggleInspectorMode,
+    resetInspectorMode,
+  } = useInspectorMode();
 
   // Load custom storage overrides state and rules config using the custom hook
   const {
@@ -56,6 +65,11 @@ export default function App() {
     routingStrategy,
     setRoutingStrategy,
   } = routing;
+
+  // Reset inspector mode if start or end coordinates change
+  useEffect(() => {
+    resetInspectorMode();
+  }, [startCoord, endCoord, resetInspectorMode]);
 
   const handleStartDrag = (coord: Coordinate | null) => {
     setStartCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
@@ -142,6 +156,10 @@ export default function App() {
         navigationProgress={navigation.state.progress}
         onToggleCameraMode={navigation.toggleCameraMode}
         cameraMode={navigation.state.cameraMode}
+        isInspectorModeActive={isInspectorModeActive}
+        selectedNodeId={selectedNodeId}
+        onToggleInspectorMode={toggleInspectorMode}
+        onSelectNodeId={setSelectedNodeId}
       />
       <MapView
         graph={graph}
@@ -162,6 +180,9 @@ export default function App() {
         onClearNodeOverride={handleClearNodeOverride}
         onMapBoundsChange={handleMapBoundsChange}
         theme={theme}
+        isInspectorModeActive={isInspectorModeActive}
+        selectedNodeId={selectedNodeId}
+        setSelectedNodeId={setSelectedNodeId}
         navigationState={navigation.state}
         isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
         rideStats={navigation.rideStats}
