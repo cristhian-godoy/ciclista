@@ -176,4 +176,8 @@ export interface AlternativeEdgeEvaluation {
   routingWeight: number;
   displayCostSeconds: number;
   isRestricted: boolean;
+  turnPenaltySeconds: number;
+  nodeDelaySeconds: number;
+  nodeDelayType: 'signal' | 'yield' | 'stop' | 'crossing' | 'custom' | null;
+  restrictionReason: 'footway_not_bicycle_frei' | null;
 }
