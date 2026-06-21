@@ -1,13 +1,11 @@
 import { API_CONFIG } from '../common/constants';
 import { getChunkBBox } from '../common/geo';
 import { logger } from '../common/logger';
-import { OSMGraphParser } from '../graph/parser';
+import { parseInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
 import { getValidCacheEntries } from '../storage/cache';
 import { addDataUsage } from '../storage/dataUsage';
-
-const parser = new OSMGraphParser();
 
 /**
  * Represents the result of attempting to load chunks from local cache.
@@ -92,9 +90,12 @@ export class OSMCacheReader {
               logger.warn(`Failed to estimate cached data size for URL ${url}:`, e);
             }
             const data = JSON.parse(text);
-            const parsed = parser.parse(data);
+            const parsed = await parseInWorker(data);
             mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
             loadedChunkIds.push(...chunkIds);
+
+            // Yield the main thread to allow MapLibre to render vector tiles and prevent stuttering
+            await new Promise((resolve) => setTimeout(resolve, 0));
           } else {
             logger.warn(`No cached response found for URL ${url}`);
             missingChunkIds.push(...chunkIds);

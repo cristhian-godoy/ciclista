@@ -2,6 +2,10 @@ geojson.test.ts
 	Unit tests for GeoJSON features builders and coordinate mapping.
 geojson.ts
 	GeoJSON translation helper functions for map layer inputs.
+parser.client.ts
+	Main thread client interface for worker-based graph parsing and fallback parsing.
+parser.worker.ts
+	Web Worker for asynchronous OSM raw graph data parsing.
 parser.test.ts
 	Unit tests for OSM XML/JSON parsing and network connectivity builders.
 parser.ts

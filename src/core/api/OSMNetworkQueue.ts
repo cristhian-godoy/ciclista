@@ -1,11 +1,9 @@
 import { API_CONFIG, MAP_CONFIG } from '../common/constants';
 import { mergeChunksToBBox } from '../common/geo';
 import { logger } from '../common/logger';
-import { OSMGraphParser } from '../graph/parser';
+import { parseInWorker } from '../graph/parser.client';
 import type { OSMLoadResult } from './OSMLoader';
 import { fetchWithCacheAndFallback } from './overpass';
-
-const parser = new OSMGraphParser();
 
 /**
  * Callback listener type for status updates.
@@ -173,12 +171,14 @@ out geom;
 out body;`;
 
         const data = await fetchWithCacheAndFallback(query);
-        const parsed = parser.parse(data);
+        const parsed = await parseInWorker(data);
 
         this.notifyData({
           graph: parsed,
           loadedChunkIds: group,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
       }
     } catch (err) {
       logger.error('Failed to process network queue:', err);
