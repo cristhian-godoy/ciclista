@@ -1,4 +1,4 @@
-import type { RulesConfiguration } from '../router/types';
+import type { RulesConfiguration, SemanticTurnType } from '../router/types';
 
 /**
  * Available bicycle routing profiles representing different riding speeds and preferences.
@@ -21,7 +21,7 @@ export interface BikeConfig {
 export interface LocalOverrides {
   nodeDelays: Map<string, number>;
   nodeNotes: Map<string, string>;
-  nodeTurns: Map<string, Record<string, unknown>>;
+  nodeTurns: Map<string, Record<string, SemanticTurnType>>;
   rulesConfig?: RulesConfiguration;
   bikeConfig?: BikeConfig;
 }

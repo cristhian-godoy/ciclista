@@ -150,12 +150,34 @@ export type RouterSignImpacts = Record<InfrastructureType, ResolvedEdgeImpact>;
 export type RouterRoadImpacts = Record<RoadType, ResolvedEdgeImpact>;
 
 /**
+ * Configured average wait/penalty times for directional turns.
+ */
+export interface TurnRuleConfig {
+  rightTurnPenaltySeconds: number;
+  leftTurnPenaltySeconds: number;
+  greenArrowRightTurnSeconds: number;
+  indirectLeftTurnSeconds: number;
+  uTurnPenaltySeconds: number;
+}
+
+/**
+ * Semantic classifications for custom turn overrides.
+ */
+export type SemanticTurnType =
+  | 'right_turn'
+  | 'left_turn'
+  | 'green_arrow_right'
+  | 'indirect_left'
+  | 'u_turn';
+
+/**
  * Aggregated configuration wrapper mapping signs, roads, and intersection node delays.
  */
 export interface RulesConfiguration {
   signs: Record<InfrastructureType, SignRuleConfig>;
   roads: Record<RoadType, RoadRuleConfig>;
   nodeDelays: NodeDelayConfig;
+  turns: TurnRuleConfig;
 }
 
 /**

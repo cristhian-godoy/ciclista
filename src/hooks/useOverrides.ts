@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
-import type { RulesConfiguration } from '../core/router/types';
+import type { RulesConfiguration, SemanticTurnType } from '../core/router/types';
 import { LocalStorageProvider } from '../core/storage/storage';
 import type { BikeConfig, LocalOverrides } from '../core/storage/types';
 
@@ -14,7 +14,9 @@ const storage = new LocalStorageProvider();
 export function useOverrides() {
   const [nodeDelays, setNodeDelays] = useState<Map<string, number>>(new Map());
   const [nodeNotes, setNodeNotes] = useState<Map<string, string>>(new Map());
-  const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, unknown>>>(new Map());
+  const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, SemanticTurnType>>>(
+    new Map(),
+  );
   const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(() => {
     const saved = storage.loadRulesConfig();
     if (!saved) return DEFAULT_RULES_CONFIG;
@@ -38,12 +40,18 @@ export function useOverrides() {
       }
     }
 
+    const mergedTurns = {
+      ...DEFAULT_RULES_CONFIG.turns,
+      ...(saved.turns ?? {}),
+    };
+
     return {
       ...DEFAULT_RULES_CONFIG,
       ...saved,
       signs: mergedSigns,
       roads: mergedRoads,
       nodeDelays: { ...DEFAULT_RULES_CONFIG.nodeDelays, ...(saved.nodeDelays ?? {}) },
+      turns: mergedTurns,
     };
   });
   const [bikeConfig, setBikeConfig] = useState<BikeConfig>({ id: 'normal' });
