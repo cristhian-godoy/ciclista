@@ -2,58 +2,45 @@
 
 ## 🎯 Objective
 
-Implement an interactive inspector mode that allows users to select individual nodes along their chosen route and visualize the cost factors, rules, and alternative paths evaluated by the routing algorithm, promoting transparency in algorithmic decisions.
+Enhance the existing interactive inspector mode to provide full visibility into algorithmic routing choices, enabling users to understand why specific rules (turns, signs, paths) caused a segment to be favored or penalized, and visualize full alternative paths originating from intersection nodes.
 
 ## 🗺️ Milestones
 
-### Milestone 1: Core Algorithm Support (Cost Factor Breakdown Extraction)
+### Milestone 1: Enhance Edge Evaluation with Road Rules (Addresses point 6)
 
-_Focus: Expose pre-algorithm configurations and evaluated impacts for routing edges while keeping the core Dijkstra logic unchanged (Open/Closed Principle, Single Responsibility Principle)._
+_Focus: Augment the `AlternativeEdgeEvaluation` model and `InspectorPanel` to explicitly surface road rules, traffic signs, and turn directions._
 
-- [x] **Task 1: Define Evaluation Types**
-  - _Details_: Create strictly typed interfaces (e.g., `AlternativeEdgeEvaluation`) in `src/core/router/types.ts` to encapsulate base speed, surface conditions, flat penalties, comfort modifiers, and matched infrastructure signs for non-selected edges.
-- [x] **Task 2: Decouple Cost Evaluation Logic**
-  - _Details_: Refactor `cost.ts` to expose a cohesive, stateless utility function that calculates the detailed impact breakdown for any generic edge. This ensures Separation of Concerns and avoids repeating evaluation logic (DRY).
-- [x] **Task 3: Augment `RouteResult`**
-  - _Details_: Modify `buildRouteStatistics` in `router.ts` to compute and attach `AlternativeEdgeEvaluation` objects for the out-edges of each traversed node. This isolates the inspector logic from the pathfinding loop, maintaining loose coupling.
+- [ ] **Task 1: Expose Explicit Rule Modifiers**
+  - _Details_: Update `evaluateEdge` and `AlternativeEdgeEvaluation` in `router.ts`/`types.ts` to explicitly capture the source of penalties. This includes the stringified reason (e.g., "Left Turn Penalty (+5s)", "Restricted Shared Path", "Stop Sign (+8s)").
+- [ ] **Task 2: UI Representation in Inspector Panel**
+  - _Details_: Update `InspectorPanel.tsx` to prominently display these explicit rule violations or penalties per edge. Instead of just "Penalty: +X", map it to the "road rules" domain (e.g., "Right Turn", "Traffic Light").
 
-### Milestone 2: State Management & Hooks
+### Milestone 2: Meaningful Node Filtering (Addresses points 1 and 5)
 
-_Focus: Manage the inspector mode UI state cleanly and independently._
+_Focus: Clean up the map visualization to only highlight nodes with valid routing alternatives, preventing user frustration._
 
-- [x] **Task 1: Implement `useInspectorMode` Hook**
-  - _Details_: Create a custom React hook to manage `isInspectorModeActive` and `selectedNodeId` state. This centralizes state management and prevents bloating existing hooks (Single Responsibility Principle, Interface Segregation).
+- [ ] **Task 1: Improve Backward Edge Filtering**
+  - _Details_: Although a basic backward filter exists, ensure it comprehensively handles complex intersection geometries (e.g., U-turns or split dual-carriageways) so the "way backwards" never appears as a valid alternative.
+- [ ] **Task 2: Hide Nodes Without Alternatives**
+  - _Details_: Update `InspectorLayer.tsx` to conditionally skip rendering the interactive circle for any node where `alternativeEvaluations` (minus the chosen edge and backwards edge) is empty.
 
-### Milestone 3: UI Components & Map Visualization
+### Milestone 3: Full Alternative Path Projection (Addresses point 4)
 
-_Focus: Build loosely coupled, reusable components for rendering inspector data on the map and in the UI._
+_Focus: Allow users to visualize the complete "what-if" journey when hovering or selecting an alternative edge from a node._
 
-- [x] **Task 2: Interactive Node Map Layer**
-  - _Details_: Implement a MapLibre layer to render clickable nodes along the active route when inspector mode is toggled on.
-- [x] **Task 3: Alternative Paths Visualization**
-  - _Details_: Render divergent map line layers for the alternative paths originating from the `selectedNodeId`, visually differentiating them from the main route.
-- [x] **Task 4: Inspector Details Panel Component**
-  - _Details_: Build a standalone React component (favoring Composition over Inheritance) that displays a side-by-side comparison of the chosen edge versus the alternatives, detailing the exact rule impacts (surface, speed, signs, delays) derived from the evaluation utility.
+- [ ] **Task 1: Compute Full Alternative Paths**
+  - _Details_: When `selectedNodeId` is active, run a lightweight Dijkstra projection from the alternative outgoing edges to the final destination to compute the _full_ alternative route cost, distance, and signal count.
+- [ ] **Task 2: Hover Comparisons**
+  - _Details_: Implement hover interactions in `InspectorLayer.tsx` / `RouteAlternativesLayer.tsx` that display a tooltip summarizing the difference in Time, Distance, and Signals if the hovered path were taken instead of the main route.
+
+### Milestone 4: Layer Visibility Fixes (Addresses point 2)
+
+_Focus: Ensure background UI elements do not conflict with the Inspector's focus._
+
+- [ ] **Task 1: Hide Inactive Strategies**
+  - _Details_: Update `RouteAlternativesLayer.tsx` to set the opacity of non-active global route strategies (quiet, avoid-stops) to `0.0` when `isInspectorModeActive` is true, ensuring only the selected route and the node's alternatives are visible.
 
 ## 📝 Notes & Open Questions
 
-- **Performance**: Will evaluating all alternative edges within `buildRouteStatistics` cause a noticeable delay for very long routes? We should monitor this to prevent Technical Debt.
-- **Visual Clutter**: How do we handle nodes with many complex alternatives (e.g., large roundabouts or complex junctions) without overwhelming the map view?
-
-### Milestone 4: Inspector Data Refinement
-
-_Focus: Eliminate redundant data and provide deeper, actionable algorithmic insights for alternative paths._
-
-- [x] **Task 1: Filter Backward Edges**
-  - _Details_: Modify `buildRouteStatistics` (or the Inspector UI logic) to identify and exclude the backwards-facing edge (the edge returning to the previous node in the route) from the alternatives list, as it is practically irrelevant for routing decisions.
-- [x] **Task 2: Enhance Penalty Breakdown & Rules Visibility**
-  - _Details_: Augment the `AlternativeEdgeEvaluation` type and extraction logic to explicitly include computed turn penalties, node delay penalties, and specific restriction reasons. Update `InspectorPanel.tsx` to clearly articulate _why_ a penalty was applied (e.g., "Left Turn Penalty", "Not a shared path", "Traffic Signal Delay"), allowing users to easily compare rules against the chosen path.
-
-### Milestone 5: Visual Isolation & Hover Insights
-
-_Focus: Improve map clarity and provide quick exploratory comparisons without disrupting the active selection state._
-
-- [x] **Task 1: Isolate Active Route**
-  - _Details_: Update `RouteAlternativesLayer.tsx` so that when `isInspectorModeActive` is true, the non-active route strategies (e.g., quiet, less-stops) are visually hidden (opacity set to 0.0), reducing map clutter.
-- [x] **Task-2: Implement Alternative Hover Insights**
-  - _Details_: Add mouse enter/leave listeners to the `inspector-alternatives-layer` in `InspectorLayer.tsx`. When a user hovers over an alternative path segment, render a lightweight map popup or tooltip displaying quick comparison stats (e.g., "Time: +15s, Distance: +50m, Signals: +1") relative to the chosen path. This supports exploration without conflicting with mobile touch paradigms or node selection clicks.
+- **Performance**: Projecting full alternative routes (Milestone 3, Task 1) could be computationally expensive if done synchronously for many edges. We should offload this to the Web Worker (`router.worker.ts`) or only compute it when the user explicitly hovers/clicks an alternative.
+- **Mobile Compatibility**: Hover features will need a tap-to-select fallback for mobile, but as requested, this is deferred for now.
