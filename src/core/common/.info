@@ -6,7 +6,10 @@ constants.ts
 	Global application and routing configuration constants.
 geo.ts
 	Geographic coordinate mathematical utilities.
+geo.test.ts
+	Unit tests for geographic coordinate and chunking mathematical utilities.
 geometry.ts
 	Geometry calculations and spatial helper functions.
 logger.ts
 	Application logger for debugging and telemetry.
+
