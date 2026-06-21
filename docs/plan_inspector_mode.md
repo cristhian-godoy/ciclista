@@ -39,3 +39,21 @@ _Focus: Build loosely coupled, reusable components for rendering inspector data 
 
 - **Performance**: Will evaluating all alternative edges within `buildRouteStatistics` cause a noticeable delay for very long routes? We should monitor this to prevent Technical Debt.
 - **Visual Clutter**: How do we handle nodes with many complex alternatives (e.g., large roundabouts or complex junctions) without overwhelming the map view?
+
+### Milestone 4: Inspector Data Refinement
+
+_Focus: Eliminate redundant data and provide deeper, actionable algorithmic insights for alternative paths._
+
+- [x] **Task 1: Filter Backward Edges**
+  - _Details_: Modify `buildRouteStatistics` (or the Inspector UI logic) to identify and exclude the backwards-facing edge (the edge returning to the previous node in the route) from the alternatives list, as it is practically irrelevant for routing decisions.
+- [x] **Task 2: Enhance Penalty Breakdown & Rules Visibility**
+  - _Details_: Augment the `AlternativeEdgeEvaluation` type and extraction logic to explicitly include computed turn penalties, node delay penalties, and specific restriction reasons. Update `InspectorPanel.tsx` to clearly articulate _why_ a penalty was applied (e.g., "Left Turn Penalty", "Not a shared path", "Traffic Signal Delay"), allowing users to easily compare rules against the chosen path.
+
+### Milestone 5: Visual Isolation & Hover Insights
+
+_Focus: Improve map clarity and provide quick exploratory comparisons without disrupting the active selection state._
+
+- [x] **Task 1: Isolate Active Route**
+  - _Details_: Update `RouteAlternativesLayer.tsx` so that when `isInspectorModeActive` is true, the non-active route strategies (e.g., quiet, less-stops) are visually hidden (opacity set to 0.0), reducing map clutter.
+- [x] **Task-2: Implement Alternative Hover Insights**
+  - _Details_: Add mouse enter/leave listeners to the `inspector-alternatives-layer` in `InspectorLayer.tsx`. When a user hovers over an alternative path segment, render a lightweight map popup or tooltip displaying quick comparison stats (e.g., "Time: +15s, Distance: +50m, Signals: +1") relative to the chosen path. This supports exploration without conflicting with mobile touch paradigms or node selection clicks.

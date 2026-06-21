@@ -62,6 +62,9 @@ const defaultContextValue: MapContextType = {
   isNavigating: false,
   rideStats: null,
   onStopNavigation: vi.fn(),
+  isInspectorModeActive: false,
+  selectedNodeId: null,
+  setSelectedNodeId: vi.fn(),
 };
 
 describe('NodePopup', () => {

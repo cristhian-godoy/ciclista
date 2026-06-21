@@ -64,6 +64,10 @@ describe('Sidebar Integration', () => {
     navigationProgress: null,
     onToggleCameraMode: vi.fn(),
     cameraMode: 'heading-up' as const,
+    isInspectorModeActive: false,
+    selectedNodeId: null,
+    onToggleInspectorMode: vi.fn(),
+    onSelectNodeId: vi.fn(),
   };
 
   it('renders all mounted config and stats panels', () => {
