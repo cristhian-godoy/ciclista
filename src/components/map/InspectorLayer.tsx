@@ -265,6 +265,15 @@ export const InspectorLayer: React.FC = () => {
       .map((nodeId, idx) => {
         const entry = graph?.nodes.get(nodeId);
         if (!entry) return null;
+
+        const evals = activeRoute?.result?.alternativeEvaluations?.[nodeId] ?? [];
+        const nextNodeId = pathNodeIds[idx + 1];
+        const alternativeEvals = evals.filter((ev) => ev.targetId !== nextNodeId);
+
+        if (alternativeEvals.length === 0) {
+          return null;
+        }
+
         return {
           type: 'Feature' as const,
           id: idx,
