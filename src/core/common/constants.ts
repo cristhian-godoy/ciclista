@@ -34,3 +34,9 @@ export const ROUTING_CONFIG = {
   SNAPPING_DISTANCE_METERS: 3,
   INTERPOLATION_SPEED_MS: 1.5, // 1.5 m/s walk/push speed for out-of-network interpolation segments
 } as const;
+
+export const CHUNK_CONFIG = {
+  SIZE_LAT: 0.01,
+  SIZE_LNG: 0.01,
+  MAX_CHUNKS_LIMIT: 150,
+} as const;
