@@ -2,6 +2,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  CornerUpRight,
   RotateCcw,
   Route,
   Settings,
@@ -15,10 +16,12 @@ import type {
   RoadRuleConfig,
   RulesConfiguration,
   SignRuleConfig,
+  TurnRuleConfig,
 } from '../core/router/types';
 import { InfrastructureType, RoadType } from '../core/router/types';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
+import { TurnDelaySection } from './TurnDelaySection';
 
 interface RulesConfigPanelProps {
   config: RulesConfiguration;
@@ -33,6 +36,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
   const [signsOpen, setSignsOpen] = useState(false);
   const [roadsOpen, setRoadsOpen] = useState(false);
   const [intersectionsOpen, setIntersectionsOpen] = useState(false);
+  const [turnsOpen, setTurnsOpen] = useState(false);
 
   const updateSign = (signId: InfrastructureType, updated: SignRuleConfig) => {
     onChange({
@@ -50,6 +54,10 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
 
   const updateNodeDelays = (updated: NodeDelayConfig) => {
     onChange({ ...config, nodeDelays: updated });
+  };
+
+  const updateTurns = (updated: TurnRuleConfig) => {
+    onChange({ ...config, turns: updated });
   };
 
   const handleReset = (e: React.MouseEvent) => {
@@ -139,6 +147,22 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({ config, onCh
         {intersectionsOpen && (
           <IntersectionDelaySection config={config.nodeDelays} onChange={updateNodeDelays} />
         )}
+      </div>
+
+      {/* Turn Penalties sub-section */}
+      <div className="rules-section">
+        <button
+          className="rules-section-toggle"
+          onClick={() => setTurnsOpen((v) => !v)}
+          aria-expanded={turnsOpen}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <CornerUpRight size={13} aria-label="Turns Icon" />
+            Turn Penalties
+          </span>
+          {turnsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
+        {turnsOpen && <TurnDelaySection config={config.turns} onChange={updateTurns} />}
       </div>
     </section>
   );
