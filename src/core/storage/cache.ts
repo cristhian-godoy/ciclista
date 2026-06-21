@@ -56,15 +56,17 @@ export async function fetchWithCache<T>(
       const timestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
       const ttl = API_CONFIG.CACHE_TTL_MS;
 
-      cachedData = (await cachedResponse.json()) as T;
+      const text = await cachedResponse.text();
+      try {
+        const size = new Blob([text]).size;
+        addDataUsage(size, true);
+      } catch (e) {
+        logger.warn('Failed to estimate cached data size:', e);
+      }
+      cachedData = JSON.parse(text) as T;
+
       if (Date.now() - timestamp < ttl) {
         logger.log('Serving fresh Overpass query from CacheStorage.');
-        try {
-          const size = new Blob([JSON.stringify(cachedData)]).size;
-          addDataUsage(size, true);
-        } catch (e) {
-          logger.warn('Failed to estimate cached data size:', e);
-        }
         return cachedData;
       } else {
         isStale = true;
@@ -72,12 +74,6 @@ export async function fetchWithCache<T>(
           logger.log(
             'Cache entry is stale, but Data Saver is active. Serving stale data to save bandwidth.',
           );
-          try {
-            const size = new Blob([JSON.stringify(cachedData)]).size;
-            addDataUsage(size, true);
-          } catch (e) {
-            logger.warn('Failed to estimate cached data size:', e);
-          }
           return cachedData;
         }
         logger.log('Cache entry is stale. Triggering background revalidation (SWR).');
@@ -111,12 +107,6 @@ export async function fetchWithCache<T>(
   };
 
   if (isStale && cachedData) {
-    try {
-      const size = new Blob([JSON.stringify(cachedData)]).size;
-      addDataUsage(size, true);
-    } catch (e) {
-      logger.warn('Failed to estimate cached data size:', e);
-    }
     revalidate().catch(() => {});
     return cachedData;
   }

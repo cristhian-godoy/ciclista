@@ -5,6 +5,7 @@ import { OSMGraphParser } from '../graph/parser';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
 import { getValidCacheEntries } from '../storage/cache';
+import { addDataUsage } from '../storage/dataUsage';
 import { fetchWithCacheAndFallback } from './overpass';
 
 const parser = new OSMGraphParser();
@@ -82,22 +83,41 @@ export class OSMLoader {
       logger.log(`Loading ${cachedChunkIds.length} chunks directly from local CacheStorage.`);
       const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
 
+      const urlToChunkIds = new Map<string, string[]>();
       for (const chunkId of cachedChunkIds) {
         const chunkBBox = getChunkBBox(chunkId);
         const entry = validCache.find((e) => this.isBBoxContained(chunkBBox, e.bbox));
         if (entry) {
-          try {
-            const cachedResponse = await cacheInstance.match(new Request(entry.url));
-            if (cachedResponse) {
-              const data = await cachedResponse.json();
-              const parsed = parser.parse(data);
-              mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
-              loadedChunkIds.push(chunkId);
+          const list = urlToChunkIds.get(entry.url) || [];
+          list.push(chunkId);
+          urlToChunkIds.set(entry.url, list);
+        } else {
+          networkChunkIds.push(chunkId);
+        }
+      }
+
+      for (const [url, chunkIds] of urlToChunkIds.entries()) {
+        try {
+          const cachedResponse = await cacheInstance.match(new Request(url));
+          if (cachedResponse) {
+            const text = await cachedResponse.text();
+            try {
+              const size = new Blob([text]).size;
+              addDataUsage(size, true);
+            } catch (e) {
+              logger.warn(`Failed to estimate cached data size for URL ${url}:`, e);
             }
-          } catch (err) {
-            logger.warn(`Failed to read cached response for chunk ${chunkId}:`, err);
-            networkChunkIds.push(chunkId);
+            const data = JSON.parse(text);
+            const parsed = parser.parse(data);
+            mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
+            loadedChunkIds.push(...chunkIds);
+          } else {
+            logger.warn(`No cached response found for URL ${url}`);
+            networkChunkIds.push(...chunkIds);
           }
+        } catch (err) {
+          logger.warn(`Failed to read cached response for URL ${url}:`, err);
+          networkChunkIds.push(...chunkIds);
         }
       }
     }
