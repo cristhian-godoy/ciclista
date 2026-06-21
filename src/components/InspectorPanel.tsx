@@ -146,11 +146,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
           </div>
         </div>
 
-        {(ev.matchedSign ||
-          ev.flatPenaltySeconds > 0 ||
-          ev.isRestricted ||
-          ev.turnPenaltySeconds > 0 ||
-          ev.nodeDelaySeconds > 0) && (
+        {ev.rulePenalties && ev.rulePenalties.length > 0 ? (
           <div
             style={{
               display: 'flex',
@@ -161,85 +157,147 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
               paddingTop: '6px',
             }}
           >
-            {ev.matchedSign && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(99, 102, 241, 0.1)',
-                  border: '1px solid rgba(99, 102, 241, 0.2)',
-                  color: 'var(--ciclista-color-brand-hover)',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                }}
-              >
-                Sign: {ev.matchedSign}
-              </span>
-            )}
-            {ev.flatPenaltySeconds > 0 && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(244, 63, 94, 0.1)',
-                  border: '1px solid rgba(244, 63, 94, 0.2)',
-                  color: 'var(--ciclista-color-brand-danger)',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                }}
-              >
-                Surface Penalty: +{Math.round(ev.flatPenaltySeconds)}s
-              </span>
-            )}
-            {ev.turnPenaltySeconds > 0 && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(234, 179, 8, 0.1)',
-                  border: '1px solid rgba(234, 179, 8, 0.2)',
-                  color: 'var(--ciclista-color-brand-hover)',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                }}
-              >
-                Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s
-              </span>
-            )}
-            {ev.nodeDelaySeconds > 0 && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                  color: '#60a5fa',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                }}
-              >
-                {ev.nodeDelayType === 'signal' && 'Traffic Signal Delay'}
-                {ev.nodeDelayType === 'yield' && 'Yield Delay'}
-                {ev.nodeDelayType === 'stop' && 'Stop Sign Delay'}
-                {ev.nodeDelayType === 'crossing' && 'Crossing Delay'}
-                {ev.nodeDelayType === 'custom' && 'Custom Override Delay'}
-                {!ev.nodeDelayType && 'Intersection Delay'}: +{Math.round(ev.nodeDelaySeconds)}s
-              </span>
-            )}
-            {ev.isRestricted && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'var(--ciclista-color-danger-bg)',
-                  border: '1px solid var(--ciclista-color-danger-border)',
-                  color: 'var(--ciclista-color-danger-text)',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {ev.restrictionReason === 'footway_not_bicycle_frei'
-                  ? 'Bicycles Prohibited (Footway)'
-                  : 'Bicycle Restricted'}
-              </span>
-            )}
+            {ev.rulePenalties.map((penalty, index) => {
+              let bg = 'rgba(234, 179, 8, 0.1)';
+              let border = '1px solid rgba(234, 179, 8, 0.2)';
+              let color = 'var(--ciclista-color-brand-hover)';
+
+              if (penalty.type === 'restriction') {
+                bg = 'var(--ciclista-color-danger-bg)';
+                border = '1px solid var(--ciclista-color-danger-border)';
+                color = 'var(--ciclista-color-danger-text)';
+              } else if (penalty.type === 'node_delay') {
+                bg = 'rgba(59, 130, 246, 0.1)';
+                border = '1px solid rgba(59, 130, 246, 0.2)';
+                color = '#60a5fa';
+              } else if (penalty.type === 'surface') {
+                bg = 'rgba(244, 63, 94, 0.1)';
+                border = '1px solid rgba(244, 63, 94, 0.2)';
+                color = 'var(--ciclista-color-brand-danger)';
+              } else if (penalty.type === 'road_class') {
+                bg = 'rgba(99, 102, 241, 0.1)';
+                border = '1px solid rgba(99, 102, 241, 0.2)';
+                color = 'var(--ciclista-color-brand-hover)';
+              } else if (penalty.type === 'service') {
+                bg = 'rgba(168, 85, 247, 0.1)';
+                border = '1px solid rgba(168, 85, 247, 0.2)';
+                color = '#c084fc';
+              }
+
+              return (
+                <span
+                  key={index}
+                  style={{
+                    fontSize: '0.65rem',
+                    background: bg,
+                    border: border,
+                    color: color,
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                    fontWeight: penalty.type === 'restriction' ? 'bold' : 'normal',
+                  }}
+                >
+                  {penalty.name}: +{Math.round(penalty.value)}s
+                </span>
+              );
+            })}
           </div>
+        ) : (
+          (ev.matchedSign ||
+            ev.flatPenaltySeconds > 0 ||
+            ev.isRestricted ||
+            ev.turnPenaltySeconds > 0 ||
+            ev.nodeDelaySeconds > 0) && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '4px',
+                marginTop: '4px',
+                borderTop: '1px solid var(--ciclista-glass-border-base)',
+                paddingTop: '6px',
+              }}
+            >
+              {ev.matchedSign && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    background: 'rgba(99, 102, 241, 0.1)',
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    color: 'var(--ciclista-color-brand-hover)',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                  }}
+                >
+                  Sign: {ev.matchedSign}
+                </span>
+              )}
+              {ev.flatPenaltySeconds > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    background: 'rgba(244, 63, 94, 0.1)',
+                    border: '1px solid rgba(244, 63, 94, 0.2)',
+                    color: 'var(--ciclista-color-brand-danger)',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                  }}
+                >
+                  Surface Penalty: +{Math.round(ev.flatPenaltySeconds)}s
+                </span>
+              )}
+              {ev.turnPenaltySeconds > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    background: 'rgba(234, 179, 8, 0.1)',
+                    border: '1px solid rgba(234, 179, 8, 0.2)',
+                    color: 'var(--ciclista-color-brand-hover)',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                  }}
+                >
+                  Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s
+                </span>
+              )}
+              {ev.nodeDelaySeconds > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    color: '#60a5fa',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                  }}
+                >
+                  {ev.nodeDelayType === 'signal' && 'Traffic Signal Delay'}
+                  {ev.nodeDelayType === 'yield' && 'Yield Delay'}
+                  {ev.nodeDelayType === 'stop' && 'Stop Sign Delay'}
+                  {ev.nodeDelayType === 'crossing' && 'Crossing Delay'}
+                  {ev.nodeDelayType === 'custom' && 'Custom Override Delay'}
+                  {!ev.nodeDelayType && 'Intersection Delay'}: +{Math.round(ev.nodeDelaySeconds)}s
+                </span>
+              )}
+              {ev.isRestricted && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    background: 'var(--ciclista-color-danger-bg)',
+                    border: '1px solid var(--ciclista-color-danger-border)',
+                    color: 'var(--ciclista-color-danger-text)',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {ev.restrictionReason === 'footway_not_bicycle_frei'
+                    ? 'Bicycles Prohibited (Footway)'
+                    : 'Bicycle Restricted'}
+                </span>
+              )}
+            </div>
+          )
         )}
       </div>
     );
