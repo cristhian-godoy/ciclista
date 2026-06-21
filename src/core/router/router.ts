@@ -324,8 +324,22 @@ export class DijkstraRouter implements IRouter {
             turnPenalty = calculateTurnPenalty(parentNode, currentNode, neighborNode);
           }
 
+          // Exclude U-turns (angle > 135 degrees)
+          if (parentNode && turnPenalty === ROUTING_CONFIG.U_TURN_PENALTY_SECONDS) {
+            continue;
+          }
+
           evals.push(
-            evaluateEdge(nodeId, edge, edge.target, overrides, graph, costFn, turnPenalty),
+            evaluateEdge(
+              nodeId,
+              edge,
+              edge.target,
+              overrides,
+              graph,
+              costFn,
+              turnPenalty,
+              backwardNodeId || undefined,
+            ),
           );
         }
         alternativeEvaluations[nodeId] = evals;
