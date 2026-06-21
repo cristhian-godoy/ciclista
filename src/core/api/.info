@@ -1,5 +1,7 @@
 OSMCacheReader.ts
 	Service to check and load chunk data directly from browser CacheStorage, separating cache resolution from network fetching.
+OSMNetworkQueue.ts
+	Service managing sequential Overpass network requests with bounding box merging and splitting.
 OSMLoader.ts
 	OSM raw data chunk loader, cache orchestrator and queue lock service.
 OSMLoader.test.ts

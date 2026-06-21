@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { OSMLoader } from '../core/api/OSMLoader';
+import { OSMCacheReader } from '../core/api/OSMCacheReader';
+import { OSMNetworkQueue } from '../core/api/OSMNetworkQueue';
 import { MAP_CONFIG } from '../core/common/constants';
 import {
   calculateBoundingBox,
@@ -54,6 +55,46 @@ export function useOSMData({
     };
   }, []);
 
+  // Listen to the network queue status and data events
+  useEffect(() => {
+    const handleQueueStatus = (fetching: boolean) => {
+      setIsFetchingOSM(fetching);
+    };
+
+    const handleQueueData = (result: { graph: StreetGraph; loadedChunkIds: string[] }) => {
+      setGraph((prev) => (prev ? mergeGraphs(prev, result.graph) : result.graph));
+      setLoadedChunkIds((prev) => {
+        const next = new Set(prev);
+        result.loadedChunkIds.forEach((id) => next.add(id));
+        return next;
+      });
+      setLoadedBBoxes((prev) => {
+        const next = [...prev];
+        result.loadedChunkIds.forEach((id) => {
+          const chunkBBox = getChunkBBox(id);
+          if (!prev.some((b) => b[0] === chunkBBox[0] && b[1] === chunkBBox[1])) {
+            next.push(chunkBBox);
+          }
+        });
+        return next;
+      });
+    };
+
+    const handleQueueError = (err: unknown) => {
+      logger.error('Error in OSM network queue:', err);
+    };
+
+    OSMNetworkQueue.addStatusListener(handleQueueStatus);
+    OSMNetworkQueue.addDataListener(handleQueueData);
+    OSMNetworkQueue.addErrorListener(handleQueueError);
+
+    return () => {
+      OSMNetworkQueue.removeStatusListener(handleQueueStatus);
+      OSMNetworkQueue.removeDataListener(handleQueueData);
+      OSMNetworkQueue.removeErrorListener(handleQueueError);
+    };
+  }, []);
+
   // Overpass API fetching implementation
   const handleFetchOSM = async (
     bbox: [number, number, number, number],
@@ -83,7 +124,6 @@ export function useOSMData({
       setCellularDownloadAllowed(true);
     }
 
-    setIsFetchingOSM(true);
     if (!merge) {
       setSelectedNode(null); // Clear selected signal node
       setGraph(null); // Clear previous graph during load to prevent "phantom roads"
@@ -91,38 +131,56 @@ export function useOSMData({
       setLoadedChunkIds(new Set());
     }
 
-    try {
-      const activeChunks = merge ? loadedChunkIds : new Set<string>();
-      const result = await OSMLoader.loadViewport(bbox, activeChunks);
+    const requiredChunks = getChunksInBBox(bbox);
+    if (requiredChunks.length === 0) {
+      if (!merge) {
+        setGraph({ nodes: new Map() });
+      }
+      return;
+    }
 
-      if (result) {
-        if (merge) {
-          setGraph((prev) => (prev ? mergeGraphs(prev, result.graph) : result.graph));
-          setLoadedChunkIds((prev) => {
-            const next = new Set(prev);
-            result.loadedChunkIds.forEach((id) => next.add(id));
-            return next;
+    const activeChunks = merge ? loadedChunkIds : new Set<string>();
+    const neededChunks = requiredChunks.filter((chunkId) => !activeChunks.has(chunkId));
+    if (neededChunks.length === 0) {
+      return;
+    }
+
+    try {
+      // 1. Immediately resolve cached chunks
+      const cacheResult = await OSMCacheReader.readChunks(neededChunks);
+      if (cacheResult.graph) {
+        setGraph((prev) => (prev ? mergeGraphs(prev, cacheResult.graph!) : cacheResult.graph));
+        setLoadedChunkIds((prev) => {
+          const next = new Set(prev);
+          cacheResult.loadedChunkIds.forEach((id) => next.add(id));
+          return next;
+        });
+        setLoadedBBoxes((prev) => {
+          const next = [...prev];
+          cacheResult.loadedChunkIds.forEach((id) => {
+            const chunkBBox = getChunkBBox(id);
+            if (!prev.some((b) => b[0] === chunkBBox[0] && b[1] === chunkBBox[1])) {
+              next.push(chunkBBox);
+            }
           });
-          setLoadedBBoxes((prev) => {
-            const next = [...prev];
-            result.loadedChunkIds.forEach((id) => {
-              const chunkBBox = getChunkBBox(id);
-              if (!prev.some((b) => b[0] === chunkBBox[0] && b[1] === chunkBBox[1])) {
-                next.push(chunkBBox);
-              }
-            });
-            return next;
-          });
-        } else {
-          setGraph(result.graph);
-          setLoadedChunkIds(new Set(result.loadedChunkIds));
-          setLoadedBBoxes(result.loadedChunkIds.map(getChunkBBox));
+          return next;
+        });
+      }
+
+      // 2. Queue remaining missing chunks for network fetching after 500ms debounce
+      if (cacheResult.missingChunkIds.length > 0) {
+        if (boundsChangeTimeoutRef.current) {
+          clearTimeout(boundsChangeTimeoutRef.current);
         }
-      } else if (!merge) {
+        boundsChangeTimeoutRef.current = setTimeout(() => {
+          logger.log('Queueing missing chunks for network fetch:', cacheResult.missingChunkIds);
+          OSMNetworkQueue.enqueue(cacheResult.missingChunkIds);
+        }, 500);
+      } else if (!merge && !cacheResult.graph) {
         setGraph({ nodes: new Map() });
       }
     } catch (e: unknown) {
-      logger.error('Failed to retrieve OSM network data:', e);
+      logger.error('Failed to retrieve cached/network OSM data:', e);
 
       if (graph === null && !merge) {
         logger.warn('Using mock fallback graph due to initial fetch failure.');
@@ -148,15 +206,13 @@ export function useOSMData({
           }`,
         );
       }
-    } finally {
-      setIsFetchingOSM(false);
     }
   };
 
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
     if (!startCoord || !endCoord) return;
-    if (loadedBBoxes.length === 0 || isFetchingOSM) return;
+    if (loadedBBoxes.length === 0) return;
 
     const startInside = isInsideLoadedArea(startCoord, loadedBBoxes);
     const endInside = isInsideLoadedArea(endCoord, loadedBBoxes);
@@ -164,7 +220,6 @@ export function useOSMData({
     if (!startInside || !endInside) {
       const newBBox = calculateBoundingBox(startCoord, endCoord);
 
-      // Limit bounding box size to prevent Overpass query timeouts (max ~35km span)
       if (
         newBBox[2] - newBBox[0] > MAP_CONFIG.MAX_LAT_SPAN ||
         newBBox[3] - newBBox[1] > MAP_CONFIG.MAX_LNG_SPAN
@@ -185,7 +240,7 @@ export function useOSMData({
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startCoord, endCoord, loadedBBoxes, isFetchingOSM]);
+  }, [startCoord, endCoord, loadedBBoxes]);
 
   // Handler for preset selections
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
@@ -197,16 +252,10 @@ export function useOSMData({
 
   // Handler to load OSM data as one moves through the map
   const handleMapBoundsChange = (viewportBBox: [number, number, number, number], zoom: number) => {
-    if (zoom < 13 || isFetchingOSM) return;
+    if (zoom < 13) return;
 
-    if (boundsChangeTimeoutRef.current) {
-      clearTimeout(boundsChangeTimeoutRef.current);
-    }
-
-    boundsChangeTimeoutRef.current = setTimeout(() => {
-      logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', viewportBBox);
-      handleFetchOSM(viewportBBox, true, true); // merge = true, silent = true
-    }, 1000);
+    logger.log('Map moved. Checking for immediate cached load or debounced network fetch.');
+    handleFetchOSM(viewportBBox, true, true);
   };
 
   return {
