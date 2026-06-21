@@ -16,19 +16,32 @@ export const InspectorLayer: React.FC = () => {
     setSelectedNodeId,
     routeAlternatives,
     activeAlternativeLabel,
+    selectedAlternativeTargetId,
+    setSelectedAlternativeTargetId,
   } = useMapContext();
 
   const setSelectedNodeIdRef = useRef(setSelectedNodeId);
   const selectedNodeIdRef = useRef(selectedNodeId);
   const routeAlternativesRef = useRef(routeAlternatives);
   const activeAlternativeLabelRef = useRef(activeAlternativeLabel);
+  const selectedAlternativeTargetIdRef = useRef(selectedAlternativeTargetId);
+  const setSelectedAlternativeTargetIdRef = useRef(setSelectedAlternativeTargetId);
 
   useEffect(() => {
     setSelectedNodeIdRef.current = setSelectedNodeId;
     selectedNodeIdRef.current = selectedNodeId;
     routeAlternativesRef.current = routeAlternatives;
     activeAlternativeLabelRef.current = activeAlternativeLabel;
-  }, [setSelectedNodeId, selectedNodeId, routeAlternatives, activeAlternativeLabel]);
+    selectedAlternativeTargetIdRef.current = selectedAlternativeTargetId;
+    setSelectedAlternativeTargetIdRef.current = setSelectedAlternativeTargetId;
+  }, [
+    setSelectedNodeId,
+    selectedNodeId,
+    routeAlternatives,
+    activeAlternativeLabel,
+    selectedAlternativeTargetId,
+    setSelectedAlternativeTargetId,
+  ]);
 
   // Setup layers and sources
   useEffect(() => {
@@ -80,6 +93,31 @@ export const InspectorLayer: React.FC = () => {
         paint: {
           'line-color': ['case', ['get', 'isChosen'], '#10b981', '#ef4444'],
           'line-width': 4,
+        },
+      });
+    }
+
+    // inspector-highlighted-path source
+    if (!map.getSource('inspector-highlighted-path')) {
+      map.addSource('inspector-highlighted-path', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // inspector-highlighted-path-layer
+    if (!map.getLayer('inspector-highlighted-path-layer')) {
+      map.addLayer({
+        id: 'inspector-highlighted-path-layer',
+        type: 'line',
+        source: 'inspector-highlighted-path',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#ef4444',
+          'line-width': 5,
           'line-dasharray': [2, 2],
         },
       });
@@ -247,6 +285,34 @@ export const InspectorLayer: React.FC = () => {
             `;
           }
 
+          if (!isChosen && hoveredEval.altCoordinates) {
+            const highlightedSource = map.getSource(
+              'inspector-highlighted-path',
+            ) as maplibregl.GeoJSONSource;
+            if (highlightedSource) {
+              highlightedSource.setData({
+                type: 'FeatureCollection',
+                features: [
+                  {
+                    type: 'Feature',
+                    geometry: {
+                      type: 'LineString',
+                      coordinates: hoveredEval.altCoordinates.map((c) => [c.lng, c.lat]),
+                    },
+                    properties: {},
+                  },
+                ],
+              });
+            }
+          } else {
+            const highlightedSource = map.getSource(
+              'inspector-highlighted-path',
+            ) as maplibregl.GeoJSONSource;
+            if (highlightedSource) {
+              highlightedSource.setData({ type: 'FeatureCollection', features: [] });
+            }
+          }
+
           if (contentHtml) {
             popup.setLngLat(e.lngLat).setHTML(contentHtml).addTo(map);
           }
@@ -257,6 +323,49 @@ export const InspectorLayer: React.FC = () => {
     const onAltMouseLeave = () => {
       map.getCanvas().style.cursor = '';
       popup.remove();
+
+      const highlightedSource = map.getSource(
+        'inspector-highlighted-path',
+      ) as maplibregl.GeoJSONSource;
+      if (highlightedSource) {
+        const lockedId = selectedAlternativeTargetIdRef.current;
+        const selNodeId = selectedNodeIdRef.current;
+        const alts = routeAlternativesRef.current;
+        const activeLabel = activeAlternativeLabelRef.current;
+        const activeRoute = alts.find((a) => a.label === activeLabel);
+        const evaluations = activeRoute?.result?.alternativeEvaluations?.[selNodeId ?? ''];
+        const lockedEval = evaluations?.find((ev) => ev.targetId === lockedId);
+
+        if (lockedEval && lockedEval.altCoordinates) {
+          highlightedSource.setData({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: lockedEval.altCoordinates.map((c) => [c.lng, c.lat]),
+                },
+                properties: {},
+              },
+            ],
+          });
+        } else {
+          highlightedSource.setData({ type: 'FeatureCollection', features: [] });
+        }
+      }
+    };
+
+    const onAltClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      if (e.features && e.features.length > 0) {
+        const targetId = e.features[0].properties.targetId;
+        const isChosen = e.features[0].properties.isChosen;
+        if (!isChosen) {
+          const currentSelected = selectedAlternativeTargetIdRef.current;
+          setSelectedAlternativeTargetIdRef.current(currentSelected === targetId ? null : targetId);
+        }
+      }
     };
 
     map.on('mousemove', 'inspector-nodes-layer', onMouseMove);
@@ -264,6 +373,7 @@ export const InspectorLayer: React.FC = () => {
     map.on('click', 'inspector-nodes-layer', onClick);
     map.on('mousemove', 'inspector-alternatives-layer', onAltMouseMove);
     map.on('mouseleave', 'inspector-alternatives-layer', onAltMouseLeave);
+    map.on('click', 'inspector-alternatives-layer', onAltClick);
 
     return () => {
       map.off('mousemove', 'inspector-nodes-layer', onMouseMove);
@@ -271,6 +381,7 @@ export const InspectorLayer: React.FC = () => {
       map.off('click', 'inspector-nodes-layer', onClick);
       map.off('mousemove', 'inspector-alternatives-layer', onAltMouseMove);
       map.off('mouseleave', 'inspector-alternatives-layer', onAltMouseLeave);
+      map.off('click', 'inspector-alternatives-layer', onAltClick);
       popup.remove();
 
       if (map.getLayer('inspector-nodes-layer')) map.removeLayer('inspector-nodes-layer');
@@ -279,6 +390,11 @@ export const InspectorLayer: React.FC = () => {
       if (map.getLayer('inspector-alternatives-layer'))
         map.removeLayer('inspector-alternatives-layer');
       if (map.getSource('inspector-alternatives')) map.removeSource('inspector-alternatives');
+
+      if (map.getLayer('inspector-highlighted-path-layer'))
+        map.removeLayer('inspector-highlighted-path-layer');
+      if (map.getSource('inspector-highlighted-path'))
+        map.removeSource('inspector-highlighted-path');
 
       if (map.getLayer('inspector-alternative-labels-layer'))
         map.removeLayer('inspector-alternative-labels-layer');
@@ -297,12 +413,16 @@ export const InspectorLayer: React.FC = () => {
     const nodesSource = map.getSource('inspector-nodes') as maplibregl.GeoJSONSource;
     const alternativesSource = map.getSource('inspector-alternatives') as maplibregl.GeoJSONSource;
     const labelsSource = map.getSource('inspector-alternative-labels') as maplibregl.GeoJSONSource;
+    const highlightedSource = map.getSource(
+      'inspector-highlighted-path',
+    ) as maplibregl.GeoJSONSource;
 
     if (!isInspectorModeActive || pathNodeIds.length === 0) {
       if (nodesSource) nodesSource.setData({ type: 'FeatureCollection', features: [] });
       if (alternativesSource)
         alternativesSource.setData({ type: 'FeatureCollection', features: [] });
       if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
+      if (highlightedSource) highlightedSource.setData({ type: 'FeatureCollection', features: [] });
       return;
     }
 
@@ -375,8 +495,13 @@ export const InspectorLayer: React.FC = () => {
           if (!endNode) return;
 
           const isChosen = ev.targetId === nextNodeId;
-          const coordinates = ev.altCoordinates
-            ? ev.altCoordinates.map((c) => [c.lng, c.lat])
+          const coordinates = isChosen
+            ? ev.altCoordinates
+              ? ev.altCoordinates.map((c) => [c.lng, c.lat])
+              : [
+                  [startNode.lng, startNode.lat],
+                  [endNode.lng, endNode.lat],
+                ]
             : [
                 [startNode.lng, startNode.lat],
                 [endNode.lng, endNode.lat],
@@ -399,7 +524,7 @@ export const InspectorLayer: React.FC = () => {
           labelFeatures.push({
             type: 'Feature',
             geometry: {
-              type: 'Point',
+              type: 'Point' as const,
               coordinates: [midLng, midLat],
             },
             properties: {
@@ -430,11 +555,40 @@ export const InspectorLayer: React.FC = () => {
         alternativesSource.setData({ type: 'FeatureCollection', features: [] });
       if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
     }
+
+    // 3. Highlighted Locked Path GeoJSON
+    if (highlightedSource) {
+      if (selectedNodeId && selectedAlternativeTargetId) {
+        const lockedEval = activeRoute?.result?.alternativeEvaluations?.[selectedNodeId]?.find(
+          (ev) => ev.targetId === selectedAlternativeTargetId,
+        );
+        if (lockedEval && lockedEval.altCoordinates) {
+          highlightedSource.setData({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: lockedEval.altCoordinates.map((c) => [c.lng, c.lat]),
+                },
+                properties: {},
+              },
+            ],
+          });
+        } else {
+          highlightedSource.setData({ type: 'FeatureCollection', features: [] });
+        }
+      } else {
+        highlightedSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+    }
   }, [
     map,
     graph,
     isInspectorModeActive,
     selectedNodeId,
+    selectedAlternativeTargetId,
     routeAlternatives,
     activeAlternativeLabel,
   ]);

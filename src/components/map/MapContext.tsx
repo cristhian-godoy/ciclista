@@ -48,6 +48,8 @@ export interface MapContextType {
   isInspectorModeActive: boolean;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
+  selectedAlternativeTargetId: string | null;
+  setSelectedAlternativeTargetId: (id: string | null) => void;
 
   // Declarative camera fitting state
   shouldFitBounds: boolean;
@@ -100,6 +102,8 @@ interface MapProviderProps {
   isInspectorModeActive: boolean;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
+  selectedAlternativeTargetId: string | null;
+  setSelectedAlternativeTargetId: (id: string | null) => void;
   navigationState: NavigationState;
   isNavigating: boolean;
   rideStats: RideStats | null;
@@ -134,6 +138,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   isInspectorModeActive,
   selectedNodeId,
   setSelectedNodeId,
+  selectedAlternativeTargetId,
+  setSelectedAlternativeTargetId,
   navigationState,
   isNavigating,
   rideStats,
@@ -184,6 +190,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         isInspectorModeActive,
         selectedNodeId,
         setSelectedNodeId,
+        selectedAlternativeTargetId,
+        setSelectedAlternativeTargetId,
         shouldFitBounds,
         setShouldFitBounds,
         showMinorControls,
