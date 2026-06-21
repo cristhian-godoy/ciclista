@@ -16,6 +16,18 @@ const ATTRIBUTIONS: AttributionItem[] = [
     link: 'https://www.openstreetmap.org/copyright',
   },
   {
+    name: 'OpenFreeMap',
+    license: 'MIT',
+    description: 'Map tiles and styles hosting.',
+    link: 'https://openfreemap.org/',
+  },
+  {
+    name: 'Overpass API',
+    license: 'AGPL',
+    description: 'Query API used to fetch OpenStreetMap data.',
+    link: 'https://overpass-api.de/',
+  },
+  {
     name: 'MapLibre GL JS',
     license: 'BSD 3-Clause',
     description: 'WebGL-based map rendering engine.',
@@ -32,6 +44,12 @@ const ATTRIBUTIONS: AttributionItem[] = [
     license: 'ISC',
     description: 'UI icons.',
     link: 'https://lucide.dev',
+  },
+  {
+    name: 'Google Fonts',
+    license: 'OFL',
+    description: 'Inter and Outfit fonts.',
+    link: 'https://fonts.google.com/',
   },
   {
     name: 'Vite, TypeScript & ESLint',

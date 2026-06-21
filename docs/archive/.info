@@ -28,4 +28,5 @@ plan_chunked_caching.md
 	Implementation details for chunked geographical local caching.
 plan_debounced_fetching_queue.md
 	Implementation plan for debounced Overpass API requests and dynamic fetching queue.
-
+plan_attribution.md
+	Implementation plan for frontend open-source licensing and attributions UI.
