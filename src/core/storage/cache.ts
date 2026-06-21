@@ -123,3 +123,50 @@ export async function fetchWithCache<T>(
 
   return await revalidate();
 }
+
+/**
+ * Represents a valid cache entry with its bounding box and URL identifier.
+ */
+export interface ValidCacheEntry {
+  bbox: [number, number, number, number];
+  url: string;
+}
+
+/**
+ * Returns currently valid cached bounding boxes by scanning CacheStorage.
+ */
+export async function getValidCacheEntries(): Promise<ValidCacheEntry[]> {
+  const validEntries: ValidCacheEntry[] = [];
+  try {
+    const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
+    const keys = await cacheInstance.keys();
+    const ttl = API_CONFIG.CACHE_TTL_MS;
+    const now = Date.now();
+    const dataSaver = isDataSaverActive();
+
+    for (const req of keys) {
+      const res = await cacheInstance.match(req);
+      if (!res) continue;
+
+      const timestampStr = res.headers.get('X-Cache-Timestamp');
+      const timestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
+
+      if (now - timestamp < ttl || dataSaver) {
+        const urlObj = new URL(req.url);
+        const bboxStr = urlObj.searchParams.get('bbox');
+        if (bboxStr) {
+          const coords = bboxStr.split(',').map(Number);
+          if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
+            validEntries.push({
+              bbox: coords as [number, number, number, number],
+              url: req.url,
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn('Failed to scan CacheStorage for valid entries:', err);
+  }
+  return validEntries;
+}
