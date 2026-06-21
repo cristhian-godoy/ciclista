@@ -154,6 +154,8 @@ describe('NavigationLayer', () => {
       isInspectorModeActive: false,
       selectedNodeId: null,
       setSelectedNodeId: vi.fn(),
+      selectedAlternativeTargetId: null,
+      setSelectedAlternativeTargetId: vi.fn(),
     };
   });
 

@@ -190,4 +190,7 @@ export interface AlternativeEdgeEvaluation {
   altDurationSeconds?: number;
   altDistanceMeters?: number;
   altSignalCount?: number;
+  chosenRemainingDuration?: number;
+  chosenRemainingDistance?: number;
+  chosenRemainingSignals?: number;
 }
