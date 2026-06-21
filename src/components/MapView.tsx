@@ -41,6 +41,8 @@ interface MapViewProps {
   isInspectorModeActive: boolean;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
+  selectedAlternativeTargetId: string | null;
+  setSelectedAlternativeTargetId: (id: string | null) => void;
   navigationState: NavigationState;
   isNavigating: boolean;
   rideStats: RideStats | null;

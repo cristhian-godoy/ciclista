@@ -49,6 +49,8 @@ interface SidebarProps {
   selectedNodeId: string | null;
   onToggleInspectorMode: () => void;
   onSelectNodeId: (id: string | null) => void;
+  selectedAlternativeTargetId: string | null;
+  setSelectedAlternativeTargetId: (id: string | null) => void;
 }
 
 /**
@@ -79,6 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedNodeId,
   onToggleInspectorMode,
   onSelectNodeId,
+  selectedAlternativeTargetId,
+  setSelectedAlternativeTargetId,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -150,6 +154,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
                     }
                     onClose={() => onSelectNodeId(null)}
+                    selectedAlternativeTargetId={selectedAlternativeTargetId}
+                    setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
                   />
                 )}
             </>

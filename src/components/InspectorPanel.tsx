@@ -7,6 +7,8 @@ interface InspectorPanelProps {
   evaluations: AlternativeEdgeEvaluation[];
   nextNodeId: string | undefined;
   onClose: () => void;
+  selectedAlternativeTargetId: string | null;
+  setSelectedAlternativeTargetId: (id: string | null) => void;
 }
 
 /**
@@ -18,29 +20,43 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   evaluations,
   nextNodeId,
   onClose,
+  selectedAlternativeTargetId,
+  setSelectedAlternativeTargetId,
 }) => {
   const chosenEdge = evaluations.find((ev) => ev.targetId === nextNodeId);
   const alternativeEdges = evaluations.filter((ev) => ev.targetId !== nextNodeId);
 
   const renderEdgeDetails = (ev: AlternativeEdgeEvaluation, isChosen: boolean) => {
     const hasSpeedReduction = ev.effectiveSpeedKmh < ev.baseSpeedKmh;
+    const isLockedAlternative = ev.targetId === selectedAlternativeTargetId;
 
     return (
       <div
         key={ev.targetId}
         className={`ciclista-card`}
+        onClick={() => {
+          if (!isChosen) {
+            setSelectedAlternativeTargetId(isLockedAlternative ? null : ev.targetId);
+          }
+        }}
         style={{
           padding: '12px',
           border: isChosen
             ? '1.5px solid var(--ciclista-color-brand-secondary)'
-            : '1px solid var(--ciclista-glass-border-base)',
+            : isLockedAlternative
+              ? '1.5px solid #ef4444'
+              : '1px solid var(--ciclista-glass-border-base)',
           background: isChosen
             ? 'rgba(20, 184, 166, 0.05)'
-            : 'var(--ciclista-color-surface-elevated)',
+            : isLockedAlternative
+              ? 'rgba(239, 68, 68, 0.05)'
+              : 'var(--ciclista-color-surface-elevated)',
           borderRadius: '8px',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
+          cursor: isChosen ? 'default' : 'pointer',
+          transition: 'all 0.2s ease',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -303,6 +319,133 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     );
   };
 
+  const selectedEval = evaluations.find((ev) => ev.targetId === selectedAlternativeTargetId);
+
+  const renderComparisonCard = () => {
+    if (!selectedEval) return null;
+
+    const chosenRemainingDuration =
+      selectedEval.chosenRemainingDuration ?? chosenEdge?.chosenRemainingDuration ?? 0;
+    const chosenRemainingDistance =
+      selectedEval.chosenRemainingDistance ?? chosenEdge?.chosenRemainingDistance ?? 0;
+    const chosenRemainingSignals =
+      selectedEval.chosenRemainingSignals ?? chosenEdge?.chosenRemainingSignals ?? 0;
+
+    const timeDiff = Math.round(
+      (selectedEval.altDurationSeconds ?? selectedEval.displayCostSeconds) -
+        chosenRemainingDuration,
+    );
+    const distDiff = Math.round(
+      (selectedEval.altDistanceMeters ?? selectedEval.distance) - chosenRemainingDistance,
+    );
+    const signalsDiff = (selectedEval.altSignalCount ?? 0) - chosenRemainingSignals;
+
+    const timeColor = timeDiff > 0 ? '#ef4444' : timeDiff < 0 ? '#10b981' : 'inherit';
+    const distColor = distDiff > 0 ? '#ef4444' : distDiff < 0 ? '#10b981' : 'inherit';
+    const signalsColor = signalsDiff > 0 ? '#ef4444' : signalsDiff < 0 ? '#10b981' : 'inherit';
+
+    const timeSign = timeDiff >= 0 ? `+${timeDiff}` : `${timeDiff}`;
+    const distSign = distDiff >= 0 ? `+${distDiff}` : `${distDiff}`;
+    const signalsSign = signalsDiff >= 0 ? `+${signalsDiff}` : `${signalsDiff}`;
+
+    return (
+      <div
+        className="ciclista-card"
+        style={{
+          padding: '12px',
+          border: '1.5px solid #ef4444',
+          background: 'rgba(239, 68, 68, 0.04)',
+          borderRadius: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#ef4444' }}>
+            Comparing paths to destination
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedAlternativeTargetId(null);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--ciclista-color-text-secondary)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              padding: '0 4px',
+            }}
+            title="Clear comparison"
+          >
+            &times;
+          </button>
+        </div>
+        <div style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}>
+          Chosen remaining vs <strong style={{ color: '#ef4444' }}>{selectedEval.name}</strong>{' '}
+          alternative:
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            gap: '8px',
+            textAlign: 'center',
+            marginTop: '4px',
+          }}
+        >
+          <div style={{ borderRight: '1px solid var(--ciclista-glass-border-base)' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
+              Time Diff
+            </div>
+            <div
+              style={{
+                fontWeight: 'bold',
+                color: timeColor,
+                fontSize: '0.85rem',
+                marginTop: '2px',
+              }}
+            >
+              {timeSign}s
+            </div>
+          </div>
+          <div style={{ borderRight: '1px solid var(--ciclista-glass-border-base)' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
+              Dist Diff
+            </div>
+            <div
+              style={{
+                fontWeight: 'bold',
+                color: distColor,
+                fontSize: '0.85rem',
+                marginTop: '2px',
+              }}
+            >
+              {distSign}m
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
+              Signals Diff
+            </div>
+            <div
+              style={{
+                fontWeight: 'bold',
+                color: signalsColor,
+                fontSize: '0.85rem',
+                marginTop: '2px',
+              }}
+            >
+              {signalsSign}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="ciclista-card"
@@ -350,6 +493,8 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
       >
         Selected Node ID: <span style={{ fontFamily: 'monospace' }}>{selectedNodeId}</span>
       </div>
+
+      {renderComparisonCard()}
 
       <div
         className="inspector-scroll-area"

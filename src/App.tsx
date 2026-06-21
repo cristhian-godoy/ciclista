@@ -24,6 +24,8 @@ export default function App() {
     isInspectorModeActive,
     selectedNodeId,
     setSelectedNodeId,
+    selectedAlternativeTargetId,
+    setSelectedAlternativeTargetId,
     toggleInspectorMode,
     resetInspectorMode,
   } = useInspectorMode();
@@ -160,6 +162,8 @@ export default function App() {
         selectedNodeId={selectedNodeId}
         onToggleInspectorMode={toggleInspectorMode}
         onSelectNodeId={setSelectedNodeId}
+        selectedAlternativeTargetId={selectedAlternativeTargetId}
+        setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
       />
       <MapView
         graph={graph}
@@ -183,6 +187,8 @@ export default function App() {
         isInspectorModeActive={isInspectorModeActive}
         selectedNodeId={selectedNodeId}
         setSelectedNodeId={setSelectedNodeId}
+        selectedAlternativeTargetId={selectedAlternativeTargetId}
+        setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
         navigationState={navigation.state}
         isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
         rideStats={navigation.rideStats}
