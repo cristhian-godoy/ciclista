@@ -167,34 +167,50 @@ export const InspectorLayer: React.FC = () => {
           const nextNodeId = pathNodeIds[pathNodeIds.indexOf(selNodeId ?? '') + 1];
           const chosenEval = evaluations?.find((ev) => ev.targetId === nextNodeId);
 
-          let contentHtml = '';
-          if (hoveredEval.targetId === nextNodeId) {
+          const isChosen = hoveredEval.targetId === nextNodeId;
+          const chosenRemainingDuration =
+            hoveredEval.chosenRemainingDuration ?? chosenEval?.chosenRemainingDuration ?? 0;
+          const chosenRemainingDistance =
+            hoveredEval.chosenRemainingDistance ?? chosenEval?.chosenRemainingDistance ?? 0;
+          const chosenRemainingSignals =
+            hoveredEval.chosenRemainingSignals ?? chosenEval?.chosenRemainingSignals ?? 0;
+
+          let contentHtml: string;
+          if (isChosen) {
             contentHtml = `
               <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
                 <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #10b981;">
                   ${hoveredEval.name} (Chosen Path)
                 </div>
-                <div><strong>Time:</strong> ${Math.round(hoveredEval.displayCostSeconds)}s</div>
-                <div><strong>Distance:</strong> ${Math.round(hoveredEval.distance)}m</div>
+                <div><strong>Remaining Time:</strong> ${Math.round(chosenRemainingDuration)}s</div>
+                <div><strong>Remaining Dist:</strong> ${Math.round(chosenRemainingDistance)}m</div>
+                <div><strong>Remaining Signals:</strong> ${chosenRemainingSignals}</div>
                 <div><strong>Speed:</strong> ${hoveredEval.effectiveSpeedKmh.toFixed(1)} km/h</div>
                 <div><strong>Comfort:</strong> ${hoveredEval.comfort}</div>
               </div>
             `;
-          } else if (chosenEval) {
+          } else {
             const timeDiff = Math.round(
-              hoveredEval.displayCostSeconds - chosenEval.displayCostSeconds,
+              (hoveredEval.altDurationSeconds ?? hoveredEval.displayCostSeconds) -
+                chosenRemainingDuration,
             );
-            const distDiff = Math.round(hoveredEval.distance - chosenEval.distance);
+            const distDiff = Math.round(
+              (hoveredEval.altDistanceMeters ?? hoveredEval.distance) - chosenRemainingDistance,
+            );
+            const signalsDiff = (hoveredEval.altSignalCount ?? 0) - chosenRemainingSignals;
+
             const timeSign = timeDiff >= 0 ? `+${timeDiff}` : `${timeDiff}`;
             const distSign = distDiff >= 0 ? `+${distDiff}` : `${distDiff}`;
+            const signalsSign = signalsDiff >= 0 ? `+${signalsDiff}` : `${signalsDiff}`;
 
             contentHtml = `
               <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
                 <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #ef4444;">
-                  ${hoveredEval.name}
+                  ${hoveredEval.name} (Alternative)
                 </div>
-                <div><strong>Time:</strong> ${timeSign}s</div>
-                <div><strong>Distance:</strong> ${distSign}m</div>
+                <div><strong>Total Time:</strong> ${timeSign}s</div>
+                <div><strong>Total Distance:</strong> ${distSign}m</div>
+                <div><strong>Total Signals:</strong> ${signalsSign}</div>
                 <div><strong>Speed:</strong> ${hoveredEval.effectiveSpeedKmh.toFixed(1)} km/h</div>
                 <div><strong>Comfort:</strong> ${hoveredEval.comfort}</div>
               </div>
@@ -329,15 +345,18 @@ export const InspectorLayer: React.FC = () => {
           if (!endNode) return;
 
           const isChosen = ev.targetId === nextNodeId;
+          const coordinates = ev.altCoordinates
+            ? ev.altCoordinates.map((c) => [c.lng, c.lat])
+            : [
+                [startNode.lng, startNode.lat],
+                [endNode.lng, endNode.lat],
+              ];
 
           lineFeatures.push({
             type: 'Feature',
             geometry: {
               type: 'LineString',
-              coordinates: [
-                [startNode.lng, startNode.lat],
-                [endNode.lng, endNode.lat],
-              ],
+              coordinates,
             },
             properties: {
               targetId: ev.targetId,
