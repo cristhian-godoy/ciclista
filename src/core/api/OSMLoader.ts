@@ -1,11 +1,10 @@
 import { API_CONFIG } from '../common/constants';
-import { getChunkBBox, getChunksInBBox, mergeChunksToBBox } from '../common/geo';
+import { getChunksInBBox, mergeChunksToBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import { OSMGraphParser } from '../graph/parser';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
-import { getValidCacheEntries } from '../storage/cache';
-import { addDataUsage } from '../storage/dataUsage';
+import { OSMCacheReader } from './OSMCacheReader';
 import { fetchWithCacheAndFallback } from './overpass';
 
 const parser = new OSMGraphParser();
@@ -24,21 +23,6 @@ export interface OSMLoadResult {
  */
 export class OSMLoader {
   private static activeFetchPromise: Promise<void> | null = null;
-
-  /**
-   * Helper to check if child bbox is fully contained in parent bbox.
-   */
-  private static isBBoxContained(
-    child: [number, number, number, number],
-    parent: [number, number, number, number],
-  ): boolean {
-    return (
-      child[0] >= parent[0] - 0.000001 &&
-      child[1] >= parent[1] - 0.000001 &&
-      child[2] <= parent[2] + 0.000001 &&
-      child[3] <= parent[3] + 0.000001
-    );
-  }
 
   /**
    * Loads OSM data for a given viewport bounding box by resolving chunks,
@@ -62,65 +46,10 @@ export class OSMLoader {
       `Resolving ${neededChunks.length} needed chunks out of ${requiredChunks.length} required.`,
     );
 
-    const validCache = await getValidCacheEntries();
-    const cachedChunkIds: string[] = [];
-    const networkChunkIds: string[] = [];
-
-    for (const chunkId of neededChunks) {
-      const chunkBBox = getChunkBBox(chunkId);
-      const isCached = validCache.some((entry) => this.isBBoxContained(chunkBBox, entry.bbox));
-      if (isCached) {
-        cachedChunkIds.push(chunkId);
-      } else {
-        networkChunkIds.push(chunkId);
-      }
-    }
-
-    let mergedGraph: StreetGraph | null = null;
-    const loadedChunkIds: string[] = [];
-
-    if (cachedChunkIds.length > 0) {
-      logger.log(`Loading ${cachedChunkIds.length} chunks directly from local CacheStorage.`);
-      const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
-
-      const urlToChunkIds = new Map<string, string[]>();
-      for (const chunkId of cachedChunkIds) {
-        const chunkBBox = getChunkBBox(chunkId);
-        const entry = validCache.find((e) => this.isBBoxContained(chunkBBox, e.bbox));
-        if (entry) {
-          const list = urlToChunkIds.get(entry.url) || [];
-          list.push(chunkId);
-          urlToChunkIds.set(entry.url, list);
-        } else {
-          networkChunkIds.push(chunkId);
-        }
-      }
-
-      for (const [url, chunkIds] of urlToChunkIds.entries()) {
-        try {
-          const cachedResponse = await cacheInstance.match(new Request(url));
-          if (cachedResponse) {
-            const text = await cachedResponse.text();
-            try {
-              const size = new Blob([text]).size;
-              addDataUsage(size, true);
-            } catch (e) {
-              logger.warn(`Failed to estimate cached data size for URL ${url}:`, e);
-            }
-            const data = JSON.parse(text);
-            const parsed = parser.parse(data);
-            mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
-            loadedChunkIds.push(...chunkIds);
-          } else {
-            logger.warn(`No cached response found for URL ${url}`);
-            networkChunkIds.push(...chunkIds);
-          }
-        } catch (err) {
-          logger.warn(`Failed to read cached response for URL ${url}:`, err);
-          networkChunkIds.push(...chunkIds);
-        }
-      }
-    }
+    const cacheResult = await OSMCacheReader.readChunks(neededChunks);
+    let mergedGraph = cacheResult.graph;
+    const loadedChunkIds = [...cacheResult.loadedChunkIds];
+    const networkChunkIds = cacheResult.missingChunkIds;
 
     if (networkChunkIds.length > 0) {
       const mergedBBox = mergeChunksToBBox(networkChunkIds);

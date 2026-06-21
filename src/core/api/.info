@@ -1,3 +1,5 @@
+OSMCacheReader.ts
+	Service to check and load chunk data directly from browser CacheStorage, separating cache resolution from network fetching.
 OSMLoader.ts
 	OSM raw data chunk loader, cache orchestrator and queue lock service.
 OSMLoader.test.ts
@@ -10,4 +12,5 @@ style.test.ts
 	Unit tests checking map stylesheet layer filtering and POI removal logic.
 style.ts
 	MapLibre theme style fetcher with programmatic POI layer removal and CacheStorage support.
+
 
