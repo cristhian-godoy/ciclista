@@ -51,6 +51,7 @@ describe('OSMLoader service', () => {
 
     const mockCache = {
       match: vi.fn().mockResolvedValue({
+        text: async () => JSON.stringify(mockResponse),
         json: async () => mockResponse,
       }),
     };
