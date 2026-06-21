@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { fetchWithCacheAndFallback } from '../core/api/overpass';
-import { API_CONFIG, MAP_CONFIG } from '../core/common/constants';
-import { calculateBoundingBox, isInsideLoadedArea } from '../core/common/geo';
+import { OSMLoader } from '../core/api/OSMLoader';
+import { MAP_CONFIG } from '../core/common/constants';
+import {
+  calculateBoundingBox,
+  getChunkBBox,
+  getChunksInBBox,
+  isInsideLoadedArea,
+} from '../core/common/geo';
 import { logger } from '../core/common/logger';
 import type { Coordinate } from '../core/common/types';
 import { OSMGraphParser } from '../core/graph/parser';
@@ -37,13 +42,9 @@ export function useOSMData({
 }: UseOSMDataProps) {
   const [graph, setGraph] = useState<StreetGraph | null>(null);
   const [loadedBBoxes, setLoadedBBoxes] = useState<[number, number, number, number][]>([]);
+  const [loadedChunkIds, setLoadedChunkIds] = useState<Set<string>>(new Set());
   const [isFetchingOSM, setIsFetchingOSM] = useState<boolean>(false);
   const boundsChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const loadedBBoxesRef = useRef<[number, number, number, number][]>([]);
-
-  useEffect(() => {
-    loadedBBoxesRef.current = loadedBBoxes;
-  }, [loadedBBoxes]);
 
   useEffect(() => {
     return () => {
@@ -73,7 +74,9 @@ export function useOSMData({
           logger.warn('Initial download declined. Loading mock fallback graph.');
           const mockGraph = parser.parse(null);
           setGraph(mockGraph);
-          setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
+          const fallbackBBox: [number, number, number, number] = [48.134, 11.574, 48.144, 11.583];
+          setLoadedBBoxes([fallbackBBox]);
+          setLoadedChunkIds(new Set(getChunksInBBox(fallbackBBox)));
         }
         return;
       }
@@ -85,42 +88,38 @@ export function useOSMData({
       setSelectedNode(null); // Clear selected signal node
       setGraph(null); // Clear previous graph during load to prevent "phantom roads"
       setLoadedBBoxes([]);
+      setLoadedChunkIds(new Set());
     }
 
     try {
-      // Standard, fast, optimized bounding box query.
-      // DESIGN DECISIONS & OPTIMIZATIONS:
-      // 1. Bandwidth Savings: By fetching ways with 'out geom' (inline geometries) and requesting
-      //    only tagged nodes of interest, the node payload drops from 6,000+ to ~500 nodes per viewport.
-      //    Untagged nodes are resolved directly from way geometry, saving 75-80% of data.
-      // 2. Path Filtering: Motorways, trunks, proposed, construction, and steps are blacklisted.
-      //    General access 'no' and 'private' are blacklisted. We do not blacklist 'bicycle=no' because
-      //    cyclists can legally push or dismount their bikes on footways/pedestrian areas.
-      // 3. Node Filtering: Keeps only nodes representing controls (traffic signals, stops, yields, crossings),
-      //    micro-frictions (bollards, cycle barriers, gates, blocks, kerbs), and railway tram crossings.
-      const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
-[out:json][timeout:${API_CONFIG.QUERY_TIMEOUT_SECONDS}];
-way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|proposed|construction|abandoned|steps"]
-   ["access"!~"no|private"]
-   (${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})->.ways;
-(.ways;);
-out geom;
-(
-  node(w.ways)["highway"~"traffic_signals|stop|give_way|crossing"];
-  node(w.ways)["crossing"];
-  node(w.ways)["barrier"~"bollard|cycle_barrier|gate|block|kerb"];
-  node(w.ways)["railway"~"tram_crossing|tram_level_crossing"];
-);
-out body;`;
+      const activeChunks = merge ? loadedChunkIds : new Set<string>();
+      const result = await OSMLoader.loadViewport(bbox, activeChunks);
 
-      const data = await fetchWithCacheAndFallback(query);
-      const parsedGraph = parser.parse(data);
-      if (merge) {
-        setGraph((prev) => (prev ? mergeGraphs(prev, parsedGraph) : parsedGraph));
-        setLoadedBBoxes((prev) => [...prev, bbox]);
-      } else {
-        setGraph(parsedGraph);
-        setLoadedBBoxes([bbox]);
+      if (result) {
+        if (merge) {
+          setGraph((prev) => (prev ? mergeGraphs(prev, result.graph) : result.graph));
+          setLoadedChunkIds((prev) => {
+            const next = new Set(prev);
+            result.loadedChunkIds.forEach((id) => next.add(id));
+            return next;
+          });
+          setLoadedBBoxes((prev) => {
+            const next = [...prev];
+            result.loadedChunkIds.forEach((id) => {
+              const chunkBBox = getChunkBBox(id);
+              if (!prev.some((b) => b[0] === chunkBBox[0] && b[1] === chunkBBox[1])) {
+                next.push(chunkBBox);
+              }
+            });
+            return next;
+          });
+        } else {
+          setGraph(result.graph);
+          setLoadedChunkIds(new Set(result.loadedChunkIds));
+          setLoadedBBoxes(result.loadedChunkIds.map(getChunkBBox));
+        }
+      } else if (!merge) {
+        setGraph({ nodes: new Map() });
       }
     } catch (e: unknown) {
       logger.error('Failed to retrieve OSM network data:', e);
@@ -129,12 +128,13 @@ out body;`;
         logger.warn('Using mock fallback graph due to initial fetch failure.');
         const mockGraph = parser.parse(null);
         setGraph(mockGraph);
-        setLoadedBBoxes([[48.134, 11.574, 48.144, 11.583]]);
+        const fallbackBBox: [number, number, number, number] = [48.134, 11.574, 48.144, 11.583];
+        setLoadedBBoxes([fallbackBBox]);
+        setLoadedChunkIds(new Set(getChunksInBBox(fallbackBBox)));
         if (onFetchFallback) {
           onFetchFallback();
         }
       } else {
-        // Restore the previous valid graph
         setGraph(graph);
       }
 
@@ -190,10 +190,9 @@ out body;`;
   // Handler for preset selections
   const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
     setSelectedPreset(preset);
-    // Clear graph and loaded bounds. Once the map transitions to the new center,
-    // the map's moveend event will automatically trigger dynamic fetch of the viewport.
     setGraph(null);
     setLoadedBBoxes([]);
+    setLoadedChunkIds(new Set());
   };
 
   // Handler to load OSM data as one moves through the map
@@ -205,32 +204,8 @@ out body;`;
     }
 
     boundsChangeTimeoutRef.current = setTimeout(() => {
-      // Check if the current viewport is fully contained within our already loaded bounds
-      const isContained = loadedBBoxesRef.current.some((bbox) => {
-        return (
-          viewportBBox[0] >= bbox[0] &&
-          viewportBBox[1] >= bbox[1] &&
-          viewportBBox[2] <= bbox[2] &&
-          viewportBBox[3] <= bbox[3]
-        );
-      });
-
-      if (!isContained) {
-        // Calculate a padded bounding box around the viewport to make queries less frequent
-        const latSpan = viewportBBox[2] - viewportBBox[0];
-        const lngSpan = viewportBBox[3] - viewportBBox[1];
-
-        // Pad by 20% on all sides
-        const paddedBBox: [number, number, number, number] = [
-          viewportBBox[0] - latSpan * 0.2,
-          viewportBBox[1] - lngSpan * 0.2,
-          viewportBBox[2] + latSpan * 0.2,
-          viewportBBox[3] + lngSpan * 0.2,
-        ];
-
-        logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', paddedBBox);
-        handleFetchOSM(paddedBBox, true, true); // merge = true, silent = true
-      }
+      logger.log('Map moved to unloaded area. Fetching OSM data for viewport:', viewportBBox);
+      handleFetchOSM(viewportBBox, true, true); // merge = true, silent = true
     }, 1000);
   };
 
