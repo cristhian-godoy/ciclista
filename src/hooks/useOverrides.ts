@@ -79,6 +79,11 @@ export function useOverrides() {
     await loadCustomOverrides();
   };
 
+  const handleSaveNodeTurns = async (nodeId: string, turns: Record<string, SemanticTurnType>) => {
+    await storage.saveNodeTurns(nodeId, turns);
+    await loadCustomOverrides();
+  };
+
   const handleClearNodeOverride = async (nodeId: string) => {
     await storage.clearNodeOverrides(nodeId);
     await loadCustomOverrides();
@@ -104,6 +109,7 @@ export function useOverrides() {
     setBikeConfig,
     currentOverrides,
     handleSaveNodeOverride,
+    handleSaveNodeTurns,
     handleClearNodeOverride,
   };
 }
