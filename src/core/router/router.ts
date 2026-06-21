@@ -292,8 +292,41 @@ export class DijkstraRouter implements IRouter {
 
       if (currentEdges.length > 0) {
         const evals: AlternativeEdgeEvaluation[] = [];
+        const backwardNodeId = i > 0 ? pathNodeIds[i - 1] : null;
+
+        let parentNode: GraphNode | undefined;
+        if (i > 0 && backwardNodeId) {
+          if (virtualConfig && backwardNodeId === 'virtual-start') {
+            parentNode = virtualConfig.startNode;
+          } else if (virtualConfig && backwardNodeId === 'virtual-end') {
+            parentNode = virtualConfig.endNode;
+          } else {
+            parentNode = graph.nodes.get(backwardNodeId)?.node;
+          }
+        }
+
         for (const edge of currentEdges) {
-          evals.push(evaluateEdge(nodeId, edge, edge.target, overrides, graph, costFn));
+          if (backwardNodeId && edge.target === backwardNodeId) {
+            continue;
+          }
+
+          let neighborNode: GraphNode | undefined;
+          if (virtualConfig && edge.target === 'virtual-start') {
+            neighborNode = virtualConfig.startNode;
+          } else if (virtualConfig && edge.target === 'virtual-end') {
+            neighborNode = virtualConfig.endNode;
+          } else {
+            neighborNode = graph.nodes.get(edge.target)?.node;
+          }
+
+          let turnPenalty = 0;
+          if (parentNode && currentNode && neighborNode) {
+            turnPenalty = calculateTurnPenalty(parentNode, currentNode, neighborNode);
+          }
+
+          evals.push(
+            evaluateEdge(nodeId, edge, edge.target, overrides, graph, costFn, turnPenalty),
+          );
         }
         alternativeEvaluations[nodeId] = evals;
       }

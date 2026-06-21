@@ -146,7 +146,11 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
           </div>
         </div>
 
-        {(ev.matchedSign || ev.flatPenaltySeconds > 0 || ev.isRestricted) && (
+        {(ev.matchedSign ||
+          ev.flatPenaltySeconds > 0 ||
+          ev.isRestricted ||
+          ev.turnPenaltySeconds > 0 ||
+          ev.nodeDelaySeconds > 0) && (
           <div
             style={{
               display: 'flex',
@@ -182,7 +186,40 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                   borderRadius: '3px',
                 }}
               >
-                Penalty: +{Math.round(ev.flatPenaltySeconds)}s
+                Surface Penalty: +{Math.round(ev.flatPenaltySeconds)}s
+              </span>
+            )}
+            {ev.turnPenaltySeconds > 0 && (
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  background: 'rgba(234, 179, 8, 0.1)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                  color: 'var(--ciclista-color-brand-hover)',
+                  padding: '1px 5px',
+                  borderRadius: '3px',
+                }}
+              >
+                Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s
+              </span>
+            )}
+            {ev.nodeDelaySeconds > 0 && (
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  color: '#60a5fa',
+                  padding: '1px 5px',
+                  borderRadius: '3px',
+                }}
+              >
+                {ev.nodeDelayType === 'signal' && 'Traffic Signal Delay'}
+                {ev.nodeDelayType === 'yield' && 'Yield Delay'}
+                {ev.nodeDelayType === 'stop' && 'Stop Sign Delay'}
+                {ev.nodeDelayType === 'crossing' && 'Crossing Delay'}
+                {ev.nodeDelayType === 'custom' && 'Custom Override Delay'}
+                {!ev.nodeDelayType && 'Intersection Delay'}: +{Math.round(ev.nodeDelaySeconds)}s
               </span>
             )}
             {ev.isRestricted && (
@@ -197,7 +234,9 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                   fontWeight: 'bold',
                 }}
               >
-                Bicycle Restricted
+                {ev.restrictionReason === 'footway_not_bicycle_frei'
+                  ? 'Bicycles Prohibited (Footway)'
+                  : 'Bicycle Restricted'}
               </span>
             )}
           </div>

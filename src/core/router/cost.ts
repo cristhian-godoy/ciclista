@@ -306,6 +306,7 @@ export function evaluateEdge(
   overrides: LocalOverrides,
   graph: StreetGraph,
   costFn?: CostFunction,
+  turnPenalty?: number,
 ): AlternativeEdgeEvaluation {
   const {
     speed: effectiveSpeedMs,
@@ -362,11 +363,29 @@ export function evaluateEdge(
   }
 
   const isRestricted = ['footway', 'pedestrian', 'path'].includes(highway) && !bicycleFrei;
+  const restrictionReason = isRestricted ? 'footway_not_bicycle_frei' : null;
 
   const displayCostSeconds = calculateDisplayCost(sourceId, edge, targetId, overrides, graph);
   const routingWeight = costFn
     ? costFn(sourceId, edge, targetId, overrides, graph)
     : standardCost(sourceId, edge, targetId, overrides, graph);
+
+  // Extract node delay details
+  let nodeDelaySeconds: number;
+  let nodeDelayType: 'signal' | 'yield' | 'stop' | 'crossing' | 'custom' | null = null;
+  const customDelay = overrides.nodeDelays.get(targetId);
+  if (customDelay !== undefined) {
+    nodeDelaySeconds = customDelay;
+    nodeDelayType = 'custom';
+  } else {
+    const targetNode = graph.nodes.get(targetId)?.node;
+    const tags = targetNode?.tags || {};
+    nodeDelaySeconds = getDefaultNodeDelay(tags, overrides.rulesConfig?.nodeDelays);
+    if (nodeDelaySeconds > 0) {
+      const controlType = mapOSMNodeToControl(tags);
+      nodeDelayType = controlType as 'signal' | 'yield' | 'stop' | 'crossing' | null;
+    }
+  }
 
   return {
     targetId,
@@ -383,5 +402,9 @@ export function evaluateEdge(
     routingWeight,
     displayCostSeconds,
     isRestricted,
+    turnPenaltySeconds: turnPenalty ?? 0,
+    nodeDelaySeconds,
+    nodeDelayType,
+    restrictionReason,
   };
 }
