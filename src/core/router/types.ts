@@ -39,6 +39,7 @@ export interface RouteResult {
     matchedSign: string | null;
     matchedRoad: string;
   }[];
+  alternativeEvaluations?: Record<string, AlternativeEdgeEvaluation[]>;
 }
 
 /**
@@ -155,4 +156,24 @@ export interface RulesConfiguration {
   signs: Record<InfrastructureType, SignRuleConfig>;
   roads: Record<RoadType, RoadRuleConfig>;
   nodeDelays: NodeDelayConfig;
+}
+
+/**
+ * Detailed routing cost and physical impact evaluation for a single graph edge.
+ */
+export interface AlternativeEdgeEvaluation {
+  targetId: string;
+  name: string;
+  distance: number;
+  highway: string;
+  baseSpeedKmh: number;
+  effectiveSpeedKmh: number;
+  surface: 'paved' | 'gravel' | 'cobblestone';
+  flatPenaltySeconds: number;
+  comfort: ComfortLevel;
+  matchedSign: string | null;
+  matchedRoad: string;
+  routingWeight: number;
+  displayCostSeconds: number;
+  isRestricted: boolean;
 }
