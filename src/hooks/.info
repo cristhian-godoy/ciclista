@@ -6,3 +6,5 @@ useOverrides.ts
 	React hook persisting traffic light status overrides to local storage.
 useRoutingState.ts
 	React hook managing coordinates, routing options, and active route paths.
+useInspectorMode.ts
+	React hook managing inspector mode toggle status and selected route node.
