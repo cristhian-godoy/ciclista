@@ -180,4 +180,14 @@ export interface AlternativeEdgeEvaluation {
   nodeDelaySeconds: number;
   nodeDelayType: 'signal' | 'yield' | 'stop' | 'crossing' | 'custom' | null;
   restrictionReason: 'footway_not_bicycle_frei' | null;
+  rulePenalties?: {
+    name: string;
+    value: number;
+    type: 'turn' | 'node_delay' | 'surface' | 'road_class' | 'restriction' | 'service';
+  }[];
+  altPathNodeIds?: string[];
+  altCoordinates?: Coordinate[];
+  altDurationSeconds?: number;
+  altDistanceMeters?: number;
+  altSignalCount?: number;
 }
