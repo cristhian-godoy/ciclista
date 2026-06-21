@@ -83,12 +83,15 @@ export class DijkstraRouter implements IRouter {
     }
 
     if (virtualConfig) {
-      nodeIdToInt.set(startId, idx);
-      intToNodeId[idx] = startId;
-      idx++;
-
-      nodeIdToInt.set(endId, idx);
-      intToNodeId[idx] = endId;
+      if (!nodeIdToInt.has(startId)) {
+        nodeIdToInt.set(startId, idx);
+        intToNodeId[idx] = startId;
+        idx++;
+      }
+      if (!nodeIdToInt.has(endId)) {
+        nodeIdToInt.set(endId, idx);
+        intToNodeId[idx] = endId;
+      }
     }
 
     const startInt = nodeIdToInt.get(startId);
@@ -127,10 +130,10 @@ export class DijkstraRouter implements IRouter {
       let currentEdges: GraphEdge[] = [];
       let currentNode: GraphNode | undefined;
 
-      if (virtualConfig && currentId === startId) {
+      if (virtualConfig && currentId === 'virtual-start') {
         currentNode = virtualConfig.startNode;
         currentEdges = virtualConfig.startEdges;
-      } else if (virtualConfig && currentId === endId) {
+      } else if (virtualConfig && currentId === 'virtual-end') {
         currentNode = virtualConfig.endNode;
         currentEdges = [];
       } else {
@@ -164,18 +167,18 @@ export class DijkstraRouter implements IRouter {
         if (parentInt !== -1) {
           const parentId = intToNodeId[parentInt];
           let parentNode: GraphNode | undefined;
-          if (virtualConfig && parentId === startId) {
+          if (virtualConfig && parentId === 'virtual-start') {
             parentNode = virtualConfig.startNode;
-          } else if (virtualConfig && parentId === endId) {
+          } else if (virtualConfig && parentId === 'virtual-end') {
             parentNode = virtualConfig.endNode;
           } else {
             parentNode = graph.nodes.get(parentId)?.node;
           }
 
           let neighborNode: GraphNode | undefined;
-          if (virtualConfig && neighborId === startId) {
+          if (virtualConfig && neighborId === 'virtual-start') {
             neighborNode = virtualConfig.startNode;
-          } else if (virtualConfig && neighborId === endId) {
+          } else if (virtualConfig && neighborId === 'virtual-end') {
             neighborNode = virtualConfig.endNode;
           } else {
             neighborNode = graph.nodes.get(neighborId)?.node;
