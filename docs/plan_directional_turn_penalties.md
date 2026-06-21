@@ -19,18 +19,18 @@ _Focus: Define the types and default values for directional turn penalties and s
 
 _Focus: Update the core routing engine to differentiate between left and right turns._
 
-- [ ] **Task 1: Update Geometry Logic**
+- [x] **Task 1: Update Geometry Logic**
   - _Details_: In `src/core/common/geometry.ts`, modify `calculateTurnPenalty` to accept the new `turns` config or return a direction object so the router can apply the correct penalty. Leverage the cross-product calculation (already present in `getTurnDetails`) to correctly identify left vs. right turns.
-- [ ] **Task 2: Integrate into Router**
+- [x] **Task 2: Integrate into Router**
   - _Details_: Update `router.ts` and `cost.ts` to utilize the new directional logic. Ensure that when a standard turn occurs, the appropriate default left or right turn penalty from `rulesConfig` is applied, replacing the old hardcoded `NORMAL_TURN_PENALTY_SECONDS`.
 
 ### Milestone 3: Semantic Turn Overrides
 
 _Focus: Allow specific intersections to override standard turn penalties based on user configuration._
 
-- [ ] **Task 1: Apply Custom Turn Overrides during Routing**
+- [x] **Task 1: Apply Custom Turn Overrides during Routing**
   - _Details_: In `router.ts` (`runDijkstra` and `buildRouteStatistics`), inspect the `overrides.nodeTurns` map when traversing a node. Use a composite key like `${parentNodeId}->${nextNodeId}` to detect if the user has defined a semantic override (e.g., "Free Right Turn") for the maneuver at `currentNode`.
-- [ ] **Task 2: Evaluate Override Costs**
+- [x] **Task 2: Evaluate Override Costs**
   - _Details_: If an override is found, map the semantic turn type to its corresponding configured penalty in `rulesConfig.turns` and apply it in place of the default turn penalty.
 
 ## 📝 Notes & Open Questions

@@ -37,6 +37,26 @@ describe('calculateTurnPenalty', () => {
     const n = { lat: 0.0, lng: 0.0 };
     expect(calculateTurnPenalty(p, c, n)).toBe(30);
   });
+
+  it('supports customized turn penalties', () => {
+    const p = { lat: 0.0, lng: 0.0 };
+    const c = { lat: 1.0, lng: 0.0 };
+    const nRight = { lat: 1.0, lng: 1.0 }; // Right turn
+    const nLeft = { lat: 1.0, lng: -1.0 }; // Left turn
+    const nUTurn = { lat: 0.0, lng: 0.0 }; // U-turn
+
+    const turnsConfig = {
+      rightTurnPenaltySeconds: 2.5,
+      leftTurnPenaltySeconds: 5.5,
+      greenArrowRightTurnSeconds: 0.5,
+      indirectLeftTurnSeconds: 12,
+      uTurnPenaltySeconds: 15,
+    };
+
+    expect(calculateTurnPenalty(p, c, nRight, turnsConfig)).toBe(2.5);
+    expect(calculateTurnPenalty(p, c, nLeft, turnsConfig)).toBe(5.5);
+    expect(calculateTurnPenalty(p, c, nUTurn, turnsConfig)).toBe(15);
+  });
 });
 
 describe('getDefaultNodeDelay', () => {

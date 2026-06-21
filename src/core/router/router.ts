@@ -4,6 +4,7 @@ import {
   findNearestEdge,
   findNearestNode,
   getProjectionT,
+  getTurnDetails,
   projectPointOnSegment,
 } from '../common/geometry';
 import { logger } from '../common/logger';
@@ -13,8 +14,46 @@ import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
 import { calculateDisplayCost, evaluateEdge, standardCost } from './cost';
-import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
-import type { AlternativeEdgeEvaluation, CostFunction, IRouter, RouteResult } from './types';
+import {
+  DEFAULT_RULES_CONFIG,
+  getSurfaceType,
+  hasCycleway,
+  mapOSMNodeToControl,
+  mapOSMToSignAndRoad,
+} from './rules';
+import type {
+  AlternativeEdgeEvaluation,
+  CostFunction,
+  IRouter,
+  RouteResult,
+  RulesConfiguration,
+} from './types';
+
+/**
+ * Calculates the effective turn penalty considering default rules configuration and node turn overrides.
+ */
+export function getEffectiveTurnPenalty(
+  parentNode: GraphNode,
+  currentNode: GraphNode,
+  nextNode: GraphNode,
+  overrides: LocalOverrides,
+  rulesConfig: RulesConfiguration,
+): number {
+  const nodeOverride = overrides.nodeTurns.get(currentNode.id);
+  if (nodeOverride) {
+    const compositeKey = `${parentNode.id}->${nextNode.id}`;
+    const overrideType = nodeOverride[compositeKey];
+    if (overrideType) {
+      if (overrideType === 'right_turn') return rulesConfig.turns.rightTurnPenaltySeconds;
+      if (overrideType === 'left_turn') return rulesConfig.turns.leftTurnPenaltySeconds;
+      if (overrideType === 'green_arrow_right') return rulesConfig.turns.greenArrowRightTurnSeconds;
+      if (overrideType === 'indirect_left') return rulesConfig.turns.indirectLeftTurnSeconds;
+      if (overrideType === 'u_turn') return rulesConfig.turns.uTurnPenaltySeconds;
+    }
+  }
+
+  return calculateTurnPenalty(parentNode, currentNode, nextNode, rulesConfig.turns);
+}
 
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
@@ -71,6 +110,7 @@ export class DijkstraRouter implements IRouter {
     overrides: LocalOverrides,
     virtualConfig?: VirtualRoutingConfig,
   ): { destReached: boolean; previous: Map<string, string> } {
+    const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
     const N = graph.nodes.size + (virtualConfig ? 2 : 0);
     const nodeIdToInt = new Map<string, number>();
     const intToNodeId = new Array<string>(N);
@@ -185,7 +225,13 @@ export class DijkstraRouter implements IRouter {
           }
 
           if (parentNode && neighborNode) {
-            edgeCost += calculateTurnPenalty(parentNode, currentNode, neighborNode);
+            edgeCost += getEffectiveTurnPenalty(
+              parentNode,
+              currentNode,
+              neighborNode,
+              overrides,
+              rulesConfig,
+            );
           }
         }
 
@@ -321,7 +367,14 @@ export class DijkstraRouter implements IRouter {
               }
               const nextNNode = graph.nodes.get(nextNodeId)?.node;
               if (pNode && nextNNode) {
-                accumulatedDuration += calculateTurnPenalty(pNode, nNode, nextNNode);
+                const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+                accumulatedDuration += getEffectiveTurnPenalty(
+                  pNode,
+                  nNode,
+                  nextNNode,
+                  overrides,
+                  rulesConfig,
+                );
               }
             }
           }
@@ -391,12 +444,21 @@ export class DijkstraRouter implements IRouter {
           }
 
           let turnPenalty = 0;
+          let isUTurn = false;
           if (parentNode && currentNode && neighborNode) {
-            turnPenalty = calculateTurnPenalty(parentNode, currentNode, neighborNode);
+            const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+            turnPenalty = getEffectiveTurnPenalty(
+              parentNode,
+              currentNode,
+              neighborNode,
+              overrides,
+              rulesConfig,
+            );
+            isUTurn = getTurnDetails(parentNode, currentNode, neighborNode).direction === 'u-turn';
           }
 
           // Exclude U-turns (angle > 135 degrees)
-          if (parentNode && turnPenalty === ROUTING_CONFIG.U_TURN_PENALTY_SECONDS) {
+          if (isUTurn) {
             continue;
           }
 
@@ -483,7 +545,14 @@ export class DijkstraRouter implements IRouter {
                       }
                       const nextNNode = graph.nodes.get(nextNId)?.node;
                       if (pNode && nextNNode) {
-                        altDurationSeconds += calculateTurnPenalty(pNode, nNode, nextNNode);
+                        const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+                        altDurationSeconds += getEffectiveTurnPenalty(
+                          pNode,
+                          nNode,
+                          nextNNode,
+                          overrides,
+                          rulesConfig,
+                        );
                       }
                     }
                   }
@@ -584,7 +653,14 @@ export class DijkstraRouter implements IRouter {
             }
 
             if (parentNode && nextNode) {
-              turnPenalty = calculateTurnPenalty(parentNode, currentNode, nextNode);
+              const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+              turnPenalty = getEffectiveTurnPenalty(
+                parentNode,
+                currentNode,
+                nextNode,
+                overrides,
+                rulesConfig,
+              );
             }
           }
 

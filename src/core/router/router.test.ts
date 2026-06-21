@@ -154,4 +154,73 @@ describe('DijkstraRouter', () => {
       }
     }
   });
+
+  it('applies custom semantic turn overrides during routing', () => {
+    // Construct a path: A -> B -> C -> D -> E
+    // Turn at C (between B and D) is a left turn.
+    const testGraph: StreetGraph = {
+      nodes: new Map([
+        [
+          'A',
+          {
+            node: { id: 'A', lat: 0.0, lng: 0.0, tags: {} },
+            edges: [{ target: 'B', distance: 100, tags: { highway: 'residential' } }],
+          },
+        ],
+        [
+          'B',
+          {
+            node: { id: 'B', lat: 1.0, lng: 0.0, tags: {} },
+            edges: [{ target: 'C', distance: 100, tags: { highway: 'residential' } }],
+          },
+        ],
+        [
+          'C',
+          {
+            node: { id: 'C', lat: 2.0, lng: 0.0, tags: {} },
+            edges: [{ target: 'D', distance: 100, tags: { highway: 'residential' } }],
+          },
+        ],
+        [
+          'D',
+          {
+            node: { id: 'D', lat: 2.0, lng: -1.0, tags: {} },
+            edges: [{ target: 'E', distance: 100, tags: { highway: 'residential' } }],
+          },
+        ],
+        [
+          'E',
+          {
+            node: { id: 'E', lat: 2.0, lng: -2.0, tags: {} },
+            edges: [],
+          },
+        ],
+      ]),
+    };
+
+    const start: Coordinate = { lat: 0.0, lng: 0.0 };
+    const end: Coordinate = { lat: 2.0, lng: -2.0 };
+
+    // 1. Without overrides (default left turn penalty = 4s)
+    const result1 = router.findRoute(testGraph, start, end, standardCost, defaultOverrides);
+    expect(result1).not.toBeNull();
+    const durationWithoutOverride = result1!.totalDurationSeconds;
+
+    // 2. With a custom green arrow right turn override at C for maneuver B->D (which is 0s penalty)
+    const nodeTurnsMap = new Map();
+    nodeTurnsMap.set('C', {
+      'B->D': 'green_arrow_right',
+    });
+    const overridesWithTurn: LocalOverrides = {
+      ...defaultOverrides,
+      nodeTurns: nodeTurnsMap,
+    };
+
+    const result2 = router.findRoute(testGraph, start, end, standardCost, overridesWithTurn);
+    expect(result2).not.toBeNull();
+    const durationWithOverride = result2!.totalDurationSeconds;
+
+    // The duration with override should be exactly 4 seconds less than without override
+    expect(durationWithoutOverride - durationWithOverride).toBeCloseTo(4, 1);
+  });
 });
