@@ -12,9 +12,9 @@ import type { Coordinate } from '../common/types';
 import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
-import { calculateDisplayCost } from './cost';
+import { calculateDisplayCost, evaluateEdge } from './cost';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
-import type { CostFunction, IRouter, RouteResult } from './types';
+import type { AlternativeEdgeEvaluation, CostFunction, IRouter, RouteResult } from './types';
 
 /**
  * Classifies an OSM highway tag into one of four categories for route analytics.
@@ -210,6 +210,7 @@ export class DijkstraRouter implements IRouter {
     graph: StreetGraph,
     previous: Map<string, string>,
     endId: string,
+    costFn: CostFunction | undefined,
     overrides: LocalOverrides,
     virtualConfig?: VirtualRoutingConfig,
   ): {
@@ -225,6 +226,7 @@ export class DijkstraRouter implements IRouter {
     surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number>;
     edges: NonNullable<RouteResult['edges']>;
     totalDisplayCost: number;
+    alternativeEvaluations: Record<string, AlternativeEdgeEvaluation[]>;
   } {
     const pathNodeIds: string[] = [];
     let current = endId;
@@ -253,6 +255,7 @@ export class DijkstraRouter implements IRouter {
     const streetsSet = new Set<string>();
     const edgesDetails: NonNullable<RouteResult['edges']> = [];
     let totalDisplayCost = 0;
+    const alternativeEvaluations: Record<string, AlternativeEdgeEvaluation[]> = {};
 
     let lastSignalNode: { lat: number; lng: number } | null = null;
     let lastYieldNode: { lat: number; lng: number } | null = null;
@@ -286,6 +289,14 @@ export class DijkstraRouter implements IRouter {
 
       if (!currentNode) continue;
       coordinates.push({ lat: currentNode.lat, lng: currentNode.lng });
+
+      if (currentEdges.length > 0) {
+        const evals: AlternativeEdgeEvaluation[] = [];
+        for (const edge of currentEdges) {
+          evals.push(evaluateEdge(nodeId, edge, edge.target, overrides, graph, costFn));
+        }
+        alternativeEvaluations[nodeId] = evals;
+      }
 
       const tags = currentNode.tags || {};
       const controlType = mapOSMNodeToControl(tags);
@@ -389,6 +400,7 @@ export class DijkstraRouter implements IRouter {
       surfaceTotals,
       edges: edgesDetails,
       totalDisplayCost,
+      alternativeEvaluations,
     };
   }
 
@@ -561,6 +573,7 @@ export class DijkstraRouter implements IRouter {
       graph,
       previous,
       END_VNODE_ID,
+      costFn,
       overrides,
       virtualConfig,
     );
@@ -601,6 +614,7 @@ export class DijkstraRouter implements IRouter {
       roadTypeTotals: stats.roadTypeTotals,
       surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
+      alternativeEvaluations: stats.alternativeEvaluations,
     };
   }
 
@@ -660,7 +674,7 @@ export class DijkstraRouter implements IRouter {
       return null;
     }
 
-    const stats = this.buildRouteStatistics(graph, previous, endNodeId, overrides);
+    const stats = this.buildRouteStatistics(graph, previous, endNodeId, costFn, overrides);
 
     let finalCoords: Coordinate[] = [];
     if (stats.coordinates.length >= 2) {
@@ -707,6 +721,7 @@ export class DijkstraRouter implements IRouter {
       roadTypeTotals: stats.roadTypeTotals,
       surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
+      alternativeEvaluations: stats.alternativeEvaluations,
     };
   }
 }
