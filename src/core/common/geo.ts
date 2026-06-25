@@ -189,3 +189,19 @@ export function mergeChunksToBBox(chunkIds: string[]): [number, number, number, 
     parseFloat(globalMaxLng.toFixed(6)),
   ];
 }
+
+/**
+ * Calculates the distance between two nearby points on the Earth's surface
+ * using a fast flat-earth Pythagorean (equirectangular) approximation.
+ * Returns distance in meters.
+ */
+export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Radius of Earth in meters
+  const degToRad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * degToRad;
+  const dLon = (lon2 - lon1) * degToRad;
+  const meanLat = ((lat1 + lat2) / 2) * degToRad;
+  const x = dLon * Math.cos(meanLat);
+  const y = dLat;
+  return R * Math.sqrt(x * x + y * y);
+}
