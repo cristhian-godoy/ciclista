@@ -20,10 +20,15 @@ export const RouteAlternativesLayer: React.FC = () => {
   } = useMapContext();
 
   const onSelectAlternativeRef = useRef(onSelectAlternative);
+  const isInspectorModeActiveRef = useRef(isInspectorModeActive);
 
   useEffect(() => {
     onSelectAlternativeRef.current = onSelectAlternative;
   }, [onSelectAlternative]);
+
+  useEffect(() => {
+    isInspectorModeActiveRef.current = isInspectorModeActive;
+  }, [isInspectorModeActive]);
 
   // Setup layers and sources
   useEffect(() => {
@@ -56,6 +61,7 @@ export const RouteAlternativesLayer: React.FC = () => {
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
+            visibility: isInspectorModeActiveRef.current ? 'none' : 'visible',
           },
           paint: {
             'line-color': colors[strategy],
@@ -74,6 +80,7 @@ export const RouteAlternativesLayer: React.FC = () => {
             layout: {
               'line-join': 'round',
               'line-cap': 'round',
+              visibility: isInspectorModeActiveRef.current ? 'none' : 'visible',
             },
             paint: {
               'line-color': colors[strategy],
@@ -88,9 +95,11 @@ export const RouteAlternativesLayer: React.FC = () => {
 
     // Hover cursors
     const setPointerCursor = () => {
+      if (isInspectorModeActiveRef.current) return;
       map.getCanvas().style.cursor = 'pointer';
     };
     const resetCursor = () => {
+      if (isInspectorModeActiveRef.current) return;
       map.getCanvas().style.cursor = '';
     };
 
@@ -103,14 +112,17 @@ export const RouteAlternativesLayer: React.FC = () => {
     // Click triggers
     const handleStandardClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
+      if (isInspectorModeActiveRef.current) return;
       onSelectAlternativeRef.current('standard');
     };
     const handleAvoidStopsClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
+      if (isInspectorModeActiveRef.current) return;
       onSelectAlternativeRef.current('avoid-stops');
     };
     const handleQuietStreetsClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
+      if (isInspectorModeActiveRef.current) return;
       onSelectAlternativeRef.current('quiet-streets');
     };
 
@@ -194,10 +206,20 @@ export const RouteAlternativesLayer: React.FC = () => {
       const glowWidth = isNavigating ? (isActive ? 14 : 9) : isActive ? 9 : 9;
 
       if (map.getLayer(`route-path-layer-${strategy}`)) {
+        map.setLayoutProperty(
+          `route-path-layer-${strategy}`,
+          'visibility',
+          isInspectorModeActive ? 'none' : 'visible',
+        );
         map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', opacity);
         map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', width);
       }
       if (map.getLayer(`route-path-glow-${strategy}`)) {
+        map.setLayoutProperty(
+          `route-path-glow-${strategy}`,
+          'visibility',
+          isInspectorModeActive ? 'none' : 'visible',
+        );
         map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', glowOpacity);
         map.setPaintProperty(`route-path-glow-${strategy}`, 'line-width', glowWidth);
       }
