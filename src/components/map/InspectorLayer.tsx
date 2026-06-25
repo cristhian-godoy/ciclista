@@ -563,7 +563,7 @@ export const InspectorLayer: React.FC = () => {
     if (nodeSymbolsSource) {
       nodeSymbolsSource.setData({
         type: 'FeatureCollection',
-        features: geojsonData.nodes.filter((f) => f.properties.type !== 'turn'),
+        features: geojsonData.nodes.features.filter((f) => f.properties.type !== 'turn'),
       });
     }
 
@@ -571,7 +571,7 @@ export const InspectorLayer: React.FC = () => {
     if (turnArrowsSource) {
       turnArrowsSource.setData({
         type: 'FeatureCollection',
-        features: geojsonData.nodes.filter((f) => f.properties.type === 'turn'),
+        features: geojsonData.nodes.features.filter((f) => f.properties.type === 'turn'),
       });
     }
 
