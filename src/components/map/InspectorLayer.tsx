@@ -137,6 +137,23 @@ export const InspectorLayer: React.FC = () => {
           'text-allow-overlap': false,
           'text-ignore-placement': false,
         },
+        paint: {
+          'text-color': [
+            'match',
+            ['get', 'type'],
+            'signal',
+            '#eab308',
+            'stop',
+            '#ef4444',
+            'yield',
+            '#f97316',
+            'crossing',
+            '#3b82f6',
+            '#ffffff',
+          ],
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.5,
+        },
       });
     }
 
