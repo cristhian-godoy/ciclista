@@ -550,13 +550,29 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⚠️</span>
             <span>Yield Sign</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            title="Priority or marked crossings where yielding is mandatory. Informal or unmarked crossings are excluded."
+          >
             <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🚸</span>
             <span>Crossing</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', gridColumn: 'span 2' }}>
             <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⬆</span>
             <span>Sharp Turn Direction Cue (rotates relative to map)</span>
+          </div>
+          <div
+            style={{
+              gridColumn: 'span 2',
+              fontSize: '0.65rem',
+              color: 'var(--ciclista-color-text-secondary)',
+              marginTop: '4px',
+              borderTop: '1px solid var(--ciclista-color-border, #e5e7eb)',
+              paddingTop: '4px',
+            }}
+          >
+            * 🚸 denotes priority/marked crossings where yielding is mandatory. Informal or unmarked
+            crossings are excluded.
           </div>
         </div>
       </div>
