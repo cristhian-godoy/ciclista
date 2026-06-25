@@ -1,5 +1,4 @@
-import type { RoadRuleConfig, SignRuleConfig } from '../config';
-import { InfrastructureType, RoadType } from '../config';
+import { InfrastructureType, RoadRuleConfig, RoadType, SignRuleConfig } from '../config';
 
 /**
  * Result of mapping an OSM way's tags to infrastructure concept and road classification.
@@ -93,12 +92,20 @@ export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string
 
   // ── 6. Pedestrian zone ────────────────────────────────────────────────────
   if (highway === 'pedestrian') {
-    return { sign: InfrastructureType.PEDESTRIAN_ZONE, road: RoadType.PATH_DEFAULT, bicycleFrei };
+    return {
+      sign: InfrastructureType.PEDESTRIAN_ZONE,
+      road: RoadType.PATH_DEFAULT,
+      bicycleFrei,
+    };
   }
 
   // ── 7. Footway / sidewalk ─────────────────────────────────────────────────
   if (highway === 'footway' || highway === 'steps') {
-    return { sign: InfrastructureType.SIDEWALK, road: RoadType.PATH_DEFAULT, bicycleFrei };
+    return {
+      sign: InfrastructureType.SIDEWALK,
+      road: RoadType.PATH_DEFAULT,
+      bicycleFrei,
+    };
   }
 
   // ── 7. Road classifications ───────────────────────────────────────────────

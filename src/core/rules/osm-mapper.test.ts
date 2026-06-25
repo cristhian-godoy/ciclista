@@ -8,7 +8,7 @@ import {
   hasCycleway,
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
-} from './rules';
+} from './osm-mapper';
 
 describe('mapOSMToSignAndRoad', () => {
   // ── Bicycle street ─────────────────────────────────────────────────────────

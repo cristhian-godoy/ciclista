@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateTurnPenalty } from '../common/geometry';
-import type { LocalOverrides } from '../config';
+import {
+  InfrastructureType,
+  type LocalOverrides,
+  type NodeDelayConfig,
+  type RoadRuleConfig,
+  RoadType,
+  type SignRuleConfig,
+} from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import { calculateTurnPenalty } from '../rules';
 import {
   avoidBusyRoadsCost,
   calculateDisplayCost,
@@ -10,8 +17,6 @@ import {
   standardCost,
 } from './cost';
 import { DijkstraRouter } from './router';
-import type { NodeDelayConfig, RoadRuleConfig, SignRuleConfig } from './types';
-import { InfrastructureType, RoadType } from './types';
 
 describe('calculateTurnPenalty', () => {
   it('returns 0 for straight traversal (no turn)', () => {

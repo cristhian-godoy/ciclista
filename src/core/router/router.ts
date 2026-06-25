@@ -1,10 +1,8 @@
 import { ROUTING_CONFIG } from '../common/constants';
 import {
-  calculateTurnPenalty,
   findNearestEdge,
   findNearestNode,
   getProjectionT,
-  getTurnDetails,
   projectPointOnSegment,
 } from '../common/geometry';
 import { logger } from '../common/logger';
@@ -13,8 +11,15 @@ import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides, type RulesConfiguration } from '../config';
 import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import {
+  calculateTurnPenalty,
+  getSurfaceType,
+  getTurnDetails,
+  hasCycleway,
+  mapOSMNodeToControl,
+  mapOSMToSignAndRoad,
+} from '../rules';
 import { calculateDisplayCost, evaluateEdge } from './cost';
-import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import type { AlternativeEdgeEvaluation, CostFunction, IRouter, RouteResult } from './types';
 
 /**

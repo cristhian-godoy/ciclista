@@ -1,4 +1,4 @@
-import { mapOSMNodeToControl } from '../router/rules';
+import { mapOSMNodeToControl } from '../rules';
 import type { StreetGraph } from './types';
 
 /**
