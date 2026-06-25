@@ -10,7 +10,7 @@ import {
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from '../rules';
-import { calculateDisplayCost, evaluateEdge } from './cost';
+import { calculateDisplayCost, evaluateEdge } from './edge-metrics';
 import type { AlternativeEdgeEvaluation, CostFunction, RouteResult } from './types';
 
 /**

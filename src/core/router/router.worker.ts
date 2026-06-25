@@ -1,38 +1,26 @@
-import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './cost';
 import { DijkstraRouter } from './router';
+import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
 import type { RouteAlternative } from './types';
 
 const router = new DijkstraRouter();
+
+const STRATEGIES = [
+  { label: 'standard', costFn: standardCost },
+  { label: 'avoid-stops', costFn: avoidStoppingCost },
+  { label: 'quiet-streets', costFn: avoidBusyRoadsCost },
+] as const;
 
 self.onmessage = (e: MessageEvent) => {
   const { requestId, graph, startCoord, endCoord, overrides } = e.data;
 
   try {
-    const standardResult = router.findRoute(graph, startCoord, endCoord, standardCost, overrides);
-    const avoidStopsResult = router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      avoidStoppingCost,
-      overrides,
-    );
-    const quietResult = router.findRoute(
-      graph,
-      startCoord,
-      endCoord,
-      avoidBusyRoadsCost,
-      overrides,
-    );
-
     const alts: RouteAlternative[] = [];
-    if (standardResult) {
-      alts.push({ label: 'standard', result: standardResult });
-    }
-    if (avoidStopsResult) {
-      alts.push({ label: 'avoid-stops', result: avoidStopsResult });
-    }
-    if (quietResult) {
-      alts.push({ label: 'quiet-streets', result: quietResult });
+
+    for (const strategy of STRATEGIES) {
+      const result = router.findRoute(graph, startCoord, endCoord, strategy.costFn, overrides);
+      if (result) {
+        alts.push({ label: strategy.label, result });
+      }
     }
 
     self.postMessage({ requestId, routeAlternatives: alts });

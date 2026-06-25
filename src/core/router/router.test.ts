@@ -4,8 +4,8 @@ import type { Coordinate } from '../common/types';
 import type { LocalOverrides } from '../config';
 import { OSMGraphParser } from '../graph/parser';
 import type { StreetGraph } from '../graph/types';
-import { standardCost } from './cost';
 import { DijkstraRouter } from './router';
+import { standardCost } from './strategies';
 
 describe('DijkstraRouter', () => {
   const parser = new OSMGraphParser();
