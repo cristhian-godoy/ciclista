@@ -1,0 +1,2 @@
+audit.yml
+	GitHub Actions workflow to run dependency security audit on pushes and PRs.
