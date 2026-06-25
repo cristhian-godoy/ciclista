@@ -1,9 +1,10 @@
 import React from 'react';
 
+import { getColorForEdge } from '../core/inspector/mapper';
 import type { AlternativeEdgeEvaluation } from '../core/router/types';
 
 interface InspectorPanelProps {
-  selectedNodeId: string;
+  selectedNodeId: string | null;
   evaluations: AlternativeEdgeEvaluation[];
   nextNodeId: string | undefined;
   onClose: () => void;
@@ -29,11 +30,12 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   const renderEdgeDetails = (ev: AlternativeEdgeEvaluation, isChosen: boolean) => {
     const hasSpeedReduction = ev.effectiveSpeedKmh < ev.baseSpeedKmh;
     const isLockedAlternative = ev.targetId === selectedAlternativeTargetId;
+    const color = getColorForEdge(ev.matchedSign, ev.matchedRoad);
 
     return (
       <div
         key={ev.targetId}
-        className={`ciclista-card`}
+        className="ciclista-card"
         onClick={() => {
           if (!isChosen) {
             setSelectedAlternativeTargetId(isLockedAlternative ? null : ev.targetId);
@@ -66,8 +68,21 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                 fontWeight: 600,
                 fontSize: '0.875rem',
                 color: 'var(--ciclista-color-text-primary)',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  marginRight: '6px',
+                  flexShrink: 0,
+                }}
+              />
               {ev.name}
             </div>
             <div
@@ -446,6 +461,108 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     );
   };
 
+  const renderLegend = () => {
+    return (
+      <div
+        style={{
+          borderTop: '1px solid var(--ciclista-glass-border-base)',
+          paddingTop: '12px',
+          marginTop: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 600,
+            fontSize: '0.8rem',
+            color: 'var(--ciclista-color-text-primary)',
+          }}
+        >
+          Map Inspector Legend
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px',
+            fontSize: '0.7rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '4px',
+                borderRadius: '2px',
+                backgroundColor: '#10b981',
+              }}
+            />
+            <span>Safe / Segregated Path</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '4px',
+                borderRadius: '2px',
+                backgroundColor: '#3b82f6',
+              }}
+            />
+            <span>Acceptable / Shared Path</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '4px',
+                borderRadius: '2px',
+                backgroundColor: '#ef4444',
+              }}
+            />
+            <span>Primary / Mixed Traffic</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '4px',
+                borderRadius: '2px',
+                backgroundColor: '#8b5cf6',
+              }}
+            />
+            <span>Dismount / Pedestrian</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🚦</span>
+            <span>Traffic Light</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🛑</span>
+            <span>Stop Sign</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⚠️</span>
+            <span>Yield Sign</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🚸</span>
+            <span>Crossing</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', gridColumn: 'span 2' }}>
+            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⬆</span>
+            <span>Sharp Turn Direction Cue (rotates relative to map)</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="ciclista-card"
@@ -468,61 +585,80 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         >
           Node Inspector
         </h2>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--ciclista-color-text-secondary)',
-            cursor: 'pointer',
-            fontSize: '1.2rem',
-            padding: '2px 6px',
-          }}
-          title="Close Inspector"
-        >
-          &times;
-        </button>
-      </div>
-
-      <div
-        style={{
-          fontSize: '0.75rem',
-          color: 'var(--ciclista-color-text-secondary)',
-          marginBottom: '4px',
-        }}
-      >
-        Selected Node ID: <span style={{ fontFamily: 'monospace' }}>{selectedNodeId}</span>
-      </div>
-
-      {renderComparisonCard()}
-
-      <div
-        className="inspector-scroll-area"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          maxHeight: '320px',
-          overflowY: 'auto',
-          paddingRight: '4px',
-        }}
-      >
-        {chosenEdge && renderEdgeDetails(chosenEdge, true)}
-
-        {alternativeEdges.map((ev) => renderEdgeDetails(ev, false))}
-
-        {evaluations.length === 0 && (
-          <div
+        {selectedNodeId && (
+          <button
+            onClick={onClose}
             style={{
-              textAlign: 'center',
-              fontSize: '0.75rem',
-              color: 'var(--ciclista-color-text-muted)',
+              background: 'none',
+              border: 'none',
+              color: 'var(--ciclista-color-text-secondary)',
+              cursor: 'pointer',
+              fontSize: '1.2rem',
+              padding: '2px 6px',
             }}
+            title="Close Inspector"
           >
-            No outgoing edges from this node.
-          </div>
+            &times;
+          </button>
         )}
       </div>
+
+      {selectedNodeId ? (
+        <>
+          <div
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--ciclista-color-text-secondary)',
+              marginBottom: '4px',
+            }}
+          >
+            Selected Node ID: <span style={{ fontFamily: 'monospace' }}>{selectedNodeId}</span>
+          </div>
+
+          {renderComparisonCard()}
+
+          <div
+            className="inspector-scroll-area"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              maxHeight: '320px',
+              overflowY: 'auto',
+              paddingRight: '4px',
+            }}
+          >
+            {chosenEdge && renderEdgeDetails(chosenEdge, true)}
+
+            {alternativeEdges.map((ev) => renderEdgeDetails(ev, false))}
+
+            {evaluations.length === 0 && (
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '0.75rem',
+                  color: 'var(--ciclista-color-text-muted)',
+                }}
+              >
+                No outgoing edges from this node.
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <div
+          style={{
+            fontSize: '0.75rem',
+            color: 'var(--ciclista-color-text-secondary)',
+            textAlign: 'center',
+            padding: '8px 0',
+          }}
+        >
+          Select an intersection node on the map to inspect alternative routing decisions.
+        </div>
+      )}
+
+      {renderLegend()}
     </div>
   );
 };
