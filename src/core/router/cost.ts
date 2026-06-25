@@ -1,9 +1,15 @@
-import { getTurnDetails } from '../common/geometry';
 import type { LocalOverrides } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
-import { mapBikeConfigToImpacts } from './bike';
-import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
-import { mapRoadConfigToImpacts, mapSignConfigToImpacts } from './rules-impacts';
+import {
+  getSurfaceType,
+  getTurnDetails,
+  hasCycleway,
+  mapBikeConfigToImpacts,
+  mapOSMNodeToControl,
+  mapOSMToSignAndRoad,
+  mapRoadConfigToImpacts,
+  mapSignConfigToImpacts,
+} from '../rules';
 import type {
   AlternativeEdgeEvaluation,
   ComfortLevel,

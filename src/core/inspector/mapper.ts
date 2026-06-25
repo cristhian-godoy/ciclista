@@ -1,8 +1,7 @@
-import { getTurnDetails } from '../common/geometry';
 import type { StreetGraph } from '../graph/types';
 import { calculateBearing } from '../navigation/engine';
-import { mapOSMNodeToControl, mapOSMToSignAndRoad } from '../router/rules';
 import type { RouteResult } from '../router/types';
+import { getTurnDetails, mapOSMNodeToControl, mapOSMToSignAndRoad } from '../rules';
 import type { InspectorNodeFeature, InspectorRouteSegment } from './types';
 
 /**

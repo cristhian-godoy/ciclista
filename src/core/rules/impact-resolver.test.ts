@@ -12,7 +12,7 @@ import {
   mapSignConfigToImpacts,
   resolveRoadImpact,
   resolveSignImpact,
-} from './rules-impacts';
+} from './impact-resolver';
 
 describe('rules-impacts mappers', () => {
   describe('resolveRoadImpact', () => {

@@ -1,13 +1,6 @@
-import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from './rules';
-import type {
-  InfrastructureType,
-  ResolvedEdgeImpact,
-  RoadRuleConfig,
-  RoadType,
-  RouterRoadImpacts,
-  RouterSignImpacts,
-  SignRuleConfig,
-} from './types';
+import { InfrastructureType, RoadRuleConfig, RoadType, SignRuleConfig } from '../config';
+import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from './osm-mapper';
+import type { ResolvedEdgeImpact, RouterRoadImpacts, RouterSignImpacts } from './types';
 
 /**
  * Resolves an abstract speed type to speed in meters per second.
