@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Responsive cycling commuter route analyzer and stopping optimizer.",
   "type": "module",
-  "packageManager": "pnpm@10.4.1",
+  "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
   "scripts": {
     "build": "tsc -b && vite build",
     "dev": "vite",
@@ -49,7 +49,7 @@
     "stylelint-declaration-strict-value": "^1.11.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12",
+    "vite": "^8.0.16",
     "vitest": "^4.1.7"
   },
   "lint-staged": {
@@ -64,5 +64,12 @@
     "*.md": [
       "prettier --write"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": "^7.28.0",
+      "js-yaml": ">=4.2.0",
+      "@babel/core": ">=7.29.6"
+    }
   }
 }

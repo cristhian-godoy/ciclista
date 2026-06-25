@@ -22,5 +22,9 @@ tsconfig.node.json
 	TypeScript configuration for the Vite/Node environment.
 vite.config.ts
 	Vite environment and build configurations.
+.github
+	GitHub configuration templates and workflows.
+.npmrc
+	npm configuration file setting frozen-lockfile=true.
 LICENSE
 	MIT License and copyright notice.
