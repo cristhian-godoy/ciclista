@@ -1,3 +1,4 @@
+import { mapOSMNodeToControl } from '../router/rules';
 import type { StreetGraph } from './types';
 
 /**
@@ -58,17 +59,7 @@ export function convertGraphToGeoJSON(
   graph.nodes.forEach((entry, sourceId) => {
     const u = entry.node;
     const tags = u.tags || {};
-    let controlType: 'signal' | 'yield' | 'stop' | 'crossing' | null = null;
-
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      controlType = 'signal';
-    } else if (tags.highway === 'give_way') {
-      controlType = 'yield';
-    } else if (tags.highway === 'stop') {
-      controlType = 'stop';
-    } else if (tags.highway === 'crossing' || tags.crossing) {
-      controlType = 'crossing';
-    }
+    const controlType = mapOSMNodeToControl(tags);
 
     if (controlType) {
       const hasOverride = customNodeDelays.has(sourceId);

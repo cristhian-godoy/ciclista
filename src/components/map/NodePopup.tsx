@@ -2,6 +2,7 @@ import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucid
 import React, { useEffect, useRef, useState } from 'react';
 
 import { getTurnDetails } from '../../core/common/geometry';
+import { mapOSMNodeToControl } from '../../core/router/rules';
 import type { SemanticTurnType } from '../../core/router/types';
 import { useMapContext } from './MapContext';
 
@@ -53,18 +54,11 @@ export const NodePopup: React.FC = () => {
   } = useMapContext();
 
   const getDefaultBaseDelay = (tags: Record<string, string>): number => {
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      return 15;
-    }
-    if (tags.highway === 'give_way') {
-      return 3;
-    }
-    if (tags.highway === 'stop') {
-      return 8;
-    }
-    if (tags.highway === 'crossing' || tags.crossing) {
-      return 3;
-    }
+    const controlType = mapOSMNodeToControl(tags);
+    if (controlType === 'signal') return 15;
+    if (controlType === 'yield') return 3;
+    if (controlType === 'stop') return 8;
+    if (controlType === 'crossing') return 3;
     return 0;
   };
 
@@ -109,16 +103,7 @@ export const NodePopup: React.FC = () => {
   const getControlType = (
     tags: Record<string, string>,
   ): 'signal' | 'yield' | 'stop' | 'crossing' => {
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      return 'signal';
-    }
-    if (tags.highway === 'give_way') {
-      return 'yield';
-    }
-    if (tags.highway === 'stop') {
-      return 'stop';
-    }
-    return 'crossing';
+    return mapOSMNodeToControl(tags) || 'crossing';
   };
 
   const getControlTypeLabel = (tags: Record<string, string>): React.ReactNode => {
