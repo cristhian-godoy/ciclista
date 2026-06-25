@@ -1,7 +1,7 @@
 import { getTurnDetails } from '../common/geometry';
 import type { StreetGraph } from '../graph/types';
 import { calculateBearing } from '../navigation/engine';
-import { mapOSMToSignAndRoad } from '../router/rules';
+import { mapOSMNodeToControl, mapOSMToSignAndRoad } from '../router/rules';
 import type { RouteResult } from '../router/types';
 import type { InspectorNodeFeature, InspectorRouteSegment } from './types';
 
@@ -161,16 +161,7 @@ export function mapRouteToInspectorGeoJSON(
     const u = entry.node;
     const tags = u.tags || {};
 
-    let controlType: 'signal' | 'yield' | 'stop' | 'crossing' | null = null;
-    if (tags.highway === 'traffic_signals' || tags.crossing === 'traffic_signals') {
-      controlType = 'signal';
-    } else if (tags.highway === 'give_way') {
-      controlType = 'yield';
-    } else if (tags.highway === 'stop') {
-      controlType = 'stop';
-    } else if (tags.highway === 'crossing' || tags.crossing) {
-      controlType = 'crossing';
-    }
+    const controlType = mapOSMNodeToControl(tags);
 
     if (controlType) {
       let bearing = 0;
