@@ -144,20 +144,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               </div>
 
-              {isInspectorModeActive &&
-                selectedNodeId &&
-                routeResult.alternativeEvaluations?.[selectedNodeId] && (
-                  <InspectorPanel
-                    selectedNodeId={selectedNodeId}
-                    evaluations={routeResult.alternativeEvaluations[selectedNodeId]}
-                    nextNodeId={
-                      routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
-                    }
-                    onClose={() => onSelectNodeId(null)}
-                    selectedAlternativeTargetId={selectedAlternativeTargetId}
-                    setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
-                  />
-                )}
+              {isInspectorModeActive && (
+                <InspectorPanel
+                  selectedNodeId={selectedNodeId}
+                  evaluations={
+                    selectedNodeId ? routeResult.alternativeEvaluations?.[selectedNodeId] || [] : []
+                  }
+                  nextNodeId={
+                    selectedNodeId
+                      ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
+                      : undefined
+                  }
+                  onClose={() => onSelectNodeId(null)}
+                  selectedAlternativeTargetId={selectedAlternativeTargetId}
+                  setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+                />
+              )}
             </>
           )}
 
