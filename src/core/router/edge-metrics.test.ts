@@ -10,13 +10,9 @@ import {
 } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import { calculateTurnPenalty } from '../rules';
-import {
-  avoidBusyRoadsCost,
-  calculateDisplayCost,
-  getDefaultNodeDelay,
-  standardCost,
-} from './cost';
+import { calculateDisplayCost, getDefaultNodeDelay } from './edge-metrics';
 import { DijkstraRouter } from './router';
+import { avoidBusyRoadsCost, standardCost } from './strategies';
 
 describe('calculateTurnPenalty', () => {
   it('returns 0 for straight traversal (no turn)', () => {
