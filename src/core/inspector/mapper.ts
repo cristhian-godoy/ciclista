@@ -65,6 +65,8 @@ export function mapRouteToInspectorGeoJSON(
           roadType: edge.matchedRoad,
           surface: (edge.tags?.surface as string) || null,
           isChosenPath: true,
+          sourceId: edge.sourceId,
+          targetId: edge.targetId,
         },
       });
     });
@@ -100,6 +102,8 @@ export function mapRouteToInspectorGeoJSON(
           roadType: road,
           surface: tags.surface || null,
           isChosenPath: true,
+          sourceId: uId,
+          targetId: vId,
         },
       });
     }
@@ -139,6 +143,8 @@ export function mapRouteToInspectorGeoJSON(
             roadType: ev.matchedRoad,
             surface: ev.surface || null,
             isChosenPath: false,
+            sourceId,
+            targetId: ev.targetId,
           },
         });
       });

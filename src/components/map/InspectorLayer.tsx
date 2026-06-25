@@ -1,6 +1,7 @@
 import maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
+import { mapRouteToInspectorGeoJSON } from '../../core/inspector/mapper';
 import { useMapContext } from './MapContext';
 
 /**
@@ -55,7 +56,7 @@ export const InspectorLayer: React.FC = () => {
       });
     }
 
-    // inspector-nodes-layer
+    // inspector-nodes-layer (interactive circles for click-to-inspect)
     if (!map.getLayer('inspector-nodes-layer')) {
       map.addLayer({
         id: 'inspector-nodes-layer',
@@ -72,27 +73,99 @@ export const InspectorLayer: React.FC = () => {
       });
     }
 
-    // inspector-alternatives source
-    if (!map.getSource('inspector-alternatives')) {
-      map.addSource('inspector-alternatives', {
+    // inspector-path-segments source
+    if (!map.getSource('inspector-path-segments')) {
+      map.addSource('inspector-path-segments', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
     }
 
-    // inspector-alternatives-layer
-    if (!map.getLayer('inspector-alternatives-layer')) {
+    // inspector-path-segments-layer
+    if (!map.getLayer('inspector-path-segments-layer')) {
       map.addLayer({
-        id: 'inspector-alternatives-layer',
+        id: 'inspector-path-segments-layer',
         type: 'line',
-        source: 'inspector-alternatives',
+        source: 'inspector-path-segments',
         layout: {
           'line-join': 'round',
           'line-cap': 'round',
         },
         paint: {
-          'line-color': ['case', ['get', 'isChosen'], '#10b981', '#ef4444'],
-          'line-width': 4,
+          'line-color': ['get', 'color'],
+          'line-width': ['case', ['boolean', ['get', 'isChosenPath'], false], 6, 4],
+          'line-opacity': ['case', ['boolean', ['get', 'isChosenPath'], false], 1.0, 0.6],
+          'line-dasharray': [
+            'case',
+            ['boolean', ['get', 'isChosenPath'], false],
+            ['literal', [1, 0]],
+            ['literal', [3, 2]],
+          ],
+        },
+      });
+    }
+
+    // inspector-node-symbols source
+    if (!map.getSource('inspector-node-symbols')) {
+      map.addSource('inspector-node-symbols', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // inspector-node-symbols-layer (always visible signs: 🛑, 🚦, etc.)
+    if (!map.getLayer('inspector-node-symbols-layer')) {
+      map.addLayer({
+        id: 'inspector-node-symbols-layer',
+        type: 'symbol',
+        source: 'inspector-node-symbols',
+        layout: {
+          'text-field': [
+            'match',
+            ['get', 'type'],
+            'signal',
+            '🚦',
+            'stop',
+            '🛑',
+            'yield',
+            '⚠️',
+            'crossing',
+            '🚸',
+            '',
+          ],
+          'text-size': 14,
+          'text-allow-overlap': false,
+          'text-ignore-placement': false,
+        },
+      });
+    }
+
+    // inspector-turn-arrows source
+    if (!map.getSource('inspector-turn-arrows')) {
+      map.addSource('inspector-turn-arrows', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // inspector-turn-arrows-layer (always visible sharp turns arrows)
+    if (!map.getLayer('inspector-turn-arrows-layer')) {
+      map.addLayer({
+        id: 'inspector-turn-arrows-layer',
+        type: 'symbol',
+        source: 'inspector-turn-arrows',
+        layout: {
+          'text-field': '⬆',
+          'text-size': 12,
+          'text-rotate': ['get', 'bearing'],
+          'text-rotation-alignment': 'map',
+          'text-allow-overlap': false,
+          'text-ignore-placement': false,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.5,
         },
       });
     }
@@ -191,21 +264,22 @@ export const InspectorLayer: React.FC = () => {
       if (e.features && e.features.length > 0) {
         map.getCanvas().style.cursor = 'pointer';
         const feature = e.features[0];
+        const sourceId = feature.properties.sourceId;
         const targetId = feature.properties.targetId;
-        const selNodeId = selectedNodeIdRef.current;
+        const isChosen = feature.properties.isChosenPath;
         const alts = routeAlternativesRef.current;
         const activeLabel = activeAlternativeLabelRef.current;
 
         const activeRoute = alts.find((a) => a.label === activeLabel);
         const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
-        const evaluations = activeRoute?.result?.alternativeEvaluations?.[selNodeId ?? ''];
+        const evaluations = activeRoute?.result?.alternativeEvaluations?.[sourceId ?? ''];
         const hoveredEval = evaluations?.find((ev) => ev.targetId === targetId);
 
         if (hoveredEval) {
-          const nextNodeId = pathNodeIds[pathNodeIds.indexOf(selNodeId ?? '') + 1];
+          const nextNodeId = pathNodeIds[pathNodeIds.indexOf(sourceId ?? '') + 1];
           const chosenEval = evaluations?.find((ev) => ev.targetId === nextNodeId);
 
-          const isChosen = hoveredEval.targetId === nextNodeId;
+          const isChosenPath = isChosen;
           const chosenRemainingDuration =
             hoveredEval.chosenRemainingDuration ?? chosenEval?.chosenRemainingDuration ?? 0;
           const chosenRemainingDistance =
@@ -242,7 +316,7 @@ export const InspectorLayer: React.FC = () => {
           }
 
           let contentHtml: string;
-          if (isChosen) {
+          if (isChosenPath) {
             contentHtml = `
               <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
                 <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #10b981;">
@@ -285,7 +359,7 @@ export const InspectorLayer: React.FC = () => {
             `;
           }
 
-          if (!isChosen && hoveredEval.altCoordinates) {
+          if (!isChosenPath && hoveredEval.altCoordinates) {
             const highlightedSource = map.getSource(
               'inspector-highlighted-path',
             ) as maplibregl.GeoJSONSource;
@@ -359,9 +433,11 @@ export const InspectorLayer: React.FC = () => {
     const onAltClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
       if (e.features && e.features.length > 0) {
+        const sourceId = e.features[0].properties.sourceId;
         const targetId = e.features[0].properties.targetId;
-        const isChosen = e.features[0].properties.isChosen;
+        const isChosen = e.features[0].properties.isChosenPath;
         if (!isChosen) {
+          setSelectedNodeIdRef.current(sourceId);
           const currentSelected = selectedAlternativeTargetIdRef.current;
           setSelectedAlternativeTargetIdRef.current(currentSelected === targetId ? null : targetId);
         }
@@ -371,25 +447,33 @@ export const InspectorLayer: React.FC = () => {
     map.on('mousemove', 'inspector-nodes-layer', onMouseMove);
     map.on('mouseleave', 'inspector-nodes-layer', onMouseLeave);
     map.on('click', 'inspector-nodes-layer', onClick);
-    map.on('mousemove', 'inspector-alternatives-layer', onAltMouseMove);
-    map.on('mouseleave', 'inspector-alternatives-layer', onAltMouseLeave);
-    map.on('click', 'inspector-alternatives-layer', onAltClick);
+    map.on('mousemove', 'inspector-path-segments-layer', onAltMouseMove);
+    map.on('mouseleave', 'inspector-path-segments-layer', onAltMouseLeave);
+    map.on('click', 'inspector-path-segments-layer', onAltClick);
 
     return () => {
       map.off('mousemove', 'inspector-nodes-layer', onMouseMove);
       map.off('mouseleave', 'inspector-nodes-layer', onMouseLeave);
       map.off('click', 'inspector-nodes-layer', onClick);
-      map.off('mousemove', 'inspector-alternatives-layer', onAltMouseMove);
-      map.off('mouseleave', 'inspector-alternatives-layer', onAltMouseLeave);
-      map.off('click', 'inspector-alternatives-layer', onAltClick);
+      map.off('mousemove', 'inspector-path-segments-layer', onAltMouseMove);
+      map.off('mouseleave', 'inspector-path-segments-layer', onAltMouseLeave);
+      map.off('click', 'inspector-path-segments-layer', onAltClick);
       popup.remove();
 
       if (map.getLayer('inspector-nodes-layer')) map.removeLayer('inspector-nodes-layer');
       if (map.getSource('inspector-nodes')) map.removeSource('inspector-nodes');
 
-      if (map.getLayer('inspector-alternatives-layer'))
-        map.removeLayer('inspector-alternatives-layer');
-      if (map.getSource('inspector-alternatives')) map.removeSource('inspector-alternatives');
+      if (map.getLayer('inspector-path-segments-layer'))
+        map.removeLayer('inspector-path-segments-layer');
+      if (map.getSource('inspector-path-segments')) map.removeSource('inspector-path-segments');
+
+      if (map.getLayer('inspector-node-symbols-layer'))
+        map.removeLayer('inspector-node-symbols-layer');
+      if (map.getSource('inspector-node-symbols')) map.removeSource('inspector-node-symbols');
+
+      if (map.getLayer('inspector-turn-arrows-layer'))
+        map.removeLayer('inspector-turn-arrows-layer');
+      if (map.getSource('inspector-turn-arrows')) map.removeSource('inspector-turn-arrows');
 
       if (map.getLayer('inspector-highlighted-path-layer'))
         map.removeLayer('inspector-highlighted-path-layer');
@@ -411,7 +495,9 @@ export const InspectorLayer: React.FC = () => {
     const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
 
     const nodesSource = map.getSource('inspector-nodes') as maplibregl.GeoJSONSource;
-    const alternativesSource = map.getSource('inspector-alternatives') as maplibregl.GeoJSONSource;
+    const segmentsSource = map.getSource('inspector-path-segments') as maplibregl.GeoJSONSource;
+    const nodeSymbolsSource = map.getSource('inspector-node-symbols') as maplibregl.GeoJSONSource;
+    const turnArrowsSource = map.getSource('inspector-turn-arrows') as maplibregl.GeoJSONSource;
     const labelsSource = map.getSource('inspector-alternative-labels') as maplibregl.GeoJSONSource;
     const highlightedSource = map.getSource(
       'inspector-highlighted-path',
@@ -419,14 +505,21 @@ export const InspectorLayer: React.FC = () => {
 
     if (!isInspectorModeActive || pathNodeIds.length === 0) {
       if (nodesSource) nodesSource.setData({ type: 'FeatureCollection', features: [] });
-      if (alternativesSource)
-        alternativesSource.setData({ type: 'FeatureCollection', features: [] });
+      if (segmentsSource) segmentsSource.setData({ type: 'FeatureCollection', features: [] });
+      if (nodeSymbolsSource) nodeSymbolsSource.setData({ type: 'FeatureCollection', features: [] });
+      if (turnArrowsSource) turnArrowsSource.setData({ type: 'FeatureCollection', features: [] });
       if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
       if (highlightedSource) highlightedSource.setData({ type: 'FeatureCollection', features: [] });
       return;
     }
 
-    // 1. Nodes GeoJSON
+    // Run mapper to get unified geojson data
+    const geojsonData = mapRouteToInspectorGeoJSON(
+      activeRoute.result,
+      graph ?? { nodes: new Map() },
+    );
+
+    // 1. Nodes GeoJSON (interactive click points)
     const nodeFeatures = pathNodeIds
       .map((nodeId, idx) => {
         const entry = graph?.nodes.get(nodeId);
@@ -461,24 +554,32 @@ export const InspectorLayer: React.FC = () => {
       });
     }
 
-    // 2. Alternative Edges GeoJSON
+    // 2. Set segments data
+    if (segmentsSource) {
+      segmentsSource.setData(geojsonData.segments);
+    }
+
+    // 3. Set node symbols (traffic lights, stops, yields, crossings)
+    if (nodeSymbolsSource) {
+      nodeSymbolsSource.setData({
+        type: 'FeatureCollection',
+        features: geojsonData.nodes.filter((f) => f.properties.type !== 'turn'),
+      });
+    }
+
+    // 4. Set turn arrows
+    if (turnArrowsSource) {
+      turnArrowsSource.setData({
+        type: 'FeatureCollection',
+        features: geojsonData.nodes.filter((f) => f.properties.type === 'turn'),
+      });
+    }
+
+    // 5. Setup Alternative labels only for selectedNodeId
     if (selectedNodeId && graph && activeRoute?.result?.alternativeEvaluations?.[selectedNodeId]) {
       const evaluations = activeRoute.result.alternativeEvaluations[selectedNodeId];
-      const nextNodeId = pathNodeIds[pathNodeIds.indexOf(selectedNodeId) + 1];
-
       const startNode = graph.nodes.get(selectedNodeId)?.node;
       if (startNode) {
-        const lineFeatures: Array<{
-          type: 'Feature';
-          geometry: {
-            type: 'LineString';
-            coordinates: number[][];
-          };
-          properties: {
-            targetId: string;
-            isChosen: boolean;
-          };
-        }> = [];
         const labelFeatures: Array<{
           type: 'Feature';
           geometry: {
@@ -493,32 +594,6 @@ export const InspectorLayer: React.FC = () => {
         evaluations.forEach((ev) => {
           const endNode = graph.nodes.get(ev.targetId)?.node;
           if (!endNode) return;
-
-          const isChosen = ev.targetId === nextNodeId;
-          const coordinates = isChosen
-            ? ev.altCoordinates
-              ? ev.altCoordinates.map((c) => [c.lng, c.lat])
-              : [
-                  [startNode.lng, startNode.lat],
-                  [endNode.lng, endNode.lat],
-                ]
-            : [
-                [startNode.lng, startNode.lat],
-                [endNode.lng, endNode.lat],
-              ];
-
-          lineFeatures.push({
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates,
-            },
-            properties: {
-              targetId: ev.targetId,
-              isChosen,
-            },
-          });
-
           const midLng = (startNode.lng + endNode.lng) / 2;
           const midLat = (startNode.lat + endNode.lat) / 2;
           labelFeatures.push({
@@ -533,12 +608,6 @@ export const InspectorLayer: React.FC = () => {
           });
         });
 
-        if (alternativesSource) {
-          alternativesSource.setData({
-            type: 'FeatureCollection',
-            features: lineFeatures,
-          });
-        }
         if (labelsSource) {
           labelsSource.setData({
             type: 'FeatureCollection',
@@ -546,17 +615,13 @@ export const InspectorLayer: React.FC = () => {
           });
         }
       } else {
-        if (alternativesSource)
-          alternativesSource.setData({ type: 'FeatureCollection', features: [] });
         if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
       }
     } else {
-      if (alternativesSource)
-        alternativesSource.setData({ type: 'FeatureCollection', features: [] });
       if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
     }
 
-    // 3. Highlighted Locked Path GeoJSON
+    // 6. Highlighted Locked Path GeoJSON
     if (highlightedSource) {
       if (selectedNodeId && selectedAlternativeTargetId) {
         const lockedEval = activeRoute?.result?.alternativeEvaluations?.[selectedNodeId]?.find(

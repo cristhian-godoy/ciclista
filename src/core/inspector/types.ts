@@ -24,6 +24,14 @@ export interface InspectorRouteSegmentProperties {
    * True if the segment is part of the chosen main path, false if it's an alternative.
    */
   isChosenPath: boolean;
+  /**
+   * The start node ID of this segment.
+   */
+  sourceId?: string;
+  /**
+   * The end node ID of this segment.
+   */
+  targetId?: string;
 }
 
 /**
