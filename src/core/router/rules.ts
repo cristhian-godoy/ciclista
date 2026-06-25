@@ -126,6 +126,9 @@ export function mapOSMToSignAndRoad(highway: string, tags: Record<string, string
 
 /**
  * Classifies an OSM node's tags into a traffic control type.
+ * Note: Only relevant crossings (e.g. zebra, marked) that strictly require yielding or stopping
+ * are classified as 'crossing'. Unmarked, informal, or generic highway=crossing tags without priority
+ * specifications return null to be treated as standard non-delay nodes.
  */
 export function mapOSMNodeToControl(
   tags: Record<string, string>,
