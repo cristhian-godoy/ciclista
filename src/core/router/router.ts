@@ -13,7 +13,7 @@ import type { Coordinate } from '../common/types';
 import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import type { LocalOverrides } from '../storage/types';
-import { calculateDisplayCost, evaluateEdge, standardCost } from './cost';
+import { calculateDisplayCost, evaluateEdge } from './cost';
 import {
   DEFAULT_RULES_CONFIG,
   getSurfaceType,
@@ -462,105 +462,6 @@ export class DijkstraRouter implements IRouter {
             continue;
           }
 
-          // Run Dijkstra projection from the alternative target to the route destination
-          const { destReached, previous: prevAlt } = this.runDijkstra(
-            graph,
-            edge.target,
-            endId,
-            costFn || standardCost,
-            overrides,
-            virtualConfig,
-          );
-
-          let altPathNodeIds: string[] = [];
-          const altCoordinates: Coordinate[] = [];
-          let altDistanceMeters = edge.distance;
-          let altDurationSeconds = 0;
-          let altSignalCount = 0;
-
-          if (destReached) {
-            const path: string[] = [];
-            let curr = endId;
-            while (curr && curr !== edge.target) {
-              path.unshift(curr);
-              curr = prevAlt.get(curr) || '';
-            }
-            if (curr === edge.target) {
-              path.unshift(edge.target);
-            }
-
-            altPathNodeIds = path;
-
-            for (let j = 0; j < path.length; j++) {
-              const nId = path[j];
-              let nNode: GraphNode | undefined;
-              if (virtualConfig && nId === 'virtual-start') {
-                nNode = virtualConfig.startNode;
-              } else if (virtualConfig && nId === 'virtual-end') {
-                nNode = virtualConfig.endNode;
-              } else {
-                nNode = graph.nodes.get(nId)?.node;
-              }
-
-              if (nNode) {
-                altCoordinates.push({ lat: nNode.lat, lng: nNode.lng });
-
-                const nodeTags = nNode.tags || {};
-                if (mapOSMNodeToControl(nodeTags) === 'signal') {
-                  altSignalCount++;
-                }
-
-                if (j < path.length - 1) {
-                  const nextNId = path[j + 1];
-                  let nextNodeEdges: GraphEdge[];
-                  if (virtualConfig && nId === 'virtual-start') {
-                    nextNodeEdges = virtualConfig.startEdges;
-                  } else {
-                    const baseEdges = graph.nodes.get(nId)?.edges || [];
-                    const extraEdge = virtualConfig?.endVirtualEdges.get(nId);
-                    nextNodeEdges =
-                      virtualConfig && extraEdge ? [...baseEdges, extraEdge] : baseEdges;
-                  }
-
-                  const nextEdge = nextNodeEdges.find((e) => e.target === nextNId);
-                  if (nextEdge) {
-                    altDistanceMeters += nextEdge.distance;
-                    altDurationSeconds += calculateDisplayCost(
-                      nId,
-                      nextEdge,
-                      nextNId,
-                      overrides,
-                      graph,
-                    );
-
-                    if (j > 0) {
-                      const pId = path[j - 1];
-                      let pNode: GraphNode | undefined;
-                      if (virtualConfig && pId === 'virtual-start') {
-                        pNode = virtualConfig.startNode;
-                      } else if (virtualConfig && pId === 'virtual-end') {
-                        pNode = virtualConfig.endNode;
-                      } else {
-                        pNode = graph.nodes.get(pId)?.node;
-                      }
-                      const nextNNode = graph.nodes.get(nextNId)?.node;
-                      if (pNode && nextNNode) {
-                        const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
-                        altDurationSeconds += getEffectiveTurnPenalty(
-                          pNode,
-                          nNode,
-                          nextNNode,
-                          overrides,
-                          rulesConfig,
-                        );
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-
           const evaluation = evaluateEdge(
             nodeId,
             edge,
@@ -571,20 +472,6 @@ export class DijkstraRouter implements IRouter {
             turnPenalty,
             backwardNodeId || undefined,
           );
-
-          if (destReached) {
-            const firstNode = graph.nodes.get(nodeId)?.node;
-            const fullCoords = firstNode
-              ? [{ lat: firstNode.lat, lng: firstNode.lng }, ...altCoordinates]
-              : altCoordinates;
-
-            evaluation.altPathNodeIds = altPathNodeIds;
-            evaluation.altCoordinates = fullCoords;
-            evaluation.altDurationSeconds =
-              evaluation.displayCostSeconds + turnPenalty + altDurationSeconds;
-            evaluation.altDistanceMeters = altDistanceMeters;
-            evaluation.altSignalCount = altSignalCount;
-          }
 
           evaluation.chosenRemainingDuration = remainingDurations[i];
           evaluation.chosenRemainingDistance = remainingDistances[i];
