@@ -1,6 +1,6 @@
+import { haversineDistance } from '../common/geo';
 import { getProjectionT, projectPointOnSegment } from '../common/geometry';
 import type { Coordinate } from '../common/types';
-import { haversineDistance } from '../graph/parser';
 import type { RouteResult } from '../router/types';
 import type { NavigationProgress, RideStats, SnappedPosition } from './types';
 

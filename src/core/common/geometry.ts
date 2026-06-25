@@ -1,5 +1,5 @@
-import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, StreetGraph } from '../graph/types';
+import { haversineDistance } from './geo';
 import type { Coordinate } from './types';
 
 /**
