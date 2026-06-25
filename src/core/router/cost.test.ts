@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { calculateTurnPenalty } from '../common/geometry';
+import type { LocalOverrides } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
-import type { LocalOverrides } from '../storage/types';
 import {
   avoidBusyRoadsCost,
   calculateDisplayCost,

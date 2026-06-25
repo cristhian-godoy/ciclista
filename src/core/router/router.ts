@@ -10,24 +10,12 @@ import {
 import { logger } from '../common/logger';
 import { MinHeap } from '../common/MinHeap';
 import type { Coordinate } from '../common/types';
+import { DEFAULT_RULES_CONFIG, type LocalOverrides, type RulesConfiguration } from '../config';
 import { haversineDistance } from '../graph/parser';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
-import type { LocalOverrides } from '../storage/types';
 import { calculateDisplayCost, evaluateEdge } from './cost';
-import {
-  DEFAULT_RULES_CONFIG,
-  getSurfaceType,
-  hasCycleway,
-  mapOSMNodeToControl,
-  mapOSMToSignAndRoad,
-} from './rules';
-import type {
-  AlternativeEdgeEvaluation,
-  CostFunction,
-  IRouter,
-  RouteResult,
-  RulesConfiguration,
-} from './types';
+import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
+import type { AlternativeEdgeEvaluation, CostFunction, IRouter, RouteResult } from './types';
 
 /**
  * Calculates the effective turn penalty considering default rules configuration and node turn overrides.

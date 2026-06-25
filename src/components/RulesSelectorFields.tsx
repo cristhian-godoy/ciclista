@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import type { ComfortLevel } from '../core/router/types';
+import type { ComfortLevel } from '../core/config';
 
 interface SpeedTypeSelectorProps {
   value: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';

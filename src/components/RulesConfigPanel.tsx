@@ -10,15 +10,16 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
-import type {
-  NodeDelayConfig,
-  RoadRuleConfig,
-  RulesConfiguration,
-  SignRuleConfig,
-  TurnRuleConfig,
-} from '../core/router/types';
-import { InfrastructureType, RoadType } from '../core/router/types';
+import {
+  DEFAULT_RULES_CONFIG,
+  InfrastructureType,
+  type NodeDelayConfig,
+  type RoadRuleConfig,
+  RoadType,
+  type RulesConfiguration,
+  type SignRuleConfig,
+  type TurnRuleConfig,
+} from '../core/config';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
 import { TurnDelaySection } from './TurnDelaySection';

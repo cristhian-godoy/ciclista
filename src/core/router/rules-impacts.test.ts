@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_RULES_CONFIG } from './rules';
+import {
+  DEFAULT_RULES_CONFIG,
+  InfrastructureType,
+  type RoadRuleConfig,
+  RoadType,
+  type SignRuleConfig,
+} from '../config';
 import {
   mapRoadConfigToImpacts,
   mapSignConfigToImpacts,
   resolveRoadImpact,
   resolveSignImpact,
 } from './rules-impacts';
-import type { RoadRuleConfig, SignRuleConfig } from './types';
-import { InfrastructureType, RoadType } from './types';
 
 describe('rules-impacts mappers', () => {
   describe('resolveRoadImpact', () => {

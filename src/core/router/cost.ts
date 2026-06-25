@@ -1,6 +1,6 @@
 import { getTurnDetails } from '../common/geometry';
+import type { LocalOverrides } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
-import type { LocalOverrides } from '../storage/types';
 import { mapBikeConfigToImpacts } from './bike';
 import { getSurfaceType, hasCycleway, mapOSMNodeToControl, mapOSMToSignAndRoad } from './rules';
 import { mapRoadConfigToImpacts, mapSignConfigToImpacts } from './rules-impacts';

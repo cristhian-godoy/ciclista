@@ -1,8 +1,8 @@
 import { Bike, ChevronDown, ChevronUp, Footprints, Home, Route } from 'lucide-react';
 import React, { useState } from 'react';
 
+import type { RoadRuleConfig, SignRuleConfig } from '../core/config';
 import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from '../core/router/rules';
-import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
 import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
 
 const getIcon = (iconCode: string): React.ReactNode => {

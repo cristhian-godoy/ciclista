@@ -1,7 +1,7 @@
 import { Bike, Gauge, Layers, RefreshCw, Zap } from 'lucide-react';
 import React from 'react';
 
-import type { BikeConfig, BikeProfileId } from '../core/storage/types';
+import type { BikeConfig, BikeProfileId } from '../core/config';
 
 interface RoutingConfigPanelProps {
   selectedPreset: 'munich' | 'amsterdam';

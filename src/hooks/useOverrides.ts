@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
-import type { RulesConfiguration, SemanticTurnType } from '../core/router/types';
+import {
+  type BikeConfig,
+  DEFAULT_RULES_CONFIG,
+  type LocalOverrides,
+  type RulesConfiguration,
+  type SemanticTurnType,
+} from '../core/config';
 import { LocalStorageProvider } from '../core/storage/storage';
-import type { BikeConfig, LocalOverrides } from '../core/storage/types';
 
 const storage = new LocalStorageProvider();
 

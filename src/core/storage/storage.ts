@@ -1,5 +1,5 @@
 import { logger } from '../common/logger';
-import type { RulesConfiguration, SemanticTurnType } from '../router/types';
+import type { RulesConfiguration, SemanticTurnType } from '../config';
 import type { IStorageProvider, LocalOverrides } from './types';
 
 /**
