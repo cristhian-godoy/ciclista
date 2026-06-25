@@ -172,11 +172,25 @@ export const RouteAlternativesLayer: React.FC = () => {
 
       // Update styling dynamically based on active selection & navigation mode
       const isActive = activeAlternativeLabel === strategy;
-      const opacity =
-        isNavigating || isInspectorModeActive ? (isActive ? 1.0 : 0.0) : isActive ? 1.0 : 0.4;
+      const opacity = isInspectorModeActive
+        ? 0.0
+        : isNavigating
+          ? isActive
+            ? 1.0
+            : 0.0
+          : isActive
+            ? 1.0
+            : 0.4;
       const width = isNavigating ? (isActive ? 8 : 4) : isActive ? 6 : 4;
-      const glowOpacity =
-        isNavigating || isInspectorModeActive ? (isActive ? 0.35 : 0.0) : isActive ? 0.3 : 0.0;
+      const glowOpacity = isInspectorModeActive
+        ? 0.0
+        : isNavigating
+          ? isActive
+            ? 0.35
+            : 0.0
+          : isActive
+            ? 0.3
+            : 0.0;
       const glowWidth = isNavigating ? (isActive ? 14 : 9) : isActive ? 9 : 9;
 
       if (map.getLayer(`route-path-layer-${strategy}`)) {

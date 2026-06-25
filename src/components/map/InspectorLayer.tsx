@@ -48,31 +48,6 @@ export const InspectorLayer: React.FC = () => {
   useEffect(() => {
     if (!map) return;
 
-    // inspector-nodes source
-    if (!map.getSource('inspector-nodes')) {
-      map.addSource('inspector-nodes', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // inspector-nodes-layer (interactive circles for click-to-inspect)
-    if (!map.getLayer('inspector-nodes-layer')) {
-      map.addLayer({
-        id: 'inspector-nodes-layer',
-        type: 'circle',
-        source: 'inspector-nodes',
-        paint: {
-          'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 9, 6],
-          'circle-color': '#3b82f6',
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.9,
-          'circle-stroke-opacity': 0.9,
-        },
-      });
-    }
-
     // inspector-path-segments source
     if (!map.getSource('inspector-path-segments')) {
       map.addSource('inspector-path-segments', {
@@ -101,6 +76,31 @@ export const InspectorLayer: React.FC = () => {
             ['literal', [1, 0]],
             ['literal', [3, 2]],
           ],
+        },
+      });
+    }
+
+    // inspector-nodes source
+    if (!map.getSource('inspector-nodes')) {
+      map.addSource('inspector-nodes', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // inspector-nodes-layer (interactive circles for click-to-inspect)
+    if (!map.getLayer('inspector-nodes-layer')) {
+      map.addLayer({
+        id: 'inspector-nodes-layer',
+        type: 'circle',
+        source: 'inspector-nodes',
+        paint: {
+          'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 9, 6],
+          'circle-color': '#3b82f6',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.9,
+          'circle-stroke-opacity': 0.9,
         },
       });
     }
@@ -517,6 +517,7 @@ export const InspectorLayer: React.FC = () => {
     const geojsonData = mapRouteToInspectorGeoJSON(
       activeRoute.result,
       graph ?? { nodes: new Map() },
+      selectedNodeId,
     );
 
     // 1. Nodes GeoJSON (interactive click points)

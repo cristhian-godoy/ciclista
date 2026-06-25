@@ -130,7 +130,7 @@ describe('mapRouteToInspectorGeoJSON', () => {
       edges: [],
     });
 
-    const result = mapRouteToInspectorGeoJSON(route, graph);
+    const result = mapRouteToInspectorGeoJSON(route, graph, '2');
 
     // 2 chosen edges + 1 alternative edge (targetId 4) = 3 segments
     expect(result.segments.features.length).toBe(3);

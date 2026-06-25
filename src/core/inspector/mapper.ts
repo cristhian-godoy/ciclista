@@ -32,6 +32,7 @@ export function getColorForEdge(matchedSign: string | null, matchedRoad: string)
 export function mapRouteToInspectorGeoJSON(
   route: RouteResult,
   graph: StreetGraph,
+  selectedNodeId: string | null = null,
 ): {
   segments: { type: 'FeatureCollection'; features: InspectorRouteSegment[] };
   nodes: { type: 'FeatureCollection'; features: InspectorNodeFeature[] };
@@ -109,46 +110,47 @@ export function mapRouteToInspectorGeoJSON(
     }
   }
 
-  // 2. Process Alternative Evaluations
-  if (route.alternativeEvaluations) {
-    Object.entries(route.alternativeEvaluations).forEach(([sourceId, evals]) => {
-      const sourceNode = graph.nodes.get(sourceId)?.node;
-      if (!sourceNode) return;
+  // 2. Process Alternative Evaluations (only for the selected node)
+  if (route.alternativeEvaluations && selectedNodeId) {
+    const evals = route.alternativeEvaluations[selectedNodeId];
+    if (evals) {
+      const sourceNode = graph.nodes.get(selectedNodeId)?.node;
+      if (sourceNode) {
+        evals.forEach((ev) => {
+          const targetNode = graph.nodes.get(ev.targetId)?.node;
+          if (!targetNode) return;
 
-      evals.forEach((ev) => {
-        const targetNode = graph.nodes.get(ev.targetId)?.node;
-        if (!targetNode) return;
+          const segKey = `${selectedNodeId}->${ev.targetId}`;
+          const isChosen = processedSegments.has(segKey);
+          if (isChosen) return;
 
-        const segKey = `${sourceId}->${ev.targetId}`;
-        const isChosen = processedSegments.has(segKey);
-        if (isChosen) return;
+          const coords =
+            ev.altCoordinates && ev.altCoordinates.length >= 2
+              ? ev.altCoordinates.map((c) => [c.lng, c.lat])
+              : [
+                  [sourceNode.lng, sourceNode.lat],
+                  [targetNode.lng, targetNode.lat],
+                ];
 
-        const coords =
-          ev.altCoordinates && ev.altCoordinates.length >= 2
-            ? ev.altCoordinates.map((c) => [c.lng, c.lat])
-            : [
-                [sourceNode.lng, sourceNode.lat],
-                [targetNode.lng, targetNode.lat],
-              ];
-
-        segmentFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: coords,
-          },
-          properties: {
-            color: getColorForEdge(ev.matchedSign, ev.matchedRoad),
-            infrastructureType: ev.matchedSign,
-            roadType: ev.matchedRoad,
-            surface: ev.surface || null,
-            isChosenPath: false,
-            sourceId,
-            targetId: ev.targetId,
-          },
+          segmentFeatures.push({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: coords,
+            },
+            properties: {
+              color: getColorForEdge(ev.matchedSign, ev.matchedRoad),
+              infrastructureType: ev.matchedSign,
+              roadType: ev.matchedRoad,
+              surface: ev.surface || null,
+              isChosenPath: false,
+              sourceId: selectedNodeId,
+              targetId: ev.targetId,
+            },
+          });
         });
-      });
-    });
+      }
+    }
   }
 
   // 3. Extract Node Symbols/Events
