@@ -1,4 +1,4 @@
-import type { BikeConfig } from '../storage/types';
+import type { BikeConfig } from '../config';
 
 /**
  * Impacts and modifiers of a specific bike configuration on routing metrics.

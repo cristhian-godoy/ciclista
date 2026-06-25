@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Coordinate } from '../common/types';
+import type { LocalOverrides } from '../config';
 import { OSMGraphParser } from '../graph/parser';
 import type { StreetGraph } from '../graph/types';
-import type { LocalOverrides } from '../storage/types';
 import { standardCost } from './cost';
 import { DijkstraRouter } from './router';
 

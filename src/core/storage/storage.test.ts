@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { InfrastructureType, RulesConfiguration } from '../router/types';
+import type { InfrastructureType, RulesConfiguration } from '../config';
 import { LocalStorageProvider } from './storage';
 
 describe('LocalStorageProvider', () => {

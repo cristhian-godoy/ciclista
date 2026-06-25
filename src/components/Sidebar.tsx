@@ -12,9 +12,9 @@ import {
 import React, { useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
+import type { BikeConfig, RulesConfiguration } from '../core/config';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
-import type { RouteAlternative, RouteResult, RulesConfiguration } from '../core/router/types';
-import type { BikeConfig } from '../core/storage/types';
+import type { RouteAlternative, RouteResult } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
 import { DataSaverPanel } from './DataSaverPanel';
 import { InspectorPanel } from './InspectorPanel';

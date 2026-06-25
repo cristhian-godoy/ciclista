@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import type { TurnRuleConfig } from '../core/router/types';
+import type { TurnRuleConfig } from '../core/config';
 
 interface TurnRowProps {
   label: string;

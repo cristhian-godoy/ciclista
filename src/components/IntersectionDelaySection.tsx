@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import type { NodeDelayConfig } from '../core/router/types';
+import type { NodeDelayConfig } from '../core/config';
 
 interface IntersectionRowProps {
   label: string;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { InfrastructureType, RoadType } from '../config';
 import {
   getEffectiveRoadSpeedType,
   getEffectiveSignSpeedType,
@@ -8,7 +9,6 @@ import {
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from './rules';
-import { InfrastructureType, RoadType } from './types';
 
 describe('mapOSMToSignAndRoad', () => {
   // ── Bicycle street ─────────────────────────────────────────────────────────

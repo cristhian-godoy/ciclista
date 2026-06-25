@@ -2,8 +2,8 @@ import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucid
 import React, { useEffect, useRef, useState } from 'react';
 
 import { getTurnDetails } from '../../core/common/geometry';
+import type { SemanticTurnType } from '../../core/config';
 import { mapOSMNodeToControl } from '../../core/router/rules';
-import type { SemanticTurnType } from '../../core/router/types';
 import { useMapContext } from './MapContext';
 
 function getBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {

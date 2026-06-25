@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DEFAULT_RULES_CONFIG } from '../core/router/rules';
+import { DEFAULT_RULES_CONFIG } from '../core/config';
 import { RulesConfigPanel } from './RulesConfigPanel';
 
 describe('RulesConfigPanel', () => {

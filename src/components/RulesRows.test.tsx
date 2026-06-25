@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RoadRuleConfig, SignRuleConfig } from '../core/router/types';
-import { InfrastructureType } from '../core/router/types';
+import type { RoadRuleConfig, SignRuleConfig } from '../core/config';
+import { InfrastructureType } from '../core/config';
 import { RoadRow, SignRow } from './RulesRows';
 
 describe('RulesRows Components', () => {
