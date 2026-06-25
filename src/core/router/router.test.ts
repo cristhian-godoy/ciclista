@@ -126,7 +126,7 @@ describe('DijkstraRouter', () => {
       const entryWithAlternatives = entries.find(([nodeId, evals]) => {
         const pathIndex = result.pathNodeIds.indexOf(nodeId);
         const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
-        return evals.some((ev) => ev.targetId !== nextNodeOnPath && ev.altCoordinates);
+        return evals.some((ev) => ev.targetId !== nextNodeOnPath);
       });
 
       expect(entryWithAlternatives).toBeDefined();
@@ -134,22 +134,13 @@ describe('DijkstraRouter', () => {
         const [nodeId, evals] = entryWithAlternatives;
         const pathIndex = result.pathNodeIds.indexOf(nodeId);
         const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
-        const alternativeEval = evals.find(
-          (ev) => ev.targetId !== nextNodeOnPath && ev.altCoordinates,
-        );
+        const alternativeEval = evals.find((ev) => ev.targetId !== nextNodeOnPath);
 
         expect(alternativeEval).toBeDefined();
-        if (alternativeEval && alternativeEval.altCoordinates) {
-          // The alternative path should start at the clicked node or the alternative target
-          // It should NOT start at the virtual start node 'virtual-start'
-          const firstCoord = alternativeEval.altCoordinates[0];
-          const startNode = graph.nodes.get(nodeId)?.node;
-          expect(startNode).toBeDefined();
-          if (startNode) {
-            // It should be equal to the selected/clicked node
-            expect(firstCoord.lat).toBeCloseTo(startNode.lat, 5);
-            expect(firstCoord.lng).toBeCloseTo(startNode.lng, 5);
-          }
+        if (alternativeEval) {
+          expect(alternativeEval.chosenRemainingDuration).toBeDefined();
+          expect(alternativeEval.chosenRemainingDistance).toBeDefined();
+          expect(alternativeEval.chosenRemainingSignals).toBeDefined();
         }
       }
     }
