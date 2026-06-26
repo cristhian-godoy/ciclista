@@ -19,6 +19,7 @@ export const InspectorLayer: React.FC = () => {
     activeAlternativeLabel,
     selectedAlternativeTargetId,
     setSelectedAlternativeTargetId,
+    inspectorBranches,
   } = useMapContext();
 
   const setSelectedNodeIdRef = useRef(setSelectedNodeId);
@@ -27,6 +28,7 @@ export const InspectorLayer: React.FC = () => {
   const activeAlternativeLabelRef = useRef(activeAlternativeLabel);
   const selectedAlternativeTargetIdRef = useRef(selectedAlternativeTargetId);
   const setSelectedAlternativeTargetIdRef = useRef(setSelectedAlternativeTargetId);
+  const inspectorBranchesRef = useRef(inspectorBranches);
 
   useEffect(() => {
     setSelectedNodeIdRef.current = setSelectedNodeId;
@@ -35,6 +37,7 @@ export const InspectorLayer: React.FC = () => {
     activeAlternativeLabelRef.current = activeAlternativeLabel;
     selectedAlternativeTargetIdRef.current = selectedAlternativeTargetId;
     setSelectedAlternativeTargetIdRef.current = setSelectedAlternativeTargetId;
+    inspectorBranchesRef.current = inspectorBranches;
   }, [
     setSelectedNodeId,
     selectedNodeId,
@@ -42,6 +45,7 @@ export const InspectorLayer: React.FC = () => {
     activeAlternativeLabel,
     selectedAlternativeTargetId,
     setSelectedAlternativeTargetId,
+    inspectorBranches,
   ]);
 
   // Setup layers and sources
@@ -289,7 +293,7 @@ export const InspectorLayer: React.FC = () => {
 
         const activeRoute = alts.find((a) => a.label === activeLabel);
         const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
-        const evaluations = activeRoute?.result?.alternativeEvaluations?.[sourceId ?? ''];
+        const evaluations = inspectorBranchesRef.current;
         const hoveredEval = evaluations?.find((ev) => ev.targetId === targetId);
 
         if (hoveredEval) {
@@ -420,11 +424,7 @@ export const InspectorLayer: React.FC = () => {
       ) as maplibregl.GeoJSONSource;
       if (highlightedSource) {
         const lockedId = selectedAlternativeTargetIdRef.current;
-        const selNodeId = selectedNodeIdRef.current;
-        const alts = routeVariantsRef.current;
-        const activeLabel = activeAlternativeLabelRef.current;
-        const activeRoute = alts.find((a) => a.label === activeLabel);
-        const evaluations = activeRoute?.result?.alternativeEvaluations?.[selNodeId ?? ''];
+        const evaluations = inspectorBranchesRef.current;
         const lockedEval = evaluations?.find((ev) => ev.targetId === lockedId);
 
         if (lockedEval && lockedEval.altCoordinates) {
@@ -535,6 +535,7 @@ export const InspectorLayer: React.FC = () => {
       activeRoute.result,
       graph ?? { nodes: new Map() },
       selectedNodeId,
+      inspectorBranches,
     );
 
     // 1. Nodes GeoJSON (interactive click points)
@@ -543,11 +544,14 @@ export const InspectorLayer: React.FC = () => {
         const entry = graph?.nodes.get(nodeId);
         if (!entry) return null;
 
-        const evals = activeRoute?.result?.alternativeEvaluations?.[nodeId] ?? [];
         const nextNodeId = pathNodeIds[idx + 1];
-        const alternativeEvals = evals.filter((ev) => ev.targetId !== nextNodeId);
+        const prevNodeId = idx > 0 ? pathNodeIds[idx - 1] : null;
 
-        if (alternativeEvals.length === 0) {
+        const hasDiverging = entry.edges.some(
+          (edge) => edge.target !== nextNodeId && edge.target !== prevNodeId,
+        );
+
+        if (!hasDiverging) {
           return null;
         }
 
@@ -594,8 +598,8 @@ export const InspectorLayer: React.FC = () => {
     }
 
     // 5. Setup Alternative labels only for selectedNodeId
-    if (selectedNodeId && graph && activeRoute?.result?.alternativeEvaluations?.[selectedNodeId]) {
-      const evaluations = activeRoute.result.alternativeEvaluations[selectedNodeId];
+    if (selectedNodeId && graph && inspectorBranches.length > 0) {
+      const evaluations = inspectorBranches;
       const startNode = graph.nodes.get(selectedNodeId)?.node;
       if (startNode) {
         const labelFeatures: Array<{
@@ -642,7 +646,7 @@ export const InspectorLayer: React.FC = () => {
     // 6. Highlighted Locked Path GeoJSON
     if (highlightedSource) {
       if (selectedNodeId && selectedAlternativeTargetId) {
-        const lockedEval = activeRoute?.result?.alternativeEvaluations?.[selectedNodeId]?.find(
+        const lockedEval = inspectorBranches.find(
           (ev) => ev.targetId === selectedAlternativeTargetId,
         );
         if (lockedEval && lockedEval.altCoordinates) {
@@ -674,6 +678,7 @@ export const InspectorLayer: React.FC = () => {
     selectedAlternativeTargetId,
     routeVariants,
     activeAlternativeLabel,
+    inspectorBranches,
   ]);
 
   return null;

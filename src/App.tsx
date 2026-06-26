@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
@@ -137,67 +138,73 @@ export default function App() {
   });
 
   return (
-    <div className="app-container">
-      <Sidebar
-        startCoord={startCoord}
-        endCoord={endCoord}
-        routeResult={routeResult}
-        routeVariants={routeVariants}
-        routingStrategy={routingStrategy}
-        isFetchingOSM={isFetchingOSM}
-        onStrategyChange={setRoutingStrategy}
-        selectedPreset={selectedPreset}
-        onPresetChange={onPresetChange}
-        rulesConfig={rulesConfig}
-        onRulesChange={setRulesConfig}
-        bikeConfig={bikeConfig}
-        onBikeConfigChange={setBikeConfig}
-        theme={theme}
-        onThemeChange={setTheme}
-        isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
-        onStartNavigation={navigation.startNavigation}
-        onStopNavigation={navigation.stopNavigation}
-        navigationProgress={navigation.state.progress}
-        onToggleCameraMode={navigation.toggleCameraMode}
-        cameraMode={navigation.state.cameraMode}
-        isInspectorModeActive={isInspectorModeActive}
-        selectedNodeId={selectedNodeId}
-        onToggleInspectorMode={toggleInspectorMode}
-        onSelectNodeId={setSelectedNodeId}
-        selectedAlternativeTargetId={selectedAlternativeTargetId}
-        setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
-      />
-      <MapView
-        graph={graph}
-        loadedBBoxes={loadedBBoxes}
-        startCoord={startCoord}
-        endCoord={endCoord}
-        routeVariants={routeVariants}
-        activeAlternativeLabel={routingStrategy}
-        onSelectAlternative={setRoutingStrategy}
-        selectedPreset={selectedPreset}
-        customNodeDelays={nodeDelays}
-        customNodeNotes={nodeNotes}
-        customNodeTurns={nodeTurns}
-        selectedNode={selectedNode}
-        onStartDrag={handleStartDrag}
-        onEndDrag={handleEndDrag}
-        onNodeSelect={setSelectedNode}
-        onSaveNodeOverride={handleSaveNodeOverride}
-        onSaveNodeTurns={handleSaveNodeTurns}
-        onClearNodeOverride={handleClearNodeOverride}
-        onMapBoundsChange={handleMapBoundsChange}
-        theme={theme}
-        isInspectorModeActive={isInspectorModeActive}
-        selectedNodeId={selectedNodeId}
-        setSelectedNodeId={setSelectedNodeId}
-        selectedAlternativeTargetId={selectedAlternativeTargetId}
-        setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
-        navigationState={navigation.state}
-        isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
-        rideStats={navigation.rideStats}
-        onStopNavigation={navigation.stopNavigation}
-      />
-    </div>
+    <MapProvider
+      graph={graph}
+      loadedBBoxes={loadedBBoxes}
+      startCoord={startCoord}
+      endCoord={endCoord}
+      routeVariants={routeVariants}
+      activeAlternativeLabel={routingStrategy}
+      onSelectAlternative={setRoutingStrategy}
+      selectedPreset={selectedPreset}
+      customNodeDelays={nodeDelays}
+      customNodeNotes={nodeNotes}
+      customNodeTurns={nodeTurns}
+      rulesConfig={rulesConfig}
+      bikeConfig={bikeConfig}
+      selectedNode={selectedNode}
+      onStartDrag={handleStartDrag}
+      onEndDrag={handleEndDrag}
+      onNodeSelect={setSelectedNode}
+      onSaveNodeOverride={handleSaveNodeOverride}
+      onSaveNodeTurns={handleSaveNodeTurns}
+      onClearNodeOverride={handleClearNodeOverride}
+      onMapBoundsChange={handleMapBoundsChange}
+      theme={theme}
+      isInspectorModeActive={isInspectorModeActive}
+      selectedNodeId={selectedNodeId}
+      setSelectedNodeId={setSelectedNodeId}
+      selectedAlternativeTargetId={selectedAlternativeTargetId}
+      setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+      navigationState={navigation.state}
+      isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
+      rideStats={navigation.rideStats}
+      onStopNavigation={navigation.stopNavigation}
+    >
+      <div className="app-container">
+        <Sidebar
+          startCoord={startCoord}
+          endCoord={endCoord}
+          routeResult={routeResult}
+          routeVariants={routeVariants}
+          routingStrategy={routingStrategy}
+          isFetchingOSM={isFetchingOSM}
+          onStrategyChange={setRoutingStrategy}
+          selectedPreset={selectedPreset}
+          onPresetChange={onPresetChange}
+          rulesConfig={rulesConfig}
+          onRulesChange={setRulesConfig}
+          bikeConfig={bikeConfig}
+          onBikeConfigChange={setBikeConfig}
+          theme={theme}
+          onThemeChange={setTheme}
+          isNavigating={
+            navigation.state.status === 'active' || navigation.state.status === 'paused'
+          }
+          onStartNavigation={navigation.startNavigation}
+          onStopNavigation={navigation.stopNavigation}
+          navigationProgress={navigation.state.progress}
+          onToggleCameraMode={navigation.toggleCameraMode}
+          cameraMode={navigation.state.cameraMode}
+          isInspectorModeActive={isInspectorModeActive}
+          selectedNodeId={selectedNodeId}
+          onToggleInspectorMode={toggleInspectorMode}
+          onSelectNodeId={setSelectedNodeId}
+          selectedAlternativeTargetId={selectedAlternativeTargetId}
+          setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+        />
+        <MapView onMapBoundsChange={handleMapBoundsChange} />
+      </div>
+    </MapProvider>
   );
 }

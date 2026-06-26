@@ -147,9 +147,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {isInspectorModeActive && (
                 <InspectorPanel
                   selectedNodeId={selectedNodeId}
-                  evaluations={
-                    selectedNodeId ? routeResult.alternativeEvaluations?.[selectedNodeId] || [] : []
-                  }
                   nextNodeId={
                     selectedNodeId
                       ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]

@@ -2,10 +2,12 @@ import type maplibregl from 'maplibre-gl';
 import React, { createContext, useContext, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
-import type { SemanticTurnType } from '../../core/config';
+import type { BikeConfig, RulesConfiguration, SemanticTurnType } from '../../core/config';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
+import type { InspectorBranchEvaluation } from '../../core/inspector/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
 import type { StrategyRouteVariant } from '../../core/router/types';
+import { useIntersectionBranches } from '../../hooks/useIntersectionBranches';
 
 /**
  * Context menu display state structure.
@@ -53,6 +55,7 @@ export interface MapContextType {
   setSelectedNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
+  inspectorBranches: InspectorBranchEvaluation[];
 
   // Declarative camera fitting state
   shouldFitBounds: boolean;
@@ -109,6 +112,8 @@ interface MapProviderProps {
   setSelectedNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
+  rulesConfig: RulesConfiguration;
+  bikeConfig: BikeConfig;
   navigationState: NavigationState;
   isNavigating: boolean;
   rideStats: RideStats | null;
@@ -147,12 +152,31 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   setSelectedNodeId,
   selectedAlternativeTargetId,
   setSelectedAlternativeTargetId,
+  rulesConfig,
+  bikeConfig,
   navigationState,
   isNavigating,
   rideStats,
   onStopNavigation,
   children,
 }) => {
+  const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
+  const routeResult = activeRoute ? activeRoute.result : null;
+
+  const inspectorBranches = useIntersectionBranches({
+    selectedNodeId,
+    routeResult,
+    graph,
+    overrides: {
+      nodeDelays: customNodeDelays,
+      nodeNotes: customNodeNotes,
+      nodeTurns: customNodeTurns,
+      rulesConfig,
+      bikeConfig,
+    },
+    activeStrategyLabel: activeAlternativeLabel,
+  });
+
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [shouldFitBounds, setShouldFitBounds] = useState(true);
@@ -201,6 +225,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         setSelectedNodeId,
         selectedAlternativeTargetId,
         setSelectedAlternativeTargetId,
+        inspectorBranches,
         shouldFitBounds,
         setShouldFitBounds,
         showMinorControls,

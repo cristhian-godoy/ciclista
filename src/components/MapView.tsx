@@ -1,14 +1,11 @@
 import type maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
-import type { Coordinate } from '../core/common/types';
-import type { GraphNode, StreetGraph } from '../core/graph/types';
-import type { NavigationState, RideStats } from '../core/navigation/types';
-import type { SemanticTurnType, StrategyRouteVariant } from '../core/router/types';
+import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { InspectorLayer } from './map/InspectorLayer';
-import { MapProvider, useMapContext } from './map/MapContext';
+import { useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
 import { NavigationLayer } from './map/NavigationLayer';
@@ -20,35 +17,7 @@ import { useMapInstance } from './map/useMapInstance';
 import { NavigationHUD } from './NavigationHUD';
 
 interface MapViewProps {
-  graph: StreetGraph | null;
-  loadedBBoxes: [number, number, number, number][];
-  startCoord: Coordinate | null;
-  endCoord: Coordinate | null;
-  routeVariants: StrategyRouteVariant[];
-  activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
-  onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  selectedPreset: 'munich' | 'amsterdam';
-  customNodeDelays: Map<string, number>;
-  customNodeNotes: Map<string, string>;
-  customNodeTurns: Map<string, Record<string, SemanticTurnType>>;
-  selectedNode: GraphNode | null;
-  onStartDrag: (coord: Coordinate | null) => void;
-  onEndDrag: (coord: Coordinate | null) => void;
-  onNodeSelect: (node: GraphNode | null) => void;
-  onSaveNodeOverride: (nodeId: string, delay: number, notes: string) => void;
-  onSaveNodeTurns: (nodeId: string, turns: Record<string, SemanticTurnType>) => void;
-  onClearNodeOverride: (nodeId: string) => void;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
-  theme: 'bright' | 'liberty' | 'dark';
-  isInspectorModeActive: boolean;
-  selectedNodeId: string | null;
-  setSelectedNodeId: (id: string | null) => void;
-  selectedAlternativeTargetId: string | null;
-  setSelectedAlternativeTargetId: (id: string | null) => void;
-  navigationState: NavigationState;
-  isNavigating: boolean;
-  rideStats: RideStats | null;
-  onStopNavigation: () => void;
 }
 
 const MapViewContent: React.FC<{
@@ -217,9 +186,5 @@ const MapViewContent: React.FC<{
  * handles map events, and mounts interactive layer overlays.
  */
 export const MapView: React.FC<MapViewProps> = (props) => {
-  return (
-    <MapProvider {...props}>
-      <MapViewContent onMapBoundsChange={props.onMapBoundsChange} />
-    </MapProvider>
-  );
+  return <MapViewContent onMapBoundsChange={props.onMapBoundsChange} />;
 };

@@ -78,51 +78,50 @@ describe('mapRouteToInspectorGeoJSON', () => {
           matchedRoad: 'path_default',
         },
       ],
-      alternativeEvaluations: {
-        '2': [
-          {
-            targetId: '3',
-            name: 'Cycleway B',
-            distance: 50,
-            highway: 'cycleway',
-            baseSpeedKmh: 15,
-            effectiveSpeedKmh: 15,
-            surface: 'paved',
-            flatPenaltySeconds: 0,
-            comfort: 'high',
-            matchedSign: 'segregated_path',
-            matchedRoad: 'path_default',
-            routingWeight: 5,
-            displayCostSeconds: 5,
-            isRestricted: false,
-            turnPenaltySeconds: 0,
-            nodeDelaySeconds: 0,
-            nodeDelayType: null,
-            restrictionReason: null,
-          },
-          {
-            targetId: '4', // alternative target node not in chosen route
-            name: 'Alternative Primary Road',
-            distance: 80,
-            highway: 'primary',
-            baseSpeedKmh: 20,
-            effectiveSpeedKmh: 18,
-            surface: 'paved',
-            flatPenaltySeconds: 0,
-            comfort: 'neutral',
-            matchedSign: null,
-            matchedRoad: 'primary',
-            routingWeight: 15,
-            displayCostSeconds: 15,
-            isRestricted: false,
-            turnPenaltySeconds: 0,
-            nodeDelaySeconds: 0,
-            nodeDelayType: null,
-            restrictionReason: null,
-          },
-        ],
-      },
     };
+
+    const branches = [
+      {
+        targetId: '3',
+        name: 'Cycleway B',
+        distance: 50,
+        highway: 'cycleway',
+        baseSpeedKmh: 15,
+        effectiveSpeedKmh: 15,
+        surface: 'paved',
+        flatPenaltySeconds: 0,
+        comfort: 'high',
+        matchedSign: 'segregated_path',
+        matchedRoad: 'path_default',
+        routingWeight: 5,
+        displayCostSeconds: 5,
+        isRestricted: false,
+        turnPenaltySeconds: 0,
+        nodeDelaySeconds: 0,
+        nodeDelayType: null,
+        restrictionReason: null,
+      },
+      {
+        targetId: '4', // alternative target node not in chosen route
+        name: 'Alternative Primary Road',
+        distance: 80,
+        highway: 'primary',
+        baseSpeedKmh: 20,
+        effectiveSpeedKmh: 18,
+        surface: 'paved',
+        flatPenaltySeconds: 0,
+        comfort: 'neutral',
+        matchedSign: null,
+        matchedRoad: 'primary',
+        routingWeight: 15,
+        displayCostSeconds: 15,
+        isRestricted: false,
+        turnPenaltySeconds: 0,
+        nodeDelaySeconds: 0,
+        nodeDelayType: null,
+        restrictionReason: null,
+      },
+    ];
 
     // Add node 4 manually to graph so it resolves coordinate
     graph.nodes.set('4', {
@@ -130,7 +129,7 @@ describe('mapRouteToInspectorGeoJSON', () => {
       edges: [],
     });
 
-    const result = mapRouteToInspectorGeoJSON(route, graph, '2');
+    const result = mapRouteToInspectorGeoJSON(route, graph, '2', branches);
 
     // 2 chosen edges + 1 alternative edge (targetId 4) = 3 segments
     expect(result.segments.features.length).toBe(3);
