@@ -2,10 +2,10 @@ import React from 'react';
 
 import { getColorForEdge } from '../core/inspector/mapper';
 import type { InspectorBranchEvaluation } from '../core/inspector/types';
+import { useMapContext } from './map/MapContext';
 
 interface InspectorPanelProps {
   selectedNodeId: string | null;
-  evaluations: InspectorBranchEvaluation[];
   nextNodeId: string | undefined;
   onClose: () => void;
   selectedAlternativeTargetId: string | null;
@@ -18,12 +18,13 @@ interface InspectorPanelProps {
  */
 export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   selectedNodeId,
-  evaluations,
   nextNodeId,
   onClose,
   selectedAlternativeTargetId,
   setSelectedAlternativeTargetId,
 }) => {
+  const { inspectorBranches } = useMapContext();
+  const evaluations = inspectorBranches;
   const chosenEdge = evaluations.find((ev) => ev.targetId === nextNodeId);
   const alternativeEdges = evaluations.filter((ev) => ev.targetId !== nextNodeId);
 
