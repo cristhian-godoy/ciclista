@@ -1,5 +1,5 @@
 import type maplibregl from 'maplibre-gl';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import type { PathSegmentFeature, PathStyleConfig } from '../../../core/rendering/types';
 import { useMapContext } from '../MapContext';
@@ -50,30 +50,73 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
 }) => {
   const { map } = useMapContext();
 
-  const sourceId = `route-path-source-${id}`;
+  const sourceSegmentedId = `route-path-source-segmented-${id}`;
+  const sourceContinuousId = `route-path-source-continuous-${id}`;
   const glowId = `route-path-glow-${id}`;
   const coreId = `route-path-core-${id}`;
   const semanticId = `route-path-semantic-${id}`;
 
-  // 1. Manage Source and Layers lifecycle
+  // Build continuous line features to prevent overlapping joint dots on non-opaque/glow lines
+  const continuousFeatures = useMemo(() => {
+    if (features.length === 0) return [];
+
+    const coordsList: number[][] = [];
+    features.forEach((feat) => {
+      if (feat.geometry && feat.geometry.type === 'LineString') {
+        feat.geometry.coordinates.forEach((coord) => {
+          if (coordsList.length === 0) {
+            coordsList.push(coord);
+          } else {
+            const last = coordsList[coordsList.length - 1];
+            if (last[0] !== coord[0] || last[1] !== coord[1]) {
+              coordsList.push(coord);
+            }
+          }
+        });
+      }
+    });
+
+    if (coordsList.length < 2) return [];
+
+    return [
+      {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: coordsList,
+        },
+        properties: {},
+      },
+    ];
+  }, [features]);
+
+  // 1. Manage Sources and Layers lifecycle
   useEffect(() => {
     if (!map) return;
 
-    // Add source if not present
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, {
+    // Add segmented source if not present
+    if (!map.getSource(sourceSegmentedId)) {
+      map.addSource(sourceSegmentedId, {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
     }
 
-    // Glow layer (bottom)
+    // Add continuous source if not present
+    if (!map.getSource(sourceContinuousId)) {
+      map.addSource(sourceContinuousId, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // Glow layer (bottom, uses continuous source to prevent overlapping dot joints)
     if (!map.getLayer(glowId)) {
       map.addLayer(
         {
           id: glowId,
           type: 'line',
-          source: sourceId,
+          source: sourceContinuousId,
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
@@ -88,13 +131,13 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
       );
     }
 
-    // Core layer (middle)
+    // Core layer (middle, uses continuous source to prevent overlapping dot joints)
     if (!map.getLayer(coreId)) {
       map.addLayer(
         {
           id: coreId,
           type: 'line',
-          source: sourceId,
+          source: sourceContinuousId,
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
@@ -109,13 +152,13 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
       );
     }
 
-    // Semantic layer (top)
+    // Semantic layer (top, uses segmented source to support per-segment colors)
     if (!map.getLayer(semanticId)) {
       map.addLayer(
         {
           id: semanticId,
           type: 'line',
-          source: sourceId,
+          source: sourceSegmentedId,
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
@@ -134,21 +177,30 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
       if (map.getLayer(glowId)) map.removeLayer(glowId);
       if (map.getLayer(coreId)) map.removeLayer(coreId);
       if (map.getLayer(semanticId)) map.removeLayer(semanticId);
-      if (map.getSource(sourceId)) map.removeSource(sourceId);
+      if (map.getSource(sourceSegmentedId)) map.removeSource(sourceSegmentedId);
+      if (map.getSource(sourceContinuousId)) map.removeSource(sourceContinuousId);
     };
-  }, [map, sourceId, glowId, coreId, semanticId, beforeId]);
+  }, [map, sourceSegmentedId, sourceContinuousId, glowId, coreId, semanticId, beforeId]);
 
   // 2. Synchronize Source GeoJSON Data
   useEffect(() => {
     if (!map) return;
-    const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
-    if (source) {
-      source.setData({
+    const sourceSeg = map.getSource(sourceSegmentedId) as maplibregl.GeoJSONSource;
+    if (sourceSeg) {
+      sourceSeg.setData({
         type: 'FeatureCollection',
         features,
       });
     }
-  }, [map, sourceId, features]);
+
+    const sourceCont = map.getSource(sourceContinuousId) as maplibregl.GeoJSONSource;
+    if (sourceCont) {
+      sourceCont.setData({
+        type: 'FeatureCollection',
+        features: continuousFeatures,
+      });
+    }
+  }, [map, sourceSegmentedId, sourceContinuousId, features, continuousFeatures]);
 
   // 3. Synchronize Styles and Visibilities
   useEffect(() => {

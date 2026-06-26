@@ -1,11 +1,13 @@
 import maplibregl from 'maplibre-gl';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper';
-import { INACTIVE_STRATEGY_COLORS, STRATEGY_COLORS } from '../../core/rendering/theme';
+import { STRATEGY_COLORS } from '../../core/rendering/theme';
 import type { PathStyleConfig } from '../../core/rendering/types';
 import { UnifiedPathLayer } from './layers/UnifiedPathLayer';
 import { useMapContext } from './MapContext';
+
+const STRATEGIES = ['standard', 'avoid-stops', 'quiet-streets'] as const;
 
 /**
  * Map overlay layer that renders all computed routing path variants (Standard, Avoid Stops, Quiet Streets).
@@ -58,16 +60,40 @@ export const RouteVariantsLayer: React.FC = () => {
     isNavigating,
   ]);
 
-  if (!map) return null;
-
-  const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
-  const referenceLayer = map.getLayer('traffic-lights-cluster')
+  const referenceLayer = map?.getLayer('traffic-lights-cluster')
     ? 'traffic-lights-cluster'
     : undefined;
 
+  // Sort strategies so that the active strategy is always rendered last (on top)
+  const sortedStrategies = useMemo(() => {
+    return [...STRATEGIES].sort((a, b) => {
+      if (a === activeAlternativeLabel) return 1;
+      if (b === activeAlternativeLabel) return -1;
+      return 0;
+    });
+  }, [activeAlternativeLabel]);
+
+  // Synchronize layer stacking order: active route variant must always be on top of inactive variants
+  useEffect(() => {
+    if (!map) return;
+
+    // Move layers in sorted order (inactive first, active last) so active is on top
+    sortedStrategies.forEach((strategy) => {
+      const glowId = `route-path-glow-${strategy}`;
+      const coreId = `route-path-core-${strategy}`;
+      const semanticId = `route-path-semantic-${strategy}`;
+
+      if (map.getLayer(glowId)) map.moveLayer(glowId, referenceLayer);
+      if (map.getLayer(coreId)) map.moveLayer(coreId, referenceLayer);
+      if (map.getLayer(semanticId)) map.moveLayer(semanticId, referenceLayer);
+    });
+  }, [map, sortedStrategies, referenceLayer]);
+
+  if (!map) return null;
+
   return (
     <>
-      {strategies.map((strategy) => {
+      {sortedStrategies.map((strategy) => {
         const variant = routeVariants.find((v) => v.label === strategy);
         if (!variant || !variant.result) return null;
 
@@ -75,7 +101,7 @@ export const RouteVariantsLayer: React.FC = () => {
         const features = buildSegmentedPathGeoJSON(variant.result).features;
 
         // styling configurations derived from strategy status
-        const opacity = isActive ? 1.0 : isNavigating ? 0.0 : 0.4;
+        const opacity = isActive ? 1.0 : isNavigating ? 0.0 : 0.8;
         const width = isActive ? (isNavigating ? 8 : 6) : 4;
         const glowWidth = isActive ? (isNavigating ? 14 : 9) : 9;
         const glowOpacity = isActive ? (isNavigating ? 0.35 : 0.3) : 0.0;
@@ -87,7 +113,7 @@ export const RouteVariantsLayer: React.FC = () => {
           glowOpacity,
         };
 
-        const color = isActive ? STRATEGY_COLORS[strategy] : INACTIVE_STRATEGY_COLORS[strategy];
+        const color = STRATEGY_COLORS[strategy];
 
         return (
           <UnifiedPathLayer
@@ -96,7 +122,7 @@ export const RouteVariantsLayer: React.FC = () => {
             features={features}
             styleConfig={styleConfig}
             color={color}
-            useSemanticColors={isActive}
+            useSemanticColors={false}
             visible={!isInspectorModeActive}
             beforeId={referenceLayer}
             onPathClick={() => {
