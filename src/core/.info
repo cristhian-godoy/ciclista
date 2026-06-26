@@ -14,5 +14,7 @@ router
 	Dijkstra pathfinding and dynamic routing cost algorithms.
 rules
 	Osm matching, bike profiles configuration, and rule speed/delay resolver.
+rendering
+	Pure functions, types, and theme definitions for unified path rendering.
 storage
 	Local browser storage persistence adapters.

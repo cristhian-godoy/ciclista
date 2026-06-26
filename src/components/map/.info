@@ -30,3 +30,6 @@ MapContext.tsx
 	MapProvider component hosting state and operations for map subcomponents.
 useCustomMapControls.ts
 	React hook for injecting custom zoom and compass map controls.
+layers
+	Directory containing unified path rendering components.
+

@@ -2,9 +2,5 @@ evaluator.test.ts
 	Unit tests for on-demand evaluator verifying intersection branch calculations.
 evaluator.ts
 	On-demand evaluator calculating alternative path details for diverging intersection edges.
-mapper.test.ts
-	Unit tests checking route features and control point mappings to GeoJSON.
-mapper.ts
-	GeoJSON translation helper converting path route result and branches to map layers.
 types.ts
 	Type definitions for inspector features, properties, and branch evaluations.
