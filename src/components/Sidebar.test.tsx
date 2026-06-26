@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_RULES_CONFIG } from '../core/config';
-import type { RouteAlternative, RouteResult } from '../core/router/types';
+import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar Integration', () => {
-  const mockAlternatives: RouteAlternative[] = [
+  const mockAlternatives: StrategyRouteVariant[] = [
     {
       label: 'standard',
       result: {
@@ -46,7 +46,7 @@ describe('Sidebar Integration', () => {
     startCoord: null,
     endCoord: null,
     routeResult: mockRouteResult,
-    routeAlternatives: mockAlternatives,
+    routeVariants: mockAlternatives,
     routingStrategy: 'standard' as const,
     isFetchingOSM: false,
     onStrategyChange: vi.fn(),

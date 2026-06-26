@@ -1,6 +1,7 @@
 import type { Coordinate } from '../common/types';
-import type { ComfortLevel, LocalOverrides } from '../config';
+import type { LocalOverrides } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
+import type { InspectorBranchEvaluation } from '../inspector/types';
 
 /**
  * A function that calculates the routing cost/weight for traveling along a graph edge.
@@ -39,13 +40,13 @@ export interface RouteResult {
     matchedSign: string | null;
     matchedRoad: string;
   }[];
-  alternativeEvaluations?: Record<string, AlternativeEdgeEvaluation[]>;
+  alternativeEvaluations?: Record<string, InspectorBranchEvaluation[]>;
 }
 
 /**
  * An alternative routing path option with a label (strategy name) and the routing result metrics.
  */
-export interface RouteAlternative {
+export interface StrategyRouteVariant {
   label: string;
   result: RouteResult;
 }
@@ -61,41 +62,4 @@ export interface IRouter {
     costFn: CostFunction,
     overrides: LocalOverrides,
   ): RouteResult | null;
-}
-
-/**
- * Detailed routing cost and physical impact evaluation for a single graph edge.
- */
-export interface AlternativeEdgeEvaluation {
-  targetId: string;
-  name: string;
-  distance: number;
-  highway: string;
-  baseSpeedKmh: number;
-  effectiveSpeedKmh: number;
-  surface: 'paved' | 'gravel' | 'cobblestone';
-  flatPenaltySeconds: number;
-  comfort: ComfortLevel;
-  matchedSign: string | null;
-  matchedRoad: string;
-  routingWeight: number;
-  displayCostSeconds: number;
-  isRestricted: boolean;
-  turnPenaltySeconds: number;
-  nodeDelaySeconds: number;
-  nodeDelayType: 'signal' | 'yield' | 'stop' | 'crossing' | 'custom' | null;
-  restrictionReason: 'footway_not_bicycle_frei' | null;
-  rulePenalties?: {
-    name: string;
-    value: number;
-    type: 'turn' | 'node_delay' | 'surface' | 'road_class' | 'restriction' | 'service';
-  }[];
-  altPathNodeIds?: string[];
-  altCoordinates?: Coordinate[];
-  altDurationSeconds?: number;
-  altDistanceMeters?: number;
-  altSignalCount?: number;
-  chosenRemainingDuration?: number;
-  chosenRemainingDistance?: number;
-  chosenRemainingSignals?: number;
 }

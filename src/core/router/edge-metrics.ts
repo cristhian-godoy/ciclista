@@ -1,5 +1,6 @@
 import type { LocalOverrides } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
+import type { InspectorBranchEvaluation } from '../inspector/types';
 import {
   getSurfaceType,
   getTurnDetails,
@@ -10,12 +11,7 @@ import {
   mapRoadConfigToImpacts,
   mapSignConfigToImpacts,
 } from '../rules';
-import type {
-  AlternativeEdgeEvaluation,
-  ComfortLevel,
-  CostFunction,
-  NodeDelayConfig,
-} from './types';
+import type { ComfortLevel, CostFunction, NodeDelayConfig } from './types';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -175,7 +171,7 @@ export function evaluateEdge(
   costFn?: CostFunction,
   turnPenalty?: number,
   parentNodeId?: string,
-): AlternativeEdgeEvaluation {
+): InspectorBranchEvaluation {
   const {
     speed: effectiveSpeedMs,
     flatPenalty,

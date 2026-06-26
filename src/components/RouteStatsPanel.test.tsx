@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RouteAlternative, RouteResult } from '../core/router/types';
+import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { RouteStatsPanel } from './RouteStatsPanel';
 
 describe('RouteStatsPanel', () => {
@@ -31,7 +31,7 @@ describe('RouteStatsPanel', () => {
         edges: [],
       },
     },
-  ] as unknown as RouteAlternative[];
+  ] as unknown as StrategyRouteVariant[];
 
   const mockRouteResult = {
     totalDurationSeconds: 150,
@@ -61,7 +61,7 @@ describe('RouteStatsPanel', () => {
   it('renders alternative strategies and their formatted values', () => {
     render(
       <RouteStatsPanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         routingStrategy="standard"
         onStrategyChange={vi.fn()}
         routeResult={mockRouteResult}
@@ -84,7 +84,7 @@ describe('RouteStatsPanel', () => {
 
     render(
       <RouteStatsPanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         routingStrategy="standard"
         onStrategyChange={handleStrategyChange}
         routeResult={mockRouteResult}
@@ -102,7 +102,7 @@ describe('RouteStatsPanel', () => {
     const user = userEvent.setup();
     render(
       <RouteStatsPanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         routingStrategy="standard"
         onStrategyChange={vi.fn()}
         routeResult={mockRouteResult}
@@ -125,7 +125,7 @@ describe('RouteStatsPanel', () => {
 
     render(
       <RouteStatsPanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         routingStrategy="standard"
         onStrategyChange={handleStrategyChange}
         routeResult={mockRouteResult}

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RouteAlternative } from '../core/router/types';
+import type { StrategyRouteVariant } from '../core/router/types';
 import { RouteComparePanel } from './RouteComparePanel';
 
 describe('RouteComparePanel', () => {
@@ -51,12 +51,12 @@ describe('RouteComparePanel', () => {
         },
       },
     },
-  ] as unknown as RouteAlternative[];
+  ] as unknown as StrategyRouteVariant[];
 
   it('renders placeholder when no alternatives exist', () => {
     render(
       <RouteComparePanel
-        routeAlternatives={[]}
+        routeVariants={[]}
         activeAlternativeLabel="standard"
         onSelectAlternative={vi.fn()}
       />,
@@ -69,7 +69,7 @@ describe('RouteComparePanel', () => {
   it('renders comparison table and checks metric display values', () => {
     render(
       <RouteComparePanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         activeAlternativeLabel="standard"
         onSelectAlternative={vi.fn()}
       />,
@@ -111,7 +111,7 @@ describe('RouteComparePanel', () => {
 
     render(
       <RouteComparePanel
-        routeAlternatives={mockAlternatives}
+        routeVariants={mockAlternatives}
         activeAlternativeLabel="standard"
         onSelectAlternative={handleSelect}
       />,
