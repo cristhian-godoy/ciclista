@@ -4,11 +4,11 @@ import { MinHeap } from '../common/MinHeap';
 import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
-import { calculateDisplayCost, calculateTurnPenalty, evaluateEdge } from '../router/edge-metrics';
+import { calculateDisplayCost, evaluateEdge } from '../router/edge-metrics';
 import { getEffectiveTurnPenalty } from '../router/statistics';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from '../router/strategies';
 import type { CostFunction, RouteResult } from '../router/types';
-import { getTurnDetails, mapOSMNodeToControl } from '../rules';
+import { calculateTurnPenalty, getTurnDetails, mapOSMNodeToControl } from '../rules';
 import type { InspectorBranchEvaluation } from './types';
 
 // Map strategy label to cost function

@@ -1,4 +1,5 @@
-import { InfrastructureType, RoadType, RulesConfiguration } from './types';
+import type { RulesConfiguration } from './types';
+import { InfrastructureType, RoadType } from './types';
 
 /**
  * Default rules and speed configuration for cycling path calculations.

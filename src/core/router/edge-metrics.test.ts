@@ -7,6 +7,7 @@ import {
   type RoadRuleConfig,
   RoadType,
   type SignRuleConfig,
+  type TurnRuleConfig,
 } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
 import { calculateTurnPenalty } from '../rules';
@@ -478,6 +479,7 @@ describe('avoidBusyRoadsCost', () => {
           },
         } as unknown as Record<RoadType, RoadRuleConfig>,
         nodeDelays: {} as NodeDelayConfig,
+        turns: {} as TurnRuleConfig,
       },
     };
 
@@ -512,6 +514,7 @@ describe('avoidBusyRoadsCost', () => {
           },
         } as unknown as Record<RoadType, RoadRuleConfig>,
         nodeDelays: {} as NodeDelayConfig,
+        turns: {} as TurnRuleConfig,
       },
     };
 

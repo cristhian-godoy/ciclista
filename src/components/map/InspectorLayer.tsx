@@ -520,7 +520,7 @@ export const InspectorLayer: React.FC = () => {
       'inspector-highlighted-path',
     ) as maplibregl.GeoJSONSource;
 
-    if (!isInspectorModeActive || pathNodeIds.length === 0) {
+    if (!isInspectorModeActive || pathNodeIds.length === 0 || !activeRoute) {
       if (nodesSource) nodesSource.setData({ type: 'FeatureCollection', features: [] });
       if (segmentsSource) segmentsSource.setData({ type: 'FeatureCollection', features: [] });
       if (nodeSymbolsSource) nodeSymbolsSource.setData({ type: 'FeatureCollection', features: [] });

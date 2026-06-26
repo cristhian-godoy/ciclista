@@ -10,7 +10,7 @@ import {
   mapOSMToSignAndRoad,
 } from '../rules';
 import { calculateDisplayCost } from './edge-metrics';
-import type { CostFunction, RouteResult } from './types';
+import type { RouteResult } from './types';
 
 /**
  * Configuration for out-of-network virtual routing.
@@ -86,7 +86,6 @@ export function buildRouteStatistics(
   graph: StreetGraph,
   previous: Map<string, string>,
   endId: string,
-  costFn: CostFunction | undefined,
   overrides: LocalOverrides,
   virtualConfig?: VirtualRoutingConfig,
 ): {
