@@ -1,6 +1,10 @@
 import maplibregl from 'maplibre-gl';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
+import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper';
+import { INACTIVE_STRATEGY_COLORS, STRATEGY_COLORS } from '../../core/rendering/theme';
+import type { PathStyleConfig } from '../../core/rendering/types';
+import { UnifiedPathLayer } from './layers/UnifiedPathLayer';
 import { useMapContext } from './MapContext';
 
 /**
@@ -19,227 +23,10 @@ export const RouteVariantsLayer: React.FC = () => {
     isInspectorModeActive,
   } = useMapContext();
 
-  const onSelectAlternativeRef = useRef(onSelectAlternative);
-  const isInspectorModeActiveRef = useRef(isInspectorModeActive);
-
-  useEffect(() => {
-    onSelectAlternativeRef.current = onSelectAlternative;
-  }, [onSelectAlternative]);
-
-  useEffect(() => {
-    isInspectorModeActiveRef.current = isInspectorModeActive;
-  }, [isInspectorModeActive]);
-
-  // Setup layers and sources
+  // Fit map bounds to show full route path smoothly (using active selection coordinates)
   useEffect(() => {
     if (!map) return;
-    const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
 
-    strategies.forEach((strategy) => {
-      const sourceId = `route-path-${strategy}`;
-      const layerId = `route-path-layer-${strategy}`;
-      const glowId = `route-path-glow-${strategy}`;
-
-      if (!map.getSource(sourceId)) {
-        map.addSource(sourceId, {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: [] },
-        });
-      }
-
-      const colors = {
-        standard: '#6366f1',
-        'avoid-stops': '#f43f5e',
-        'quiet-streets': '#14b8a6',
-      };
-
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          type: 'line',
-          source: sourceId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-            visibility: isInspectorModeActiveRef.current ? 'none' : 'visible',
-          },
-          paint: {
-            'line-color': colors[strategy],
-            'line-width': 5,
-            'line-opacity': 0.4,
-          },
-        });
-      }
-
-      if (!map.getLayer(glowId)) {
-        map.addLayer(
-          {
-            id: glowId,
-            type: 'line',
-            source: sourceId,
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-              visibility: isInspectorModeActiveRef.current ? 'none' : 'visible',
-            },
-            paint: {
-              'line-color': colors[strategy],
-              'line-width': 9,
-              'line-opacity': 0.0,
-            },
-          },
-          layerId, // Draw glow underneath the core route line
-        );
-      }
-    });
-
-    // Hover cursors
-    const setPointerCursor = () => {
-      if (isInspectorModeActiveRef.current) return;
-      map.getCanvas().style.cursor = 'pointer';
-    };
-    const resetCursor = () => {
-      if (isInspectorModeActiveRef.current) return;
-      map.getCanvas().style.cursor = '';
-    };
-
-    strategies.forEach((strategy) => {
-      const layerId = `route-path-layer-${strategy}`;
-      map.on('mouseenter', layerId, setPointerCursor);
-      map.on('mouseleave', layerId, resetCursor);
-    });
-
-    // Click triggers
-    const handleStandardClick = (e: maplibregl.MapLayerMouseEvent) => {
-      e.preventDefault();
-      if (isInspectorModeActiveRef.current) return;
-      onSelectAlternativeRef.current('standard');
-    };
-    const handleAvoidStopsClick = (e: maplibregl.MapLayerMouseEvent) => {
-      e.preventDefault();
-      if (isInspectorModeActiveRef.current) return;
-      onSelectAlternativeRef.current('avoid-stops');
-    };
-    const handleQuietStreetsClick = (e: maplibregl.MapLayerMouseEvent) => {
-      e.preventDefault();
-      if (isInspectorModeActiveRef.current) return;
-      onSelectAlternativeRef.current('quiet-streets');
-    };
-
-    map.on('click', 'route-path-layer-standard', handleStandardClick);
-    map.on('click', 'route-path-layer-avoid-stops', handleAvoidStopsClick);
-    map.on('click', 'route-path-layer-quiet-streets', handleQuietStreetsClick);
-
-    return () => {
-      strategies.forEach((strategy) => {
-        const layerId = `route-path-layer-${strategy}`;
-        const glowId = `route-path-glow-${strategy}`;
-        const sourceId = `route-path-${strategy}`;
-
-        map.off('mouseenter', layerId, setPointerCursor);
-        map.off('mouseleave', layerId, resetCursor);
-
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-        if (map.getLayer(glowId)) map.removeLayer(glowId);
-        if (map.getSource(sourceId)) map.removeSource(sourceId);
-      });
-
-      map.off('click', 'route-path-layer-standard', handleStandardClick);
-      map.off('click', 'route-path-layer-avoid-stops', handleAvoidStopsClick);
-      map.off('click', 'route-path-layer-quiet-streets', handleQuietStreetsClick);
-    };
-  }, [map]);
-
-  // Synchronize route lines & opacities & fitbounds
-  useEffect(() => {
-    if (!map) return;
-    const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
-
-    strategies.forEach((strategy) => {
-      const source = map.getSource(`route-path-${strategy}`) as maplibregl.GeoJSONSource;
-      if (!source) return;
-
-      const alt = routeVariants.find((a) => a.label === strategy);
-      if (alt && alt.result && alt.result.coordinates.length > 0) {
-        const coords = alt.result.coordinates.map((c) => [c.lng, c.lat]);
-        source.setData({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: coords,
-              },
-              properties: {},
-            },
-          ],
-        });
-      } else {
-        source.setData({
-          type: 'FeatureCollection',
-          features: [],
-        });
-      }
-
-      // Update styling dynamically based on active selection & navigation mode
-      const isActive = activeAlternativeLabel === strategy;
-      const opacity = isInspectorModeActive
-        ? 0.0
-        : isNavigating
-          ? isActive
-            ? 1.0
-            : 0.0
-          : isActive
-            ? 1.0
-            : 0.4;
-      const width = isNavigating ? (isActive ? 8 : 4) : isActive ? 6 : 4;
-      const glowOpacity = isInspectorModeActive
-        ? 0.0
-        : isNavigating
-          ? isActive
-            ? 0.35
-            : 0.0
-          : isActive
-            ? 0.3
-            : 0.0;
-      const glowWidth = isNavigating ? (isActive ? 14 : 9) : isActive ? 9 : 9;
-
-      if (map.getLayer(`route-path-layer-${strategy}`)) {
-        map.setLayoutProperty(
-          `route-path-layer-${strategy}`,
-          'visibility',
-          isInspectorModeActive ? 'none' : 'visible',
-        );
-        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-opacity', opacity);
-        map.setPaintProperty(`route-path-layer-${strategy}`, 'line-width', width);
-      }
-      if (map.getLayer(`route-path-glow-${strategy}`)) {
-        map.setLayoutProperty(
-          `route-path-glow-${strategy}`,
-          'visibility',
-          isInspectorModeActive ? 'none' : 'visible',
-        );
-        map.setPaintProperty(`route-path-glow-${strategy}`, 'line-opacity', glowOpacity);
-        map.setPaintProperty(`route-path-glow-${strategy}`, 'line-width', glowWidth);
-      }
-
-      // Bring active layer to front (under the traffic lights layer)
-      if (isActive) {
-        const referenceLayer = map.getLayer('traffic-lights-cluster')
-          ? 'traffic-lights-cluster'
-          : undefined;
-
-        if (map.getLayer(`route-path-glow-${strategy}`)) {
-          map.moveLayer(`route-path-glow-${strategy}`, referenceLayer);
-        }
-        if (map.getLayer(`route-path-layer-${strategy}`)) {
-          map.moveLayer(`route-path-layer-${strategy}`, referenceLayer);
-        }
-      }
-    });
-
-    // Fit map bounds to show full route path smoothly (using active selection coordinates)
     const activeRoute = routeVariants.find((a) => a.label === activeAlternativeLabel);
     if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
       const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
@@ -269,8 +56,57 @@ export const RouteVariantsLayer: React.FC = () => {
     shouldFitBounds,
     setShouldFitBounds,
     isNavigating,
-    isInspectorModeActive,
   ]);
 
-  return null;
+  if (!map) return null;
+
+  const strategies = ['standard', 'avoid-stops', 'quiet-streets'] as const;
+  const referenceLayer = map.getLayer('traffic-lights-cluster')
+    ? 'traffic-lights-cluster'
+    : undefined;
+
+  return (
+    <>
+      {strategies.map((strategy) => {
+        const variant = routeVariants.find((v) => v.label === strategy);
+        if (!variant || !variant.result) return null;
+
+        const isActive = activeAlternativeLabel === strategy;
+        const features = buildSegmentedPathGeoJSON(variant.result).features;
+
+        // styling configurations derived from strategy status
+        const opacity = isActive ? 1.0 : isNavigating ? 0.0 : 0.4;
+        const width = isActive ? (isNavigating ? 8 : 6) : 4;
+        const glowWidth = isActive ? (isNavigating ? 14 : 9) : 9;
+        const glowOpacity = isActive ? (isNavigating ? 0.35 : 0.3) : 0.0;
+
+        const styleConfig: PathStyleConfig = {
+          width,
+          opacity,
+          glowWidth,
+          glowOpacity,
+        };
+
+        const color = isActive ? STRATEGY_COLORS[strategy] : INACTIVE_STRATEGY_COLORS[strategy];
+
+        return (
+          <UnifiedPathLayer
+            key={strategy}
+            id={strategy}
+            features={features}
+            styleConfig={styleConfig}
+            color={color}
+            useSemanticColors={isActive}
+            visible={!isInspectorModeActive}
+            beforeId={referenceLayer}
+            onPathClick={() => {
+              if (!isInspectorModeActive) {
+                onSelectAlternative(strategy);
+              }
+            }}
+          />
+        );
+      })}
+    </>
+  );
 };
