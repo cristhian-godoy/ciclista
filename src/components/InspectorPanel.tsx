@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { getColorForEdge } from '../core/inspector/mapper';
 import type { InspectorBranchEvaluation } from '../core/inspector/types';
+import { getColorForEdge } from '../core/rendering/theme';
 import { useMapContext } from './map/MapContext';
 
 interface InspectorPanelProps {
