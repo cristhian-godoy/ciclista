@@ -1,4 +1,5 @@
-import { InfrastructureType, RoadRuleConfig, RoadType, SignRuleConfig } from '../config';
+import type { RoadRuleConfig, SignRuleConfig } from '../config';
+import { InfrastructureType, RoadType } from '../config';
 
 /**
  * Result of mapping an OSM way's tags to infrastructure concept and road classification.

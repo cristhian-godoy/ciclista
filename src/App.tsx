@@ -164,7 +164,6 @@ export default function App() {
       onSaveNodeOverride={handleSaveNodeOverride}
       onSaveNodeTurns={handleSaveNodeTurns}
       onClearNodeOverride={handleClearNodeOverride}
-      onMapBoundsChange={handleMapBoundsChange}
       theme={theme}
       isInspectorModeActive={isInspectorModeActive}
       selectedNodeId={selectedNodeId}

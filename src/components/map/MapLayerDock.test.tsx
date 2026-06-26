@@ -65,6 +65,9 @@ const defaultContextValue: MapContextType = {
   setSelectedNodeId: vi.fn(),
   selectedAlternativeTargetId: null,
   setSelectedAlternativeTargetId: vi.fn(),
+  customNodeTurns: new Map(),
+  onSaveNodeTurns: vi.fn(),
+  inspectorBranches: [],
 };
 
 describe('MapLayerDock', () => {

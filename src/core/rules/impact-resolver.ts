@@ -1,4 +1,4 @@
-import { InfrastructureType, RoadRuleConfig, RoadType, SignRuleConfig } from '../config';
+import type { InfrastructureType, RoadRuleConfig, RoadType, SignRuleConfig } from '../config';
 import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from './osm-mapper';
 import type { ResolvedEdgeImpact, RouterRoadImpacts, RouterSignImpacts } from './types';
 

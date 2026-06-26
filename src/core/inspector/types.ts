@@ -34,6 +34,7 @@ export interface InspectorRouteSegmentProperties {
    * The end node ID of this segment.
    */
   targetId?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -74,6 +75,7 @@ export interface InspectorNodeFeatureProperties {
    * The angle/bearing for symbol rotation.
    */
   bearing?: number;
+  [key: string]: unknown;
 }
 
 /**

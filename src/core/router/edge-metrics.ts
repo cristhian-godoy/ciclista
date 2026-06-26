@@ -1,4 +1,4 @@
-import type { LocalOverrides } from '../config';
+import type { ComfortLevel, LocalOverrides, NodeDelayConfig } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
 import type { InspectorBranchEvaluation } from '../inspector/types';
 import {
@@ -11,7 +11,7 @@ import {
   mapRoadConfigToImpacts,
   mapSignConfigToImpacts,
 } from '../rules';
-import type { ComfortLevel, CostFunction, NodeDelayConfig } from './types';
+import type { CostFunction } from './types';
 
 // ─── Speed helpers ────────────────────────────────────────────────────────────
 
@@ -168,7 +168,7 @@ export function evaluateEdge(
   targetId: string,
   overrides: LocalOverrides,
   graph: StreetGraph,
-  costFn?: CostFunction,
+  costFn: CostFunction,
   turnPenalty?: number,
   parentNodeId?: string,
 ): InspectorBranchEvaluation {
@@ -230,9 +230,7 @@ export function evaluateEdge(
   const restrictionReason = isRestricted ? 'footway_not_bicycle_frei' : null;
 
   const displayCostSeconds = calculateDisplayCost(sourceId, edge, targetId, overrides, graph);
-  const routingWeight = costFn
-    ? costFn(sourceId, edge, targetId, overrides, graph)
-    : standardCost(sourceId, edge, targetId, overrides, graph);
+  const routingWeight = costFn(sourceId, edge, targetId, overrides, graph);
 
   // Extract node delay details
   let nodeDelaySeconds: number;

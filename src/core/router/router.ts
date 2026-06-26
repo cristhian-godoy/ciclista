@@ -19,18 +19,6 @@ import {
 import type { CostFunction, IRouter, RouteResult } from './types';
 
 /**
- * Configuration for out-of-network virtual routing.
- * Defines temporary start/end nodes and their corresponding virtual edges
- * to connect points outside the street graph into the traversable graph structure.
- */
-interface VirtualRoutingConfig {
-  startNode: GraphNode;
-  endNode: GraphNode;
-  startEdges: GraphEdge[];
-  endVirtualEdges: Map<string, GraphEdge>;
-}
-
-/**
  * Router implementation that uses Dijkstra's shortest path algorithm
  * to find optimal bicycle paths, incorporating turn penalties, local delays,
  * and custom safety rules configuration.
@@ -354,14 +342,7 @@ export class DijkstraRouter implements IRouter {
       return null;
     }
 
-    const stats = buildRouteStatistics(
-      graph,
-      previous,
-      END_VNODE_ID,
-      costFn,
-      overrides,
-      virtualConfig,
-    );
+    const stats = buildRouteStatistics(graph, previous, END_VNODE_ID, overrides, virtualConfig);
 
     const rawCoords: Coordinate[] = [start, ...stats.coordinates, end];
     const finalCoords: Coordinate[] = [];
@@ -458,7 +439,7 @@ export class DijkstraRouter implements IRouter {
       return null;
     }
 
-    const stats = buildRouteStatistics(graph, previous, endNodeId, costFn, overrides);
+    const stats = buildRouteStatistics(graph, previous, endNodeId, overrides);
 
     let finalCoords: Coordinate[] = [];
     if (stats.coordinates.length >= 2) {

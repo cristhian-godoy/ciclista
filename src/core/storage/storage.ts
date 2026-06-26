@@ -1,6 +1,6 @@
 import { logger } from '../common/logger';
-import type { RulesConfiguration, SemanticTurnType } from '../config';
-import type { IStorageProvider, LocalOverrides } from './types';
+import type { LocalOverrides, RulesConfiguration, SemanticTurnType } from '../config';
+import type { IStorageProvider } from './types';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
@@ -66,7 +66,7 @@ export class LocalStorageProvider implements IStorageProvider {
    */
   private loadRawData(): Record<
     string,
-    { delay?: number; notes?: string; turns?: Record<string, unknown> }
+    { delay?: number; notes?: string; turns?: Record<string, SemanticTurnType> }
   > {
     if (this.overridesCache !== null) {
       return this.overridesCache;
@@ -91,7 +91,10 @@ export class LocalStorageProvider implements IStorageProvider {
    * Helper to save raw JSON object to localStorage with debouncing.
    */
   private saveRawData(
-    data: Record<string, { delay?: number; notes?: string; turns?: Record<string, unknown> }>,
+    data: Record<
+      string,
+      { delay?: number; notes?: string; turns?: Record<string, SemanticTurnType> }
+    >,
   ): void {
     // Keep cache updated immediately for synchronous in-memory read access
     this.overridesCache = data;

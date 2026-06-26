@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { OSMGraphParser } from '../graph/parser';
 import type { RouteResult } from '../router/types';
 import { mapRouteToInspectorGeoJSON } from './mapper';
+import type { InspectorBranchEvaluation } from './types';
 
 describe('mapRouteToInspectorGeoJSON', () => {
   const parser = new OSMGraphParser();
@@ -80,7 +81,7 @@ describe('mapRouteToInspectorGeoJSON', () => {
       ],
     };
 
-    const branches = [
+    const branches: InspectorBranchEvaluation[] = [
       {
         targetId: '3',
         name: 'Cycleway B',
