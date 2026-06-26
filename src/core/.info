@@ -2,11 +2,17 @@ api
 	External API clients (Overpass API and MapLibre stylesheets).
 common
 	Shared global types and models.
+config
+	Configuration defaults, user-facing overrides, and profile schemas.
 graph
 	OSM Overpass JSON data parsing and graph construction.
+inspector
+	On-demand evaluator and GeoJSON builders for intersection details.
 navigation
 	Real-time navigation engine and position providers.
 router
 	Dijkstra pathfinding and dynamic routing cost algorithms.
+rules
+	Osm matching, bike profiles configuration, and rule speed/delay resolver.
 storage
 	Local browser storage persistence adapters.

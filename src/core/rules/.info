@@ -1,0 +1,16 @@
+bike-impacts.ts
+	Bicycle profiles speed and delay factor mappings.
+impact-resolver.test.ts
+	Unit tests checking user configuration mappings to resolved numerical impacts.
+impact-resolver.ts
+	Resolves configuration parameters and bike profiles into concrete speed and penalty modifiers.
+index.ts
+	Barrel exports for the rules and impact domain.
+osm-mapper.test.ts
+	Unit tests checking matching and classification of OSM ways.
+osm-mapper.ts
+	Translates OSM way and node tags to application infrastructure types and road classes.
+turn-evaluator.ts
+	Pure functions computing routing turn angles and turn penalties.
+types.ts
+	Rules domain specific types and resolved edge impact structures.

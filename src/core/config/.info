@@ -1,0 +1,6 @@
+defaults.ts
+	Default rules configuration values, road classes baseline speeds, and sign profiles.
+index.ts
+	Barrel exports for the configuration domain.
+types.ts
+	Type definitions for user-facing configs, overrides, bike profiles, and turn rules.

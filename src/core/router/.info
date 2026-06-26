@@ -1,22 +1,16 @@
-cost.test.ts
-	Unit tests verifying speed, stop penalties, and quietness factors logic.
-cost.ts
-	Cost calculation methods (speed-based, stop avoidance, quiet paths).
+edge-metrics.test.ts
+	Unit tests for display cost calculations, turn penalties, and default delays.
+edge-metrics.ts
+	Generic cost resolver and evaluator for physical edges and node delays.
 router.test.ts
 	Unit tests for finding the shortest/most comfortable path under various profiles.
 router.ts
 	Dijkstra pathfinding search algorithm using a Min-Heap queue.
-rules-impacts.test.ts
-	Unit tests verifying mapping from user config to resolved edge impacts.
-rules-impacts.ts
-	Mappers transforming user rules configuration to algorithm-facing resolved impacts.
-rules.test.ts
-	Unit tests verifying base rules configuration resolving.
-rules.ts
-	Rules processor evaluating weight modifiers for road types and traffic signs.
-types.ts
-	Routing strategies interfaces, rules, presets, and route alternative structures.
-bike.ts
-	Bike profiles configuration and base routing speed modifier mappings.
 router.worker.ts
 	Web worker wrapping Dijkstra pathfinding to offload main thread.
+statistics.ts
+	Utility functions to aggregate distance, duration, and node crossing counts from path.
+strategies.ts
+	Cost function implementations for standard, stop-avoidance, and quiet-streets profiles.
+types.ts
+	Router interfaces, strategy route variants, and worker payload contracts.
