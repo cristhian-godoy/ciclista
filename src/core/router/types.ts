@@ -61,3 +61,23 @@ export interface IRouter {
     overrides: LocalOverrides,
   ): RouteResult | null;
 }
+
+/**
+ * Data format for routing requests sent to the routing Web Worker.
+ */
+export interface WorkerRoutingRequest {
+  requestId?: string;
+  graph: StreetGraph;
+  startCoord: Coordinate;
+  endCoord: Coordinate;
+  overrides: LocalOverrides;
+}
+
+/**
+ * Data format for routing responses sent back from the routing Web Worker.
+ */
+export interface WorkerRoutingResponse {
+  requestId?: string;
+  routeVariants?: StrategyRouteVariant[];
+  error?: string;
+}

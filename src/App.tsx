@@ -5,7 +5,11 @@ import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
-import type { StrategyRouteVariant } from './core/router/types';
+import type {
+  StrategyRouteVariant,
+  WorkerRoutingRequest,
+  WorkerRoutingResponse,
+} from './core/router/types';
 import { useInspectorMode } from './hooks/useInspectorMode';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
@@ -106,7 +110,7 @@ export default function App() {
       type: 'module',
     });
 
-    worker.onmessage = (e) => {
+    worker.onmessage = (e: MessageEvent<WorkerRoutingResponse>) => {
       const { routeVariants: alts, error } = e.data;
       if (error) {
         console.error('Worker routing error:', error);
@@ -115,12 +119,13 @@ export default function App() {
       }
     };
 
-    worker.postMessage({
+    const request: WorkerRoutingRequest = {
       graph,
       startCoord,
       endCoord,
       overrides: currentOverrides,
-    });
+    };
+    worker.postMessage(request);
 
     return () => {
       worker.terminate();
