@@ -4,7 +4,7 @@ import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
-import type { RouteAlternative } from './core/router/types';
+import type { StrategyRouteVariant } from './core/router/types';
 import { useInspectorMode } from './hooks/useInspectorMode';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
@@ -91,12 +91,12 @@ export default function App() {
   };
 
   // 4. Reactive Concurrent Routing Calculation via WebWorker
-  const [routeAlternatives, setRouteAlternatives] = useState<RouteAlternative[]>([]);
+  const [routeVariants, setRouteVariants] = useState<StrategyRouteVariant[]>([]);
 
   useEffect(() => {
     if (!graph || !startCoord || !endCoord) {
       Promise.resolve().then(() => {
-        setRouteAlternatives((prev) => (prev.length === 0 ? prev : []));
+        setRouteVariants((prev) => (prev.length === 0 ? prev : []));
       });
       return;
     }
@@ -106,11 +106,11 @@ export default function App() {
     });
 
     worker.onmessage = (e) => {
-      const { routeAlternatives: alts, error } = e.data;
+      const { routeVariants: alts, error } = e.data;
       if (error) {
         console.error('Worker routing error:', error);
       } else if (alts) {
-        setRouteAlternatives(alts);
+        setRouteVariants(alts);
       }
     };
 
@@ -127,9 +127,9 @@ export default function App() {
   }, [graph, startCoord, endCoord, currentOverrides]);
 
   const routeResult = useMemo(() => {
-    const active = routeAlternatives.find((alt) => alt.label === routingStrategy);
+    const active = routeVariants.find((alt) => alt.label === routingStrategy);
     return active ? active.result : null;
-  }, [routeAlternatives, routingStrategy]);
+  }, [routeVariants, routingStrategy]);
 
   const navigation = useNavigation({
     routeResult,
@@ -142,7 +142,7 @@ export default function App() {
         startCoord={startCoord}
         endCoord={endCoord}
         routeResult={routeResult}
-        routeAlternatives={routeAlternatives}
+        routeVariants={routeVariants}
         routingStrategy={routingStrategy}
         isFetchingOSM={isFetchingOSM}
         onStrategyChange={setRoutingStrategy}
@@ -172,7 +172,7 @@ export default function App() {
         loadedBBoxes={loadedBBoxes}
         startCoord={startCoord}
         endCoord={endCoord}
-        routeAlternatives={routeAlternatives}
+        routeVariants={routeVariants}
         activeAlternativeLabel={routingStrategy}
         onSelectAlternative={setRoutingStrategy}
         selectedPreset={selectedPreset}

@@ -4,13 +4,13 @@ import React, { useEffect, useRef } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- * Map overlay layer that renders all computed routing path alternatives (Standard, Avoid Stops, Quiet Streets).
+ * Map overlay layer that renders all computed routing path variants (Standard, Avoid Stops, Quiet Streets).
  * Handles pathway styling, route highlight glows, hover effects, and selection click listeners.
  */
-export const RouteAlternativesLayer: React.FC = () => {
+export const RouteVariantsLayer: React.FC = () => {
   const {
     map,
-    routeAlternatives,
+    routeVariants,
     activeAlternativeLabel,
     onSelectAlternative,
     shouldFitBounds,
@@ -159,7 +159,7 @@ export const RouteAlternativesLayer: React.FC = () => {
       const source = map.getSource(`route-path-${strategy}`) as maplibregl.GeoJSONSource;
       if (!source) return;
 
-      const alt = routeAlternatives.find((a) => a.label === strategy);
+      const alt = routeVariants.find((a) => a.label === strategy);
       if (alt && alt.result && alt.result.coordinates.length > 0) {
         const coords = alt.result.coordinates.map((c) => [c.lng, c.lat]);
         source.setData({
@@ -240,7 +240,7 @@ export const RouteAlternativesLayer: React.FC = () => {
     });
 
     // Fit map bounds to show full route path smoothly (using active selection coordinates)
-    const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
+    const activeRoute = routeVariants.find((a) => a.label === activeAlternativeLabel);
     if (activeRoute && activeRoute.result && activeRoute.result.coordinates.length > 0) {
       const coords = activeRoute.result.coordinates.map((c) => [c.lng, c.lat]);
       if (shouldFitBounds && coords.length > 1 && !isNavigating) {
@@ -264,7 +264,7 @@ export const RouteAlternativesLayer: React.FC = () => {
     }
   }, [
     map,
-    routeAlternatives,
+    routeVariants,
     activeAlternativeLabel,
     shouldFitBounds,
     setShouldFitBounds,

@@ -1,3 +1,5 @@
+import type { Coordinate } from '../common/types';
+import type { ComfortLevel } from '../config';
 import type { GeoJSONFeature } from '../graph/geojson';
 
 /**
@@ -89,4 +91,41 @@ export interface InspectorNodeFeature extends GeoJSONFeature {
    * The node feature properties.
    */
   properties: InspectorNodeFeatureProperties;
+}
+
+/**
+ * Detailed routing cost and physical impact evaluation for a single graph edge branch.
+ */
+export interface InspectorBranchEvaluation {
+  targetId: string;
+  name: string;
+  distance: number;
+  highway: string;
+  baseSpeedKmh: number;
+  effectiveSpeedKmh: number;
+  surface: 'paved' | 'gravel' | 'cobblestone';
+  flatPenaltySeconds: number;
+  comfort: ComfortLevel;
+  matchedSign: string | null;
+  matchedRoad: string;
+  routingWeight: number;
+  displayCostSeconds: number;
+  isRestricted: boolean;
+  turnPenaltySeconds: number;
+  nodeDelaySeconds: number;
+  nodeDelayType: 'signal' | 'yield' | 'stop' | 'crossing' | 'custom' | null;
+  restrictionReason: 'footway_not_bicycle_frei' | null;
+  rulePenalties?: {
+    name: string;
+    value: number;
+    type: 'turn' | 'node_delay' | 'surface' | 'road_class' | 'restriction' | 'service';
+  }[];
+  altPathNodeIds?: string[];
+  altCoordinates?: Coordinate[];
+  altDurationSeconds?: number;
+  altDistanceMeters?: number;
+  altSignalCount?: number;
+  chosenRemainingDuration?: number;
+  chosenRemainingDistance?: number;
+  chosenRemainingSignals?: number;
 }

@@ -14,7 +14,7 @@ import React, { useState } from 'react';
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, RulesConfiguration } from '../core/config';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
-import type { RouteAlternative, RouteResult } from '../core/router/types';
+import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
 import { DataSaverPanel } from './DataSaverPanel';
 import { InspectorPanel } from './InspectorPanel';
@@ -27,7 +27,7 @@ interface SidebarProps {
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
   routeResult: RouteResult | null;
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
@@ -59,7 +59,7 @@ interface SidebarProps {
  */
 export const Sidebar: React.FC<SidebarProps> = ({
   routeResult,
-  routeAlternatives,
+  routeVariants,
   routingStrategy,
   isFetchingOSM,
   onStrategyChange,
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Section 2: Route Alternatives Selector & Stats */}
           <RouteStatsPanel
-            routeAlternatives={routeAlternatives}
+            routeVariants={routeVariants}
             routingStrategy={routingStrategy}
             onStrategyChange={onStrategyChange}
             routeResult={routeResult}
@@ -262,7 +262,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Section 4: Route Comparison Panel */}
           <RouteComparePanel
-            routeAlternatives={routeAlternatives}
+            routeVariants={routeVariants}
             activeAlternativeLabel={routingStrategy}
             onSelectAlternative={onStrategyChange}
           />

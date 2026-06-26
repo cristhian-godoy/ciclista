@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { NavigationState, RideStats } from '../core/navigation/types';
-import type { RouteAlternative, SemanticTurnType } from '../core/router/types';
+import type { SemanticTurnType, StrategyRouteVariant } from '../core/router/types';
 import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { InspectorLayer } from './map/InspectorLayer';
@@ -13,7 +13,7 @@ import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
 import { NavigationLayer } from './map/NavigationLayer';
 import { NodePopup } from './map/NodePopup';
-import { RouteAlternativesLayer } from './map/RouteAlternativesLayer';
+import { RouteVariantsLayer } from './map/RouteVariantsLayer';
 import { StartEndMarkers } from './map/StartEndMarkers';
 import { StreetGraphLayer } from './map/StreetGraphLayer';
 import { useMapInstance } from './map/useMapInstance';
@@ -24,7 +24,7 @@ interface MapViewProps {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   selectedPreset: 'munich' | 'amsterdam';
@@ -195,7 +195,7 @@ const MapViewContent: React.FC<{
       {map && mapReady && (
         <>
           <StreetGraphLayer />
-          <RouteAlternativesLayer />
+          <RouteVariantsLayer />
           <BBoxBoundaryLayer />
           <StartEndMarkers />
           <NavigationLayer />

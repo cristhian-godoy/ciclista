@@ -114,7 +114,7 @@ describe('NavigationLayer', () => {
       loadedBBoxes: [],
       startCoord: null,
       endCoord: null,
-      routeAlternatives: [],
+      routeVariants: [],
       activeAlternativeLabel: 'standard',
       onSelectAlternative: vi.fn(),
       selectedPreset: 'munich',

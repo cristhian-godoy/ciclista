@@ -2,6 +2,7 @@ import { haversineDistance } from '../common/geo';
 import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides, type RulesConfiguration } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import type { InspectorBranchEvaluation } from '../inspector/types';
 import {
   calculateTurnPenalty,
   getSurfaceType,
@@ -11,7 +12,7 @@ import {
   mapOSMToSignAndRoad,
 } from '../rules';
 import { calculateDisplayCost, evaluateEdge } from './edge-metrics';
-import type { AlternativeEdgeEvaluation, CostFunction, RouteResult } from './types';
+import type { CostFunction, RouteResult } from './types';
 
 /**
  * Configuration for out-of-network virtual routing.
@@ -103,7 +104,7 @@ export function buildRouteStatistics(
   surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number>;
   edges: NonNullable<RouteResult['edges']>;
   totalDisplayCost: number;
-  alternativeEvaluations: Record<string, AlternativeEdgeEvaluation[]>;
+  alternativeEvaluations: Record<string, InspectorBranchEvaluation[]>;
 } {
   const pathNodeIds: string[] = [];
   let current = endId;
@@ -132,7 +133,7 @@ export function buildRouteStatistics(
   const streetsSet = new Set<string>();
   const edgesDetails: NonNullable<RouteResult['edges']> = [];
   let totalDisplayCost = 0;
-  const alternativeEvaluations: Record<string, AlternativeEdgeEvaluation[]> = {};
+  const alternativeEvaluations: Record<string, InspectorBranchEvaluation[]> = {};
 
   let lastSignalNode: { lat: number; lng: number } | null = null;
   let lastYieldNode: { lat: number; lng: number } | null = null;
@@ -243,7 +244,7 @@ export function buildRouteStatistics(
     coordinates.push({ lat: currentNode.lat, lng: currentNode.lng });
 
     if (currentEdges.length > 0) {
-      const evals: AlternativeEdgeEvaluation[] = [];
+      const evals: InspectorBranchEvaluation[] = [];
       const backwardNodeId = i > 0 ? pathNodeIds[i - 1] : null;
 
       let parentNode: GraphNode | undefined;

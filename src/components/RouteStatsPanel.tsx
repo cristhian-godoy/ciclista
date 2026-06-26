@@ -13,10 +13,10 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import type { RouteAlternative, RouteResult } from '../core/router/types';
+import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 
 interface RouteStatsPanelProps {
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   routeResult: RouteResult | null;
@@ -28,7 +28,7 @@ interface RouteStatsPanelProps {
  * allowing users to switch between routing strategies (standard, avoid-stops, quiet-streets).
  */
 export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
-  routeAlternatives,
+  routeVariants,
   routingStrategy,
   onStrategyChange,
   routeResult,
@@ -81,7 +81,7 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
       <section className="ciclista-form-group">
         <label className="ciclista-label">Route Alternatives</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-          {routeAlternatives.map((alt) => {
+          {routeVariants.map((alt) => {
             const isActive = routingStrategy === alt.label;
             const duration = alt.result.totalDurationSeconds;
             const distance = alt.result.totalDistanceMeters;

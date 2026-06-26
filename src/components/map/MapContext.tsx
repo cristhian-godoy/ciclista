@@ -5,7 +5,7 @@ import type { Coordinate } from '../../core/common/types';
 import type { SemanticTurnType } from '../../core/config';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
-import type { RouteAlternative } from '../../core/router/types';
+import type { StrategyRouteVariant } from '../../core/router/types';
 
 /**
  * Context menu display state structure.
@@ -32,7 +32,7 @@ export interface MapContextType {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   selectedPreset: 'munich' | 'amsterdam';
@@ -89,7 +89,7 @@ interface MapProviderProps {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   selectedPreset: 'munich' | 'amsterdam';
@@ -127,7 +127,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   loadedBBoxes,
   startCoord,
   endCoord,
-  routeAlternatives,
+  routeVariants,
   activeAlternativeLabel,
   onSelectAlternative,
   selectedPreset,
@@ -181,7 +181,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         loadedBBoxes,
         startCoord,
         endCoord,
-        routeAlternatives,
+        routeVariants,
         activeAlternativeLabel,
         onSelectAlternative,
         selectedPreset,

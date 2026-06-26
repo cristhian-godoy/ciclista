@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { getColorForEdge } from '../core/inspector/mapper';
-import type { AlternativeEdgeEvaluation } from '../core/router/types';
+import type { InspectorBranchEvaluation } from '../core/inspector/types';
 
 interface InspectorPanelProps {
   selectedNodeId: string | null;
-  evaluations: AlternativeEdgeEvaluation[];
+  evaluations: InspectorBranchEvaluation[];
   nextNodeId: string | undefined;
   onClose: () => void;
   selectedAlternativeTargetId: string | null;
@@ -27,7 +27,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   const chosenEdge = evaluations.find((ev) => ev.targetId === nextNodeId);
   const alternativeEdges = evaluations.filter((ev) => ev.targetId !== nextNodeId);
 
-  const renderEdgeDetails = (ev: AlternativeEdgeEvaluation, isChosen: boolean) => {
+  const renderEdgeDetails = (ev: InspectorBranchEvaluation, isChosen: boolean) => {
     const hasSpeedReduction = ev.effectiveSpeedKmh < ev.baseSpeedKmh;
     const isLockedAlternative = ev.targetId === selectedAlternativeTargetId;
     const color = getColorForEdge(ev.matchedSign, ev.matchedRoad);

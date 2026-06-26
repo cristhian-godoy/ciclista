@@ -1,6 +1,6 @@
 import { DijkstraRouter } from './router';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
-import type { RouteAlternative } from './types';
+import type { StrategyRouteVariant } from './types';
 
 const router = new DijkstraRouter();
 
@@ -14,7 +14,7 @@ self.onmessage = (e: MessageEvent) => {
   const { requestId, graph, startCoord, endCoord, overrides } = e.data;
 
   try {
-    const alts: RouteAlternative[] = [];
+    const alts: StrategyRouteVariant[] = [];
 
     for (const strategy of STRATEGIES) {
       const result = router.findRoute(graph, startCoord, endCoord, strategy.costFn, overrides);
@@ -23,7 +23,7 @@ self.onmessage = (e: MessageEvent) => {
       }
     }
 
-    self.postMessage({ requestId, routeAlternatives: alts });
+    self.postMessage({ requestId, routeVariants: alts });
   } catch (error) {
     self.postMessage({ requestId, error: String(error) });
   }

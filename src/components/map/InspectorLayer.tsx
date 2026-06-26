@@ -15,7 +15,7 @@ export const InspectorLayer: React.FC = () => {
     isInspectorModeActive,
     selectedNodeId,
     setSelectedNodeId,
-    routeAlternatives,
+    routeVariants,
     activeAlternativeLabel,
     selectedAlternativeTargetId,
     setSelectedAlternativeTargetId,
@@ -23,7 +23,7 @@ export const InspectorLayer: React.FC = () => {
 
   const setSelectedNodeIdRef = useRef(setSelectedNodeId);
   const selectedNodeIdRef = useRef(selectedNodeId);
-  const routeAlternativesRef = useRef(routeAlternatives);
+  const routeVariantsRef = useRef(routeVariants);
   const activeAlternativeLabelRef = useRef(activeAlternativeLabel);
   const selectedAlternativeTargetIdRef = useRef(selectedAlternativeTargetId);
   const setSelectedAlternativeTargetIdRef = useRef(setSelectedAlternativeTargetId);
@@ -31,14 +31,14 @@ export const InspectorLayer: React.FC = () => {
   useEffect(() => {
     setSelectedNodeIdRef.current = setSelectedNodeId;
     selectedNodeIdRef.current = selectedNodeId;
-    routeAlternativesRef.current = routeAlternatives;
+    routeVariantsRef.current = routeVariants;
     activeAlternativeLabelRef.current = activeAlternativeLabel;
     selectedAlternativeTargetIdRef.current = selectedAlternativeTargetId;
     setSelectedAlternativeTargetIdRef.current = setSelectedAlternativeTargetId;
   }, [
     setSelectedNodeId,
     selectedNodeId,
-    routeAlternatives,
+    routeVariants,
     activeAlternativeLabel,
     selectedAlternativeTargetId,
     setSelectedAlternativeTargetId,
@@ -284,7 +284,7 @@ export const InspectorLayer: React.FC = () => {
         const sourceId = feature.properties.sourceId;
         const targetId = feature.properties.targetId;
         const isChosen = feature.properties.isChosenPath;
-        const alts = routeAlternativesRef.current;
+        const alts = routeVariantsRef.current;
         const activeLabel = activeAlternativeLabelRef.current;
 
         const activeRoute = alts.find((a) => a.label === activeLabel);
@@ -421,7 +421,7 @@ export const InspectorLayer: React.FC = () => {
       if (highlightedSource) {
         const lockedId = selectedAlternativeTargetIdRef.current;
         const selNodeId = selectedNodeIdRef.current;
-        const alts = routeAlternativesRef.current;
+        const alts = routeVariantsRef.current;
         const activeLabel = activeAlternativeLabelRef.current;
         const activeRoute = alts.find((a) => a.label === activeLabel);
         const evaluations = activeRoute?.result?.alternativeEvaluations?.[selNodeId ?? ''];
@@ -508,7 +508,7 @@ export const InspectorLayer: React.FC = () => {
   useEffect(() => {
     if (!map) return;
 
-    const activeRoute = routeAlternatives.find((a) => a.label === activeAlternativeLabel);
+    const activeRoute = routeVariants.find((a) => a.label === activeAlternativeLabel);
     const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
 
     const nodesSource = map.getSource('inspector-nodes') as maplibregl.GeoJSONSource;
@@ -672,7 +672,7 @@ export const InspectorLayer: React.FC = () => {
     isInspectorModeActive,
     selectedNodeId,
     selectedAlternativeTargetId,
-    routeAlternatives,
+    routeVariants,
     activeAlternativeLabel,
   ]);
 

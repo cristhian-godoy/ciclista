@@ -15,10 +15,10 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
-import type { RouteAlternative } from '../core/router/types';
+import type { StrategyRouteVariant } from '../core/router/types';
 
 interface RouteComparePanelProps {
-  routeAlternatives: RouteAlternative[];
+  routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
 }
@@ -27,7 +27,7 @@ interface RouteComparePanelProps {
  * Renders a side-by-side comparison of generated routes with Lucide icons.
  */
 export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
-  routeAlternatives,
+  routeVariants,
   activeAlternativeLabel,
   onSelectAlternative,
 }) => {
@@ -94,7 +94,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
     }
   };
 
-  if (routeAlternatives.length === 0) {
+  if (routeVariants.length === 0) {
     return (
       <section className="ciclista-card compare-panel-placeholder">
         <h2 className="compare-panel-title">Route Comparison</h2>
@@ -113,7 +113,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
           <thead>
             <tr className="header-row">
               <th className="metric-col">Metric</th>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <th
@@ -137,7 +137,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Clock size={12} aria-label="Time Icon" /> Time Predict
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
@@ -154,7 +154,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Milestone size={12} aria-label="Distance Icon" /> Distance
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
@@ -171,7 +171,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <TrafficCone size={12} aria-label="Signals Icon" /> Traffic Lights
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
@@ -188,7 +188,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <AlertTriangle size={12} aria-label="Yield Icon" /> Yield Signs
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
@@ -205,7 +205,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Accessibility size={12} aria-label="Crossing Icon" /> Crossings
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 return (
                   <td key={alt.label} className={`value-col ${isActive ? 'active' : ''}`}>
@@ -222,7 +222,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Bike size={12} aria-label="Cycleway Icon" /> % Cycleway
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.cycleway || 0;
                 return (
@@ -243,7 +243,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Home size={12} aria-label="Residential Icon" /> % Resident
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.residential || 0;
                 return (
@@ -261,7 +261,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Car size={12} aria-label="Primary Road Icon" /> % Primary
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.roadTypeTotals?.primary || 0;
                 return (
@@ -282,7 +282,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Route size={12} aria-label="Paved Surface Icon" /> % Paved
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.paved || 0;
                 return (
@@ -300,7 +300,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Trees size={12} aria-label="Gravel Surface Icon" /> % Gravel
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.gravel || 0;
                 return (
@@ -318,7 +318,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                   <Layers size={12} aria-label="Cobblestone Surface Icon" /> % Cobble
                 </span>
               </td>
-              {routeAlternatives.map((alt) => {
+              {routeVariants.map((alt) => {
                 const isActive = activeAlternativeLabel === alt.label;
                 const dist = alt.result.surfaceTotals?.cobblestone || 0;
                 return (
