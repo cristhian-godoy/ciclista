@@ -399,7 +399,6 @@ export class DijkstraRouter implements IRouter {
       roadTypeTotals: stats.roadTypeTotals,
       surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
-      alternativeEvaluations: stats.alternativeEvaluations,
     };
   }
 
@@ -506,7 +505,6 @@ export class DijkstraRouter implements IRouter {
       roadTypeTotals: stats.roadTypeTotals,
       surfaceTotals: stats.surfaceTotals,
       edges: stats.edges,
-      alternativeEvaluations: stats.alternativeEvaluations,
     };
   }
 }

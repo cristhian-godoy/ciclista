@@ -2,16 +2,14 @@ import { haversineDistance } from '../common/geo';
 import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides, type RulesConfiguration } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
-import type { InspectorBranchEvaluation } from '../inspector/types';
 import {
   calculateTurnPenalty,
   getSurfaceType,
-  getTurnDetails,
   hasCycleway,
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from '../rules';
-import { calculateDisplayCost, evaluateEdge } from './edge-metrics';
+import { calculateDisplayCost } from './edge-metrics';
 import type { CostFunction, RouteResult } from './types';
 
 /**
@@ -104,7 +102,6 @@ export function buildRouteStatistics(
   surfaceTotals: Record<'paved' | 'gravel' | 'cobblestone', number>;
   edges: NonNullable<RouteResult['edges']>;
   totalDisplayCost: number;
-  alternativeEvaluations: Record<string, InspectorBranchEvaluation[]>;
 } {
   const pathNodeIds: string[] = [];
   let current = endId;
@@ -133,7 +130,6 @@ export function buildRouteStatistics(
   const streetsSet = new Set<string>();
   const edgesDetails: NonNullable<RouteResult['edges']> = [];
   let totalDisplayCost = 0;
-  const alternativeEvaluations: Record<string, InspectorBranchEvaluation[]> = {};
 
   let lastSignalNode: { lat: number; lng: number } | null = null;
   let lastYieldNode: { lat: number; lng: number } | null = null;
@@ -243,74 +239,6 @@ export function buildRouteStatistics(
     if (!currentNode) continue;
     coordinates.push({ lat: currentNode.lat, lng: currentNode.lng });
 
-    if (currentEdges.length > 0) {
-      const evals: InspectorBranchEvaluation[] = [];
-      const backwardNodeId = i > 0 ? pathNodeIds[i - 1] : null;
-
-      let parentNode: GraphNode | undefined;
-      if (i > 0 && backwardNodeId) {
-        if (virtualConfig && backwardNodeId === 'virtual-start') {
-          parentNode = virtualConfig.startNode;
-        } else if (virtualConfig && backwardNodeId === 'virtual-end') {
-          parentNode = virtualConfig.endNode;
-        } else {
-          parentNode = graph.nodes.get(backwardNodeId)?.node;
-        }
-      }
-
-      for (const edge of currentEdges) {
-        if (backwardNodeId && edge.target === backwardNodeId) {
-          continue;
-        }
-
-        let neighborNode: GraphNode | undefined;
-        if (virtualConfig && edge.target === 'virtual-start') {
-          neighborNode = virtualConfig.startNode;
-        } else if (virtualConfig && edge.target === 'virtual-end') {
-          neighborNode = virtualConfig.endNode;
-        } else {
-          neighborNode = graph.nodes.get(edge.target)?.node;
-        }
-
-        let turnPenalty = 0;
-        let isUTurn = false;
-        if (parentNode && currentNode && neighborNode) {
-          const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
-          turnPenalty = getEffectiveTurnPenalty(
-            parentNode,
-            currentNode,
-            neighborNode,
-            overrides,
-            rulesConfig,
-          );
-          isUTurn = getTurnDetails(parentNode, currentNode, neighborNode).direction === 'u-turn';
-        }
-
-        // Exclude U-turns (angle > 135 degrees)
-        if (isUTurn) {
-          continue;
-        }
-
-        const evaluation = evaluateEdge(
-          nodeId,
-          edge,
-          edge.target,
-          overrides,
-          graph,
-          costFn,
-          turnPenalty,
-          backwardNodeId || undefined,
-        );
-
-        evaluation.chosenRemainingDuration = remainingDurations[i];
-        evaluation.chosenRemainingDistance = remainingDistances[i];
-        evaluation.chosenRemainingSignals = remainingSignals[i];
-
-        evals.push(evaluation);
-      }
-      alternativeEvaluations[nodeId] = evals;
-    }
-
     const tags = currentNode.tags || {};
     const controlType = mapOSMNodeToControl(tags);
 
@@ -418,6 +346,5 @@ export function buildRouteStatistics(
     surfaceTotals,
     edges: edgesDetails,
     totalDisplayCost,
-    alternativeEvaluations,
   };
 }

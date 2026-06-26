@@ -1,7 +1,6 @@
 import type { Coordinate } from '../common/types';
 import type { LocalOverrides } from '../config';
 import type { GraphEdge, StreetGraph } from '../graph/types';
-import type { InspectorBranchEvaluation } from '../inspector/types';
 
 /**
  * A function that calculates the routing cost/weight for traveling along a graph edge.
@@ -40,7 +39,6 @@ export interface RouteResult {
     matchedSign: string | null;
     matchedRoad: string;
   }[];
-  alternativeEvaluations?: Record<string, InspectorBranchEvaluation[]>;
 }
 
 /**
