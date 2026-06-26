@@ -1,0 +1,10 @@
+geometry-mapper.ts
+	Pure functions to slice coordinate arrays and map path geometry to GeoJSON features.
+geometry-mapper.test.ts
+	Unit tests verifying precision geometry mapping and virtual segment logic.
+symbols-mapper.ts
+	Pure functions extracting node-based event symbols (traffic lights, stops, turns) along route paths.
+theme.ts
+	Centralized theme color palettes and category edge coloring functions.
+types.ts
+	Core type definitions for unified path rendering and style configs.

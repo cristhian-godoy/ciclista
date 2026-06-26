@@ -1,0 +1,2 @@
+UnifiedPathLayer.tsx
+	Unified path rendering component managing Glow, Core, and Semantic layers under the hood.
