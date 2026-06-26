@@ -467,8 +467,8 @@ export const InspectorLayer: React.FC = () => {
   const handlePathHover = (properties: Record<string, unknown>, lngLat: [number, number]) => {
     if (!map || !popupRef.current) return;
 
-    const targetId = properties.targetId;
-    const isChosen = properties.isChosenPath;
+    const targetId = typeof properties.targetId === 'string' ? properties.targetId : '';
+    const isChosen = properties.isChosenPath === true;
     const activeLabel = activeAlternativeLabelRef.current;
 
     const activeRouteVal = routeVariantsRef.current.find((a) => a.label === activeLabel);
@@ -477,8 +477,8 @@ export const InspectorLayer: React.FC = () => {
     const hoveredEval = evaluations?.find((ev) => ev.targetId === targetId);
 
     if (hoveredEval) {
-      const sourceId = properties.sourceId;
-      const nextNodeId = pathNodeIds[pathNodeIds.indexOf(sourceId ?? '') + 1];
+      const sourceId = typeof properties.sourceId === 'string' ? properties.sourceId : '';
+      const nextNodeId = pathNodeIds[pathNodeIds.indexOf(sourceId) + 1];
       const chosenEval = evaluations?.find((ev) => ev.targetId === nextNodeId);
 
       const isChosenPath = isChosen;
@@ -575,10 +575,10 @@ export const InspectorLayer: React.FC = () => {
   };
 
   const handlePathClick = (properties: Record<string, unknown>) => {
-    const isChosen = properties.isChosenPath;
+    const isChosen = properties.isChosenPath === true;
     if (!isChosen) {
-      const sourceId = properties.sourceId;
-      const targetId = properties.targetId;
+      const sourceId = typeof properties.sourceId === 'string' ? properties.sourceId : null;
+      const targetId = typeof properties.targetId === 'string' ? properties.targetId : null;
       setSelectedNodeIdRef.current(sourceId);
       const currentSelected = selectedAlternativeTargetIdRef.current;
       setSelectedAlternativeTargetIdRef.current(currentSelected === targetId ? null : targetId);
