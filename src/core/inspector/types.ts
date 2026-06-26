@@ -1,6 +1,7 @@
 import type { Coordinate } from '../common/types';
 import type { ComfortLevel } from '../config';
 import type { GeoJSONFeature } from '../graph/geojson';
+import type { PathNodeFeature, PathNodeFeatureProperties, PathNodeType } from '../rendering/types';
 
 /**
  * Properties for the GeoJSON features representing path segments in inspector mode.
@@ -57,43 +58,17 @@ export interface InspectorRouteSegment extends GeoJSONFeature {
 /**
  * The classification of events or controls at nodes.
  */
-export type InspectorNodeType = 'stop' | 'yield' | 'signal' | 'crossing' | 'turn';
+export type InspectorNodeType = PathNodeType;
 
 /**
  * Properties for a GeoJSON Point feature representing a node event in inspector mode.
  */
-export interface InspectorNodeFeatureProperties {
-  /**
-   * The type of control or event at the node.
-   */
-  type: InspectorNodeType;
-  /**
-   * The direction of the turn, if type is 'turn'.
-   */
-  turnDirection?: string;
-  /**
-   * The angle/bearing for symbol rotation.
-   */
-  bearing?: number;
-  [key: string]: unknown;
-}
+export type InspectorNodeFeatureProperties = PathNodeFeatureProperties;
 
 /**
  * A GeoJSON Point feature representing a node event in inspector mode.
  */
-export interface InspectorNodeFeature extends GeoJSONFeature {
-  /**
-   * The Point geometry.
-   */
-  geometry: {
-    type: 'Point';
-    coordinates: number[];
-  };
-  /**
-   * The node feature properties.
-   */
-  properties: InspectorNodeFeatureProperties;
-}
+export type InspectorNodeFeature = PathNodeFeature;
 
 /**
  * Detailed routing cost and physical impact evaluation for a single graph edge branch.

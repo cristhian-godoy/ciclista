@@ -36,3 +36,29 @@ export interface PathStyleConfig {
   dashArray?: number[];
   zIndex?: number;
 }
+
+/**
+ * The classification of events or controls at nodes.
+ */
+export type PathNodeType = 'stop' | 'yield' | 'signal' | 'crossing' | 'turn';
+
+/**
+ * Properties for a GeoJSON Point feature representing a node event.
+ */
+export interface PathNodeFeatureProperties {
+  type: PathNodeType;
+  turnDirection?: string;
+  bearing?: number;
+  [key: string]: unknown;
+}
+
+/**
+ * A GeoJSON Point feature representing a node event.
+ */
+export interface PathNodeFeature extends GeoJSONFeature {
+  geometry: {
+    type: 'Point';
+    coordinates: number[];
+  };
+  properties: PathNodeFeatureProperties;
+}
