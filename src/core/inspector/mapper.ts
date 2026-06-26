@@ -1,8 +1,8 @@
 import type { StreetGraph } from '../graph/types';
-import { calculateBearing } from '../navigation/engine';
+import { buildPathSymbolsGeoJSON } from '../rendering/symbols-mapper';
 import { getColorForEdge } from '../rendering/theme';
 import type { RouteResult } from '../router/types';
-import { getTurnDetails, mapOSMNodeToControl, mapOSMToSignAndRoad } from '../rules';
+import { mapOSMToSignAndRoad } from '../rules';
 import type {
   InspectorBranchEvaluation,
   InspectorNodeFeature,
@@ -23,7 +23,6 @@ export function mapRouteToInspectorGeoJSON(
   nodes: { type: 'FeatureCollection'; features: InspectorNodeFeature[] };
 } {
   const segmentFeatures: InspectorRouteSegment[] = [];
-  const nodeFeatures: InspectorNodeFeature[] = [];
   const processedSegments = new Set<string>();
 
   // 1. Process Chosen Path segments
@@ -133,72 +132,8 @@ export function mapRouteToInspectorGeoJSON(
         });
       });
     }
-  }
-
-  // 3. Extract Node Symbols/Events
-  const pathNodeIds = route.pathNodeIds || [];
-  pathNodeIds.forEach((nodeId, idx) => {
-    const entry = graph.nodes.get(nodeId);
-    if (!entry) return;
-    const u = entry.node;
-    const tags = u.tags || {};
-
-    const controlType = mapOSMNodeToControl(tags);
-
-    if (controlType) {
-      let bearing = 0;
-      if (idx < pathNodeIds.length - 1) {
-        const nextNode = graph.nodes.get(pathNodeIds[idx + 1])?.node;
-        if (nextNode) {
-          bearing = calculateBearing(u, nextNode);
-        }
-      } else if (idx > 0) {
-        const prevNode = graph.nodes.get(pathNodeIds[idx - 1])?.node;
-        if (prevNode) {
-          bearing = calculateBearing(prevNode, u);
-        }
-      }
-
-      nodeFeatures.push({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [u.lng, u.lat],
-        },
-        properties: {
-          type: controlType,
-          bearing,
-        },
-      });
-    }
-
-    if (idx > 0 && idx < pathNodeIds.length - 1) {
-      const prevNode = graph.nodes.get(pathNodeIds[idx - 1])?.node;
-      const nextNode = graph.nodes.get(pathNodeIds[idx + 1])?.node;
-      if (prevNode && nextNode) {
-        const turn = getTurnDetails(prevNode, u, nextNode);
-        if (
-          turn.direction === 'left' ||
-          turn.direction === 'right' ||
-          turn.direction === 'u-turn'
-        ) {
-          const bearing = calculateBearing(u, nextNode);
-          nodeFeatures.push({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [u.lng, u.lat],
-            },
-            properties: {
-              type: 'turn',
-              turnDirection: turn.direction,
-              bearing,
-            },
-          });
-        }
-      }
-    }
-  });
+  } // 3. Extract Node Symbols/Events
+  const nodeFeatures = buildPathSymbolsGeoJSON(route, graph).features;
 
   return {
     segments: { type: 'FeatureCollection', features: segmentFeatures },
