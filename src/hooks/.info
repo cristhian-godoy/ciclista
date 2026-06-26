@@ -8,3 +8,5 @@ useRoutingState.ts
 	React hook managing coordinates, routing options, and active route paths.
 useInspectorMode.ts
 	React hook managing inspector mode toggle status and selected route node.
+useIntersectionBranches.ts
+	React hook managing dynamic intersection branches and alternative outgoing evaluations.
