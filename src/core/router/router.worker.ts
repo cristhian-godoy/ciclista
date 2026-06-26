@@ -1,6 +1,6 @@
 import { DijkstraRouter } from './router';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
-import type { StrategyRouteVariant } from './types';
+import type { StrategyRouteVariant, WorkerRoutingRequest, WorkerRoutingResponse } from './types';
 
 const router = new DijkstraRouter();
 
@@ -10,7 +10,7 @@ const STRATEGIES = [
   { label: 'quiet-streets', costFn: avoidBusyRoadsCost },
 ] as const;
 
-self.onmessage = (e: MessageEvent) => {
+self.onmessage = (e: MessageEvent<WorkerRoutingRequest>) => {
   const { requestId, graph, startCoord, endCoord, overrides } = e.data;
 
   try {
@@ -23,8 +23,10 @@ self.onmessage = (e: MessageEvent) => {
       }
     }
 
-    self.postMessage({ requestId, routeVariants: alts });
+    const response: WorkerRoutingResponse = { requestId, routeVariants: alts };
+    self.postMessage(response);
   } catch (error) {
-    self.postMessage({ requestId, error: String(error) });
+    const response: WorkerRoutingResponse = { requestId, error: String(error) };
+    self.postMessage(response);
   }
 };

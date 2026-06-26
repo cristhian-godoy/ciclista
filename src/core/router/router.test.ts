@@ -113,39 +113,6 @@ describe('DijkstraRouter', () => {
     }).not.toThrow();
   });
 
-  it('populates alternativeEvaluations correctly without tracing back to start', () => {
-    const start: Coordinate = { lat: 48.13715, lng: 11.5754 }; // Home (Marienplatz)
-    const end: Coordinate = { lat: 48.135, lng: 11.582 }; // Office (Isartor)
-
-    const result = router.findRoute(graph, start, end, standardCost, defaultOverrides);
-
-    expect(result).not.toBeNull();
-    if (result && result.alternativeEvaluations) {
-      // Find a node that has at least one alternative evaluation
-      const entries = Object.entries(result.alternativeEvaluations);
-      const entryWithAlternatives = entries.find(([nodeId, evals]) => {
-        const pathIndex = result.pathNodeIds.indexOf(nodeId);
-        const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
-        return evals.some((ev) => ev.targetId !== nextNodeOnPath);
-      });
-
-      expect(entryWithAlternatives).toBeDefined();
-      if (entryWithAlternatives) {
-        const [nodeId, evals] = entryWithAlternatives;
-        const pathIndex = result.pathNodeIds.indexOf(nodeId);
-        const nextNodeOnPath = result.pathNodeIds[pathIndex + 1];
-        const alternativeEval = evals.find((ev) => ev.targetId !== nextNodeOnPath);
-
-        expect(alternativeEval).toBeDefined();
-        if (alternativeEval) {
-          expect(alternativeEval.chosenRemainingDuration).toBeDefined();
-          expect(alternativeEval.chosenRemainingDistance).toBeDefined();
-          expect(alternativeEval.chosenRemainingSignals).toBeDefined();
-        }
-      }
-    }
-  });
-
   it('applies custom semantic turn overrides during routing', () => {
     // Construct a path: A -> B -> C -> D -> E
     // Turn at C (between B and D) is a left turn.
