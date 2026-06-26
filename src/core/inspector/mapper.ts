@@ -1,5 +1,6 @@
 import type { StreetGraph } from '../graph/types';
 import { calculateBearing } from '../navigation/engine';
+import { getColorForEdge } from '../rendering/theme';
 import type { RouteResult } from '../router/types';
 import { getTurnDetails, mapOSMNodeToControl, mapOSMToSignAndRoad } from '../rules';
 import type {
@@ -7,26 +8,6 @@ import type {
   InspectorNodeFeature,
   InspectorRouteSegment,
 } from './types';
-
-/**
- * Maps matched infrastructure or road types to standard color codes.
- */
-export function getColorForEdge(matchedSign: string | null, matchedRoad: string): string {
-  if (matchedSign === 'segregated_path' || matchedSign === 'bicycle_street') {
-    return '#10b981'; // Green (Safe/Pleasant)
-  }
-  if (matchedSign === 'pedestrian_zone' || matchedSign === 'sidewalk') {
-    return '#8b5cf6'; // Purple (Dismount/Penalty)
-  }
-  if (matchedSign === 'shared_path' || matchedSign === 'living_street') {
-    return '#3b82f6'; // Blue (Acceptable)
-  }
-  if (matchedRoad === 'primary' || matchedRoad === 'secondary') {
-    return '#ef4444'; // Red (Danger)
-  }
-  // Generic cycle-friendly paths (e.g. residential, service, path_default)
-  return '#3b82f6'; // Blue (Acceptable)
-}
 
 /**
  * Transforms RouteResult and alternative evaluations into GeoJSON feature collections
