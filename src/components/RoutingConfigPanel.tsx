@@ -9,8 +9,6 @@ interface RoutingConfigPanelProps {
   isFetchingOSM: boolean;
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
-  theme: 'bright' | 'liberty' | 'dark';
-  onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
 /**
@@ -23,8 +21,6 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   isFetchingOSM,
   bikeConfig,
   onBikeConfigChange,
-  theme,
-  onThemeChange,
 }) => {
   return (
     <>
@@ -50,21 +46,6 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           >
             <option value="munich">Munich (Marienplatz)</option>
             <option value="amsterdam">Amsterdam (Center)</option>
-          </select>
-        </div>
-        <div className="ciclista-form-group config-form-group">
-          <label className="ciclista-label" htmlFor="map-theme-select">
-            Map Theme
-          </label>
-          <select
-            id="map-theme-select"
-            className="ciclista-input config-select"
-            value={theme}
-            onChange={(e) => onThemeChange(e.target.value as 'bright' | 'liberty' | 'dark')}
-          >
-            <option value="bright">Bright</option>
-            <option value="liberty">Liberty</option>
-            <option value="dark">Dark</option>
           </select>
         </div>
         {isFetchingOSM && (

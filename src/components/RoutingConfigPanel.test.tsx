@@ -13,8 +13,6 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={vi.fn()}
-        theme="bright"
-        onThemeChange={vi.fn()}
       />,
     );
 
@@ -35,33 +33,11 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={vi.fn()}
-        theme="bright"
-        onThemeChange={vi.fn()}
       />,
     );
 
     await user.selectOptions(screen.getByRole('combobox', { name: /City Preset/i }), 'amsterdam');
     expect(handlePresetChange).toHaveBeenCalledWith('amsterdam');
-  });
-
-  it('calls onThemeChange when a different theme is selected', async () => {
-    const user = userEvent.setup();
-    const handleThemeChange = vi.fn();
-
-    render(
-      <RoutingConfigPanel
-        selectedPreset="munich"
-        onPresetChange={vi.fn()}
-        isFetchingOSM={false}
-        bikeConfig={{ id: 'normal' }}
-        onBikeConfigChange={vi.fn()}
-        theme="bright"
-        onThemeChange={handleThemeChange}
-      />,
-    );
-
-    await user.selectOptions(screen.getByRole('combobox', { name: /Map Theme/i }), 'dark');
-    expect(handleThemeChange).toHaveBeenCalledWith('dark');
   });
 
   it('shows fetching status overlay when isFetchingOSM is true', () => {
@@ -72,8 +48,6 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={true}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={vi.fn()}
-        theme="bright"
-        onThemeChange={vi.fn()}
       />,
     );
 
@@ -91,8 +65,6 @@ describe('RoutingConfigPanel', () => {
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={handleBikeChange}
-        theme="bright"
-        onThemeChange={vi.fn()}
       />,
     );
 

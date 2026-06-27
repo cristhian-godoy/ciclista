@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
@@ -191,8 +192,6 @@ export default function App() {
           onRulesChange={setRulesConfig}
           bikeConfig={bikeConfig}
           onBikeConfigChange={setBikeConfig}
-          theme={theme}
-          onThemeChange={setTheme}
           isNavigating={
             navigation.state.status === 'active' || navigation.state.status === 'paused'
           }
@@ -208,6 +207,7 @@ export default function App() {
           setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
+        <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />
       </div>
     </MapProvider>
   );

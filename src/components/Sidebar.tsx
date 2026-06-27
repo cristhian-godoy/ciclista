@@ -16,7 +16,6 @@ import type { BikeConfig, RulesConfiguration } from '../core/config';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
-import { DataSaverPanel } from './DataSaverPanel';
 import { InspectorPanel } from './InspectorPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
@@ -37,8 +36,6 @@ interface SidebarProps {
   onRulesChange: (config: RulesConfiguration) => void;
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
-  theme: 'bright' | 'liberty' | 'dark';
-  onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
   isNavigating: boolean;
   onStartNavigation: () => void;
   onStopNavigation: () => void;
@@ -68,8 +65,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRulesChange,
   bikeConfig,
   onBikeConfigChange,
-  theme,
-  onThemeChange,
   isNavigating,
   onStartNavigation,
   onStopNavigation,
@@ -105,11 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isFetchingOSM={isFetchingOSM}
             bikeConfig={bikeConfig}
             onBikeConfigChange={onBikeConfigChange}
-            theme={theme}
-            onThemeChange={onThemeChange}
           />
-
-          <DataSaverPanel />
 
           {/* Section 2: Route Alternatives Selector & Stats */}
           <RouteStatsPanel
