@@ -4,9 +4,5 @@ future-features.md
 	Milestone 5 roadmap specs for core feature additions.
 archive
 	Directory containing completed plans and checklists.
-plan_navigation.md
-	Technical plan and breakdown for real-time navigation system.
 plan_template.md
 	Markdown template for creating new feature implementation plans.
-plan_inspector_mode.md
-	Implementation plan for the interactive inspector mode feature.
