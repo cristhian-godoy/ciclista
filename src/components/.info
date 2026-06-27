@@ -8,6 +8,8 @@ DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
 GlobalControlsPanel.tsx
 	Global controls overlay panel housing theme toggles and data saver options.
+GlobalControlsPanel.test.tsx
+	Unit tests for GlobalControlsPanel theme selection popover and toggle handlers.
 IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 InspectorPanel.tsx
