@@ -61,6 +61,7 @@ const defaultContextValue: MapContextType = {
   rideStats: null,
   onStopNavigation: vi.fn(),
   isInspectorModeActive: false,
+  onToggleInspectorMode: vi.fn(),
   selectedNodeId: null,
   setSelectedNodeId: vi.fn(),
   selectedAlternativeTargetId: null,

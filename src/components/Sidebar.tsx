@@ -47,7 +47,6 @@ interface SidebarProps {
   cameraMode: CameraMode;
   isInspectorModeActive: boolean;
   selectedNodeId: string | null;
-  onToggleInspectorMode: () => void;
   onSelectNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
@@ -79,7 +78,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   cameraMode,
   isInspectorModeActive,
   selectedNodeId,
-  onToggleInspectorMode,
   onSelectNodeId,
   selectedAlternativeTargetId,
   setSelectedAlternativeTargetId,
@@ -122,42 +120,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isNavigating={isNavigating}
           />
 
-          {/* Inspector Mode Toggle and Details Panel */}
-          {routeResult !== null && !isNavigating && (
-            <>
-              <div className="ciclista-card" style={{ marginTop: '16px', padding: '16px' }}>
-                <button
-                  className={`ciclista-btn ${
-                    isInspectorModeActive ? 'ciclista-btn--primary' : 'ciclista-btn--secondary'
-                  }`}
-                  onClick={onToggleInspectorMode}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <span>🔍</span>
-                  {isInspectorModeActive ? 'Deactivate Inspector' : 'Activate Inspector'}
-                </button>
-              </div>
-
-              {isInspectorModeActive && (
-                <InspectorPanel
-                  selectedNodeId={selectedNodeId}
-                  nextNodeId={
-                    selectedNodeId
-                      ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
-                      : undefined
-                  }
-                  onClose={() => onSelectNodeId(null)}
-                  selectedAlternativeTargetId={selectedAlternativeTargetId}
-                  setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
-                />
-              )}
-            </>
+          {/* Inspector Mode Details Panel */}
+          {routeResult !== null && !isNavigating && isInspectorModeActive && (
+            <InspectorPanel
+              selectedNodeId={selectedNodeId}
+              nextNodeId={
+                selectedNodeId
+                  ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
+                  : undefined
+              }
+              onClose={() => onSelectNodeId(null)}
+              selectedAlternativeTargetId={selectedAlternativeTargetId}
+              setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+            />
           )}
 
           {/* Navigation Control Panel */}

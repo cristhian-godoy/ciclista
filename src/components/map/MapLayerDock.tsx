@@ -1,4 +1,4 @@
-import { ChevronDown, Sliders, TrafficCone } from 'lucide-react';
+import { ChevronDown, Search, Sliders, TrafficCone } from 'lucide-react';
 import React from 'react';
 
 import { useMapContext } from './MapContext';
@@ -8,34 +8,23 @@ import { useMapContext } from './MapContext';
  * bounding boxes, node markers, and traffic signal overlays.
  */
 export const MapLayerDock: React.FC = () => {
-  const { showMinorControls, setShowMinorControls, dockExpanded, setDockExpanded } =
-    useMapContext();
+  const {
+    showMinorControls,
+    setShowMinorControls,
+    dockExpanded,
+    setDockExpanded,
+    isInspectorModeActive,
+    onToggleInspectorMode,
+    routeVariants,
+    isNavigating,
+  } = useMapContext();
+
+  const hasRoute = routeVariants && routeVariants.length > 0;
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 5,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
-    >
+    <div className="map-layer-dock">
       {dockExpanded ? (
-        <div
-          style={{
-            background: 'rgba(15, 23, 42, 0.85)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            padding: '8px 12px 8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
+        <div className="map-layer-dock-expanded">
           <span
             style={{
               fontSize: '0.75rem',
@@ -48,7 +37,7 @@ export const MapLayerDock: React.FC = () => {
             Map Layers
           </span>
 
-          <div style={{ width: '1px', height: '16px', background: 'rgba(255, 255, 255, 0.15)' }} />
+          <div className="map-layer-dock-separator" />
 
           <button
             style={{
@@ -58,20 +47,43 @@ export const MapLayerDock: React.FC = () => {
               color: showMinorControls ? '#000000' : 'var(--text-primary)',
               border: 'none',
               borderRadius: '8px',
-              padding: '6px 12px',
-              fontSize: '0.75rem',
-              fontWeight: 500,
+              padding: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              justifyContent: 'center',
               transition: 'all 0.2s ease',
             }}
             onClick={() => setShowMinorControls(!showMinorControls)}
+            aria-label={showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}
+            title={showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}
           >
-            <TrafficCone size={12} aria-label="Traffic Signal Icon" />
-            <span>{showMinorControls ? 'Hide Minor Controls' : 'Show Minor Controls'}</span>
+            <TrafficCone size={16} />
           </button>
+
+          {hasRoute && !isNavigating && (
+            <button
+              style={{
+                background: isInspectorModeActive
+                  ? 'var(--accent-secondary)'
+                  : 'rgba(255, 255, 255, 0.08)',
+                color: isInspectorModeActive ? '#000000' : 'var(--text-primary)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={onToggleInspectorMode}
+              aria-label={isInspectorModeActive ? 'Deactivate Inspector' : 'Activate Inspector'}
+              title={isInspectorModeActive ? 'Deactivate Inspector' : 'Activate Inspector'}
+            >
+              <Search size={16} />
+            </button>
+          )}
 
           <button
             style={{

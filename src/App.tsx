@@ -166,6 +166,7 @@ export default function App() {
       onClearNodeOverride={handleClearNodeOverride}
       theme={theme}
       isInspectorModeActive={isInspectorModeActive}
+      onToggleInspectorMode={toggleInspectorMode}
       selectedNodeId={selectedNodeId}
       setSelectedNodeId={setSelectedNodeId}
       selectedAlternativeTargetId={selectedAlternativeTargetId}
@@ -202,7 +203,6 @@ export default function App() {
           cameraMode={navigation.state.cameraMode}
           isInspectorModeActive={isInspectorModeActive}
           selectedNodeId={selectedNodeId}
-          onToggleInspectorMode={toggleInspectorMode}
           onSelectNodeId={setSelectedNodeId}
           selectedAlternativeTargetId={selectedAlternativeTargetId}
           setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}

@@ -66,7 +66,6 @@ describe('Sidebar Integration', () => {
     cameraMode: 'heading-up' as const,
     isInspectorModeActive: false,
     selectedNodeId: null,
-    onToggleInspectorMode: vi.fn(),
     onSelectNodeId: vi.fn(),
     selectedAlternativeTargetId: null,
     setSelectedAlternativeTargetId: vi.fn(),

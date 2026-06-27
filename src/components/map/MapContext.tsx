@@ -51,6 +51,7 @@ export interface MapContextType {
   theme: 'bright' | 'liberty' | 'dark';
 
   isInspectorModeActive: boolean;
+  onToggleInspectorMode: () => void;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
@@ -108,6 +109,7 @@ interface MapProviderProps {
   onClearNodeOverride: (nodeId: string) => void;
   theme: 'bright' | 'liberty' | 'dark';
   isInspectorModeActive: boolean;
+  onToggleInspectorMode: () => void;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
@@ -148,6 +150,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   onClearNodeOverride,
   theme,
   isInspectorModeActive,
+  onToggleInspectorMode,
   selectedNodeId,
   setSelectedNodeId,
   selectedAlternativeTargetId,
@@ -221,6 +224,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onClearNodeOverride,
         theme,
         isInspectorModeActive,
+        onToggleInspectorMode,
         selectedNodeId,
         setSelectedNodeId,
         selectedAlternativeTargetId,
