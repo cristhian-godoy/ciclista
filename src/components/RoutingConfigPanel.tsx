@@ -1,4 +1,4 @@
-import { Bike, Gauge, Layers, RefreshCw, Zap } from 'lucide-react';
+import { Bike, Layers, RefreshCw, Zap } from 'lucide-react';
 import React from 'react';
 
 import type { BikeConfig, BikeProfileId } from '../core/config';
@@ -60,51 +60,21 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       <section className="ciclista-form-group">
         <label className="ciclista-label">Bike Profile</label>
         <div className="strategy-selector">
-          {(['slow', 'normal', 'ebike', 'road', 'custom'] as BikeProfileId[]).map((p) => (
+          {[
+            { id: 'normal', label: 'Standard', icon: Bike },
+            { id: 'ebike', label: 'E-Bike', icon: Zap },
+            { id: 'slow', label: 'Cargo', icon: Bike },
+          ].map(({ id, label, icon: Icon }) => (
             <button
-              key={p}
-              className={`strategy-btn ${bikeConfig.id === p ? 'active' : ''}`}
-              onClick={() => onBikeConfigChange({ id: p })}
+              key={id}
+              className={`strategy-btn ${bikeConfig.id === id ? 'active' : ''}`}
+              onClick={() => onBikeConfigChange({ id: id as BikeProfileId })}
             >
-              {p === 'slow' && <Bike size={12} aria-label="Slow Bike Icon" />}
-              {p === 'normal' && <Bike size={12} aria-label="Normal Bike Icon" />}
-              {p === 'ebike' && <Zap size={12} aria-label="E-Bike Icon" />}
-              {p === 'road' && <Gauge size={12} aria-label="Road Bike Icon" />}
-              {p === 'custom' && <Gauge size={12} aria-label="Custom Bike Icon" />}
-              <span>
-                {p === 'slow'
-                  ? 'Slow'
-                  : p === 'normal'
-                    ? 'Normal'
-                    : p === 'ebike'
-                      ? 'E-Bike'
-                      : p === 'road'
-                        ? 'Road'
-                        : 'Custom'}
-              </span>
+              <Icon size={12} aria-label={`${label} Icon`} />
+              <span>{label}</span>
             </button>
           ))}
         </div>
-        {bikeConfig.id === 'custom' && (
-          <div className="ciclista-form-group config-form-group" style={{ marginTop: '8px' }}>
-            <label className="ciclista-label" htmlFor="custom-speed-input">
-              Cruising Speed (km/h)
-            </label>
-            <input
-              id="custom-speed-input"
-              type="number"
-              className="ciclista-input"
-              min={1}
-              max={100}
-              value={bikeConfig.customSpeedKmh ?? ''}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                onBikeConfigChange({ id: 'custom', customSpeedKmh: isNaN(val) ? undefined : val });
-              }}
-              placeholder="18"
-            />
-          </div>
-        )}
       </section>
     </>
   );

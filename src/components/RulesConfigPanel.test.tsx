@@ -7,7 +7,9 @@ import { RulesConfigPanel } from './RulesConfigPanel';
 
 describe('RulesConfigPanel', () => {
   it('renders section headers and reset button', () => {
-    render(<RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} />);
+    render(
+      <RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} defaultOpen={true} />,
+    );
 
     expect(screen.getByText('Road Rules')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reset/i })).toBeInTheDocument();
@@ -18,7 +20,9 @@ describe('RulesConfigPanel', () => {
 
   it('reveals traffic signs lists when expanded', async () => {
     const user = userEvent.setup();
-    render(<RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} />);
+    render(
+      <RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} defaultOpen={true} />,
+    );
 
     expect(screen.queryByText('Pedestrian Zone')).not.toBeInTheDocument();
 
@@ -45,7 +49,7 @@ describe('RulesConfigPanel', () => {
       },
     };
 
-    render(<RulesConfigPanel config={modifiedConfig} onChange={handleChange} />);
+    render(<RulesConfigPanel config={modifiedConfig} onChange={handleChange} defaultOpen={true} />);
 
     const resetBtn = screen.getByRole('button', { name: /Reset/i });
     await user.click(resetBtn);
@@ -55,7 +59,9 @@ describe('RulesConfigPanel', () => {
 
   it('reveals intersection delay sliders when intersections toggle is clicked', async () => {
     const user = userEvent.setup();
-    render(<RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} />);
+    render(
+      <RulesConfigPanel config={DEFAULT_RULES_CONFIG} onChange={vi.fn()} defaultOpen={true} />,
+    );
 
     expect(screen.queryByRole('button', { name: /Traffic Light/ })).not.toBeInTheDocument();
 

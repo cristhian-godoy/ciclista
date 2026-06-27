@@ -68,8 +68,8 @@ describe('RoutingConfigPanel', () => {
       />,
     );
 
-    const normalBtn = screen.getByRole('button', { name: /Normal/i });
-    expect(normalBtn).toHaveClass('active');
+    const standardBtn = screen.getByRole('button', { name: /Standard/i });
+    expect(standardBtn).toHaveClass('active');
 
     const ebikeBtn = screen.getByRole('button', { name: /E-Bike/i });
     await user.click(ebikeBtn);

@@ -954,3 +954,13 @@ h2 {
   line-height: 1.35;
   margin: 0;
 }
+
+/* Road Rules Details & Summary resets */
+.rules-details summary {
+  list-style: none;
+  outline: none;
+}
+
+.rules-details summary::-webkit-details-marker {
+  display: none;
+}
