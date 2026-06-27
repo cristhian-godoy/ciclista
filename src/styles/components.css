@@ -966,17 +966,23 @@ h2 {
 }
 
 /* Horizontal MapLibre control group popover overrides */
-.horizontal-ctrl-group {
+.maplibregl-ctrl-group.horizontal-ctrl-group {
   display: flex !important;
   flex-direction: row !important;
 }
 
-.horizontal-ctrl-group button {
+.maplibregl-ctrl-group.horizontal-ctrl-group button {
   border-bottom: none !important;
   border-right: 1px solid var(--ciclista-glass-border-base) !important;
 }
 
-.horizontal-ctrl-group button:last-child {
+.maplibregl-ctrl-group.horizontal-ctrl-group button:last-child {
   border-right: none !important;
   border-bottom-style: none !important;
+}
+
+/* Reset any sibling borders applied by native MapLibre stylesheets */
+.maplibregl-ctrl-group.horizontal-ctrl-group button + button {
+  border-top: none !important;
+  border-left: none !important;
 }
