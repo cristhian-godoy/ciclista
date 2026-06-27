@@ -35,21 +35,28 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
   };
 
   return (
-    <div className="global-controls-panel ciclista-glass-panel">
+    <div
+      className="maplibregl-ctrl maplibregl-ctrl-group"
+      style={{ position: 'absolute', top: '120px', right: '10px', zIndex: 10 }}
+    >
       <button
+        type="button"
         onClick={handleThemeCycle}
         title={`Cycle Theme (Current: ${theme})`}
         aria-label={`Cycle Theme (Current: ${theme})`}
-        className="global-control-btn"
       >
-        {theme === 'bright' && <Sun size={16} />}
-        {theme === 'dark' && <Moon size={16} />}
-        {theme === 'liberty' && <Monitor size={16} />}
+        <span
+          className="maplibregl-ctrl-icon"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {theme === 'bright' && <Sun size={16} />}
+          {theme === 'dark' && <Moon size={16} />}
+          {theme === 'liberty' && <Monitor size={16} />}
+        </span>
       </button>
 
-      <div className="global-control-separator" />
-
       <button
+        type="button"
         onClick={handleToggleDataSaver}
         title={
           dataSaver
@@ -61,9 +68,21 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
             ? 'Data Saver Active (Click to deactivate)'
             : 'Data Saver Inactive (Click to activate)'
         }
-        className={`global-control-btn ${dataSaver ? 'active' : ''}`}
+        style={
+          dataSaver
+            ? {
+                backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
+                color: 'var(--ciclista-color-surface-base)',
+              }
+            : undefined
+        }
       >
-        {dataSaver ? <WifiOff size={16} /> : <Wifi size={16} />}
+        <span
+          className="maplibregl-ctrl-icon"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {dataSaver ? <WifiOff size={16} /> : <Wifi size={16} />}
+        </span>
       </button>
     </div>
   );
