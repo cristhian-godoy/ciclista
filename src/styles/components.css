@@ -964,3 +964,19 @@ h2 {
 .rules-details summary::-webkit-details-marker {
   display: none;
 }
+
+/* Horizontal MapLibre control group popover overrides */
+.horizontal-ctrl-group {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+.horizontal-ctrl-group button {
+  border-bottom: none !important;
+  border-right: 1px solid var(--ciclista-glass-border-base) !important;
+}
+
+.horizontal-ctrl-group button:last-child {
+  border-right: none !important;
+  border-bottom-style: none !important;
+}

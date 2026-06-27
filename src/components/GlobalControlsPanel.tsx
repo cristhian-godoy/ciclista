@@ -1,4 +1,4 @@
-import { Map, Moon, Sun, Wifi, WifiOff } from 'lucide-react';
+import { Box, Moon, Palette, Sun, Wifi, WifiOff } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { isDataSaverActive, setDataSaverActive } from '../core/storage/dataUsage';
@@ -55,15 +55,43 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
           className="maplibregl-ctrl-icon"
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          {theme === 'bright' && <Sun size={16} />}
-          {theme === 'dark' && <Moon size={16} />}
-          {theme === 'liberty' && <Map size={16} />}
+          <Palette size={16} />
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={handleToggleDataSaver}
+        title={
+          dataSaver
+            ? 'Data Saver Active (Click to deactivate)'
+            : 'Data Saver Inactive (Click to activate)'
+        }
+        aria-label={
+          dataSaver
+            ? 'Data Saver Active (Click to deactivate)'
+            : 'Data Saver Inactive (Click to activate)'
+        }
+        style={
+          dataSaver
+            ? {
+                backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
+                color: 'var(--ciclista-color-surface-base)',
+              }
+            : undefined
+        }
+      >
+        <span
+          className="maplibregl-ctrl-icon"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {dataSaver ? <WifiOff size={16} /> : <Wifi size={16} />}
         </span>
       </button>
 
       {isThemeExpanded && (
         <div
-          className="maplibregl-ctrl maplibregl-ctrl-group"
+          className="maplibregl-ctrl maplibregl-ctrl-group horizontal-ctrl-group"
           style={{
             position: 'absolute',
             right: '100%',
@@ -118,7 +146,7 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
               className="maplibregl-ctrl-icon"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <Map size={16} />
+              <Box size={16} />
             </span>
           </button>
           <button
@@ -147,36 +175,6 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
           </button>
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={handleToggleDataSaver}
-        title={
-          dataSaver
-            ? 'Data Saver Active (Click to deactivate)'
-            : 'Data Saver Inactive (Click to activate)'
-        }
-        aria-label={
-          dataSaver
-            ? 'Data Saver Active (Click to deactivate)'
-            : 'Data Saver Inactive (Click to activate)'
-        }
-        style={
-          dataSaver
-            ? {
-                backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
-                color: 'var(--ciclista-color-surface-base)',
-              }
-            : undefined
-        }
-      >
-        <span
-          className="maplibregl-ctrl-icon"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          {dataSaver ? <WifiOff size={16} /> : <Wifi size={16} />}
-        </span>
-      </button>
     </div>
   );
 };
