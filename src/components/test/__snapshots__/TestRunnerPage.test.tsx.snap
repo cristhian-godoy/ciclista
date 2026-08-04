@@ -1,0 +1,99 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TestRunnerPage layout and design system compliance > renders test dashboard structure matching component snapshots 1`] = `
+<div
+  class="test-runner-container"
+>
+  <div
+    class="test-runner-sidebar"
+  >
+    <div
+      class="test-runner-header"
+    >
+      <h1
+        class="test-runner-title"
+      >
+        Routing Test Dashboard
+      </h1>
+      <a
+        class="test-runner-exit-link"
+        href="/"
+      >
+        ← Exit
+      </a>
+    </div>
+    <button
+      class="test-runner-btn-all"
+      type="button"
+    >
+      Run All Tests (
+      1
+      )
+    </button>
+    <div
+      class="test-runner-cases-list"
+    >
+      <span
+        class="test-runner-cases-label"
+      >
+        Available Test Cases
+      </span>
+      <div
+        class="test-runner-case-item selected"
+      >
+        <div>
+          <div
+            class="test-runner-case-name"
+          >
+            Marienplatz to Isartor Standard Route
+          </div>
+          <div
+            class="test-runner-case-preset"
+          >
+            Preset: 
+            munich
+          </div>
+        </div>
+        <div>
+          <span
+            class="test-runner-badge--idle"
+          >
+            IDLE
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="test-runner-detail-card"
+    >
+      <div
+        class="test-runner-detail-title"
+      >
+        Marienplatz to Isartor Standard Route
+      </div>
+      <div
+        class="test-runner-detail-desc"
+      >
+        Validates optimal path calculation and non-zero distance/duration between Marienplatz and Isartor.
+      </div>
+      <button
+        class="test-runner-btn-single"
+        type="button"
+      >
+        Run Selected Test
+      </button>
+    </div>
+  </div>
+  <div
+    class="test-runner-map-view"
+  >
+    <div
+      class="map-wrapper"
+    >
+      <div
+        class="map-container"
+      />
+    </div>
+  </div>
+</div>
+`;
