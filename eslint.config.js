@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import reactPlugin from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
@@ -27,12 +28,23 @@ export default defineConfig([
       prettier: eslintPluginPrettier,
       jsdoc,
       'simple-import-sort': simpleImportSort,
+      react: reactPlugin,
     },
     rules: {
       'react-hooks/set-state-in-effect': 'error',
       'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      'react/forbid-component-props': ['error', { forbid: ['style'] }],
+      'react/forbid-dom-props': ['error', { forbid: ['style'] }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXAttribute Literal[value=/#([0-9a-fA-F]{3,8})/]',
+          message:
+            'Raw hex color literals are forbidden in JSX attributes. Use CSS classes and CSS variable theme tokens instead.',
+        },
+      ],
       'jsdoc/require-description': [
         'error',
         {

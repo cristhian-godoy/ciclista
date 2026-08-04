@@ -2,7 +2,5 @@ ROADMAP.md
 	The project's long-term milestone roadmap (Milestones 1 through 4).
 future-features.md
 	Milestone 5 roadmap specs for core feature additions.
-archive
-	Directory containing completed plans and checklists.
-plan_template.md
-	Markdown template for creating new feature implementation plans.
+plans
+	Implementation plans, plan templates, and archived task specs.
