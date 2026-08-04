@@ -20,6 +20,8 @@
   --ciclista-color-danger-text: hsl(0deg 85% 65%);
   --ciclista-color-success-bg: rgb(16 185 129 / 15%);
   --ciclista-color-success-border: rgb(16 185 129 / 30%);
+  --ciclista-color-route-shared: hsl(217deg 91% 60%);
+  --ciclista-color-route-dismount: hsl(258deg 90% 66%);
   --ciclista-glass-bg-base: rgb(20 24 33 / 70%);
   --ciclista-glass-bg-hover: rgb(30 36 48 / 80%);
   --ciclista-glass-border-base: rgb(255 255 255 / 8%);

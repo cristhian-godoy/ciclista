@@ -221,9 +221,7 @@ export default function App() {
 
   if (isTestRoute) {
     return (
-      <Suspense
-        fallback={<div style={{ padding: '2rem', color: '#fff' }}>Loading Test Dashboard...</div>}
-      >
+      <Suspense fallback={<div className="app-suspense-fallback">Loading Test Dashboard...</div>}>
         <TestRunnerPage />
       </Suspense>
     );
