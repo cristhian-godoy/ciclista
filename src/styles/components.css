@@ -2174,7 +2174,7 @@ h2 {
 }
 
 .popup-select-option {
-  background: #111;
+  background: var(--ciclista-color-surface-base);
 }
 
 .popup-empty-tags {
