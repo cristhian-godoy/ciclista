@@ -21,7 +21,7 @@
         "severity": "error"
       }
     ],
-    "selector-class-pattern": "^(ciclista-[a-z0-9-]+|map-[a-z0-9-]+|hud-[a-z0-9-]+|arrival-[a-z0-9-]+|data-saver-[a-z0-9-]+|ctrl-[a-z0-9-]+|inspector-[a-z0-9-]+|legend-[a-z0-9-]+|font-[a-z0-9-]+|text-[a-z0-9-]+|navigation-[a-z0-9-]+|strategy-[a-z0-9-]+|stats-[a-z0-9-]+|rules-[a-z0-9-]+|mt-[a-z0-9-]+|sidebar-[a-z0-9-]+|context-[a-z0-9-]+|dock-[a-z0-9-]+|popup-[a-z0-9-]+|badge-[a-z0-9-]+|osm-[a-z0-9-]+|speed-selector-[a-z0-9-]+|compare-[a-z0-9-]+|preset-[a-z0-9-]+|config-[a-z0-9-]+|attribution-[a-z0-9-]+|maplibregl-[a-z0-9-]+|custom-[a-z0-9-]+|app-[a-z0-9-]+)$",
+    "selector-class-pattern": "^(ciclista-[a-z0-9-]+|map-[a-z0-9-]+|hud-[a-z0-9-]+|arrival-[a-z0-9-]+|data-saver-[a-z0-9-]+|ctrl-[a-z0-9-]+|global-controls-[a-z0-9-]+|inspector-[a-z0-9-]+|legend-[a-z0-9-]+|font-[a-z0-9-]+|text-[a-z0-9-]+|navigation-[a-z0-9-]+|strategy-[a-z0-9-]+|stats-[a-z0-9-]+|rules-[a-z0-9-]+|mt-[a-z0-9-]+|sidebar-[a-z0-9-]+|context-[a-z0-9-]+|dock-[a-z0-9-]+|popup-[a-z0-9-]+|badge-[a-z0-9-]+|osm-[a-z0-9-]+|speed-selector-[a-z0-9-]+|compare-[a-z0-9-]+|preset-[a-z0-9-]+|config-[a-z0-9-]+|attribution-[a-z0-9-]+|maplibregl-[a-z0-9-]+|custom-[a-z0-9-]+|app-[a-z0-9-]+|sidebar|active|disabled|collapsed|mobile-icon|desktop-icon|chosen|locked-alt|selected|header-row|last-row|metric-col|strategy-col|value-col|cycleway-pct|primary-pct|placeholder-text)$",
     "keyframes-name-pattern": null,
     "no-descending-specificity": null,
     "declaration-block-no-duplicate-properties": null
