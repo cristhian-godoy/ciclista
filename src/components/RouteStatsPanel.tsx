@@ -80,7 +80,7 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
       {/* Route Alternatives Selector */}
       <section className="ciclista-form-group">
         <label className="ciclista-label">Route Alternatives</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+        <div className="stats-alt-list">
           {routeVariants.map((alt) => {
             const isActive = routingStrategy === alt.label;
             const duration = alt.result.totalDurationSeconds;
@@ -91,21 +91,21 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
               switch (label) {
                 case 'standard':
                   return (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="strategy-label-badge">
                       <Zap size={14} aria-label="Speed Icon" />
                       Speed
                     </span>
                   );
                 case 'avoid-stops':
                   return (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="strategy-label-badge">
                       <Octagon size={14} aria-label="Avoid Stops Icon" />
                       Avoid Stops
                     </span>
                   );
                 case 'quiet-streets':
                   return (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="strategy-label-badge">
                       <Trees size={14} aria-label="Quiet Paths Icon" />
                       Quiet Paths
                     </span>
@@ -118,83 +118,28 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
             return (
               <div
                 key={alt.label}
-                className={`alternative-card ${isActive ? 'active' : ''}`}
+                className={`alternative-card stats-alt-card ${isActive ? 'active' : ''} ${
+                  isNavigating && !isActive ? 'disabled' : ''
+                }`}
                 onClick={() => {
                   if (isNavigating) return;
                   onStrategyChange(alt.label as 'standard' | 'avoid-stops' | 'quiet-streets');
                 }}
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-secondary)',
-                  border: `1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                  cursor: isNavigating ? 'default' : 'pointer',
-                  transition: 'var(--transition-fast)',
-                  boxShadow: isActive ? 'var(--shadow-glow)' : 'none',
-                  opacity: isNavigating && !isActive ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive && !isNavigating) {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive && !isNavigating) {
-                    e.currentTarget.style.borderColor = 'var(--border-color)';
-                    e.currentTarget.style.background = 'var(--bg-secondary)';
-                  }
-                }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '4px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontWeight: '600',
-                      fontSize: '0.85rem',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    }}
-                  >
-                    {getStrategyLabel(alt.label)}
-                  </span>
-                  {isActive && (
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        background: 'var(--accent-primary)',
-                        color: 'var(--text-primary)',
-                        padding: '1px 6px',
-                        borderRadius: '10px',
-                        fontWeight: '600',
-                      }}
-                    >
-                      Active
-                    </span>
-                  )}
+                <div className="stats-alt-header">
+                  <span className="stats-alt-title">{getStrategyLabel(alt.label)}</span>
+                  {isActive && <span className="stats-alt-active-badge">Active</span>}
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    fontSize: '0.75rem',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <div className="stats-alt-metrics">
+                  <span className="strategy-label-badge">
                     <Clock size={12} aria-label="Duration Icon" />
                     {formatTime(duration)}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="strategy-label-badge">
                     <Ruler size={12} aria-label="Distance Icon" />
                     {formatDistance(distance)}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="strategy-label-badge">
                     <TrafficCone size={12} aria-label="Traffic Signals Icon" />
                     {signals} signals
                   </span>
@@ -208,41 +153,20 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
       {/* Debug Route Details */}
       {routeResult && routeResult.edges && (
         <section className="ciclista-card">
-          <h2
-            onClick={() => setShowDebug(!showDebug)}
-            style={{
-              cursor: 'pointer',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              margin: 0,
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              <Bug size={16} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
+          <h2 onClick={() => setShowDebug(!showDebug)} className="stats-debug-header">
+            <span className="stats-debug-title">
+              <Bug size={16} className="stats-debug-icon" />
               Debug Route Edges
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="stats-debug-actions">
               <button
                 onClick={handleCopyDebug}
                 title="Copy path debug info to clipboard"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '4px',
-                  padding: '2px 6px',
-                  fontSize: '0.65rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  zIndex: 2,
-                }}
+                className="stats-copy-btn"
               >
                 {copied ? (
                   <>
-                    <Check size={10} style={{ color: 'var(--accent-secondary)' }} />
+                    <Check size={10} className="badge-bike" />
                     <span>Copied!</span>
                   </>
                 ) : (
@@ -256,97 +180,34 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
             </div>
           </h2>
           {showDebug && (
-            <div
-              style={{
-                marginTop: '12px',
-                maxHeight: '220px',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}
-            >
+            <div className="stats-debug-container">
               {routeResult.edges.map((edge, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '8px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    fontSize: '0.75rem',
-                    lineHeight: '1.4',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: 'bold',
-                      color: 'var(--text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      flexWrap: 'wrap',
-                    }}
-                  >
+                <div key={index} className="stats-edge-item">
+                  <div className="stats-edge-title">
                     <span>
                       {index + 1}. {edge.name}
                     </span>
                     {edge.matchedSign && (
-                      <code
-                        style={{
-                          fontSize: '0.62rem',
-                          background: 'rgba(139,92,246,0.15)',
-                          color: 'hsl(265,80%,72%)',
-                          border: '1px solid rgba(139,92,246,0.3)',
-                          borderRadius: '3px',
-                          padding: '1px 5px',
-                        }}
-                      >
-                        {edge.matchedSign}
-                      </code>
+                      <code className="stats-tag-badge">{edge.matchedSign}</code>
                     )}
                     {!edge.matchedSign && edge.matchedRoad && (
-                      <code
-                        style={{
-                          fontSize: '0.62rem',
-                          background: 'rgba(14,165,233,0.12)',
-                          color: 'hsl(200,80%,65%)',
-                          border: '1px solid rgba(14,165,233,0.25)',
-                          borderRadius: '3px',
-                          padding: '1px 5px',
-                        }}
-                      >
+                      <code className="stats-tag-badge stats-tag-badge--road">
                         {edge.matchedRoad}
                       </code>
                     )}
                   </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      color: 'var(--text-secondary)',
-                      marginTop: '2px',
-                    }}
-                  >
+                  <div className="stats-edge-row">
                     <span>
-                      Type: <code style={{ color: 'var(--accent-secondary)' }}>{edge.highway}</code>
+                      Type: <code className="badge-bike">{edge.highway}</code>
                     </span>
                     <span>{Math.round(edge.distance)}m</span>
                     <span>Cost: {Math.round(edge.cost)}s</span>
                   </div>
                   {Object.entries(edge.tags).length > 0 && (
-                    <div
-                      style={{
-                        marginTop: '4px',
-                        padding: '4px 6px',
-                        background: 'rgba(0,0,0,0.2)',
-                        borderRadius: '4px',
-                      }}
-                    >
+                    <div className="stats-tags-box">
                       {Object.entries(edge.tags).map(([key, val]) => (
-                        <div key={key} style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                          <strong style={{ color: 'var(--text-secondary)' }}>{key}:</strong>{' '}
-                          {String(val)}
+                        <div key={key} className="stats-tag-kv">
+                          <strong className="text-secondary">{key}:</strong> {String(val)}
                         </div>
                       ))}
                     </div>

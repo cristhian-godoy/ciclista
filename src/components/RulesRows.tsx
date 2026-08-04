@@ -13,7 +13,7 @@ const getIcon = (iconCode: string): React.ReactNode => {
       return <Footprints size={14} aria-label="Sidewalk Icon" />;
     case '🚶‍♂️🚲':
       return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+        <span className="strategy-label-badge">
           <Footprints size={10} aria-label="Pedestrian Icon" />
           <Bike size={10} aria-label="Bicycle Icon" />
         </span>
@@ -67,11 +67,8 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
           </div>
 
           {speedType === 'dismount' ? (
-            <div className="ciclista-form-group--small" style={{ marginTop: '4px' }}>
-              <span
-                className="rules-speed-info"
-                style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}
-              >
+            <div className="ciclista-form-group--small mt-xs">
+              <span className="rules-speed-info">
                 Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
@@ -94,7 +91,7 @@ export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
             )
           )}
 
-          <div className="ciclista-form-group--small" style={{ marginTop: '8px' }}>
+          <div className="ciclista-form-group--small mt-sm">
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}
@@ -160,11 +157,8 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
           </div>
 
           {speedType === 'dismount' ? (
-            <div className="ciclista-form-group--small" style={{ marginTop: '4px' }}>
-              <span
-                className="rules-speed-info"
-                style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}
-              >
+            <div className="ciclista-form-group--small mt-xs">
+              <span className="rules-speed-info">
                 Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
               </span>
             </div>
@@ -187,7 +181,7 @@ export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
             )
           )}
 
-          <div className="ciclista-form-group--small" style={{ marginTop: '8px' }}>
+          <div className="ciclista-form-group--small mt-sm">
             <label>Comfort level</label>
             <ComfortSelector
               value={config.comfort || 'neutral'}

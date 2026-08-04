@@ -158,7 +158,7 @@ const MapViewContent: React.FC<{
   }, [mapInstance, mapInstanceReady, setMap, setMapReady]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div className="map-wrapper">
       <div ref={mapContainerRef} className="map-container" />
 
       {map && mapReady && (

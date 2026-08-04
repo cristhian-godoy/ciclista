@@ -36,199 +36,80 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     return (
       <div
         key={ev.targetId}
-        className="ciclista-card"
+        className={`ciclista-card inspector-edge-card ${isChosen ? 'chosen' : ''} ${
+          isLockedAlternative ? 'locked-alt' : ''
+        }`}
         onClick={() => {
           if (!isChosen) {
             setSelectedAlternativeTargetId(isLockedAlternative ? null : ev.targetId);
           }
         }}
-        style={{
-          padding: '12px',
-          border: isChosen
-            ? '1.5px solid var(--ciclista-color-brand-secondary)'
-            : isLockedAlternative
-              ? '1.5px solid #ef4444'
-              : '1px solid var(--ciclista-glass-border-base)',
-          background: isChosen
-            ? 'rgba(20, 184, 166, 0.05)'
-            : isLockedAlternative
-              ? 'rgba(239, 68, 68, 0.05)'
-              : 'var(--ciclista-color-surface-elevated)',
-          borderRadius: '8px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          cursor: isChosen ? 'default' : 'pointer',
-          transition: 'all 0.2s ease',
-        }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="inspector-edge-header">
           <div>
-            <div
-              style={{
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                color: 'var(--ciclista-color-text-primary)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: color,
-                  marginRight: '6px',
-                  flexShrink: 0,
-                }}
-              />
+            <div className="inspector-edge-title">
+              {/* eslint-disable-next-line react/forbid-dom-props -- Dynamic edge rendering color computed dynamically at runtime from road classification and traffic signs */}
+              <span className="inspector-color-dot" style={{ backgroundColor: color }} />
               {ev.name}
             </div>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--ciclista-color-text-secondary)',
-                marginTop: '2px',
-              }}
-            >
-              To node: <span style={{ fontFamily: 'monospace' }}>{ev.targetId}</span>
+            <div className="inspector-edge-sub">
+              To node: <span className="font-mono">{ev.targetId}</span>
             </div>
           </div>
-          <span
-            style={{
-              fontSize: '0.7rem',
-              fontWeight: 'bold',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              textTransform: 'uppercase',
-              background: isChosen
-                ? 'var(--ciclista-color-success-bg)'
-                : 'var(--ciclista-color-surface-tertiary)',
-              border: isChosen
-                ? '1px solid var(--ciclista-color-success-border)'
-                : '1px solid var(--ciclista-glass-border-base)',
-              color: isChosen
-                ? 'var(--ciclista-color-brand-secondary)'
-                : 'var(--ciclista-color-text-secondary)',
-            }}
-          >
+          <span className={`inspector-badge ${isChosen ? 'chosen' : ''}`}>
             {isChosen ? 'Chosen' : 'Alternative'}
           </span>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            fontSize: '0.75rem',
-            marginTop: '4px',
-            borderTop: '1px solid var(--ciclista-glass-border-base)',
-            paddingTop: '8px',
-          }}
-        >
+        <div className="inspector-grid">
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Highway:</span>{' '}
-            <code
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                padding: '1px 4px',
-                borderRadius: '3px',
-              }}
-            >
-              {ev.highway}
-            </code>
+            <span className="text-secondary">Highway:</span>{' '}
+            <code className="inspector-code">{ev.highway}</code>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Surface:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{ev.surface}</span>
+            <span className="text-secondary">Surface:</span>{' '}
+            <span className="font-medium">{ev.surface}</span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Base Speed:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{ev.baseSpeedKmh.toFixed(1)} km/h</span>
+            <span className="text-secondary">Base Speed:</span>{' '}
+            <span className="font-medium">{ev.baseSpeedKmh.toFixed(1)} km/h</span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Effective Speed:</span>{' '}
-            <span
-              style={{
-                fontWeight: 500,
-                color: hasSpeedReduction ? 'var(--ciclista-color-danger-text)' : 'inherit',
-              }}
-            >
+            <span className="text-secondary">Effective Speed:</span>{' '}
+            <span className={`font-medium ${hasSpeedReduction ? 'badge-signal' : ''}`}>
               {ev.effectiveSpeedKmh.toFixed(1)} km/h
             </span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Distance:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{Math.round(ev.distance)} m</span>
+            <span className="text-secondary">Distance:</span>{' '}
+            <span className="font-medium">{Math.round(ev.distance)} m</span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Display Cost:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{Math.round(ev.displayCostSeconds)}s</span>
+            <span className="text-secondary">Display Cost:</span>{' '}
+            <span className="font-medium">{Math.round(ev.displayCostSeconds)}s</span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Comfort Rating:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{ev.comfort}</span>
+            <span className="text-secondary">Comfort Rating:</span>{' '}
+            <span className="font-medium">{ev.comfort}</span>
           </div>
           <div>
-            <span style={{ color: 'var(--ciclista-color-text-secondary)' }}>Routing Weight:</span>{' '}
-            <span style={{ fontWeight: 500 }}>{ev.routingWeight.toFixed(1)}</span>
+            <span className="text-secondary">Routing Weight:</span>{' '}
+            <span className="font-medium">{ev.routingWeight.toFixed(1)}</span>
           </div>
         </div>
 
         {ev.rulePenalties && ev.rulePenalties.length > 0 ? (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '4px',
-              marginTop: '4px',
-              borderTop: '1px solid var(--ciclista-glass-border-base)',
-              paddingTop: '6px',
-            }}
-          >
+          <div className="inspector-penalties">
             {ev.rulePenalties.map((penalty, index) => {
-              let bg = 'rgba(234, 179, 8, 0.1)';
-              let border = '1px solid rgba(234, 179, 8, 0.2)';
-              let color = 'var(--ciclista-color-brand-hover)';
-
-              if (penalty.type === 'restriction') {
-                bg = 'var(--ciclista-color-danger-bg)';
-                border = '1px solid var(--ciclista-color-danger-border)';
-                color = 'var(--ciclista-color-danger-text)';
-              } else if (penalty.type === 'node_delay') {
-                bg = 'rgba(59, 130, 246, 0.1)';
-                border = '1px solid rgba(59, 130, 246, 0.2)';
-                color = '#60a5fa';
-              } else if (penalty.type === 'surface') {
-                bg = 'rgba(244, 63, 94, 0.1)';
-                border = '1px solid rgba(244, 63, 94, 0.2)';
-                color = 'var(--ciclista-color-brand-danger)';
-              } else if (penalty.type === 'road_class') {
-                bg = 'rgba(99, 102, 241, 0.1)';
-                border = '1px solid rgba(99, 102, 241, 0.2)';
-                color = 'var(--ciclista-color-brand-hover)';
-              } else if (penalty.type === 'service') {
-                bg = 'rgba(168, 85, 247, 0.1)';
-                border = '1px solid rgba(168, 85, 247, 0.2)';
-                color = '#c084fc';
-              }
+              const badgeClass =
+                penalty.type === 'restriction'
+                  ? 'badge badge-signal'
+                  : penalty.type === 'node_delay'
+                    ? 'badge badge-bike'
+                    : 'badge';
 
               return (
-                <span
-                  key={index}
-                  style={{
-                    fontSize: '0.65rem',
-                    background: bg,
-                    border: border,
-                    color: color,
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                    fontWeight: penalty.type === 'restriction' ? 'bold' : 'normal',
-                  }}
-                >
+                <span key={index} className={badgeClass}>
                   {penalty.name}: +{Math.round(penalty.value)}s
                 </span>
               );
@@ -240,69 +121,18 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             ev.isRestricted ||
             ev.turnPenaltySeconds > 0 ||
             ev.nodeDelaySeconds > 0) && (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '4px',
-                marginTop: '4px',
-                borderTop: '1px solid var(--ciclista-glass-border-base)',
-                paddingTop: '6px',
-              }}
-            >
-              {ev.matchedSign && (
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    background: 'rgba(99, 102, 241, 0.1)',
-                    border: '1px solid rgba(99, 102, 241, 0.2)',
-                    color: 'var(--ciclista-color-brand-hover)',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                  }}
-                >
-                  Sign: {ev.matchedSign}
-                </span>
-              )}
+            <div className="inspector-penalties">
+              {ev.matchedSign && <span className="badge">Sign: {ev.matchedSign}</span>}
               {ev.flatPenaltySeconds > 0 && (
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    background: 'rgba(244, 63, 94, 0.1)',
-                    border: '1px solid rgba(244, 63, 94, 0.2)',
-                    color: 'var(--ciclista-color-brand-danger)',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                  }}
-                >
+                <span className="badge badge-signal">
                   Surface Penalty: +{Math.round(ev.flatPenaltySeconds)}s
                 </span>
               )}
               {ev.turnPenaltySeconds > 0 && (
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    background: 'rgba(234, 179, 8, 0.1)',
-                    border: '1px solid rgba(234, 179, 8, 0.2)',
-                    color: 'var(--ciclista-color-brand-hover)',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                  }}
-                >
-                  Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s
-                </span>
+                <span className="badge">Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s</span>
               )}
               {ev.nodeDelaySeconds > 0 && (
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                    color: '#60a5fa',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                  }}
-                >
+                <span className="badge badge-bike">
                   {ev.nodeDelayType === 'signal' && 'Traffic Signal Delay'}
                   {ev.nodeDelayType === 'yield' && 'Yield Delay'}
                   {ev.nodeDelayType === 'stop' && 'Stop Sign Delay'}
@@ -312,17 +142,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                 </span>
               )}
               {ev.isRestricted && (
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    background: 'var(--ciclista-color-danger-bg)',
-                    border: '1px solid var(--ciclista-color-danger-border)',
-                    color: 'var(--ciclista-color-danger-text)',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <span className="badge badge-signal">
                   {ev.restrictionReason === 'footway_not_bicycle_frei'
                     ? 'Bicycles Prohibited (Footway)'
                     : 'Bicycle Restricted'}
@@ -356,106 +176,40 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     );
     const signalsDiff = (selectedEval.altSignalCount ?? 0) - chosenRemainingSignals;
 
-    const timeColor = timeDiff > 0 ? '#ef4444' : timeDiff < 0 ? '#10b981' : 'inherit';
-    const distColor = distDiff > 0 ? '#ef4444' : distDiff < 0 ? '#10b981' : 'inherit';
-    const signalsColor = signalsDiff > 0 ? '#ef4444' : signalsDiff < 0 ? '#10b981' : 'inherit';
-
     const timeSign = timeDiff >= 0 ? `+${timeDiff}` : `${timeDiff}`;
     const distSign = distDiff >= 0 ? `+${distDiff}` : `${distDiff}`;
-    const signalsSign = signalsDiff >= 0 ? `+${signalsDiff}` : `${signalsDiff}`;
+    const signalsSign = signalsDiff >= 0 ? `+${signalsSign}` : `${signalsSign}`;
 
     return (
-      <div
-        className="ciclista-card"
-        style={{
-          padding: '12px',
-          border: '1.5px solid #ef4444',
-          background: 'rgba(239, 68, 68, 0.04)',
-          borderRadius: '8px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#ef4444' }}>
-            Comparing paths to destination
-          </span>
+      <div className="ciclista-card inspector-compare-card">
+        <div className="inspector-header-row">
+          <span className="font-medium">Comparing paths to destination</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
               setSelectedAlternativeTargetId(null);
             }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--ciclista-color-text-secondary)',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              padding: '0 4px',
-            }}
+            className="inspector-close-btn"
             title="Clear comparison"
           >
             &times;
           </button>
         </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--ciclista-color-text-secondary)' }}>
-          Chosen remaining vs <strong style={{ color: '#ef4444' }}>{selectedEval.name}</strong>{' '}
-          alternative:
+        <div className="inspector-title-sub">
+          Chosen remaining vs <strong>{selectedEval.name}</strong> alternative:
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: '8px',
-            textAlign: 'center',
-            marginTop: '4px',
-          }}
-        >
-          <div style={{ borderRight: '1px solid var(--ciclista-glass-border-base)' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
-              Time Diff
-            </div>
-            <div
-              style={{
-                fontWeight: 'bold',
-                color: timeColor,
-                fontSize: '0.85rem',
-                marginTop: '2px',
-              }}
-            >
-              {timeSign}s
-            </div>
+        <div className="inspector-compare-grid">
+          <div className="inspector-compare-col">
+            <div className="inspector-compare-lbl">Time Diff</div>
+            <div className="inspector-compare-val">{timeSign}s</div>
           </div>
-          <div style={{ borderRight: '1px solid var(--ciclista-glass-border-base)' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
-              Dist Diff
-            </div>
-            <div
-              style={{
-                fontWeight: 'bold',
-                color: distColor,
-                fontSize: '0.85rem',
-                marginTop: '2px',
-              }}
-            >
-              {distSign}m
-            </div>
+          <div className="inspector-compare-col">
+            <div className="inspector-compare-lbl">Dist Diff</div>
+            <div className="inspector-compare-val">{distSign}m</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.65rem', color: 'var(--ciclista-color-text-secondary)' }}>
-              Signals Diff
-            </div>
-            <div
-              style={{
-                fontWeight: 'bold',
-                color: signalsColor,
-                fontSize: '0.85rem',
-                marginTop: '2px',
-              }}
-            >
-              {signalsSign}
-            </div>
+            <div className="inspector-compare-lbl">Signals Diff</div>
+            <div className="inspector-compare-val">{signalsSign}</div>
           </div>
         </div>
       </div>
@@ -464,114 +218,49 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
   const renderLegend = () => {
     return (
-      <div
-        style={{
-          borderTop: '1px solid var(--ciclista-glass-border-base)',
-          paddingTop: '12px',
-          marginTop: '12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}
-      >
-        <div
-          style={{
-            fontWeight: 600,
-            fontSize: '0.8rem',
-            color: 'var(--ciclista-color-text-primary)',
-          }}
-        >
-          Map Inspector Legend
-        </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            fontSize: '0.7rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              style={{
-                display: 'inline-block',
-                width: '16px',
-                height: '4px',
-                borderRadius: '2px',
-                backgroundColor: '#10b981',
-              }}
-            />
+      <div className="inspector-legend">
+        <div className="inspector-legend-title">Map Inspector Legend</div>
+        <div className="inspector-legend-grid">
+          <div className="inspector-legend-item">
+            <span className="legend-color-bar legend-color-bar--safe" />
             <span>Safe / Segregated Path</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              style={{
-                display: 'inline-block',
-                width: '16px',
-                height: '4px',
-                borderRadius: '2px',
-                backgroundColor: '#3b82f6',
-              }}
-            />
+          <div className="inspector-legend-item">
+            <span className="legend-color-bar legend-color-bar--shared" />
             <span>Acceptable / Shared Path</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              style={{
-                display: 'inline-block',
-                width: '16px',
-                height: '4px',
-                borderRadius: '2px',
-                backgroundColor: '#ef4444',
-              }}
-            />
+          <div className="inspector-legend-item">
+            <span className="legend-color-bar legend-color-bar--primary" />
             <span>Primary / Mixed Traffic</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              style={{
-                display: 'inline-block',
-                width: '16px',
-                height: '4px',
-                borderRadius: '2px',
-                backgroundColor: '#8b5cf6',
-              }}
-            />
+          <div className="inspector-legend-item">
+            <span className="legend-color-bar legend-color-bar--dismount" />
             <span>Dismount / Pedestrian</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🚦</span>
+          <div className="inspector-legend-item">
+            <span className="inspector-legend-icon-emoji">🚦</span>
             <span>Traffic Light</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🛑</span>
+          <div className="inspector-legend-item">
+            <span className="inspector-legend-icon-emoji">🛑</span>
             <span>Stop Sign</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⚠️</span>
+          <div className="inspector-legend-item">
+            <span className="inspector-legend-icon-emoji">⚠️</span>
             <span>Yield Sign</span>
           </div>
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            className="inspector-legend-item"
             title="Priority or marked crossings where yielding is mandatory. Informal or unmarked crossings are excluded."
           >
-            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>🚸</span>
+            <span className="inspector-legend-icon-emoji">🚸</span>
             <span>Crossing</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', gridColumn: 'span 2' }}>
-            <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>⬆</span>
+          <div className="inspector-legend-item inspector-legend-item--full">
+            <span className="inspector-legend-icon-emoji">⬆</span>
             <span>Sharp Turn Direction Cue (rotates relative to map)</span>
           </div>
-          <div
-            style={{
-              gridColumn: 'span 2',
-              fontSize: '0.65rem',
-              color: 'var(--ciclista-color-text-secondary)',
-              marginTop: '4px',
-              borderTop: '1px solid var(--ciclista-color-border, #e5e7eb)',
-              paddingTop: '4px',
-            }}
-          >
+          <div className="inspector-legend-note">
             * 🚸 denotes priority/marked crossings where yielding is mandatory. Informal or unmarked
             crossings are excluded.
           </div>
@@ -581,40 +270,11 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   };
 
   return (
-    <div
-      className="ciclista-card"
-      style={{
-        padding: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        marginTop: '16px',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2
-          style={{
-            margin: 0,
-            fontSize: '0.95rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Node Inspector
-        </h2>
+    <div className="ciclista-card inspector-panel">
+      <div className="inspector-header-row">
+        <h2 className="ciclista-label">Node Inspector</h2>
         {selectedNodeId && (
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--ciclista-color-text-secondary)',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              padding: '2px 6px',
-            }}
-            title="Close Inspector"
-          >
+          <button onClick={onClose} className="inspector-close-btn" title="Close Inspector">
             &times;
           </button>
         )}
@@ -622,55 +282,24 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
       {selectedNodeId ? (
         <>
-          <div
-            style={{
-              fontSize: '0.75rem',
-              color: 'var(--ciclista-color-text-secondary)',
-              marginBottom: '4px',
-            }}
-          >
-            Selected Node ID: <span style={{ fontFamily: 'monospace' }}>{selectedNodeId}</span>
+          <div className="inspector-title-sub">
+            Selected Node ID: <span className="font-mono">{selectedNodeId}</span>
           </div>
 
           {renderComparisonCard()}
 
-          <div
-            className="inspector-scroll-area"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              maxHeight: '320px',
-              overflowY: 'auto',
-              paddingRight: '4px',
-            }}
-          >
+          <div className="inspector-scroll-area inspector-scroll-container">
             {chosenEdge && renderEdgeDetails(chosenEdge, true)}
 
             {alternativeEdges.map((ev) => renderEdgeDetails(ev, false))}
 
             {evaluations.length === 0 && (
-              <div
-                style={{
-                  textAlign: 'center',
-                  fontSize: '0.75rem',
-                  color: 'var(--ciclista-color-text-muted)',
-                }}
-              >
-                No outgoing edges from this node.
-              </div>
+              <div className="inspector-empty-msg">No outgoing edges from this node.</div>
             )}
           </div>
         </>
       ) : (
-        <div
-          style={{
-            fontSize: '0.75rem',
-            color: 'var(--ciclista-color-text-secondary)',
-            textAlign: 'center',
-            padding: '8px 0',
-          }}
-        >
+        <div className="inspector-empty-msg">
           Select an intersection node on the map to inspect alternative routing decisions.
         </div>
       )}

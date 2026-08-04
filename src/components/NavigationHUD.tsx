@@ -26,125 +26,32 @@ export const NavigationHUD: React.FC = () => {
   };
 
   return (
-    <div
-      className="navigation-hud ciclista-glass-panel"
-      style={{
-        position: 'absolute',
-        top: '16px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        padding: '12px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '24px',
-        borderRadius: '16px',
-        border: '1px solid var(--ciclista-glass-border-focus)',
-        boxShadow: 'var(--ciclista-shadow-lg)',
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span
-          style={{
-            fontSize: '10px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            color: 'var(--ciclista-color-text-secondary)',
-          }}
-        >
-          Speed
-        </span>
-        <span
-          style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: '2px',
-          }}
-        >
+    <div className="navigation-hud ciclista-glass-panel">
+      <div className="hud-item">
+        <span className="hud-label">Speed</span>
+        <span className="hud-value">
           {Math.round(currentSpeedKmh)}
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 'normal',
-              color: 'var(--ciclista-color-text-muted)',
-            }}
-          >
-            km/h
-          </span>
+          <span className="hud-unit">km/h</span>
           {showWASD && (
-            <span
-              style={{
-                marginLeft: '6px',
-                fontSize: '9px',
-                padding: '1px 4px',
-                borderRadius: '4px',
-                background: 'rgba(99, 102, 241, 0.2)',
-                color: 'var(--ciclista-color-brand-main)',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
-                fontWeight: 'bold',
-              }}
-              title="Keyboard WASD controls active"
-            >
+            <span className="hud-wasd-badge" title="Keyboard WASD controls active">
               WASD
             </span>
           )}
         </span>
       </div>
 
-      <div
-        style={{
-          width: '1px',
-          height: '32px',
-          background: 'var(--ciclista-glass-border-base)',
-        }}
-      />
+      <div className="hud-divider" />
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span
-          style={{
-            fontSize: '10px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            color: 'var(--ciclista-color-text-secondary)',
-          }}
-        >
-          Remaining
-        </span>
-        <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
-          {formatDistance(distanceRemainingM)}
-        </span>
+      <div className="hud-item">
+        <span className="hud-label">Remaining</span>
+        <span className="hud-value">{formatDistance(distanceRemainingM)}</span>
       </div>
 
-      <div
-        style={{
-          width: '1px',
-          height: '32px',
-          background: 'var(--ciclista-glass-border-base)',
-        }}
-      />
+      <div className="hud-divider" />
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span
-          style={{
-            fontSize: '10px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            color: 'var(--ciclista-color-text-secondary)',
-          }}
-        >
-          ETA
-        </span>
-        <span
-          style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            color: 'var(--ciclista-color-brand-main)',
-          }}
-        >
-          {formatDuration(etaSeconds)}
-        </span>
+      <div className="hud-item">
+        <span className="hud-label">ETA</span>
+        <span className="hud-value hud-value--eta">{formatDuration(etaSeconds)}</span>
       </div>
     </div>
   );

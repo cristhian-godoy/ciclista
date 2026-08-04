@@ -45,6 +45,7 @@ export const MapContextMenu: React.FC = () => {
   return (
     <div
       className="map-context-menu"
+      /* eslint-disable-next-line react/forbid-dom-props -- Dynamic spatial screen coordinates of context menu position calculated at mouse click location */
       style={{
         left: `${contextMenu.x}px`,
         top: `${contextMenu.y}px`,
@@ -72,7 +73,7 @@ export const MapContextMenu: React.FC = () => {
             setContextMenu((prev) => ({ ...prev, visible: false }));
           }}
         >
-          <ZoomIn size={14} style={{ color: '#f59e0b' }} />
+          <ZoomIn size={14} className="context-icon-warn" />
           <span>Manage Traffic Lights</span>
         </button>
       )}
@@ -87,7 +88,7 @@ export const MapContextMenu: React.FC = () => {
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
           >
-            <MapPin size={14} style={{ color: '#10b981' }} />
+            <MapPin size={14} className="context-icon-success" />
             <span>Start Route Here</span>
           </button>
           <button
@@ -99,7 +100,7 @@ export const MapContextMenu: React.FC = () => {
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
           >
-            <MapPin size={14} style={{ color: '#ef4444' }} />
+            <MapPin size={14} className="context-icon-danger" />
             <span>End Route Here</span>
           </button>
         </>

@@ -40,21 +40,14 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
   }, [isThemeExpanded]);
 
   return (
-    <div
-      ref={panelRef}
-      className="maplibregl-ctrl maplibregl-ctrl-group"
-      style={{ position: 'absolute', top: '120px', right: '10px', zIndex: 10 }}
-    >
+    <div ref={panelRef} className="maplibregl-ctrl maplibregl-ctrl-group global-controls-panel">
       <button
         type="button"
         onClick={() => setIsThemeExpanded((prev) => !prev)}
         title={`Select Theme (Current: ${theme})`}
         aria-label={`Select Theme (Current: ${theme})`}
       >
-        <span
-          className="maplibregl-ctrl-icon"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
+        <span className="maplibregl-ctrl-icon ctrl-icon-center">
           <Palette size={16} />
         </span>
       </button>
@@ -62,6 +55,7 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
       <button
         type="button"
         onClick={handleToggleDataSaver}
+        className={dataSaver ? 'ctrl-btn--active' : undefined}
         title={
           dataSaver
             ? 'Data Saver Active (Click to deactivate)'
@@ -72,56 +66,25 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
             ? 'Data Saver Active (Click to deactivate)'
             : 'Data Saver Inactive (Click to activate)'
         }
-        style={
-          dataSaver
-            ? {
-                backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
-                color: 'var(--ciclista-color-surface-base)',
-              }
-            : undefined
-        }
       >
-        <span
-          className="maplibregl-ctrl-icon"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
+        <span className="maplibregl-ctrl-icon ctrl-icon-center">
           {dataSaver ? <WifiOff size={16} /> : <Wifi size={16} />}
         </span>
       </button>
 
       {isThemeExpanded && (
-        <div
-          className="maplibregl-ctrl maplibregl-ctrl-group horizontal-ctrl-group"
-          style={{
-            position: 'absolute',
-            right: '100%',
-            top: 0,
-            marginRight: '8px',
-            display: 'flex',
-            flexDirection: 'row',
-          }}
-        >
+        <div className="maplibregl-ctrl maplibregl-ctrl-group horizontal-ctrl-group global-controls-popover">
           <button
             type="button"
             onClick={() => {
               onThemeChange('bright');
               setIsThemeExpanded(false);
             }}
+            className={theme === 'bright' ? 'ctrl-btn--active' : undefined}
             title="Bright Theme"
             aria-label="Bright Theme"
-            style={
-              theme === 'bright'
-                ? {
-                    backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
-                    color: 'var(--ciclista-color-surface-base)',
-                  }
-                : undefined
-            }
           >
-            <span
-              className="maplibregl-ctrl-icon"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
+            <span className="maplibregl-ctrl-icon ctrl-icon-center">
               <Sun size={16} />
             </span>
           </button>
@@ -131,21 +94,11 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
               onThemeChange('liberty');
               setIsThemeExpanded(false);
             }}
+            className={theme === 'liberty' ? 'ctrl-btn--active' : undefined}
             title="Liberty Theme"
             aria-label="Liberty Theme"
-            style={
-              theme === 'liberty'
-                ? {
-                    backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
-                    color: 'var(--ciclista-color-surface-base)',
-                  }
-                : undefined
-            }
           >
-            <span
-              className="maplibregl-ctrl-icon"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
+            <span className="maplibregl-ctrl-icon ctrl-icon-center">
               <Box size={16} />
             </span>
           </button>
@@ -155,21 +108,11 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
               onThemeChange('dark');
               setIsThemeExpanded(false);
             }}
+            className={theme === 'dark' ? 'ctrl-btn--active' : undefined}
             title="Dark Theme"
             aria-label="Dark Theme"
-            style={
-              theme === 'dark'
-                ? {
-                    backgroundColor: 'var(--ciclista-color-brand-secondary-hover)',
-                    color: 'var(--ciclista-color-surface-base)',
-                  }
-                : undefined
-            }
           >
-            <span
-              className="maplibregl-ctrl-icon"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
+            <span className="maplibregl-ctrl-icon ctrl-icon-center">
               <Moon size={16} />
             </span>
           </button>

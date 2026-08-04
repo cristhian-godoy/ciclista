@@ -110,40 +110,28 @@ export const NodePopup: React.FC = () => {
     switch (type) {
       case 'signal':
         return (
-          <span
-            className="control-type-label"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
+          <span className="control-type-label strategy-label-badge">
             <TrafficCone size={12} aria-label="Traffic Light Icon" />
             Traffic Signal
           </span>
         );
       case 'yield':
         return (
-          <span
-            className="control-type-label"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
+          <span className="control-type-label strategy-label-badge">
             <AlertTriangle size={12} aria-label="Yield Sign Icon" />
             Yield Sign (Give Way)
           </span>
         );
       case 'stop':
         return (
-          <span
-            className="control-type-label"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
+          <span className="control-type-label strategy-label-badge">
             <Octagon size={12} aria-label="Stop Sign Icon" />
             Stop Sign
           </span>
         );
       case 'crossing':
         return (
-          <span
-            className="control-type-label"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
+          <span className="control-type-label strategy-label-badge">
             <Footprints size={12} aria-label="Pedestrian Crossing Icon" />
             Pedestrian Crossing
           </span>
@@ -296,62 +284,21 @@ export const NodePopup: React.FC = () => {
   return (
     <div
       className="map-popup"
+      /* eslint-disable-next-line react/forbid-dom-props -- Dynamic spatial screen coordinates of popup position projected from MapLibre map coordinates */
       style={{
-        position: 'absolute',
         left: `${popupPos.x}px`,
         top: `${popupPos.y}px`,
-        transform: 'translate(-50%, -100%) translateY(-15px)',
-        zIndex: 10,
-        maxHeight: '400px',
-        overflowY: 'auto',
-        width: '300px',
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '8px',
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            color: 'var(--text-primary)',
-          }}
-        >
-          Configure Control Point
-        </h3>
-        <button
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '50%',
-          }}
-          onClick={() => onNodeSelect(null)}
-        >
+      <div className="popup-header-box">
+        <h3 className="popup-title">Configure Control Point</h3>
+        <button className="popup-close-btn" onClick={() => onNodeSelect(null)}>
           <X size={14} />
         </button>
       </div>
 
-      <div
-        style={{
-          fontSize: '0.75rem',
-          color: 'var(--text-secondary)',
-          marginBottom: '8px',
-          lineHeight: '1.4',
-        }}
-      >
+      <div className="popup-info-box">
         <strong>Type:</strong> {getControlTypeLabel(selectedNode.tags)}
         <br />
         <strong>ID:</strong> {selectedNode.id}
@@ -359,8 +306,8 @@ export const NodePopup: React.FC = () => {
         <strong>OSM Name:</strong> {selectedNode.tags.name || 'Unnamed Crossing'}
       </div>
 
-      <div className="ciclista-form-group" style={{ marginBottom: '10px' }}>
-        <label className="ciclista-label" style={{ fontSize: '0.65rem' }}>
+      <div className="ciclista-form-group popup-form-group">
+        <label className="ciclista-label popup-label-small">
           Wait Penalty: {nodeDelay} seconds
         </label>
         <div className="ciclista-slider-container">
@@ -375,25 +322,14 @@ export const NodePopup: React.FC = () => {
           />
         </div>
         {/* Presets buttons */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+        <div className="popup-preset-list">
           {getPresets(controlType).map((preset) => (
             <button
               key={preset.label}
               type="button"
-              style={{
-                background:
-                  nodeDelay === preset.value
-                    ? 'var(--ciclista-color-brand-secondary)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                color:
-                  nodeDelay === preset.value ? '#000000' : 'var(--ciclista-color-text-primary)',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                fontSize: '0.62rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
+              className={`popup-preset-btn ${
+                nodeDelay === preset.value ? 'popup-preset-btn--active' : ''
+              }`}
               onClick={() => setNodeDelay(preset.value)}
             >
               {preset.label}
@@ -402,52 +338,28 @@ export const NodePopup: React.FC = () => {
         </div>
       </div>
 
-      <div className="ciclista-form-group" style={{ marginBottom: '10px' }}>
-        <label className="ciclista-label" style={{ fontSize: '0.65rem' }}>
-          Custom Notes
-        </label>
+      <div className="ciclista-form-group popup-form-group">
+        <label className="ciclista-label popup-label-small">Custom Notes</label>
         <input
-          className="ciclista-input"
+          className="ciclista-input popup-input-small"
           type="text"
           placeholder="e.g. Constant bus priority request"
           value={nodeNotes}
           onChange={(e) => setNodeNotes(e.target.value)}
-          style={{ padding: '6px 8px', fontSize: '0.8rem' }}
         />
       </div>
 
       {maneuvers.length > 0 && (
-        <div style={{ marginBottom: '10px' }}>
-          <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>
-            Turn Overrides
-          </div>
-          <div
-            style={{
-              maxHeight: '150px',
-              overflowY: 'auto',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '4px',
-              background: 'rgba(0, 0, 0, 0.2)',
-              padding: '4px',
-            }}
-          >
+        <div className="popup-form-group">
+          <div className="osm-tags-title popup-tags-title">Turn Overrides</div>
+          <div className="popup-turn-container">
             {maneuvers.map((m) => {
               const compositeKey = `${m.fromNodeId}->${m.toNodeId}`;
               const activeVal = nodeTurns[compositeKey] || 'default';
 
               return (
-                <div
-                  key={compositeKey}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    padding: '6px',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                    fontSize: '0.68rem',
-                    gap: '4px',
-                  }}
-                >
-                  <div style={{ color: 'var(--text-secondary)', lineHeight: '1.3' }}>
+                <div key={compositeKey} className="popup-turn-item">
+                  <div className="text-secondary">
                     From <strong>{m.fromStreetName}</strong> ({m.incomingDir})
                     <br />
                     To <strong>{m.toStreetName}</strong> ({m.outgoingDir} -{' '}
@@ -474,33 +386,24 @@ export const NodePopup: React.FC = () => {
                         return updated;
                       });
                     }}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary)',
-                      padding: '2px 4px',
-                      fontSize: '0.65rem',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
+                    className="popup-turn-select"
                   >
-                    <option value="default" style={{ background: '#111' }}>
+                    <option value="default" className="popup-select-option">
                       Default
                     </option>
-                    <option value="left_turn" style={{ background: '#111' }}>
+                    <option value="left_turn" className="popup-select-option">
                       Direct Left Turn
                     </option>
-                    <option value="right_turn" style={{ background: '#111' }}>
+                    <option value="right_turn" className="popup-select-option">
                       Direct Right Turn
                     </option>
-                    <option value="green_arrow_right" style={{ background: '#111' }}>
+                    <option value="green_arrow_right" className="popup-select-option">
                       Green Arrow Right Turn
                     </option>
-                    <option value="indirect_left" style={{ background: '#111' }}>
+                    <option value="indirect_left" className="popup-select-option">
                       Indirect Left Turn
                     </option>
-                    <option value="u_turn" style={{ background: '#111' }}>
+                    <option value="u_turn" className="popup-select-option">
                       U-Turn
                     </option>
                   </select>
@@ -512,9 +415,7 @@ export const NodePopup: React.FC = () => {
       )}
 
       {/* Collapsible/Scrollable OSM Info Section */}
-      <div className="osm-tags-title" style={{ fontSize: '0.65rem', marginBottom: '4px' }}>
-        OSM Tags
-      </div>
+      <div className="osm-tags-title popup-tags-title">OSM Tags</div>
       <div className="osm-tags-container">
         {Object.entries(selectedNode.tags).length > 0 ? (
           Object.entries(selectedNode.tags).map(([key, val]) => (
@@ -524,37 +425,21 @@ export const NodePopup: React.FC = () => {
             </div>
           ))
         ) : (
-          <div style={{ padding: '6px 8px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            No tags available
-          </div>
+          <div className="popup-empty-tags">No tags available</div>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+      <div className="popup-actions-row">
         <button
-          className="ciclista-btn ciclista-btn--primary"
-          style={{
-            flex: 1,
-            padding: '6px var(--spacing-sm)',
-            fontSize: '0.8rem',
-            height: '32px',
-          }}
+          className="ciclista-btn ciclista-btn--primary popup-save-btn"
           onClick={handleSaveNode}
         >
-          <Check size={14} style={{ marginRight: '4px' }} />
+          <Check size={14} className="badge-bike" />
           Save
         </button>
         {customNodeDelays.has(selectedNode.id) && (
           <button
-            className="ciclista-btn ciclista-btn--danger"
-            style={{
-              flex: 0.5,
-              padding: '6px var(--spacing-sm)',
-              fontSize: '0.8rem',
-              height: '32px',
-              color: 'var(--text-primary)',
-              background: 'var(--accent-danger)',
-            }}
+            className="ciclista-btn ciclista-btn--danger popup-reset-btn"
             onClick={handleResetNode}
           >
             Reset

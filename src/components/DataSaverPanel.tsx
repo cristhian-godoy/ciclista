@@ -87,7 +87,7 @@ export const DataSaverPanel: React.FC = () => {
   };
 
   return (
-    <section className="ciclista-card" style={{ marginTop: '16px' }}>
+    <section className="ciclista-card data-saver-panel">
       <h2>
         <Database size={16} className="preset-header-icon" />
         Data & Cache Saver
@@ -97,35 +97,24 @@ export const DataSaverPanel: React.FC = () => {
       </p>
 
       {/* Network Info Status */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 12px',
-          borderRadius: '6px',
-          backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          marginBottom: '12px',
-          fontSize: '13px',
-        }}
-      >
+      <div className="data-saver-status">
         {connType === 'wifi' ? (
           <>
-            <Wifi size={14} style={{ color: 'var(--accent-primary)' }} />
+            <Wifi size={14} className="data-saver-icon-accent" />
             <span>
               Connection: <strong>WiFi / Ethernet</strong> (Unlimited)
             </span>
           </>
         ) : connType === 'cellular' ? (
           <>
-            <WifiOff size={14} style={{ color: '#ff9800' }} />
+            <WifiOff size={14} className="data-saver-icon-warn" />
             <span>
               Connection: <strong>Mobile Data</strong> (Restricted)
             </span>
           </>
         ) : (
           <>
-            <Wifi size={14} style={{ opacity: 0.5 }} />
+            <Wifi size={14} className="data-saver-icon-muted" />
             <span>
               Connection: <strong>Unknown Network</strong>
             </span>
@@ -134,93 +123,53 @@ export const DataSaverPanel: React.FC = () => {
       </div>
 
       {/* Stats Table */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '8px',
-          marginBottom: '12px',
-        }}
-      >
-        <div
-          style={{
-            padding: '8px',
-            borderRadius: '6px',
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
-          <div style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}>
-            Network Data
-          </div>
-          <div style={{ fontWeight: 'bold', fontSize: '13px', marginTop: '2px' }}>
-            {formatBytes(stats.wifiBytes + stats.cellularBytes)}
-          </div>
-          <div style={{ fontSize: '9px', opacity: 0.6, marginTop: '2px' }}>
+      <div className="data-saver-grid">
+        <div className="data-saver-card">
+          <div className="data-saver-lbl">Network Data</div>
+          <div className="data-saver-val">{formatBytes(stats.wifiBytes + stats.cellularBytes)}</div>
+          <div className="data-saver-sub">
             WiFi: {formatBytes(stats.wifiBytes)} | Mob: {formatBytes(stats.cellularBytes)}
           </div>
         </div>
 
-        <div
-          style={{
-            padding: '8px',
-            borderRadius: '6px',
-            backgroundColor: 'rgba(0, 255, 128, 0.03)',
-            border: '1px solid rgba(0, 255, 128, 0.1)',
-          }}
-        >
-          <div style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}>
-            Cache Saved
-          </div>
-          <div style={{ fontWeight: 'bold', fontSize: '13px', marginTop: '2px', color: '#00e676' }}>
+        <div className="data-saver-card data-saver-card--saved">
+          <div className="data-saver-lbl">Cache Saved</div>
+          <div className="data-saver-val data-saver-val--saved">
             {formatBytes(stats.cacheBytes)}
           </div>
-          <div style={{ fontSize: '9px', opacity: 0.6, marginTop: '2px' }}>Local disk hits</div>
+          <div className="data-saver-sub">Local disk hits</div>
         </div>
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <label htmlFor="data-saver-toggle" style={{ fontSize: '13px', cursor: 'pointer' }}>
-            Data Saver Mode
-          </label>
+      <div className="data-saver-controls">
+        <div className="data-saver-row">
+          <label htmlFor="data-saver-toggle">Data Saver Mode</label>
           <input
             id="data-saver-toggle"
             type="checkbox"
             checked={dataSaver}
             onChange={handleToggleDataSaver}
-            style={{ cursor: 'pointer' }}
+            className="ciclista-checkbox"
           />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <label htmlFor="allow-cellular-toggle" style={{ fontSize: '13px', cursor: 'pointer' }}>
-            Allow Cellular Downloads
-          </label>
+        <div className="data-saver-row">
+          <label htmlFor="allow-cellular-toggle">Allow Cellular Downloads</label>
           <input
             id="allow-cellular-toggle"
             type="checkbox"
             checked={allowCellular}
             onChange={handleToggleAllowCellular}
-            style={{ cursor: 'pointer' }}
+            className="ciclista-checkbox"
           />
         </div>
       </div>
 
       {/* Buttons */}
-      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+      <div className="data-saver-actions">
         <button
           onClick={handleClearCache}
-          className="ciclista-btn ciclista-btn--secondary"
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '4px',
-            fontSize: '12px',
-            padding: '6px 8px',
-          }}
+          className="ciclista-btn ciclista-btn--secondary data-saver-btn"
           disabled={clearingCache}
         >
           <HardDrive size={12} />
@@ -228,14 +177,7 @@ export const DataSaverPanel: React.FC = () => {
         </button>
         <button
           onClick={handleResetStats}
-          className="ciclista-btn ciclista-btn--secondary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            padding: '6px 8px',
-          }}
+          className="ciclista-btn ciclista-btn--secondary data-saver-btn"
         >
           Reset Stats
         </button>

@@ -79,24 +79,13 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
         onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}
         className="rules-details"
       >
-        <summary
-          className="rules-summary"
-          style={{ listStyle: 'none', outline: 'none', cursor: 'pointer' }}
-        >
-          <div
-            className="rules-panel-header"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Settings size={15} style={{ color: 'var(--accent-primary)' }} />
-              <h2 style={{ margin: 0 }}>Road Rules</h2>
+        <summary className="rules-summary rules-summary-content">
+          <div className="rules-panel-header rules-panel-header-box">
+            <span className="rules-panel-title-group">
+              <Settings size={15} className="rules-panel-title-icon" />
+              <h2 className="ciclista-title">Road Rules</h2>
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="rules-panel-header-actions">
               <button onClick={handleReset} title="Reset to defaults" className="rules-reset-btn">
                 <RotateCcw size={11} />
                 Reset
@@ -106,7 +95,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
           </div>
         </summary>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+        <div className="rules-body-container">
           {/* German Traffic Signs sub-section */}
           <div className="rules-section">
             <button
@@ -114,7 +103,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
               onClick={() => setSignsOpen((v) => !v)}
               aria-expanded={signsOpen}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span className="rules-section-btn-label">
                 <TrafficCone size={13} aria-label="Traffic Signs Icon" />
                 Traffic Signs
               </span>
@@ -140,7 +129,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
               onClick={() => setRoadsOpen((v) => !v)}
               aria-expanded={roadsOpen}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span className="rules-section-btn-label">
                 <Route size={13} aria-label="Road Classes Icon" />
                 Road Classes
               </span>
@@ -166,7 +155,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
               onClick={() => setIntersectionsOpen((v) => !v)}
               aria-expanded={intersectionsOpen}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span className="rules-section-btn-label">
                 <Clock size={13} aria-label="Intersections Icon" />
                 Intersections
               </span>
@@ -184,7 +173,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
               onClick={() => setTurnsOpen((v) => !v)}
               aria-expanded={turnsOpen}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span className="rules-section-btn-label">
                 <CornerUpRight size={13} aria-label="Turns Icon" />
                 Turn Penalties
               </span>

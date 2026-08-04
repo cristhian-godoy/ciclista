@@ -84,11 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       <aside className={`sidebar ciclista-glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <Navigation
-            size={24}
-            className="color-primary"
-            style={{ color: 'var(--accent-primary)' }}
-          />
+          <Navigation size={24} className="sidebar-brand-icon" />
           <h1>Ciclista</h1>
         </div>
 
@@ -128,41 +124,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Navigation Control Panel */}
           {routeResult !== null && (
-            <div className="ciclista-card" style={{ marginTop: '16px', padding: '16px' }}>
+            <div className="ciclista-card sidebar-nav-card">
               {!isNavigating ? (
                 <button
-                  className="ciclista-btn ciclista-btn--primary"
+                  className="ciclista-btn ciclista-btn--primary sidebar-nav-btn"
                   onClick={() => {
                     setIsCollapsed(true);
                     onStartNavigation();
-                  }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
                   }}
                 >
                   <Play size={16} />
                   Start Navigation
                 </button>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Active Navigation</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="sidebar-active-nav">
+                  <div className="sidebar-active-row">
+                    <span className="sidebar-active-title">Active Navigation</span>
+                    <div className="sidebar-actions-group">
                       <button
-                        className="ciclista-btn ciclista-btn--secondary"
+                        className="ciclista-btn ciclista-btn--secondary sidebar-icon-btn"
                         onClick={onToggleCameraMode}
                         title={`Toggle camera mode (current: ${cameraMode})`}
-                        style={{ padding: '6px 10px' }}
                       >
                         {cameraMode === 'north-up' ? (
                           <Compass size={16} />
@@ -171,9 +153,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         )}
                       </button>
                       <button
-                        className="ciclista-btn ciclista-btn--danger"
+                        className="ciclista-btn ciclista-btn--danger sidebar-icon-btn"
                         onClick={onStopNavigation}
-                        style={{ padding: '6px 10px' }}
                         title="Stop Navigation"
                       >
                         <Square size={16} />
@@ -181,33 +162,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                   </div>
                   {navigationProgress && (
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '8px',
-                        opacity: 0.9,
-                      }}
-                    >
+                    <div className="sidebar-nav-grid">
                       <div>
-                        <div
-                          style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}
-                        >
-                          Remaining
-                        </div>
-                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                        <div className="sidebar-nav-lbl">Remaining</div>
+                        <div className="sidebar-nav-val">
                           {navigationProgress.distanceRemainingM >= 1000
                             ? `${(navigationProgress.distanceRemainingM / 1000).toFixed(1)} km`
                             : `${Math.round(navigationProgress.distanceRemainingM)} m`}
                         </div>
                       </div>
                       <div>
-                        <div
-                          style={{ fontSize: '11px', color: 'var(--ciclista-color-text-muted)' }}
-                        >
-                          ETA
-                        </div>
-                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                        <div className="sidebar-nav-lbl">ETA</div>
+                        <div className="sidebar-nav-val">
                           {Math.floor(navigationProgress.etaSeconds / 60) > 0
                             ? `${Math.floor(navigationProgress.etaSeconds / 60)}m ${Math.round(navigationProgress.etaSeconds % 60)}s`
                             : `${Math.round(navigationProgress.etaSeconds)}s`}
@@ -235,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="sidebar-footer">
           <p>Drag green/red pins or right-click map to route.</p>
-          <p style={{ marginTop: '4px' }}>Click red nodes to time stoplights.</p>
+          <p className="sidebar-footer-note">Click red nodes to time stoplights.</p>
         </div>
       </aside>
 

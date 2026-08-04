@@ -66,7 +66,7 @@ export const AttributionPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section className="ciclista-card attribution-panel" style={{ marginTop: '16px' }}>
+    <section className="ciclista-card attribution-panel">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="attribution-panel-header"

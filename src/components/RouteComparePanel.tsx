@@ -52,40 +52,19 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
     switch (label) {
       case 'standard':
         return (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              justifyContent: 'center',
-            }}
-          >
+          <span className="strategy-label-badge">
             <Zap size={12} aria-label="Speed Icon" /> Speed
           </span>
         );
       case 'avoid-stops':
         return (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              justifyContent: 'center',
-            }}
-          >
+          <span className="strategy-label-badge">
             <Octagon size={12} aria-label="Stops Icon" /> Stops
           </span>
         );
       case 'quiet-streets':
         return (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              justifyContent: 'center',
-            }}
-          >
+          <span className="strategy-label-badge">
             <Trees size={12} aria-label="Quiet Icon" /> Quiet
           </span>
         );
