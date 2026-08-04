@@ -3,10 +3,21 @@
   "plugins": ["stylelint-declaration-strict-value"],
   "rules": {
     "scale-unlimited/declaration-strict-value": [
-      ["color", "background-color", "border-color", "fill", "box-shadow"],
+      [
+        "color",
+        "background-color",
+        "border-color",
+        "fill",
+        "box-shadow",
+        "padding",
+        "margin",
+        "gap",
+        "border-radius",
+        "font-size"
+      ],
       {
         "ignoreVariables": true,
-        "ignoreValues": ["none", "transparent"],
+        "ignoreValues": ["none", "transparent", "0", "0px", "auto", "inherit", "initial", "unset"],
         "severity": "error"
       }
     ],

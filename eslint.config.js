@@ -35,12 +35,14 @@ export default defineConfig([
       'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      'react/forbid-component-props': ['error', { forbid: ['style'] }],
+      'react/forbid-dom-props': ['error', { forbid: ['style'] }],
       'no-restricted-syntax': [
         'error',
         {
-          selector: 'JSXAttribute Literal[value=/#([0-9a-fA-F]{3,8})/]',
+          selector: 'JSXAttribute Literal[value=/^(#|rgba?\(|hsla?\()/]',
           message:
-            'Raw hex color literals are forbidden in JSX attributes. Use CSS classes and CSS variable theme tokens instead.',
+            'Raw color literals (hex, rgb, rgba, hsl, hsla) are forbidden in JSX attributes. Use CSS classes and CSS variable theme tokens instead.',
         },
       ],
       'jsdoc/require-description': [
