@@ -5,6 +5,7 @@
     "scale-unlimited/declaration-strict-value": [
       [
         "color",
+        "background",
         "background-color",
         "border-color",
         "fill",
