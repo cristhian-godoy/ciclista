@@ -40,7 +40,7 @@ export default defineConfig([
       'no-restricted-syntax': [
         'error',
         {
-          selector: 'JSXAttribute Literal[value=/^(#|rgba?\(|hsla?\()/]',
+          selector: 'JSXAttribute Literal[value=/^#|^rgb|^rgba|^hsl|^hsla/]',
           message:
             'Raw color literals (hex, rgb, rgba, hsl, hsla) are forbidden in JSX attributes. Use CSS classes and CSS variable theme tokens instead.',
         },
