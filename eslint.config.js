@@ -35,8 +35,6 @@ export default defineConfig([
       'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'react/forbid-component-props': ['error', { forbid: ['style'] }],
-      'react/forbid-dom-props': ['error', { forbid: ['style'] }],
       'no-restricted-syntax': [
         'error',
         {

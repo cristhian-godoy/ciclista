@@ -67,75 +67,22 @@ export default function TestRunnerPage() {
   }, [selectedResult, selectedTestCase, activeAlternativeLabel]);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: '#090d16',
-        color: '#e2e8f0',
-      }}
-    >
+    <div className="test-runner-container">
       {/* Sidebar Controls */}
-      <div
-        style={{
-          width: '380px',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-          padding: '1rem',
-          boxSizing: 'border-box',
-          gap: '1rem',
-          overflowY: 'auto',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '1.2rem', margin: 0, color: '#6366f1' }}>
-            Routing Test Dashboard
-          </h1>
-          <a
-            href="/"
-            style={{
-              color: '#94a3b8',
-              fontSize: '0.8rem',
-              textDecoration: 'none',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
+      <div className="test-runner-sidebar">
+        <div className="test-runner-header">
+          <h1 className="test-runner-title">Routing Test Dashboard</h1>
+          <a href="/" className="test-runner-exit-link">
             ← Exit
           </a>
         </div>
 
-        <button
-          type="button"
-          onClick={handleRunAll}
-          style={{
-            padding: '10px',
-            backgroundColor: '#6366f1',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
+        <button type="button" onClick={handleRunAll} className="test-runner-btn-all">
           Run All Tests ({ROUTING_TEST_CASES.length})
         </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              textTransform: 'uppercase',
-              color: '#94a3b8',
-              fontWeight: 600,
-            }}
-          >
-            Available Test Cases
-          </span>
+        <div className="test-runner-cases-list">
+          <span className="test-runner-cases-label">Available Test Cases</span>
           {ROUTING_TEST_CASES.map((tc) => {
             const res = results[tc.id];
             const isSelected = tc.id === selectedTestId;
@@ -143,42 +90,23 @@ export default function TestRunnerPage() {
               <div
                 key={tc.id}
                 onClick={() => setSelectedTestId(tc.id)}
-                style={{
-                  padding: '10px',
-                  borderRadius: '6px',
-                  backgroundColor: isSelected
-                    ? 'rgba(99, 102, 241, 0.15)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  border: isSelected ? '1px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.08)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+                className={`test-runner-case-item ${isSelected ? 'selected' : ''}`}
               >
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{tc.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Preset: {tc.preset}</div>
+                  <div className="test-runner-case-name">{tc.name}</div>
+                  <div className="test-runner-case-preset">Preset: {tc.preset}</div>
                 </div>
                 <div>
                   {res ? (
                     <span
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: res.passed
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : 'rgba(239, 68, 68, 0.2)',
-                        color: res.passed ? '#10b981' : '#ef4444',
-                        border: res.passed ? '1px solid #10b981' : '1px solid #ef4444',
-                      }}
+                      className={`test-runner-badge ${
+                        res.passed ? 'test-runner-badge--pass' : 'test-runner-badge--fail'
+                      }`}
                     >
                       {res.passed ? 'PASS' : 'FAIL'}
                     </span>
                   ) : (
-                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>IDLE</span>
+                    <span className="test-runner-badge--idle">IDLE</span>
                   )}
                 </div>
               </div>
@@ -187,59 +115,33 @@ export default function TestRunnerPage() {
         </div>
 
         {selectedTestCase && (
-          <div
-            style={{
-              padding: '12px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{selectedTestCase.name}</div>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-              {selectedTestCase.description}
-            </div>
+          <div className="test-runner-detail-card">
+            <div className="test-runner-detail-title">{selectedTestCase.name}</div>
+            <div className="test-runner-detail-desc">{selectedTestCase.description}</div>
             <button
               type="button"
               onClick={() => handleRunSingle(selectedTestCase)}
-              style={{
-                padding: '8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                marginTop: '4px',
-              }}
+              className="test-runner-btn-single"
             >
               Run Selected Test
             </button>
 
             {selectedResult && (
-              <div
-                style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}
-              >
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <div className="test-runner-result-summary">
+                <div className="test-runner-time">
                   Execution Time: {selectedResult.executionTimeMs.toFixed(2)} ms
                 </div>
                 {selectedResult.failures.length > 0 ? (
-                  <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
+                  <div className="test-runner-failures">
                     <strong>Failures:</strong>
-                    <ul style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                    <ul>
                       {selectedResult.failures.map((f, i) => (
                         <li key={i}>{f}</li>
                       ))}
                     </ul>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>
-                    All assertions passed cleanly.
-                  </div>
+                  <div className="test-runner-success-msg">All assertions passed cleanly.</div>
                 )}
               </div>
             )}
@@ -248,7 +150,7 @@ export default function TestRunnerPage() {
       </div>
 
       {/* Map View */}
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div className="test-runner-map-view">
         <MapProvider
           graph={graph}
           loadedBBoxes={[]}

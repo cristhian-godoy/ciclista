@@ -986,3 +986,184 @@ h2 {
   border-top: none !important;
   border-left: none !important;
 }
+
+/* ─── Test Runner Dashboard ───────────────────────────────────────── */
+
+.test-runner-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--ciclista-color-surface-base);
+  color: var(--ciclista-color-text-primary);
+}
+
+.test-runner-sidebar {
+  width: 380px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ciclista-glass-border-base);
+  padding: var(--ciclista-spacing-md);
+  box-sizing: border-box;
+  gap: var(--ciclista-spacing-md);
+  overflow-y: auto;
+}
+
+.test-runner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.test-runner-title {
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--ciclista-color-brand-main);
+}
+
+.test-runner-exit-link {
+  color: var(--ciclista-color-text-secondary);
+  font-size: 0.8rem;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: var(--ciclista-radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
+}
+
+.test-runner-btn-all {
+  padding: 10px;
+  background-color: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  border: none;
+  border-radius: var(--ciclista-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.test-runner-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.test-runner-cases-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--ciclista-color-text-secondary);
+  font-weight: 600;
+}
+
+.test-runner-case-item {
+  padding: 10px;
+  border-radius: var(--ciclista-radius-sm);
+  background-color: rgb(255 255 255 / 3%);
+  border: 1px solid var(--ciclista-glass-border-base);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.test-runner-case-item.selected {
+  background-color: rgb(99 102 241 / 15%);
+  border-color: var(--ciclista-color-brand-main);
+}
+
+.test-runner-case-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.test-runner-case-preset {
+  font-size: 0.75rem;
+  color: var(--ciclista-color-text-secondary);
+}
+
+.test-runner-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.test-runner-badge--pass {
+  background-color: var(--ciclista-color-success-bg);
+  color: var(--ciclista-color-brand-secondary);
+  border: 1px solid var(--ciclista-color-success-border);
+}
+
+.test-runner-badge--fail {
+  background-color: var(--ciclista-color-danger-bg);
+  color: var(--ciclista-color-danger-text);
+  border: 1px solid var(--ciclista-color-danger-border);
+}
+
+.test-runner-badge--idle {
+  font-size: 0.7rem;
+  color: var(--ciclista-color-text-muted);
+}
+
+.test-runner-detail-card {
+  padding: 12px;
+  border-radius: var(--ciclista-radius-sm);
+  background-color: rgb(255 255 255 / 3%);
+  border: 1px solid var(--ciclista-glass-border-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.test-runner-detail-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.test-runner-detail-desc {
+  font-size: 0.8rem;
+  color: var(--ciclista-color-text-secondary);
+}
+
+.test-runner-btn-single {
+  padding: 8px;
+  background-color: rgb(255 255 255 / 10%);
+  color: var(--ciclista-color-text-primary);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: var(--ciclista-radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.test-runner-result-summary {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.test-runner-time {
+  font-size: 0.75rem;
+  color: var(--ciclista-color-text-secondary);
+}
+
+.test-runner-failures {
+  font-size: 0.75rem;
+  color: var(--ciclista-color-danger-text);
+}
+
+.test-runner-failures ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.test-runner-success-msg {
+  font-size: 0.75rem;
+  color: var(--ciclista-color-brand-secondary);
+  font-weight: 600;
+}
+
+.test-runner-map-view {
+  flex: 1;
+  position: relative;
+}
