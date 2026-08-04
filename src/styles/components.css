@@ -814,6 +814,11 @@ h2 {
   color: var(--ciclista-color-text-primary) !important;
   width: 34px !important;
   height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .maplibregl-ctrl-group button:last-child {
@@ -1373,9 +1378,11 @@ h2 {
 }
 
 .ctrl-icon-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .ctrl-btn--active {
