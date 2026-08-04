@@ -30,6 +30,7 @@ const defaultContextValue: MapContextType = {
   onSaveNodeOverride: vi.fn(),
   onClearNodeOverride: vi.fn(),
   theme: 'bright',
+  onToggleInspectorMode: vi.fn(),
   shouldFitBounds: false,
   setShouldFitBounds: vi.fn(),
   showMinorControls: false,

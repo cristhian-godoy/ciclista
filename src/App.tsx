@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
@@ -17,12 +17,12 @@ import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
 import { useRoutingState } from './hooks/useRoutingState';
 
+const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage'));
+
 /**
- * Main application component for the Ciclista routing dashboard.
- * Coordinates map state, routing logic, sidebar panels, preset configurations,
- * and local storage overrides.
+ * Primary dashboard view component executing main map and routing hooks.
  */
-export default function App() {
+function DashboardApp() {
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
 
@@ -211,4 +211,23 @@ export default function App() {
       </div>
     </MapProvider>
   );
+}
+
+/**
+ * Root application component performing route selection between dashboard and visual test runner.
+ */
+export default function App() {
+  const isTestRoute = window.location.pathname === '/test';
+
+  if (isTestRoute) {
+    return (
+      <Suspense
+        fallback={<div style={{ padding: '2rem', color: '#fff' }}>Loading Test Dashboard...</div>}
+      >
+        <TestRunnerPage />
+      </Suspense>
+    );
+  }
+
+  return <DashboardApp />;
 }
