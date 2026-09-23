@@ -1,2 +1,4 @@
+architecture.test.ts
+	Automated architectural invariant test suite verifying core domain purity, worker boundaries, and config integrity.
 setup.ts
 	Vitest global test suite environment configurations and MapLibre mock stubs.
