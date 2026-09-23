@@ -178,7 +178,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
     const timeSign = timeDiff >= 0 ? `+${timeDiff}` : `${timeDiff}`;
     const distSign = distDiff >= 0 ? `+${distDiff}` : `${distDiff}`;
-    const signalsSign = signalsDiff >= 0 ? `+${signalsSign}` : `${signalsSign}`;
+    const signalsSign = signalsDiff >= 0 ? `+${signalsDiff}` : `${signalsDiff}`;
 
     return (
       <div className="ciclista-card inspector-compare-card">
