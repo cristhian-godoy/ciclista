@@ -995,15 +995,17 @@ h2 {
 
 /* ─── Test Runner Dashboard ───────────────────────────────────────── */
 
-.test-runner-container {
+.ciclista-workbench {
   display: flex;
   width: 100vw;
   height: 100vh;
+  position: relative;
+  overflow: hidden;
   background-color: var(--ciclista-color-surface-base);
   color: var(--ciclista-color-text-primary);
 }
 
-.test-runner-sidebar {
+.ciclista-workbench-sidebar {
   width: 380px;
   height: 100%;
   display: flex;
@@ -1013,165 +1015,142 @@ h2 {
   box-sizing: border-box;
   gap: var(--ciclista-spacing-md);
   overflow-y: auto;
+  z-index: 2;
 }
 
-.test-runner-header {
+.ciclista-workbench-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.test-runner-title {
+.ciclista-workbench-title {
   font-size: var(--ciclista-font-lg);
   margin: 0;
   color: var(--ciclista-color-brand-main);
 }
 
-.test-runner-exit-link {
+.ciclista-workbench-exit {
   color: var(--ciclista-color-text-secondary);
   font-size: var(--ciclista-font-80);
   text-decoration: none;
   padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
   border-radius: var(--ciclista-radius-sm);
   border: 1px solid var(--ciclista-glass-border-base);
+  transition: var(--ciclista-transition-fast);
 }
 
-.test-runner-btn-all {
-  padding: var(--ciclista-spacing-10);
-  background-color: var(--ciclista-color-brand-main);
+.ciclista-workbench-exit:hover {
   color: var(--ciclista-color-text-primary);
-  border: none;
-  border-radius: var(--ciclista-radius-sm);
-  font-weight: 600;
-  cursor: pointer;
+  border-color: var(--ciclista-glass-border-focus);
 }
 
-.test-runner-cases-list {
+.ciclista-cases-list {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-xs);
 }
 
-.test-runner-cases-label {
-  font-size: var(--ciclista-font-sm);
-  text-transform: uppercase;
-  color: var(--ciclista-color-text-secondary);
-  font-weight: 600;
-}
-
-.test-runner-case-item {
+.ciclista-case-item {
   padding: var(--ciclista-spacing-10);
   border-radius: var(--ciclista-radius-sm);
-  background-color: rgb(255 255 255 / 3%);
+  background-color: var(--ciclista-glass-bg-base);
   border: 1px solid var(--ciclista-glass-border-base);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: var(--ciclista-transition-fast);
 }
 
-.test-runner-case-item.selected {
-  background-color: rgb(99 102 241 / 15%);
+.ciclista-case-item:hover {
+  background-color: var(--ciclista-glass-bg-hover);
+}
+
+.ciclista-case-item.selected {
+  background-color: var(--ciclista-glass-bg-hover);
   border-color: var(--ciclista-color-brand-main);
 }
 
-.test-runner-case-name {
+.ciclista-case-name {
   font-weight: 600;
-  font-size: var(--ciclista-font-85);
+  font-size: var(--ciclista-font-md);
 }
 
-.test-runner-case-preset {
+.ciclista-case-preset {
   font-size: var(--ciclista-font-sm);
   color: var(--ciclista-color-text-secondary);
 }
 
-.test-runner-badge {
+.ciclista-badge {
   font-size: var(--ciclista-font-70);
   font-weight: 700;
   padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-6);
   border-radius: var(--ciclista-radius-xs);
+  display: inline-flex;
+  align-items: center;
 }
 
-.test-runner-badge--pass {
+.ciclista-badge--pass {
   background-color: var(--ciclista-color-success-bg);
   color: var(--ciclista-color-brand-secondary);
   border: 1px solid var(--ciclista-color-success-border);
 }
 
-.test-runner-badge--fail {
+.ciclista-badge--fail {
   background-color: var(--ciclista-color-danger-bg);
   color: var(--ciclista-color-danger-text);
   border: 1px solid var(--ciclista-color-danger-border);
 }
 
-.test-runner-badge--idle {
+.ciclista-badge--idle {
   font-size: var(--ciclista-font-70);
   color: var(--ciclista-color-text-muted);
 }
 
-.test-runner-detail-card {
-  padding: var(--ciclista-spacing-12);
-  border-radius: var(--ciclista-radius-sm);
-  background-color: rgb(255 255 255 / 3%);
-  border: 1px solid var(--ciclista-glass-border-base);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ciclista-spacing-xs);
-}
-
-.test-runner-detail-title {
+.ciclista-detail-title {
   font-weight: 600;
   font-size: var(--ciclista-font-90);
 }
 
-.test-runner-detail-desc {
+.ciclista-detail-desc {
   font-size: var(--ciclista-font-80);
   color: var(--ciclista-color-text-secondary);
 }
 
-.test-runner-btn-single {
-  padding: var(--ciclista-spacing-sm);
-  background-color: rgb(255 255 255 / 10%);
-  color: var(--ciclista-color-text-primary);
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: var(--ciclista-radius-sm);
-  cursor: pointer;
-  font-size: var(--ciclista-font-80);
-  font-weight: 600;
-  margin-top: var(--ciclista-spacing-xs);
-}
-
-.test-runner-result-summary {
+.ciclista-result-summary {
   margin-top: var(--ciclista-spacing-sm);
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-xs);
 }
 
-.test-runner-time {
+.ciclista-time-label {
   font-size: var(--ciclista-font-sm);
   color: var(--ciclista-color-text-secondary);
 }
 
-.test-runner-failures {
+.ciclista-failures {
   font-size: var(--ciclista-font-sm);
   color: var(--ciclista-color-danger-text);
 }
 
-.test-runner-failures ul {
+.ciclista-failures ul {
   margin: var(--ciclista-spacing-xs) 0 0 var(--ciclista-spacing-md);
   padding: 0;
 }
 
-.test-runner-success-msg {
+.ciclista-success-msg {
   font-size: var(--ciclista-font-sm);
   color: var(--ciclista-color-brand-secondary);
   font-weight: 600;
 }
 
-.test-runner-map-view {
+.ciclista-map-view-wrapper {
   flex: 1;
   position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /* ─── Arrival Panel Overlay ────────────────────────────────────────── */

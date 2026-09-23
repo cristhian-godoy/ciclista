@@ -18,11 +18,13 @@ import { NavigationHUD } from './NavigationHUD';
 
 interface MapViewProps {
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
+  tileless?: boolean;
 }
 
 const MapViewContent: React.FC<{
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
-}> = ({ onMapBoundsChange }) => {
+  tileless?: boolean;
+}> = ({ onMapBoundsChange, tileless = false }) => {
   const {
     map,
     setMap,
@@ -144,6 +146,7 @@ const MapViewContent: React.FC<{
   } = useMapInstance({
     selectedPreset,
     theme,
+    tileless,
     onMapBoundsChange,
     onContextMenu: handleContextMenu,
     onClick: handleClick,
@@ -186,5 +189,5 @@ const MapViewContent: React.FC<{
  * handles map events, and mounts interactive layer overlays.
  */
 export const MapView: React.FC<MapViewProps> = (props) => {
-  return <MapViewContent onMapBoundsChange={props.onMapBoundsChange} />;
+  return <MapViewContent onMapBoundsChange={props.onMapBoundsChange} tileless={props.tileless} />;
 };

@@ -6,6 +6,7 @@ import { ROUTING_TEST_CASES } from '../../core/router/test-suite/registry';
 import { runRoutingTest, runTestSuite } from '../../core/router/test-suite/runner';
 import type { RoutingTestCase, RoutingTestResult } from '../../core/router/test-suite/types';
 import type { StrategyRouteVariant } from '../../core/router/types';
+import { GlobalControlsPanel } from '../GlobalControlsPanel';
 import { MapProvider } from '../map/MapContext';
 import { MapView } from '../MapView';
 
@@ -15,6 +16,7 @@ import { MapView } from '../MapView';
 export default function TestRunnerPage() {
   const [selectedTestId, setSelectedTestId] = useState<string>(ROUTING_TEST_CASES[0]?.id ?? '');
   const [results, setResults] = useState<Record<string, RoutingTestResult>>({});
+  const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('dark');
 
   // Parse baseline graph fixture once
   const graph = useMemo(() => {
@@ -33,17 +35,23 @@ export default function TestRunnerPage() {
   );
 
   const handleRunSingle = (testCase: RoutingTestCase) => {
-    const res = runRoutingTest(testCase, graph);
-    setResults((prev) => ({ ...prev, [testCase.id]: res }));
+    // Non-blocking asynchronous dispatch to prevent freezing the UI thread
+    setTimeout(() => {
+      const res = runRoutingTest(testCase, graph);
+      setResults((prev) => ({ ...prev, [testCase.id]: res }));
+    }, 0);
   };
 
   const handleRunAll = () => {
-    const allResults = runTestSuite(ROUTING_TEST_CASES, graph);
-    const resultMap: Record<string, RoutingTestResult> = {};
-    for (const res of allResults) {
-      resultMap[res.testId] = res;
-    }
-    setResults(resultMap);
+    // Non-blocking asynchronous dispatch to prevent freezing the UI thread
+    setTimeout(() => {
+      const allResults = runTestSuite(ROUTING_TEST_CASES, graph);
+      const resultMap: Record<string, RoutingTestResult> = {};
+      for (const res of allResults) {
+        resultMap[res.testId] = res;
+      }
+      setResults(resultMap);
+    }, 0);
   };
 
   const activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets' = useMemo(() => {
@@ -67,46 +75,53 @@ export default function TestRunnerPage() {
   }, [selectedResult, selectedTestCase, activeAlternativeLabel]);
 
   return (
-    <div className="test-runner-container">
-      {/* Sidebar Controls */}
-      <div className="test-runner-sidebar">
-        <div className="test-runner-header">
-          <h1 className="test-runner-title">Routing Test Dashboard</h1>
-          <a href="/" className="test-runner-exit-link">
+    <div className="ciclista-workbench">
+      {/* Workbench Sidebar Controls */}
+      <div className="ciclista-workbench-sidebar ciclista-glass-panel">
+        <div className="ciclista-workbench-header">
+          <h1 className="ciclista-workbench-title">Routing Test Dashboard</h1>
+          <a href="/" className="ciclista-workbench-exit">
             ← Exit
           </a>
         </div>
 
-        <button type="button" onClick={handleRunAll} className="test-runner-btn-all">
+        <button type="button" onClick={handleRunAll} className="ciclista-btn ciclista-btn--primary">
           Run All Tests ({ROUTING_TEST_CASES.length})
         </button>
 
-        <div className="test-runner-cases-list">
-          <span className="test-runner-cases-label">Available Test Cases</span>
+        <div className="ciclista-cases-list">
+          <span className="ciclista-label">Available Test Cases</span>
           {ROUTING_TEST_CASES.map((tc) => {
             const res = results[tc.id];
             const isSelected = tc.id === selectedTestId;
             return (
               <div
                 key={tc.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setSelectedTestId(tc.id);
+                  }
+                }}
                 onClick={() => setSelectedTestId(tc.id)}
-                className={`test-runner-case-item ${isSelected ? 'selected' : ''}`}
+                className={`ciclista-case-item ${isSelected ? 'selected' : ''}`}
               >
                 <div>
-                  <div className="test-runner-case-name">{tc.name}</div>
-                  <div className="test-runner-case-preset">Preset: {tc.preset}</div>
+                  <div className="ciclista-case-name">{tc.name}</div>
+                  <div className="ciclista-case-preset">Preset: {tc.preset}</div>
                 </div>
                 <div>
                   {res ? (
                     <span
-                      className={`test-runner-badge ${
-                        res.passed ? 'test-runner-badge--pass' : 'test-runner-badge--fail'
+                      className={`ciclista-badge ${
+                        res.passed ? 'ciclista-badge--pass' : 'ciclista-badge--fail'
                       }`}
                     >
                       {res.passed ? 'PASS' : 'FAIL'}
                     </span>
                   ) : (
-                    <span className="test-runner-badge--idle">IDLE</span>
+                    <span className="ciclista-badge--idle">IDLE</span>
                   )}
                 </div>
               </div>
@@ -115,24 +130,24 @@ export default function TestRunnerPage() {
         </div>
 
         {selectedTestCase && (
-          <div className="test-runner-detail-card">
-            <div className="test-runner-detail-title">{selectedTestCase.name}</div>
-            <div className="test-runner-detail-desc">{selectedTestCase.description}</div>
+          <div className="ciclista-card">
+            <div className="ciclista-detail-title">{selectedTestCase.name}</div>
+            <div className="ciclista-detail-desc">{selectedTestCase.description}</div>
             <button
               type="button"
               onClick={() => handleRunSingle(selectedTestCase)}
-              className="test-runner-btn-single"
+              className="ciclista-btn ciclista-btn--secondary"
             >
               Run Selected Test
             </button>
 
             {selectedResult && (
-              <div className="test-runner-result-summary">
-                <div className="test-runner-time">
+              <div className="ciclista-result-summary">
+                <div className="ciclista-time-label">
                   Execution Time: {selectedResult.executionTimeMs.toFixed(2)} ms
                 </div>
                 {selectedResult.failures.length > 0 ? (
-                  <div className="test-runner-failures">
+                  <div className="ciclista-failures">
                     <strong>Failures:</strong>
                     <ul>
                       {selectedResult.failures.map((f, i) => (
@@ -141,7 +156,7 @@ export default function TestRunnerPage() {
                     </ul>
                   </div>
                 ) : (
-                  <div className="test-runner-success-msg">All assertions passed cleanly.</div>
+                  <div className="ciclista-success-msg">All assertions passed cleanly.</div>
                 )}
               </div>
             )}
@@ -150,7 +165,7 @@ export default function TestRunnerPage() {
       </div>
 
       {/* Map View */}
-      <div className="test-runner-map-view">
+      <div className="ciclista-map-view-wrapper">
         <MapProvider
           graph={graph}
           loadedBBoxes={[]}
@@ -172,7 +187,7 @@ export default function TestRunnerPage() {
           onSaveNodeOverride={() => {}}
           onSaveNodeTurns={() => {}}
           onClearNodeOverride={() => {}}
-          theme="dark"
+          theme={theme}
           isInspectorModeActive={false}
           onToggleInspectorMode={() => {}}
           selectedNodeId={null}
@@ -192,7 +207,8 @@ export default function TestRunnerPage() {
           rideStats={null}
           onStopNavigation={() => {}}
         >
-          <MapView />
+          <MapView tileless={true} />
+          <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />
         </MapProvider>
       </div>
     </div>

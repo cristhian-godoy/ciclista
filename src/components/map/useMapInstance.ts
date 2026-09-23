@@ -11,6 +11,7 @@ import { useCustomMapControls } from './useCustomMapControls';
 interface UseMapInstanceOptions {
   selectedPreset: 'munich' | 'amsterdam';
   theme: 'bright' | 'liberty' | 'dark';
+  tileless?: boolean;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
   onContextMenu?: (e: maplibregl.MapMouseEvent) => void;
   onClick?: (e: maplibregl.MapMouseEvent) => void;
@@ -25,6 +26,7 @@ interface UseMapInstanceOptions {
 export const useMapInstance = ({
   selectedPreset,
   theme,
+  tileless = false,
   onMapBoundsChange,
   onContextMenu,
   onClick,
@@ -166,6 +168,40 @@ export const useMapInstance = ({
 
     const loadInitialStyle = async () => {
       try {
+        if (tileless) {
+          mapInstance.once('style.load', () => {
+            if (isCancelled) return;
+            setMapReady(true);
+
+            const bounds = mapInstance.getBounds();
+            const zoom = mapInstance.getZoom();
+            const bbox: [number, number, number, number] = [
+              bounds.getSouth(),
+              bounds.getWest(),
+              bounds.getNorth(),
+              bounds.getEast(),
+            ];
+            if (onMapBoundsChangeRef.current) {
+              onMapBoundsChangeRef.current(bbox, zoom);
+            }
+          });
+
+          mapInstance.setStyle({
+            version: 8,
+            sources: {},
+            layers: [
+              {
+                id: 'background',
+                type: 'background',
+                paint: {
+                  'background-color': theme === 'bright' ? '#f8fafc' : '#0b0f19',
+                },
+              },
+            ],
+          });
+          return;
+        }
+
         const cleanStyle = await fetchFilteredStyle(theme);
         if (isCancelled) return;
 
@@ -245,6 +281,26 @@ export const useMapInstance = ({
 
     const updateThemeStyle = async () => {
       try {
+        if (tileless) {
+          map.once('style.load', () => {
+            setMapReady(true);
+          });
+          map.setStyle({
+            version: 8,
+            sources: {},
+            layers: [
+              {
+                id: 'background',
+                type: 'background',
+                paint: {
+                  'background-color': theme === 'bright' ? '#f8fafc' : '#0b0f19',
+                },
+              },
+            ],
+          });
+          return;
+        }
+
         const cleanStyle = await fetchFilteredStyle(theme);
         if (isCancelled) return;
 
@@ -264,7 +320,7 @@ export const useMapInstance = ({
     return () => {
       isCancelled = true;
     };
-  }, [theme, map]);
+  }, [theme, map, tileless]);
 
   return { map, mapContainerRef, mapReady };
 };
