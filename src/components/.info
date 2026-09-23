@@ -6,6 +6,10 @@ AttributionPanel.tsx
 	Accordion-style panel displaying third-party licensing and attributions.
 DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
+EventManagementPanel.test.tsx
+	Unit tests for Studio EventManagementPanel selection, effect gating, and event list interactions.
+EventManagementPanel.tsx
+	Sidebar panel managing studio events, road blockages, and edge selections.
 GlobalControlsPanel.tsx
 	Global controls overlay panel housing theme toggles and data saver options.
 GlobalControlsPanel.test.tsx
@@ -44,5 +48,9 @@ Sidebar.test.tsx
 	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx
 	Dashboard sidebar layout containing configurations and statistics panels.
+SideToolbar.test.tsx
+	Unit tests for SideToolbar branding, navigation mode buttons, and test runner link.
+SideToolbar.tsx
+	Non-floating left side toolbar providing switching between routing mode, studio mode, and test runner.
 map
 	Directory containing map layer subcomponents and map hooks.
