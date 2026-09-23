@@ -25,8 +25,8 @@ export class LocalStorageProvider implements IStorageProvider {
    * Initializes the LocalStorageProvider and sets up beforeunload listener.
    */
   constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
+    if (typeof globalThis !== 'undefined' && 'addEventListener' in globalThis) {
+      globalThis.addEventListener('beforeunload', () => {
         this.flushPendingWrites();
       });
     }
@@ -35,7 +35,9 @@ export class LocalStorageProvider implements IStorageProvider {
   private isLocalStorageAvailable(): boolean {
     try {
       return (
-        typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null
+        typeof globalThis !== 'undefined' &&
+        'localStorage' in globalThis &&
+        globalThis.localStorage !== null
       );
     } catch {
       return false;

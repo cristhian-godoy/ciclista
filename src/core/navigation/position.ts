@@ -189,15 +189,19 @@ export function createWASDProvider(
       if (running) return;
       running = true;
       lastTime = performance.now();
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
+      if (typeof globalThis !== 'undefined' && 'addEventListener' in globalThis) {
+        globalThis.addEventListener('keydown', handleKeyDown as EventListener);
+        globalThis.addEventListener('keyup', handleKeyUp as EventListener);
+      }
       rafId = requestAnimationFrame(tick);
     },
     stop() {
       if (!running) return;
       running = false;
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      if (typeof globalThis !== 'undefined' && 'removeEventListener' in globalThis) {
+        globalThis.removeEventListener('keydown', handleKeyDown as EventListener);
+        globalThis.removeEventListener('keyup', handleKeyUp as EventListener);
+      }
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
         rafId = null;
