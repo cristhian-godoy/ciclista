@@ -4,8 +4,11 @@ import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
+import { SideToolbar, type ToolbarMode } from './components/SideToolbar';
 import { snapCoordinateToEdge } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
+import type { LocalOverrides } from './core/config/types';
+import type { MapEvent } from './core/events';
 import type {
   StrategyRouteVariant,
   WorkerRoutingRequest,
@@ -25,6 +28,9 @@ const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage
 function DashboardApp() {
   const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
+  const [appMode, setAppMode] = useState<ToolbarMode>('routing');
+  const [events, setEvents] = useState<MapEvent[]>([]);
+  const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
 
   const {
     isInspectorModeActive,
@@ -96,6 +102,22 @@ function DashboardApp() {
     handlePresetChange(preset);
   };
 
+  const effectiveOverrides: LocalOverrides = useMemo(() => {
+    const blockedEdges = new Set<string>();
+    for (const ev of events) {
+      if (ev.active && ev.effect.type === 'road_blockage') {
+        for (const edgeId of ev.edgeIds) {
+          blockedEdges.add(edgeId);
+        }
+      }
+    }
+    return {
+      ...currentOverrides,
+      events,
+      blockedEdges,
+    };
+  }, [currentOverrides, events]);
+
   // 4. Reactive Concurrent Routing Calculation via WebWorker
   const [routeVariants, setRouteVariants] = useState<StrategyRouteVariant[]>([]);
 
@@ -124,14 +146,14 @@ function DashboardApp() {
       graph,
       startCoord,
       endCoord,
-      overrides: currentOverrides,
+      overrides: effectiveOverrides,
     };
     worker.postMessage(request);
 
     return () => {
       worker.terminate();
     };
-  }, [graph, startCoord, endCoord, currentOverrides]);
+  }, [graph, startCoord, endCoord, effectiveOverrides]);
 
   const routeResult = useMemo(() => {
     const active = routeVariants.find((alt) => alt.label === routingStrategy);
@@ -176,8 +198,21 @@ function DashboardApp() {
       isNavigating={navigation.state.status === 'active' || navigation.state.status === 'paused'}
       rideStats={navigation.rideStats}
       onStopNavigation={navigation.stopNavigation}
+      appMode={appMode}
+      onAppModeChange={setAppMode}
+      events={events}
+      onEventsChange={setEvents}
+      selectedEdgeIds={selectedEdgeIds}
+      onSelectedEdgeIdsChange={setSelectedEdgeIds}
     >
       <div className="app-container">
+        <SideToolbar
+          mode={appMode}
+          onModeChange={setAppMode}
+          onOpenTestRunner={() => {
+            window.location.pathname = '/test';
+          }}
+        />
         <Sidebar
           startCoord={startCoord}
           endCoord={endCoord}
@@ -205,6 +240,10 @@ function DashboardApp() {
           onSelectNodeId={setSelectedNodeId}
           selectedAlternativeTargetId={selectedAlternativeTargetId}
           setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+          appMode={appMode}
+          events={events}
+          selectedEdgeIds={selectedEdgeIds}
+          onClearSelection={() => setSelectedEdgeIds([])}
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
         <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />

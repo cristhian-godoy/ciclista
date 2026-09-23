@@ -130,4 +130,76 @@ describe('Sidebar Integration', () => {
     expect(sidebarElement).not.toHaveClass('collapsed');
     expect(toggleButton).toHaveAttribute('aria-label', 'Collapse sidebar');
   });
+
+  it('swaps content to EventManagementPanel when in studio mode', () => {
+    render(<Sidebar {...defaultProps} appMode="studio" selectedEdgeIds={['n1->n2']} />);
+
+    expect(screen.getByText('Studio: Event Management')).toBeInTheDocument();
+    expect(screen.getByText('1 road segment selected')).toBeInTheDocument();
+    expect(screen.queryByText('City Preset')).not.toBeInTheDocument();
+    expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Click or drag brush on roads to select and configure blockages.'),
+    ).toBeInTheDocument();
+  });
+
+  it('triggers event creation callback in studio mode', async () => {
+    const user = userEvent.setup();
+    const handleCreateEvent = vi.fn();
+
+    render(
+      <Sidebar
+        {...defaultProps}
+        appMode="studio"
+        selectedEdgeIds={['n1->n2', 'n2->n3']}
+        onCreateEvent={handleCreateEvent}
+      />,
+    );
+
+    const nameInput = screen.getByLabelText('Event Name');
+    await user.type(nameInput, 'City Marathon');
+
+    const submitBtn = screen.getByRole('button', { name: /Apply Road Blockage to Selection/i });
+    expect(submitBtn).not.toBeDisabled();
+    await user.click(submitBtn);
+
+    expect(handleCreateEvent).toHaveBeenCalledWith('City Marathon', undefined);
+  });
+
+  it('triggers event toggle and deletion callbacks in studio mode', async () => {
+    const user = userEvent.setup();
+    const handleToggleEvent = vi.fn();
+    const handleDeleteEvent = vi.fn();
+
+    const mockEvents = [
+      {
+        id: 'event-1',
+        name: 'Blockage 1',
+        active: true,
+        edgeIds: ['n1->n2'],
+        effect: { type: 'road_blockage' as const, penaltySeconds: 30 },
+        createdAt: 1000,
+      },
+    ];
+
+    render(
+      <Sidebar
+        {...defaultProps}
+        appMode="studio"
+        events={mockEvents}
+        onToggleEvent={handleToggleEvent}
+        onDeleteEvent={handleDeleteEvent}
+      />,
+    );
+
+    expect(screen.getByText('Blockage 1')).toBeInTheDocument();
+
+    const toggleCheckbox = screen.getByRole('checkbox', { name: /Toggle Blockage 1/i });
+    await user.click(toggleCheckbox);
+    expect(handleToggleEvent).toHaveBeenCalledWith('event-1');
+
+    const deleteBtn = screen.getByRole('button', { name: /Delete Blockage 1/i });
+    await user.click(deleteBtn);
+    expect(handleDeleteEvent).toHaveBeenCalledWith('event-1');
+  });
 });

@@ -5,6 +5,143 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
   class="app-container"
 >
   <aside
+    aria-label="Main application toolbar"
+    class="ciclista-toolbar"
+  >
+    <div
+      class="ciclista-toolbar-header"
+    >
+      <div
+        aria-label="Ciclista"
+        class="ciclista-toolbar-logo"
+        title="Ciclista"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-navigation ciclista-toolbar-logo-icon"
+          fill="none"
+          height="22"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="22"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <polygon
+            points="3 11 22 2 13 21 11 13 3 11"
+          />
+        </svg>
+      </div>
+    </div>
+    <nav
+      aria-label="Primary navigation modes"
+      class="ciclista-toolbar-nav"
+    >
+      <button
+        aria-label="Routing Mode"
+        aria-pressed="true"
+        class="ciclista-toolbar-btn active ciclista-toolbar-btn--active"
+        title="Routing Mode"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-route ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="6"
+            cy="19"
+            r="3"
+          />
+          <path
+            d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"
+          />
+          <circle
+            cx="18"
+            cy="5"
+            r="3"
+          />
+        </svg>
+      </button>
+      <button
+        aria-label="Studio Mode"
+        aria-pressed="false"
+        class="ciclista-toolbar-btn "
+        title="Studio Mode"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-shield-alert ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+          />
+          <path
+            d="M12 8v4"
+          />
+          <path
+            d="M12 16h.01"
+          />
+        </svg>
+      </button>
+    </nav>
+    <div
+      class="ciclista-toolbar-footer"
+    >
+      <a
+        aria-label="Test Runner"
+        class="ciclista-toolbar-btn ciclista-toolbar-btn--test"
+        href="/test"
+        title="Test Runner"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-flask-conical ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"
+          />
+          <path
+            d="M6.453 15h11.094"
+          />
+          <path
+            d="M8.5 2h7"
+          />
+        </svg>
+      </a>
+    </div>
+  </aside>
+  <aside
     class="sidebar ciclista-glass-panel "
   >
     <div

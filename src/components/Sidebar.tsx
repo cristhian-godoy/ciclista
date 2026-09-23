@@ -9,20 +9,26 @@ import {
   Play,
   Square,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, RulesConfiguration } from '../core/config';
+import type { MapEvent } from '../core/events';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
+import { EventManagementPanel } from './EventManagementPanel';
 import { InspectorPanel } from './InspectorPanel';
+import { MapContext } from './map/MapContext';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
 import { RulesConfigPanel } from './RulesConfigPanel';
 
-interface SidebarProps {
+/**
+ * Properties for the main dashboard Sidebar component.
+ */
+export interface SidebarProps {
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
   routeResult: RouteResult | null;
@@ -47,6 +53,34 @@ interface SidebarProps {
   onSelectNodeId: (id: string | null) => void;
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
+  /**
+   * Active application workflow mode ('routing' or 'studio').
+   */
+  appMode?: 'routing' | 'studio';
+  /**
+   * Current list of studio map events.
+   */
+  events?: MapEvent[];
+  /**
+   * Currently selected road segment IDs.
+   */
+  selectedEdgeIds?: string[];
+  /**
+   * Callback fired when creating a new event in Studio mode.
+   */
+  onCreateEvent?: (name: string, description?: string) => void;
+  /**
+   * Callback fired when toggling an event active status.
+   */
+  onToggleEvent?: (id: string) => void;
+  /**
+   * Callback fired when deleting an event.
+   */
+  onDeleteEvent?: (id: string) => void;
+  /**
+   * Callback fired when clearing the active edge selection.
+   */
+  onClearSelection?: () => void;
 }
 
 /**
@@ -76,9 +110,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectNodeId,
   selectedAlternativeTargetId,
   setSelectedAlternativeTargetId,
+  appMode,
+  events,
+  selectedEdgeIds,
+  onCreateEvent,
+  onToggleEvent,
+  onDeleteEvent,
+  onClearSelection,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const mapCtx = useContext(MapContext);
+  const currentAppMode = appMode ?? mapCtx?.appMode ?? 'routing';
+  const currentEvents = events ?? mapCtx?.events ?? [];
+  const currentSelectedEdgeIds = selectedEdgeIds ?? mapCtx?.selectedEdgeIds ?? [];
+
+  const handleCreateEvent = (name: string, description?: string) => {
+    if (onCreateEvent) {
+      onCreateEvent(name, description);
+      return;
+    }
+    if (!mapCtx) return;
+    const newEvent: MapEvent = {
+      id: `event-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      description,
+      active: true,
+      edgeIds: [...mapCtx.selectedEdgeIds],
+      effect: {
+        type: 'road_blockage',
+        penaltySeconds: 30,
+      },
+      createdAt: Date.now(),
+    };
+    mapCtx.setEvents((prev) => [...prev, newEvent]);
+    mapCtx.setSelectedEdgeIds([]);
+  };
+
+  const handleToggleEvent = (id: string) => {
+    if (onToggleEvent) {
+      onToggleEvent(id);
+      return;
+    }
+    mapCtx?.setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, active: !e.active } : e)));
+  };
+
+  const handleDeleteEvent = (id: string) => {
+    if (onDeleteEvent) {
+      onDeleteEvent(id);
+      return;
+    }
+    mapCtx?.setEvents((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleClearSelection = () => {
+    if (onClearSelection) {
+      onClearSelection();
+      return;
+    }
+    mapCtx?.onClearSelection();
+  };
 
   return (
     <>
@@ -89,119 +181,138 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="sidebar-content">
-          {/* Section 1 & 2b: Routing configuration inputs */}
-          <RoutingConfigPanel
-            selectedPreset={selectedPreset}
-            onPresetChange={onPresetChange}
-            isFetchingOSM={isFetchingOSM}
-            bikeConfig={bikeConfig}
-            onBikeConfigChange={onBikeConfigChange}
-          />
-
-          {/* Section 2: Route Alternatives Selector & Stats */}
-          <RouteStatsPanel
-            routeVariants={routeVariants}
-            routingStrategy={routingStrategy}
-            onStrategyChange={onStrategyChange}
-            routeResult={routeResult}
-            isNavigating={isNavigating}
-          />
-
-          {/* Inspector Mode Details Panel */}
-          {routeResult !== null && !isNavigating && isInspectorModeActive && (
-            <InspectorPanel
-              selectedNodeId={selectedNodeId}
-              nextNodeId={
-                selectedNodeId
-                  ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
-                  : undefined
-              }
-              onClose={() => onSelectNodeId(null)}
-              selectedAlternativeTargetId={selectedAlternativeTargetId}
-              setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+          {currentAppMode === 'studio' ? (
+            <EventManagementPanel
+              events={currentEvents}
+              selectedEdgeCount={currentSelectedEdgeIds.length}
+              onCreateEvent={handleCreateEvent}
+              onToggleEvent={handleToggleEvent}
+              onDeleteEvent={handleDeleteEvent}
+              onClearSelection={handleClearSelection}
             />
-          )}
+          ) : (
+            <>
+              {/* Section 1 & 2b: Routing configuration inputs */}
+              <RoutingConfigPanel
+                selectedPreset={selectedPreset}
+                onPresetChange={onPresetChange}
+                isFetchingOSM={isFetchingOSM}
+                bikeConfig={bikeConfig}
+                onBikeConfigChange={onBikeConfigChange}
+              />
 
-          {/* Navigation Control Panel */}
-          {routeResult !== null && (
-            <div className="ciclista-card sidebar-nav-card">
-              {!isNavigating ? (
-                <button
-                  className="ciclista-btn ciclista-btn--primary sidebar-nav-btn"
-                  onClick={() => {
-                    setIsCollapsed(true);
-                    onStartNavigation();
-                  }}
-                >
-                  <Play size={16} />
-                  Start Navigation
-                </button>
-              ) : (
-                <div className="sidebar-active-nav">
-                  <div className="sidebar-active-row">
-                    <span className="sidebar-active-title">Active Navigation</span>
-                    <div className="sidebar-actions-group">
-                      <button
-                        className="ciclista-btn ciclista-btn--secondary sidebar-icon-btn"
-                        onClick={onToggleCameraMode}
-                        title={`Toggle camera mode (current: ${cameraMode})`}
-                      >
-                        {cameraMode === 'north-up' ? (
-                          <Compass size={16} />
-                        ) : (
-                          <Navigation2 size={16} />
-                        )}
-                      </button>
-                      <button
-                        className="ciclista-btn ciclista-btn--danger sidebar-icon-btn"
-                        onClick={onStopNavigation}
-                        title="Stop Navigation"
-                      >
-                        <Square size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  {navigationProgress && (
-                    <div className="sidebar-nav-grid">
-                      <div>
-                        <div className="sidebar-nav-lbl">Remaining</div>
-                        <div className="sidebar-nav-val">
-                          {navigationProgress.distanceRemainingM >= 1000
-                            ? `${(navigationProgress.distanceRemainingM / 1000).toFixed(1)} km`
-                            : `${Math.round(navigationProgress.distanceRemainingM)} m`}
+              {/* Section 2: Route Alternatives Selector & Stats */}
+              <RouteStatsPanel
+                routeVariants={routeVariants}
+                routingStrategy={routingStrategy}
+                onStrategyChange={onStrategyChange}
+                routeResult={routeResult}
+                isNavigating={isNavigating}
+              />
+
+              {/* Inspector Mode Details Panel */}
+              {routeResult !== null && !isNavigating && isInspectorModeActive && (
+                <InspectorPanel
+                  selectedNodeId={selectedNodeId}
+                  nextNodeId={
+                    selectedNodeId
+                      ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
+                      : undefined
+                  }
+                  onClose={() => onSelectNodeId(null)}
+                  selectedAlternativeTargetId={selectedAlternativeTargetId}
+                  setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+                />
+              )}
+
+              {/* Navigation Control Panel */}
+              {routeResult !== null && (
+                <div className="ciclista-card sidebar-nav-card">
+                  {!isNavigating ? (
+                    <button
+                      className="ciclista-btn ciclista-btn--primary sidebar-nav-btn"
+                      onClick={() => {
+                        setIsCollapsed(true);
+                        onStartNavigation();
+                      }}
+                    >
+                      <Play size={16} />
+                      Start Navigation
+                    </button>
+                  ) : (
+                    <div className="sidebar-active-nav">
+                      <div className="sidebar-active-row">
+                        <span className="sidebar-active-title">Active Navigation</span>
+                        <div className="sidebar-actions-group">
+                          <button
+                            className="ciclista-btn ciclista-btn--secondary sidebar-icon-btn"
+                            onClick={onToggleCameraMode}
+                            title={`Toggle camera mode (current: ${cameraMode})`}
+                          >
+                            {cameraMode === 'north-up' ? (
+                              <Compass size={16} />
+                            ) : (
+                              <Navigation2 size={16} />
+                            )}
+                          </button>
+                          <button
+                            className="ciclista-btn ciclista-btn--danger sidebar-icon-btn"
+                            onClick={onStopNavigation}
+                            title="Stop Navigation"
+                          >
+                            <Square size={16} />
+                          </button>
                         </div>
                       </div>
-                      <div>
-                        <div className="sidebar-nav-lbl">ETA</div>
-                        <div className="sidebar-nav-val">
-                          {Math.floor(navigationProgress.etaSeconds / 60) > 0
-                            ? `${Math.floor(navigationProgress.etaSeconds / 60)}m ${Math.round(navigationProgress.etaSeconds % 60)}s`
-                            : `${Math.round(navigationProgress.etaSeconds)}s`}
+                      {navigationProgress && (
+                        <div className="sidebar-nav-grid">
+                          <div>
+                            <div className="sidebar-nav-lbl">Remaining</div>
+                            <div className="sidebar-nav-val">
+                              {navigationProgress.distanceRemainingM >= 1000
+                                ? `${(navigationProgress.distanceRemainingM / 1000).toFixed(1)} km`
+                                : `${Math.round(navigationProgress.distanceRemainingM)} m`}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="sidebar-nav-lbl">ETA</div>
+                            <div className="sidebar-nav-val">
+                              {Math.floor(navigationProgress.etaSeconds / 60) > 0
+                                ? `${Math.floor(navigationProgress.etaSeconds / 60)}m ${Math.round(navigationProgress.etaSeconds % 60)}s`
+                                : `${Math.round(navigationProgress.etaSeconds)}s`}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
-            </div>
+
+              {/* Section 3: Road Rules Configuration */}
+              <RulesConfigPanel config={rulesConfig} onChange={onRulesChange} />
+
+              {/* Section 4: Route Comparison Panel */}
+              <RouteComparePanel
+                routeVariants={routeVariants}
+                activeAlternativeLabel={routingStrategy}
+                onSelectAlternative={onStrategyChange}
+              />
+
+              <AttributionPanel />
+            </>
           )}
-
-          {/* Section 3: Road Rules Configuration */}
-          <RulesConfigPanel config={rulesConfig} onChange={onRulesChange} />
-
-          {/* Section 4: Route Comparison Panel */}
-          <RouteComparePanel
-            routeVariants={routeVariants}
-            activeAlternativeLabel={routingStrategy}
-            onSelectAlternative={onStrategyChange}
-          />
-
-          <AttributionPanel />
         </div>
 
         <div className="sidebar-footer">
-          <p>Drag green/red pins or right-click map to route.</p>
-          <p className="sidebar-footer-note">Click red nodes to time stoplights.</p>
+          {currentAppMode === 'studio' ? (
+            <p>Click or drag brush on roads to select and configure blockages.</p>
+          ) : (
+            <>
+              <p>Drag green/red pins or right-click map to route.</p>
+              <p className="sidebar-footer-note">Click red nodes to time stoplights.</p>
+            </>
+          )}
         </div>
       </aside>
 

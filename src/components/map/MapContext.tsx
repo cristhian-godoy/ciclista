@@ -134,10 +134,16 @@ interface MapProviderProps {
   isNavigating: boolean;
   rideStats: RideStats | null;
   onStopNavigation: () => void;
+  appMode?: 'routing' | 'studio';
+  onAppModeChange?: (mode: 'routing' | 'studio') => void;
   initialAppMode?: 'routing' | 'studio';
+  selectedEdgeIds?: string[];
+  onSelectedEdgeIdsChange?: React.Dispatch<React.SetStateAction<string[]>>;
   initialSelectedEdgeIds?: string[];
   initialSelectionTool?: 'click' | 'brush';
   initialBrushRadius?: number;
+  events?: MapEvent[];
+  onEventsChange?: React.Dispatch<React.SetStateAction<MapEvent[]>>;
   initialEvents?: MapEvent[];
   children: React.ReactNode;
 }
@@ -180,10 +186,16 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   isNavigating,
   rideStats,
   onStopNavigation,
+  appMode: controlledAppMode,
+  onAppModeChange,
   initialAppMode,
+  selectedEdgeIds: controlledSelectedEdgeIds,
+  onSelectedEdgeIdsChange,
   initialSelectedEdgeIds,
   initialSelectionTool,
   initialBrushRadius,
+  events: controlledEvents,
+  onEventsChange,
   initialEvents,
   children,
 }) => {
@@ -221,13 +233,26 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     nodeIds: null,
   });
 
-  const [appMode, setAppMode] = useState<'routing' | 'studio'>(initialAppMode ?? 'routing');
-  const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>(initialSelectedEdgeIds ?? []);
+  const [internalAppMode, setInternalAppMode] = useState<'routing' | 'studio'>(
+    initialAppMode ?? 'routing',
+  );
+  const appMode = controlledAppMode ?? internalAppMode;
+  const setAppMode = onAppModeChange ?? setInternalAppMode;
+
+  const [internalSelectedEdgeIds, setInternalSelectedEdgeIds] = useState<string[]>(
+    initialSelectedEdgeIds ?? [],
+  );
+  const selectedEdgeIds = controlledSelectedEdgeIds ?? internalSelectedEdgeIds;
+  const setSelectedEdgeIds = onSelectedEdgeIdsChange ?? setInternalSelectedEdgeIds;
+
   const [selectionTool, setSelectionTool] = useState<'click' | 'brush'>(
     initialSelectionTool ?? 'click',
   );
   const [brushRadius, setBrushRadius] = useState<number>(initialBrushRadius ?? 40);
-  const [events, setEvents] = useState<MapEvent[]>(initialEvents ?? []);
+
+  const [internalEvents, setInternalEvents] = useState<MapEvent[]>(initialEvents ?? []);
+  const events = controlledEvents ?? internalEvents;
+  const setEvents = onEventsChange ?? setInternalEvents;
 
   const onClearSelection = () => {
     setSelectedEdgeIds([]);
