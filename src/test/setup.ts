@@ -75,7 +75,27 @@ vi.mock('maplibre-gl', () => {
 
   class NavigationControl {}
 
+  class Popup {
+    setLngLat() {
+      return this;
+    }
+    setHTML() {
+      return this;
+    }
+    setDOMContent() {
+      return this;
+    }
+    addTo() {
+      return this;
+    }
+    remove() {
+      return this;
+    }
+  }
+
   class Map {
+    dragPan = { enable() {}, disable() {} };
+    dragRotate = { enable() {}, disable() {} };
     events: Record<string, Handler[]> = {};
     layerEvents: Record<string, Record<string, Handler[]>> = {};
     sources: Record<string, { data?: unknown; setData?: (data: unknown) => void }> = {};
@@ -92,6 +112,12 @@ vi.mock('maplibre-gl', () => {
 
     addControl() {}
     removeControl() {}
+
+    hasImage() {
+      return false;
+    }
+    addImage() {}
+    removeImage() {}
 
     addSource(id: string, source: { type: string; data?: unknown }) {
       this.sources[id] = {
@@ -206,11 +232,13 @@ vi.mock('maplibre-gl', () => {
     Marker,
     LngLatBounds,
     NavigationControl,
+    Popup,
     default: {
       Map,
       Marker,
       LngLatBounds,
       NavigationControl,
+      Popup,
     },
   };
 });

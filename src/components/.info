@@ -18,8 +18,10 @@ IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 InspectorPanel.tsx
 	Panel displaying side-by-side comparison of chosen routing edge vs alternatives.
+MapView.test.tsx
+	Unit tests for MapView container, studio mode selection tools, and drag interactions.
 MapView.tsx
-	MapLibre GL JS map orchestrator rendering markers and map layers.
+	MapLibre GL JS map orchestrator rendering markers, studio selection tools, and interactive layers.
 NavigationHUD.tsx
 	Floating glassmorphic head-up display showing active navigation telemetry.
 RouteComparePanel.test.tsx

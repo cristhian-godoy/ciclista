@@ -1,5 +1,17 @@
 BBoxBoundaryLayer.tsx
 	Layer component rendering OSM bounding box polygons.
+BlockedEdgesLayer.test.tsx
+	Unit tests verifying active road blockage barricade layer rendering.
+BlockedEdgesLayer.tsx
+	MapLibre layer rendering warning barricade dashed LineStrings for active road blockages.
+SelectedEdgesLayer.test.tsx
+	Unit tests for selected edges highlight layer and GeoJSON synchronization.
+SelectedEdgesLayer.tsx
+	MapLibre layer rendering high-visibility highlight LineStrings for selected graph edges.
+SelectionToolsDock.test.tsx
+	Unit tests for studio selection tools dock mode toggling and brush controls.
+SelectionToolsDock.tsx
+	Floating controls dock managing studio selection modes, radius brush, and counters.
 MapContextMenu.tsx
 	Floating context menu for setting start/end route points on right-click.
 MapLayerDock.test.tsx

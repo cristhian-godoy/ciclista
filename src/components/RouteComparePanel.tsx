@@ -112,7 +112,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Time prediction */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Clock size={12} aria-label="Time Icon" /> Time Predict
                 </span>
               </td>
@@ -129,7 +129,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Distance */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Milestone size={12} aria-label="Distance Icon" /> Distance
                 </span>
               </td>
@@ -146,7 +146,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Signals */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <TrafficCone size={12} aria-label="Signals Icon" /> Traffic Lights
                 </span>
               </td>
@@ -163,7 +163,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Yields */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <AlertTriangle size={12} aria-label="Yield Icon" /> Yield Signs
                 </span>
               </td>
@@ -180,7 +180,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Crossing */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Accessibility size={12} aria-label="Crossing Icon" /> Crossings
                 </span>
               </td>
@@ -197,7 +197,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Road mix: Cycleway */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Bike size={12} aria-label="Cycleway Icon" /> % Cycleway
                 </span>
               </td>
@@ -218,7 +218,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Road mix: Residential */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Home size={12} aria-label="Residential Icon" /> % Resident
                 </span>
               </td>
@@ -236,7 +236,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Road mix: Primary */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Car size={12} aria-label="Primary Road Icon" /> % Primary
                 </span>
               </td>
@@ -257,7 +257,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Surface mix: Paved */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Route size={12} aria-label="Paved Surface Icon" /> % Paved
                 </span>
               </td>
@@ -275,7 +275,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Surface mix: Gravel */}
             <tr>
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Trees size={12} aria-label="Gravel Surface Icon" /> % Gravel
                 </span>
               </td>
@@ -293,7 +293,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
             {/* Surface mix: Cobblestone */}
             <tr className="last-row">
               <td className="metric-col">
-                <span className="metric-cell-content">
+                <span className="compare-metric-cell-content">
                   <Layers size={12} aria-label="Cobblestone Surface Icon" /> % Cobble
                 </span>
               </td>

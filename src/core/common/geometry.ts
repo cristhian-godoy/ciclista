@@ -109,3 +109,43 @@ export function findNearestEdge(graph: StreetGraph, coord: Coordinate): EdgeRef 
 
   return bestEdge;
 }
+
+/**
+ * Finds all directed graph edge keys (e.g. 'sourceId->targetId') that fall within
+ * a specified radius (in meters) from a center geographic coordinate.
+ *
+ * @param graph - The street network graph to search within.
+ * @param center - The central geographic coordinate.
+ * @param radiusMeters - The search radius in meters.
+ * @returns Array of directed edge key strings matching 'sourceId->targetId'.
+ */
+export function findEdgesWithinRadius(
+  graph: StreetGraph,
+  center: Coordinate,
+  radiusMeters: number,
+): string[] {
+  if (radiusMeters < 0) {
+    return [];
+  }
+
+  const matchingEdgeKeys = new Set<string>();
+
+  for (const [uId, entry] of graph.nodes.entries()) {
+    const u = entry.node;
+    for (const edge of entry.edges) {
+      const vId = edge.target;
+      const vEntry = graph.nodes.get(vId);
+      if (!vEntry) continue;
+      const v = vEntry.node;
+
+      const proj = projectPointOnSegment(center, u, v);
+      const dist = haversineDistance(center.lat, center.lng, proj.lat, proj.lng);
+
+      if (dist <= radiusMeters) {
+        matchingEdgeKeys.add(`${uId}->${vId}`);
+      }
+    }
+  }
+
+  return Array.from(matchingEdgeKeys);
+}

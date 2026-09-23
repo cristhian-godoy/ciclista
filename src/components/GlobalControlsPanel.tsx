@@ -73,7 +73,7 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
       </button>
 
       {isThemeExpanded && (
-        <div className="maplibregl-ctrl maplibregl-ctrl-group horizontal-ctrl-group global-controls-popover">
+        <div className="maplibregl-ctrl maplibregl-ctrl-group ctrl-group-horizontal global-controls-popover">
           <button
             type="button"
             onClick={() => {

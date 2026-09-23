@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { StreetGraph } from '../graph/types';
 import { coordToChunkId, getChunkBBox, getChunksInBBox, mergeChunksToBBox } from './geo';
+import { findEdgesWithinRadius } from './geometry';
 import { logger } from './logger';
 
 vi.mock('./logger', () => ({
@@ -58,5 +60,71 @@ describe('geo chunking utilities', () => {
 
   it('mergeChunksToBBox with empty input should return empty bounds', () => {
     expect(mergeChunksToBBox([])).toEqual([0, 0, 0, 0]);
+  });
+});
+
+describe('findEdgesWithinRadius', () => {
+  const createMockGraph = (): StreetGraph => {
+    const nodes = new Map();
+    nodes.set('node-1', {
+      node: { id: 'node-1', lat: 48.137, lng: 11.575, tags: {} },
+      edges: [
+        { target: 'node-2', distance: 111, tags: {} },
+        { target: 'node-3', distance: 1000, tags: {} },
+      ],
+    });
+    nodes.set('node-2', {
+      node: { id: 'node-2', lat: 48.138, lng: 11.575, tags: {} },
+      edges: [{ target: 'node-1', distance: 111, tags: {} }],
+    });
+    nodes.set('node-3', {
+      node: { id: 'node-3', lat: 48.137, lng: 11.585, tags: {} },
+      edges: [{ target: 'node-1', distance: 1000, tags: {} }],
+    });
+    return { nodes };
+  };
+
+  it('returns empty array when radius is negative', () => {
+    const graph = createMockGraph();
+    const result = findEdgesWithinRadius(graph, { lat: 48.1375, lng: 11.575 }, -10);
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when graph has no nodes or edges', () => {
+    const emptyGraph: StreetGraph = { nodes: new Map() };
+    const result = findEdgesWithinRadius(emptyGraph, { lat: 48.1375, lng: 11.575 }, 50);
+    expect(result).toEqual([]);
+  });
+
+  it('finds directed edges within radius of segment midpoint', () => {
+    const graph = createMockGraph();
+    // Center at midpoint between node-1 and node-2
+    const center = { lat: 48.1375, lng: 11.575 };
+    const result = findEdgesWithinRadius(graph, center, 30);
+
+    expect(result).toContain('node-1->node-2');
+    expect(result).toContain('node-2->node-1');
+    expect(result).not.toContain('node-1->node-3');
+    expect(result).not.toContain('node-3->node-1');
+  });
+
+  it('excludes edges when center is completely outside radius', () => {
+    const graph = createMockGraph();
+    // Far coordinate away from all edges
+    const center = { lat: 48.2, lng: 11.6 };
+    const result = findEdgesWithinRadius(graph, center, 50);
+    expect(result).toEqual([]);
+  });
+
+  it('includes multiple edges if multiple segments pass within radius', () => {
+    const graph = createMockGraph();
+    // Center close to node-1 where both node-1->node-2 and node-1->node-3 connect
+    const center = { lat: 48.13705, lng: 11.575 };
+    const result = findEdgesWithinRadius(graph, center, 30);
+
+    expect(result).toContain('node-1->node-2');
+    expect(result).toContain('node-2->node-1');
+    expect(result).toContain('node-1->node-3');
+    expect(result).toContain('node-3->node-1');
   });
 });

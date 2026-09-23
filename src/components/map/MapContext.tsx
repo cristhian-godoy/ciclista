@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import type { BikeConfig, RulesConfiguration, SemanticTurnType } from '../../core/config';
+import type { MapEvent } from '../../core/events/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { InspectorBranchEvaluation } from '../../core/inspector/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
@@ -83,6 +84,19 @@ export interface MapContextType {
   isNavigating: boolean;
   rideStats: RideStats | null;
   onStopNavigation: () => void;
+
+  // Studio & Selection states
+  appMode: 'routing' | 'studio';
+  setAppMode: (mode: 'routing' | 'studio') => void;
+  selectedEdgeIds: string[];
+  setSelectedEdgeIds: React.Dispatch<React.SetStateAction<string[]>>;
+  selectionTool: 'click' | 'brush';
+  setSelectionTool: (tool: 'click' | 'brush') => void;
+  brushRadius: number;
+  setBrushRadius: (radius: number) => void;
+  events: MapEvent[];
+  setEvents: React.Dispatch<React.SetStateAction<MapEvent[]>>;
+  onClearSelection: () => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -120,6 +134,11 @@ interface MapProviderProps {
   isNavigating: boolean;
   rideStats: RideStats | null;
   onStopNavigation: () => void;
+  initialAppMode?: 'routing' | 'studio';
+  initialSelectedEdgeIds?: string[];
+  initialSelectionTool?: 'click' | 'brush';
+  initialBrushRadius?: number;
+  initialEvents?: MapEvent[];
   children: React.ReactNode;
 }
 
@@ -161,6 +180,11 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   isNavigating,
   rideStats,
   onStopNavigation,
+  initialAppMode,
+  initialSelectedEdgeIds,
+  initialSelectionTool,
+  initialBrushRadius,
+  initialEvents,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -196,6 +220,18 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     crossingId: null,
     nodeIds: null,
   });
+
+  const [appMode, setAppMode] = useState<'routing' | 'studio'>(initialAppMode ?? 'routing');
+  const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>(initialSelectedEdgeIds ?? []);
+  const [selectionTool, setSelectionTool] = useState<'click' | 'brush'>(
+    initialSelectionTool ?? 'click',
+  );
+  const [brushRadius, setBrushRadius] = useState<number>(initialBrushRadius ?? 40);
+  const [events, setEvents] = useState<MapEvent[]>(initialEvents ?? []);
+
+  const onClearSelection = () => {
+    setSelectedEdgeIds([]);
+  };
 
   return (
     <MapContext.Provider
@@ -246,6 +282,17 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         isNavigating,
         rideStats,
         onStopNavigation,
+        appMode,
+        setAppMode,
+        selectedEdgeIds,
+        setSelectedEdgeIds,
+        selectionTool,
+        setSelectionTool,
+        brushRadius,
+        setBrushRadius,
+        events,
+        setEvents,
+        onClearSelection,
       }}
     >
       {children}

@@ -7,9 +7,9 @@ constants.ts
 geo.ts
 	Geographic coordinate mathematical utilities.
 geo.test.ts
-	Unit tests for geographic coordinate and chunking mathematical utilities.
+	Unit tests for geographic coordinate chunking and radius edge discovery mathematical utilities.
 geometry.ts
-	Geometry calculations and spatial helper functions.
+	Geometry calculations, spatial helper functions, and radius edge discovery.
 logger.ts
 	Application logger for debugging and telemetry.
 

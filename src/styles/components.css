@@ -373,7 +373,7 @@ h2 {
   margin-top: var(--ciclista-spacing-xs);
 }
 
-.stat-item {
+.stats-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -384,13 +384,13 @@ h2 {
   text-align: center;
 }
 
-.stat-val {
+.stats-val {
   font-size: var(--ciclista-font-lg);
   font-weight: 700;
   color: var(--ciclista-color-brand-secondary);
 }
 
-.stat-lbl {
+.stats-lbl {
   font-size: var(--ciclista-font-xs);
   text-transform: uppercase;
   color: var(--ciclista-color-text-muted);
@@ -432,7 +432,7 @@ h2 {
 }
 
 /* Badge Chips */
-.badge {
+.badge-chip {
   display: inline-flex;
   align-items: center;
   padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-sm);
@@ -762,7 +762,7 @@ h2 {
   margin: var(--ciclista-spacing-12) 0;
 }
 
-.metric-cell-content {
+.compare-metric-cell-content {
   display: inline-flex;
   align-items: center;
   gap: var(--ciclista-spacing-6);
@@ -972,23 +972,23 @@ h2 {
 }
 
 /* Horizontal MapLibre control group popover overrides */
-.maplibregl-ctrl-group.horizontal-ctrl-group {
+.maplibregl-ctrl-group.ctrl-group-horizontal {
   display: flex !important;
   flex-direction: row !important;
 }
 
-.maplibregl-ctrl-group.horizontal-ctrl-group button {
+.maplibregl-ctrl-group.ctrl-group-horizontal button {
   border-bottom: none !important;
   border-right: 1px solid var(--ciclista-glass-border-base) !important;
 }
 
-.maplibregl-ctrl-group.horizontal-ctrl-group button:last-child {
+.maplibregl-ctrl-group.ctrl-group-horizontal button:last-child {
   border-right: none !important;
   border-bottom-style: none !important;
 }
 
 /* Reset any sibling borders applied by native MapLibre stylesheets */
-.maplibregl-ctrl-group.horizontal-ctrl-group button + button {
+.maplibregl-ctrl-group.ctrl-group-horizontal button + button {
   border-top: none !important;
   border-left: none !important;
 }
@@ -2185,4 +2185,136 @@ h2 {
 .app-suspense-fallback {
   padding: var(--ciclista-spacing-lg);
   color: var(--ciclista-color-text-primary);
+}
+
+/* ─── Map Selection Dock (Studio Mode) ─────────────────────────────── */
+
+.map-selection-dock {
+  position: absolute;
+  top: var(--ciclista-spacing-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+  padding: var(--ciclista-spacing-sm);
+  background: var(--ciclista-color-surface-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+  box-shadow: var(--ciclista-shadow-md);
+  min-width: 260px;
+}
+
+.map-selection-dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.map-selection-dock-title {
+  font-size: var(--ciclista-font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ciclista-color-text-secondary);
+}
+
+.map-selection-dock-clear {
+  padding: var(--ciclista-spacing-2xs);
+  background: transparent;
+  color: var(--ciclista-color-text-muted);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ciclista-radius-xs);
+}
+
+.map-selection-dock-clear:hover {
+  color: var(--ciclista-color-brand-danger);
+}
+
+.map-selection-dock-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.map-selection-dock-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ciclista-spacing-xs);
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  font-size: var(--ciclista-font-xs);
+  font-weight: 600;
+  border-radius: var(--ciclista-radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
+  background: var(--ciclista-glass-bg-base);
+  color: var(--ciclista-color-text-primary);
+  cursor: pointer;
+  transition: var(--ciclista-transition-fast);
+}
+
+.map-selection-dock-tool-btn:hover {
+  background: var(--ciclista-glass-bg-hover);
+}
+
+.map-selection-dock-tool-btn.active {
+  background: var(--ciclista-color-brand-main);
+  border-color: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+}
+
+.map-selection-dock-brush-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+  padding-top: var(--ciclista-spacing-xs);
+  border-top: 1px solid var(--ciclista-glass-border-base);
+}
+
+.map-selection-dock-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-2xs);
+}
+
+.map-selection-dock-label {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.map-selection-dock-slider {
+  width: 100%;
+}
+
+.map-selection-dock-quick-buttons {
+  display: flex;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.map-selection-dock-quick-btn {
+  flex: 1;
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-xs);
+  font-size: var(--ciclista-font-xs);
+  border-radius: var(--ciclista-radius-xs);
+  border: 1px solid var(--ciclista-glass-border-base);
+  background: var(--ciclista-glass-bg-base);
+  color: var(--ciclista-color-text-secondary);
+  cursor: pointer;
+}
+
+.map-selection-dock-quick-btn:hover {
+  background: var(--ciclista-glass-bg-hover);
+  color: var(--ciclista-color-text-primary);
+}
+
+.map-selection-dock-quick-btn.active {
+  background: var(--ciclista-color-brand-secondary);
+  border-color: var(--ciclista-color-brand-secondary);
+  color: var(--ciclista-color-surface-base);
 }
