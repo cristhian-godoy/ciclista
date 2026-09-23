@@ -16,11 +16,47 @@ import {
 import type { CostFunction } from './types';
 
 /**
+ * Checks whether a given graph edge is blocked by local overrides or active road blockage events.
+ *
+ * @param sourceId - Identifier of the source node.
+ * @param targetId - Identifier of the target node.
+ * @param overrides - Local user overrides containing blocked edge IDs or active map events.
+ * @returns True if the edge is marked as blocked or matches an active road blockage event.
+ */
+export function isEdgeBlocked(
+  sourceId: string,
+  targetId: string,
+  overrides?: LocalOverrides,
+): boolean {
+  if (!overrides) return false;
+
+  const key1 = `${sourceId}->${targetId}`;
+  const key2 = `${targetId}->${sourceId}`;
+
+  if (overrides.blockedEdges?.has(key1) || overrides.blockedEdges?.has(key2)) {
+    return true;
+  }
+
+  if (overrides.events) {
+    for (const event of overrides.events) {
+      if (event.active && event.effect.type === 'road_blockage') {
+        if (event.edgeIds.includes(key1) || event.edgeIds.includes(key2)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Standard routing cost: Time = Distance / Speed + flat penalties.
  * Uses rulesConfig when available for dynamic speed and penalty resolution.
+ * Incorporates a 30s penalty if the edge is marked as blocked.
  */
 export const standardCost: CostFunction = (
-  _sourceId: string,
+  sourceId: string,
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
@@ -55,15 +91,19 @@ export const standardCost: CostFunction = (
     cost += getDefaultNodeDelay(tags, overrides.rulesConfig?.nodeDelays);
   }
 
+  if (isEdgeBlocked(sourceId, targetId, overrides)) {
+    cost += 30;
+  }
+
   return cost;
 };
 
 /**
  * Stop-avoidance routing cost.
- * Uses rulesConfig for speeds; adds heavy stop penalties.
+ * Uses rulesConfig for speeds; adds heavy stop penalties and road blockage penalties.
  */
 export const avoidStoppingCost: CostFunction = (
-  _sourceId: string,
+  sourceId: string,
   edge: GraphEdge,
   targetId: string,
   overrides: LocalOverrides,
@@ -91,12 +131,21 @@ export const avoidStoppingCost: CostFunction = (
     }
   }
 
+  if (isEdgeBlocked(sourceId, targetId, overrides)) {
+    cost += 30;
+  }
+
   return cost;
 };
 
 /**
+ * Alias for avoidStoppingCost routing strategy.
+ */
+export const stopAvoidanceCost: CostFunction = avoidStoppingCost;
+
+/**
  * Quiet/convenient routing cost.
- * Uses rulesConfig for base costs; multiplies busy roads.
+ * Uses rulesConfig for base costs; multiplies busy roads and adds road blockage penalties.
  */
 export const avoidBusyRoadsCost: CostFunction = (
   sourceId: string,
@@ -105,7 +154,22 @@ export const avoidBusyRoadsCost: CostFunction = (
   overrides: LocalOverrides,
   graph: StreetGraph,
 ): number => {
-  const baseCost = standardCost(sourceId, edge, targetId, overrides, graph);
+  const blocked = isEdgeBlocked(sourceId, targetId, overrides);
+  let baseOverrides = overrides;
+  if (blocked && (overrides.blockedEdges || overrides.events)) {
+    baseOverrides = {
+      ...overrides,
+      blockedEdges: undefined,
+      events: overrides.events?.filter(
+        (e) =>
+          e.effect.type !== 'road_blockage' ||
+          !e.active ||
+          (!e.edgeIds.includes(`${sourceId}->${targetId}`) &&
+            !e.edgeIds.includes(`${targetId}->${sourceId}`)),
+      ),
+    };
+  }
+  const baseCost = standardCost(sourceId, edge, targetId, baseOverrides, graph);
   const highway = edge.tags.highway || '';
   const isCycleway = hasCycleway(edge.tags);
 
@@ -156,5 +220,16 @@ export const avoidBusyRoadsCost: CostFunction = (
   };
 
   const multiplier = COMFORT_MULTIPLIERS[comfort] ?? 1.0;
-  return baseCost * multiplier;
+  let cost = baseCost * multiplier;
+
+  if (blocked) {
+    cost += 30;
+  }
+
+  return cost;
 };
+
+/**
+ * Alias for avoidBusyRoadsCost (quiet streets) routing strategy.
+ */
+export const quietStreetsCost: CostFunction = avoidBusyRoadsCost;

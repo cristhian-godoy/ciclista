@@ -1,3 +1,5 @@
+import type { MapEvent } from '../events';
+
 /**
  * Available bicycle routing profiles representing different riding speeds and preferences.
  */
@@ -122,4 +124,6 @@ export interface LocalOverrides {
   nodeTurns: Map<string, Record<string, SemanticTurnType>>;
   rulesConfig?: RulesConfiguration;
   bikeConfig?: BikeConfig;
+  events?: MapEvent[];
+  blockedEdges?: Set<string>;
 }

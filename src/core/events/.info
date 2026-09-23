@@ -1,0 +1,6 @@
+events.test.ts
+	Unit tests for road blockage event handling and router cost penalties.
+index.ts
+	Barrel exports for the map events domain.
+types.ts
+	Type definitions for map events, blockage effects, and event models.

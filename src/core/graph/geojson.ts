@@ -208,7 +208,7 @@ export function convertGraphToGeoJSON(
   });
 
   // Draw edges
-  graph.nodes.forEach((entry) => {
+  graph.nodes.forEach((entry, sourceId) => {
     const u = entry.node;
     entry.edges.forEach((edge) => {
       const vEntry = graph.nodes.get(edge.target);
@@ -225,6 +225,9 @@ export function convertGraphToGeoJSON(
           ],
         },
         properties: {
+          edgeId: `${sourceId}->${edge.target}`,
+          sourceId,
+          targetId: edge.target,
           name: edge.name,
           highway: edge.tags.highway,
         },

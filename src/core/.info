@@ -4,6 +4,8 @@ common
 	Shared global types and models.
 config
 	Configuration defaults, user-facing overrides, and profile schemas.
+events
+	Domain models and types for map events, incidents, and edge blockages.
 graph
 	OSM Overpass JSON data parsing and graph construction.
 inspector

@@ -39,6 +39,9 @@ describe('convertGraphToGeoJSON', () => {
     // Verify street line strings
     expect(result.streets.length).toBeGreaterThanOrEqual(2);
     expect(result.streets[0].properties.name).toBe('Test Blvd');
+    expect(result.streets[0].properties.edgeId).toBe('1->2');
+    expect(result.streets[0].properties.sourceId).toBe('1');
+    expect(result.streets[0].properties.targetId).toBe('2');
     expect(result.streets[0].geometry.type).toBe('LineString');
 
     // Verify controls (nodes)
