@@ -57,7 +57,7 @@ export function getConnectionType(): 'wifi' | 'cellular' | 'unknown' {
  * Determines whether bandwidth-saving restrictions should be active.
  */
 export function isDataSaverActive(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return false;
 
   const saved = localStorage.getItem(KEYS.DATA_SAVER);
   if (saved !== null) {
@@ -79,7 +79,7 @@ export function isDataSaverActive(): boolean {
  * Sets the active state of the application-level data saver mode.
  */
 export function setDataSaverActive(active: boolean): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return;
   localStorage.setItem(KEYS.DATA_SAVER, active.toString());
 }
 
@@ -87,7 +87,7 @@ export function setDataSaverActive(active: boolean): void {
  * Evaluates whether network queries are permitted over cellular connections.
  */
 export function isCellularDownloadAllowed(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return false;
   return localStorage.getItem(KEYS.ALLOW_CELLULAR) === 'true';
 }
 
@@ -95,7 +95,7 @@ export function isCellularDownloadAllowed(): boolean {
  * Sets permission for data downloads over cellular connections.
  */
 export function setCellularDownloadAllowed(allowed: boolean): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return;
   localStorage.setItem(KEYS.ALLOW_CELLULAR, allowed.toString());
 }
 
@@ -103,7 +103,7 @@ export function setCellularDownloadAllowed(allowed: boolean): void {
  * Records additional network or cache bytes consumed by the application.
  */
 export function addDataUsage(bytes: number, fromCache: boolean): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return;
 
   try {
     if (fromCache) {
@@ -119,7 +119,9 @@ export function addDataUsage(bytes: number, fromCache: boolean): void {
         localStorage.setItem(KEYS.WIFI_BYTES, (current + bytes).toString());
       }
     }
-    window.dispatchEvent(new Event('ciclista_data_usage_changed'));
+    if ('dispatchEvent' in globalThis) {
+      globalThis.dispatchEvent(new Event('ciclista_data_usage_changed'));
+    }
   } catch (e) {
     logger.warn('Failed to update data usage stats in localStorage:', e);
   }
@@ -129,7 +131,7 @@ export function addDataUsage(bytes: number, fromCache: boolean): void {
  * Retrieves cached and network data usage statistics from local storage.
  */
 export function getDataUsage(): DataUsageStats {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) {
     return { wifiBytes: 0, cellularBytes: 0, cacheBytes: 0 };
   }
   return {
@@ -143,9 +145,11 @@ export function getDataUsage(): DataUsageStats {
  * Resets all recorded network and cache data transfer statistics.
  */
 export function clearDataUsage(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined' || !('localStorage' in globalThis)) return;
   localStorage.setItem(KEYS.WIFI_BYTES, '0');
   localStorage.setItem(KEYS.CELLULAR_BYTES, '0');
   localStorage.setItem(KEYS.CACHE_BYTES, '0');
-  window.dispatchEvent(new Event('ciclista_data_usage_changed'));
+  if ('dispatchEvent' in globalThis) {
+    globalThis.dispatchEvent(new Event('ciclista_data_usage_changed'));
+  }
 }
