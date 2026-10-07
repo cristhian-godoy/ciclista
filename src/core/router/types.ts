@@ -71,6 +71,7 @@ export interface WorkerRoutingRequest {
   startCoord: Coordinate;
   endCoord: Coordinate;
   overrides: LocalOverrides;
+  algorithm?: 'astar' | 'dijkstra';
 }
 
 /**

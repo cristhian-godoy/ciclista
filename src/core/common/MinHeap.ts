@@ -27,6 +27,14 @@ export class MinHeap<T> {
   }
 
   /**
+   * Returns the entry with the lowest priority without removing it from the heap.
+   */
+  peek(): { element: T; priority: number } | null {
+    if (this.heap.length === 0) return null;
+    return this.heap[0];
+  }
+
+  /**
    * Checks whether the heap contains no elements.
    */
   isEmpty() {

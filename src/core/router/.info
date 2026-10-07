@@ -1,3 +1,7 @@
+astar.test.ts
+	Unit tests for bidirectional A* pathfinding, strategy profiles, and parity with Dijkstra.
+astar.ts
+	Bidirectional A* pathfinding engine using meet-in-the-middle search and consistent geodesic heuristics.
 edge-metrics.test.ts
 	Unit tests for display cost calculations, turn penalties, and default delays.
 edge-metrics.ts
@@ -7,7 +11,7 @@ router.test.ts
 router.ts
 	Dijkstra pathfinding search algorithm using a Min-Heap queue.
 router.worker.ts
-	Web worker wrapping Dijkstra pathfinding to offload main thread.
+	Web worker wrapping Bidirectional A* and Dijkstra pathfinding to offload main thread.
 statistics.ts
 	Utility functions to aggregate distance, duration, and node crossing counts from path.
 strategies.ts

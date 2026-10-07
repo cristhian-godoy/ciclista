@@ -1,9 +1,11 @@
 import { ensureWasmInitialized, WasmEngine } from '../wasm';
+import { AStarRouter } from './astar';
 import { DijkstraRouter } from './router';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
 import type { StrategyRouteVariant, WorkerRoutingRequest, WorkerRoutingResponse } from './types';
 
-const router = new DijkstraRouter();
+const aStarRouter = new AStarRouter();
+const dijkstraRouter = new DijkstraRouter();
 
 const STRATEGIES = [
   { label: 'standard', costFn: standardCost },
@@ -12,7 +14,7 @@ const STRATEGIES = [
 ] as const;
 
 self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
-  const { requestId, graph, startCoord, endCoord, overrides } = e.data;
+  const { requestId, graph, startCoord, endCoord, overrides, algorithm = 'astar' } = e.data;
 
   try {
     const wasmReady = await ensureWasmInitialized();
@@ -31,14 +33,21 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
           return;
         }
       } catch {
-        // Fall back cleanly to TypeScript DijkstraRouter
+        // Fall back cleanly to TypeScript router engine
       }
     }
 
+    const activeRouter = algorithm === 'dijkstra' ? dijkstraRouter : aStarRouter;
     const alts: StrategyRouteVariant[] = [];
 
     for (const strategy of STRATEGIES) {
-      const result = router.findRoute(graph, startCoord, endCoord, strategy.costFn, overrides);
+      const result = activeRouter.findRoute(
+        graph,
+        startCoord,
+        endCoord,
+        strategy.costFn,
+        overrides,
+      );
       if (result) {
         alts.push({ label: strategy.label, result });
       }

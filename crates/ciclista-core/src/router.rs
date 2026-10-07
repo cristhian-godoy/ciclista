@@ -253,12 +253,12 @@ pub fn is_edge_blocked(source_id: &str, target_id: &str, overrides: Option<&Loca
     false
 }
 
-struct SurfaceModifier {
-    speed_multiplier: f64,
-    flat_penalty: f64,
+pub(crate) struct SurfaceModifier {
+    pub(crate) speed_multiplier: f64,
+    pub(crate) flat_penalty: f64,
 }
 
-fn get_bike_impacts(config: Option<&BikeConfig>) -> (f64, SurfaceModifier, SurfaceModifier) {
+pub(crate) fn get_bike_impacts(config: Option<&BikeConfig>) -> (f64, SurfaceModifier, SurfaceModifier) {
     let id = config.map(|c| c.id.as_str()).unwrap_or("normal");
     let speed = config
         .and_then(|c| c.custom_speed_kmh)
@@ -582,7 +582,7 @@ fn calculate_display_cost(
     cost
 }
 
-fn get_effective_turn_penalty(
+pub(crate) fn get_effective_turn_penalty(
     parent: &GraphNode,
     current: &GraphNode,
     next: &GraphNode,
@@ -652,9 +652,9 @@ fn get_road_type_category(highway: &str, tags: &HashMap<String, String>) -> &'st
 }
 
 #[derive(Copy, Clone, PartialEq)]
-struct HeapItem {
-    cost: f64,
-    node: usize,
+pub(crate) struct HeapItem {
+    pub(crate) cost: f64,
+    pub(crate) node: usize,
 }
 
 impl Eq for HeapItem {}
@@ -671,11 +671,11 @@ impl PartialOrd for HeapItem {
     }
 }
 
-struct VirtualRoutingConfig {
-    start_node: GraphNode,
-    end_node: GraphNode,
-    start_edges: Vec<GraphEdge>,
-    end_virtual_edges: HashMap<String, GraphEdge>,
+pub(crate) struct VirtualRoutingConfig {
+    pub(crate) start_node: GraphNode,
+    pub(crate) end_node: GraphNode,
+    pub(crate) start_edges: Vec<GraphEdge>,
+    pub(crate) end_virtual_edges: HashMap<String, GraphEdge>,
 }
 
 #[derive(Default)]
@@ -1180,14 +1180,14 @@ pub fn find_nearest_node(graph: &StreetGraph, coord: Coordinate) -> Option<Strin
     nearest_id
 }
 
-struct NearestEdgeRef {
-    u_id: String,
-    v_id: String,
-    projected: Coordinate,
-    edge: GraphEdge,
+pub(crate) struct NearestEdgeRef {
+    pub(crate) u_id: String,
+    pub(crate) v_id: String,
+    pub(crate) projected: Coordinate,
+    pub(crate) edge: GraphEdge,
 }
 
-fn find_nearest_edge(graph: &StreetGraph, coord: Coordinate) -> Option<NearestEdgeRef> {
+pub(crate) fn find_nearest_edge(graph: &StreetGraph, coord: Coordinate) -> Option<NearestEdgeRef> {
     let mut min_dist = f64::INFINITY;
     let mut best_edge = None;
 
@@ -1216,22 +1216,22 @@ fn find_nearest_edge(graph: &StreetGraph, coord: Coordinate) -> Option<NearestEd
     best_edge
 }
 
-struct RouteStatistics {
-    path_node_ids: Vec<String>,
-    coordinates: Vec<Coordinate>,
-    total_distance_meters: f64,
-    streets: Vec<String>,
-    traffic_signals_count: usize,
-    signal_count: usize,
-    yield_count: usize,
-    crossing_count: usize,
-    road_type_totals: HashMap<String, f64>,
-    surface_totals: HashMap<String, f64>,
-    edges: Vec<RouteEdgeDetail>,
-    total_display_cost: f64,
+pub(crate) struct RouteStatistics {
+    pub(crate) path_node_ids: Vec<String>,
+    pub(crate) coordinates: Vec<Coordinate>,
+    pub(crate) total_distance_meters: f64,
+    pub(crate) streets: Vec<String>,
+    pub(crate) traffic_signals_count: usize,
+    pub(crate) signal_count: usize,
+    pub(crate) yield_count: usize,
+    pub(crate) crossing_count: usize,
+    pub(crate) road_type_totals: HashMap<String, f64>,
+    pub(crate) surface_totals: HashMap<String, f64>,
+    pub(crate) edges: Vec<RouteEdgeDetail>,
+    pub(crate) total_display_cost: f64,
 }
 
-fn build_route_statistics(
+pub(crate) fn build_route_statistics(
     graph: &StreetGraph,
     previous: &HashMap<String, String>,
     end_id: &str,
@@ -1420,7 +1420,52 @@ fn build_route_statistics(
 }
 
 /// Evaluates all 3 routing strategies (standard, avoid-stops, quiet-streets) for given start/end coordinates.
+/// Defaults to the Bidirectional A* solver.
 pub fn find_route_variants(
+    graph: &StreetGraph,
+    start: Coordinate,
+    end: Coordinate,
+    overrides: &LocalOverrides,
+) -> Vec<StrategyRouteVariant> {
+    find_route_variants_astar(graph, start, end, overrides)
+}
+
+/// Evaluates all 3 routing strategies using Bidirectional A*.
+pub fn find_route_variants_astar(
+    graph: &StreetGraph,
+    start: Coordinate,
+    end: Coordinate,
+    overrides: &LocalOverrides,
+) -> Vec<StrategyRouteVariant> {
+    let router = crate::astar::AStarRouter::new();
+    let mut variants = Vec::new();
+
+    if let Some(standard) = router.find_route(graph, start, end, standard_cost, overrides) {
+        variants.push(StrategyRouteVariant {
+            label: "standard".to_string(),
+            result: standard,
+        });
+    }
+
+    if let Some(avoid_stops) = router.find_route(graph, start, end, avoid_stops_cost, overrides) {
+        variants.push(StrategyRouteVariant {
+            label: "avoid-stops".to_string(),
+            result: avoid_stops,
+        });
+    }
+
+    if let Some(quiet) = router.find_route(graph, start, end, quiet_streets_cost, overrides) {
+        variants.push(StrategyRouteVariant {
+            label: "quiet-streets".to_string(),
+            result: quiet,
+        });
+    }
+
+    variants
+}
+
+/// Evaluates all 3 routing strategies using Dijkstra algorithm.
+pub fn find_route_variants_dijkstra(
     graph: &StreetGraph,
     start: Coordinate,
     end: Coordinate,
