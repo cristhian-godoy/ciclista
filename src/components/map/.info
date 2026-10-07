@@ -12,6 +12,8 @@ SelectionToolsDock.test.tsx
 	Unit tests for studio selection tools dock mode toggling and brush controls.
 SelectionToolsDock.tsx
 	Floating controls dock managing studio selection modes, radius brush, and counters.
+MapContextMenu.test.tsx
+	Unit tests for floating map context menu and Add Favorite actions.
 MapContextMenu.tsx
 	Floating context menu for setting start/end route points on right-click.
 MapLayerDock.test.tsx

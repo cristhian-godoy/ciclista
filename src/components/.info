@@ -22,8 +22,20 @@ LandmarksPanel.test.tsx
 	Unit tests for favorite places and landmarks panel creation, editing, and routing delegation.
 LandmarksPanel.tsx
 	Sidebar panel managing favorite places, POI landmarks, and quick routing points.
+LandmarkModal.test.tsx
+	Unit tests for landmark creation and editing modal dialog.
+LandmarkModal.tsx
+	Modal dialog housing the favorite place creation and editing form.
+Modal.test.tsx
+	Unit tests for reusable Modal component accessibility and interactions.
+Modal.tsx
+	Accessible and reusable glassmorphic dialog modal component.
+common
+	Directory containing shared reusable UI primitives.
 MapView.test.tsx
 	Unit tests for MapView container, studio mode selection tools, and drag interactions.
+MapViewInteraction.test.tsx
+	Unit tests for contextual left click and right click landmark interactions.
 MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers, studio selection tools, and interactive layers.
 NavigationHUD.tsx

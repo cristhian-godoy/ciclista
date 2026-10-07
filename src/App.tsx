@@ -205,6 +205,9 @@ function DashboardApp() {
       onAppModeChange={setAppMode}
       landmarks={landmarks}
       onLandmarksChange={setLandmarks}
+      onCreateLandmark={addLandmark}
+      onUpdateLandmark={updateLandmark}
+      onDeleteLandmark={deleteLandmark}
       events={events}
       onEventsChange={setEvents}
       selectedEdgeIds={selectedEdgeIds}

@@ -6,7 +6,16 @@ import type { BikeConfig, RulesConfiguration, SemanticTurnType } from '../../cor
 import type { MapEvent } from '../../core/events/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { InspectorBranchEvaluation } from '../../core/inspector/types';
-import type { Landmark } from '../../core/landmarks/types';
+import {
+  createLandmark as createLandmarkDomain,
+  deleteLandmark as deleteLandmarkDomain,
+  updateLandmark as updateLandmarkDomain,
+} from '../../core/landmarks/landmarks';
+import type {
+  CreateLandmarkInput,
+  Landmark,
+  UpdateLandmarkInput,
+} from '../../core/landmarks/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
 import type { StrategyRouteVariant } from '../../core/router/types';
 import { useIntersectionBranches } from '../../hooks/useIntersectionBranches';
@@ -101,6 +110,25 @@ export interface MapContextType {
   events: MapEvent[];
   setEvents: React.Dispatch<React.SetStateAction<MapEvent[]>>;
   onClearSelection: () => void;
+
+  // Landmark modal and operations
+  landmarkModal?: LandmarkModalState;
+  setLandmarkModal?: React.Dispatch<React.SetStateAction<LandmarkModalState>>;
+  openCreateLandmarkModal?: (coord?: Coordinate | null) => void;
+  openEditLandmarkModal?: (landmark: Landmark) => void;
+  closeLandmarkModal?: () => void;
+  onCreateLandmark?: (input: CreateLandmarkInput) => void;
+  onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
+  onDeleteLandmark?: (id: string) => void;
+}
+
+/**
+ * State representing landmark creation or editing modal visibility and data.
+ */
+export interface LandmarkModalState {
+  isOpen: boolean;
+  landmark: Landmark | null;
+  initialCoordinates: Coordinate | null;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -152,6 +180,9 @@ interface MapProviderProps {
   events?: MapEvent[];
   onEventsChange?: React.Dispatch<React.SetStateAction<MapEvent[]>>;
   initialEvents?: MapEvent[];
+  onCreateLandmark?: (input: CreateLandmarkInput) => void;
+  onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
+  onDeleteLandmark?: (id: string) => void;
   children: React.ReactNode;
 }
 
@@ -207,6 +238,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   events: controlledEvents,
   onEventsChange,
   initialEvents,
+  onCreateLandmark: onCreateLandmarkProp,
+  onUpdateLandmark: onUpdateLandmarkProp,
+  onDeleteLandmark: onDeleteLandmarkProp,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -265,6 +299,59 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const [internalEvents, setInternalEvents] = useState<MapEvent[]>(initialEvents ?? []);
   const events = controlledEvents ?? internalEvents;
   const setEvents = onEventsChange ?? setInternalEvents;
+
+  const [landmarkModal, setLandmarkModal] = useState<LandmarkModalState>({
+    isOpen: false,
+    landmark: null,
+    initialCoordinates: null,
+  });
+
+  const openCreateLandmarkModal = (coord?: Coordinate | null) => {
+    setLandmarkModal({
+      isOpen: true,
+      landmark: null,
+      initialCoordinates: coord ?? null,
+    });
+  };
+
+  const openEditLandmarkModal = (landmark: Landmark) => {
+    setLandmarkModal({
+      isOpen: true,
+      landmark,
+      initialCoordinates: { lat: landmark.lat, lng: landmark.lng },
+    });
+  };
+
+  const closeLandmarkModal = () => {
+    setLandmarkModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleCreateLandmark = (input: CreateLandmarkInput) => {
+    if (onCreateLandmarkProp) {
+      onCreateLandmarkProp(input);
+    } else {
+      const created = createLandmarkDomain(input);
+      setLandmarks((prev) => [created, ...prev]);
+    }
+  };
+
+  const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
+    if (onUpdateLandmarkProp) {
+      onUpdateLandmarkProp(id, updates);
+    } else {
+      setLandmarks((prev) =>
+        prev.map((item) => (item.id === id ? updateLandmarkDomain(item, updates) : item)),
+      );
+    }
+  };
+
+  const handleDeleteLandmark = (id: string) => {
+    if (onDeleteLandmarkProp) {
+      onDeleteLandmarkProp(id);
+    } else {
+      setLandmarks((prev) => deleteLandmarkDomain(prev, id));
+    }
+  };
 
   const onClearSelection = () => {
     setSelectedEdgeIds([]);
@@ -332,6 +419,14 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         events,
         setEvents,
         onClearSelection,
+        landmarkModal,
+        setLandmarkModal,
+        openCreateLandmarkModal,
+        openEditLandmarkModal,
+        closeLandmarkModal,
+        onCreateLandmark: handleCreateLandmark,
+        onUpdateLandmark: handleUpdateLandmark,
+        onDeleteLandmark: handleDeleteLandmark,
       }}
     >
       {children}

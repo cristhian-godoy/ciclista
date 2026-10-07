@@ -1992,6 +1992,10 @@ h2 {
   color: var(--ciclista-color-brand-danger);
 }
 
+.context-icon-favorite {
+  color: var(--ciclista-color-brand-secondary);
+}
+
 /* ─── Map Layer Dock ───────────────────────────────────────────────── */
 
 .dock-label {
@@ -2319,4 +2323,93 @@ h2 {
   background: var(--ciclista-color-brand-secondary);
   border-color: var(--ciclista-color-brand-secondary);
   color: var(--ciclista-color-surface-base);
+}
+
+/* ─── Modal Dialog Component ────────────────────────────────────────── */
+
+.ciclista-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background-color: rgb(0 0 0 / 65%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+  padding: var(--ciclista-spacing-md);
+}
+
+.ciclista-modal-content {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--ciclista-radius-md);
+  box-shadow: var(--ciclista-shadow-md);
+  padding: var(--ciclista-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+  position: relative;
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+}
+
+.ciclista-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ciclista-glass-border-base);
+  padding-bottom: var(--ciclista-spacing-sm);
+}
+
+.ciclista-modal-title {
+  font-size: var(--ciclista-font-lg);
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+  margin-bottom: 0;
+}
+
+.ciclista-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-text-muted);
+  cursor: pointer;
+  padding: var(--ciclista-spacing-xs);
+  border-radius: var(--ciclista-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-modal-close-btn:hover {
+  color: var(--ciclista-color-text-primary);
+  background: rgb(255 255 255 / 10%);
+}
+
+.ciclista-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
+.ciclista-landmark-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ciclista-spacing-sm);
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-landmark-form-actions .ciclista-btn {
+  width: auto;
+}
+
+.ciclista-landmark-add-btn {
+  width: 100%;
+  margin-top: var(--ciclista-spacing-xs);
 }

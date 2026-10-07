@@ -143,6 +143,18 @@ describe('LandmarksLayer', () => {
       events: [],
       setEvents: vi.fn(),
       onClearSelection: vi.fn(),
+      landmarkModal: {
+        isOpen: false,
+        landmark: null,
+        initialCoordinates: null,
+      },
+      setLandmarkModal: vi.fn(),
+      openCreateLandmarkModal: vi.fn(),
+      openEditLandmarkModal: vi.fn(),
+      closeLandmarkModal: vi.fn(),
+      onCreateLandmark: vi.fn(),
+      onUpdateLandmark: vi.fn(),
+      onDeleteLandmark: vi.fn(),
       ...contextOverrides,
     };
 
@@ -221,13 +233,119 @@ describe('LandmarksLayer', () => {
     );
   });
 
-  it('registers click event listener on circle layer and cleans up on unmount', () => {
+  it('registers click and contextmenu listeners on landmark layers and cleans up on unmount', () => {
     const { unmount } = renderWithContext();
 
     expect(onMock).toHaveBeenCalledWith('click', 'landmarks-circle-layer', expect.any(Function));
+    expect(onMock).toHaveBeenCalledWith(
+      'contextmenu',
+      'landmarks-circle-layer',
+      expect.any(Function),
+    );
+    expect(onMock).toHaveBeenCalledWith(
+      'contextmenu',
+      'landmarks-label-layer',
+      expect.any(Function),
+    );
 
     unmount();
 
     expect(offMock).toHaveBeenCalledWith('click', 'landmarks-circle-layer', expect.any(Function));
+    expect(offMock).toHaveBeenCalledWith(
+      'contextmenu',
+      'landmarks-circle-layer',
+      expect.any(Function),
+    );
+    expect(offMock).toHaveBeenCalledWith(
+      'contextmenu',
+      'landmarks-label-layer',
+      expect.any(Function),
+    );
+  });
+
+  it('opens edit modal when clicking existing landmark in landmarks mode', () => {
+    const openEditLandmarkModalMock = vi.fn();
+    const onStartDragMock = vi.fn();
+
+    renderWithContext({
+      appMode: 'landmarks',
+      openEditLandmarkModal: openEditLandmarkModalMock,
+      onStartDrag: onStartDragMock,
+    });
+
+    const clickHandler = onMock.mock.calls.find(
+      (call) => call[0] === 'click' && call[1] === 'landmarks-circle-layer',
+    )?.[2];
+
+    expect(clickHandler).toBeDefined();
+
+    clickHandler({
+      features: [
+        {
+          properties: { id: 'lm-1', lat: 48.137, lng: 11.575 },
+        },
+      ],
+      originalEvent: { shiftKey: false },
+    });
+
+    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(sampleLandmarks[0]);
+    expect(onStartDragMock).not.toHaveBeenCalled();
+  });
+
+  it('sets routing start pin when clicking existing landmark in routing mode', () => {
+    const openEditLandmarkModalMock = vi.fn();
+    const onStartDragMock = vi.fn();
+
+    renderWithContext({
+      appMode: 'routing',
+      openEditLandmarkModal: openEditLandmarkModalMock,
+      onStartDrag: onStartDragMock,
+    });
+
+    const clickHandler = onMock.mock.calls.find(
+      (call) => call[0] === 'click' && call[1] === 'landmarks-circle-layer',
+    )?.[2];
+
+    expect(clickHandler).toBeDefined();
+
+    clickHandler({
+      features: [
+        {
+          properties: { id: 'lm-1', lat: 48.137, lng: 11.575 },
+        },
+      ],
+      originalEvent: { shiftKey: false },
+    });
+
+    expect(openEditLandmarkModalMock).not.toHaveBeenCalled();
+    expect(onStartDragMock).toHaveBeenCalledWith({ lat: 48.137, lng: 11.575 });
+  });
+
+  it('opens edit modal when right clicking an existing landmark marker', () => {
+    const openEditLandmarkModalMock = vi.fn();
+    const preventDefaultMock = vi.fn();
+
+    renderWithContext({
+      appMode: 'routing',
+      openEditLandmarkModal: openEditLandmarkModalMock,
+    });
+
+    const contextMenuHandler = onMock.mock.calls.find(
+      (call) => call[0] === 'contextmenu' && call[1] === 'landmarks-circle-layer',
+    )?.[2];
+
+    expect(contextMenuHandler).toBeDefined();
+
+    contextMenuHandler({
+      features: [
+        {
+          properties: { id: 'lm-2', lat: 48.145, lng: 11.585 },
+        },
+      ],
+      originalEvent: { preventDefault: preventDefaultMock },
+    });
+
+    expect(preventDefaultMock).toHaveBeenCalled();
+    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(sampleLandmarks[1]);
   });
 });

@@ -19,7 +19,8 @@ const GLOW_COLOR = '#0284c7';
  * @returns Null as this component orchestrates MapLibre imperative layers.
  */
 export const LandmarksLayer: React.FC = () => {
-  const { map, landmarks, onStartDrag, onEndDrag } = useMapContext();
+  const { map, landmarks, onStartDrag, onEndDrag, appMode, openEditLandmarkModal } =
+    useMapContext();
 
   // Register GeoJSON source and layers
   useEffect(() => {
@@ -128,7 +129,7 @@ export const LandmarksLayer: React.FC = () => {
     });
   }, [map, landmarks]);
 
-  // Click on landmark point layer to quickly set as start or destination
+  // Click and contextmenu handlers on landmark layers
   useEffect(() => {
     if (!map) return;
 
@@ -136,11 +137,21 @@ export const LandmarksLayer: React.FC = () => {
       const feat = e.features?.[0];
       if (!feat || !feat.properties) return;
 
+      const landmarkId = String(feat.properties.id);
+      const target = (landmarks || []).find((lm) => lm.id === landmarkId);
+
+      // In landmarks mode: clicking existing landmark opens edit modal rather than routing pins
+      if (appMode === 'landmarks') {
+        if (target) {
+          openEditLandmarkModal?.(target);
+        }
+        return;
+      }
+
       const lat = Number(feat.properties.lat);
       const lng = Number(feat.properties.lng);
       if (Number.isFinite(lat) && Number.isFinite(lng)) {
         const coord: Coordinate = { lat, lng };
-        // Default action: if no start set, set start; else set end
         if (e.originalEvent?.shiftKey) {
           onEndDrag?.(coord);
         } else {
@@ -149,12 +160,28 @@ export const LandmarksLayer: React.FC = () => {
       }
     };
 
+    const handleContextMenu = (e: maplibregl.MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
+      const feat = e.features?.[0];
+      if (!feat || !feat.properties) return;
+      e.originalEvent?.preventDefault?.();
+
+      const landmarkId = String(feat.properties.id);
+      const target = (landmarks || []).find((lm) => lm.id === landmarkId);
+      if (target) {
+        openEditLandmarkModal?.(target);
+      }
+    };
+
     map.on('click', CIRCLE_LAYER_ID, handleClick as (...args: unknown[]) => void);
+    map.on('contextmenu', CIRCLE_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
+    map.on('contextmenu', LABEL_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
 
     return () => {
       map.off('click', CIRCLE_LAYER_ID, handleClick as (...args: unknown[]) => void);
+      map.off('contextmenu', CIRCLE_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
+      map.off('contextmenu', LABEL_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
     };
-  }, [map, onStartDrag, onEndDrag]);
+  }, [map, landmarks, appMode, onStartDrag, onEndDrag, openEditLandmarkModal]);
 
   return null;
 };
