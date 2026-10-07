@@ -74,7 +74,8 @@ describe('Sidebar Integration', () => {
   it('renders all mounted config and stats panels', () => {
     render(<Sidebar {...defaultProps} />);
 
-    expect(screen.getByText('Ciclista')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Routing' })).toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
 
     // Check elements from RoutingConfigPanel
     expect(screen.getByText('City Preset')).toBeInTheDocument();
@@ -218,8 +219,30 @@ describe('Sidebar Integration', () => {
 
     render(<Sidebar {...defaultProps} appMode="landmarks" landmarks={mockLandmarks} />);
 
-    expect(screen.getByRole('heading', { name: 'Landmarks & Favorites' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Favorites' })).toBeInTheDocument();
     expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
+  });
+
+  it('renders dynamic active section headers in sidebar-header for all panel modes without duplication', () => {
+    // 1. Routing mode (default)
+    const { unmount } = render(<Sidebar {...defaultProps} appMode="routing" />);
+    expect(screen.getByRole('heading', { name: 'Routing' })).toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
+    unmount();
+
+    // 2. Landmarks mode
+    const { unmount: unmountLandmarks } = render(<Sidebar {...defaultProps} appMode="landmarks" />);
+    expect(screen.getByRole('heading', { name: 'Favorites' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Landmarks & Favorites' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
+    unmountLandmarks();
+
+    // 3. Studio mode
+    render(<Sidebar {...defaultProps} appMode="studio" />);
+    expect(screen.getByRole('heading', { name: 'Studio: Event Management' })).toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
   });
 });

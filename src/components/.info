@@ -53,7 +53,7 @@ RulesSelectorFields.tsx
 Sidebar.test.tsx
 	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx
-	Dashboard sidebar layout containing configurations and statistics panels.
+	Dashboard sidebar layout rendering dynamic active section headers, route configurations, favorites, and studio panels.
 SideToolbar.test.tsx
 	Unit tests for SideToolbar branding, navigation mode buttons, and test runner link.
 SideToolbar.tsx

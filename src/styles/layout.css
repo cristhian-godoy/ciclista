@@ -185,6 +185,14 @@
   gap: var(--ciclista-spacing-sm);
 }
 
+.sidebar-header h2 {
+  font-size: var(--ciclista-font-lg);
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
 .sidebar-content {
   flex: 1;
   overflow-y: auto;

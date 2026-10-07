@@ -65,7 +65,9 @@ describe('LandmarksPanel Component', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Landmarks & Favorites' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Define favorite destinations and anchor points for precomputed routing.'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
     expect(screen.getByLabelText('Latitude')).toBeInTheDocument();

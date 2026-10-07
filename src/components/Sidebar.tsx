@@ -4,10 +4,12 @@ import {
   ChevronRight,
   ChevronUp,
   Compass,
-  Navigation,
   Navigation2,
   Play,
+  Route,
+  ShieldAlert,
   Square,
+  Star,
 } from 'lucide-react';
 import React, { useContext, useState } from 'react';
 
@@ -277,8 +279,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       <aside className={`sidebar ciclista-glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <Navigation size={24} className="sidebar-brand-icon" />
-          <h1>Ciclista</h1>
+          {currentAppMode === 'studio' ? (
+            <>
+              <ShieldAlert size={20} className="sidebar-header-icon" />
+              <h2>Studio: Event Management</h2>
+            </>
+          ) : currentAppMode === 'landmarks' ? (
+            <>
+              <Star size={20} className="sidebar-header-icon" />
+              <h2>Favorites</h2>
+            </>
+          ) : (
+            <>
+              <Route size={20} className="sidebar-header-icon" />
+              <h2>Routing</h2>
+            </>
+          )}
         </div>
 
         <div className="sidebar-content">

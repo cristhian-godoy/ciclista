@@ -42,10 +42,10 @@ describe('EventManagementPanel Component', () => {
     onClearSelection: vi.fn(),
   };
 
-  it('renders header, selection card, and configured events list', () => {
+  it('renders selection card and configured events list', () => {
     render(<EventManagementPanel {...defaultProps} />);
 
-    expect(screen.getByRole('heading', { name: 'Studio: Event Management' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Configured Events' })).toBeInTheDocument();
     expect(screen.getByText(/0 road segments selected/i)).toBeInTheDocument();
     expect(screen.getByText('City Marathon')).toBeInTheDocument();
     expect(screen.getByText('2 segments')).toBeInTheDocument();

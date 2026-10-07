@@ -1914,8 +1914,10 @@ h2 {
 
 /* ─── Sidebar Helpers ──────────────────────────────────────────────── */
 
+.sidebar-header-icon,
 .sidebar-brand-icon {
   color: var(--ciclista-color-brand-main);
+  flex-shrink: 0;
 }
 
 .sidebar-nav-card {

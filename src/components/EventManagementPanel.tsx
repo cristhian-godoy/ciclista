@@ -92,10 +92,6 @@ export const EventManagementPanel: React.FC<EventManagementPanelProps> = ({
 
   return (
     <div className="ciclista-event-panel" aria-label="Studio Event Management">
-      <div className="ciclista-event-header">
-        <h2>Studio: Event Management</h2>
-      </div>
-
       {/* Active selection status card */}
       <div className="ciclista-card ciclista-event-card ciclista-event-selection-card">
         <div className="ciclista-event-selection-status">

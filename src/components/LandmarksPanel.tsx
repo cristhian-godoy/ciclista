@@ -197,12 +197,8 @@ export const LandmarksPanel: React.FC<LandmarksPanelProps> = ({
   }, [landmarks, selectedCategoryFilter, searchQuery, sortBy]);
 
   return (
-    <div className="ciclista-landmark-panel" aria-label="Landmarks & Favorites Management">
+    <div className="ciclista-landmark-panel" aria-label="Favorites Management">
       <div className="ciclista-landmark-header">
-        <div className="ciclista-landmark-header-title">
-          <Star size={20} className="ciclista-landmark-header-icon" />
-          <h2>Landmarks & Favorites</h2>
-        </div>
         <p className="ciclista-landmark-subtitle">
           Define favorite destinations and anchor points for precomputed routing.
         </p>
