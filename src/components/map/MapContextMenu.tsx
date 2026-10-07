@@ -1,4 +1,4 @@
-import { MapPin, ZoomIn } from 'lucide-react';
+import { MapPin, Star, ZoomIn } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 
 import { useMapContext } from './MapContext';
@@ -17,6 +17,7 @@ export const MapContextMenu: React.FC = () => {
     onStartDrag,
     onEndDrag,
     isNavigating,
+    openCreateLandmarkModal,
   } = useMapContext();
 
   const onStartDragRef = useRef(onStartDrag);
@@ -105,6 +106,16 @@ export const MapContextMenu: React.FC = () => {
           </button>
         </>
       )}
+      <button
+        className="map-context-menu-item"
+        onClick={() => {
+          openCreateLandmarkModal?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+          setContextMenu((prev) => ({ ...prev, visible: false }));
+        }}
+      >
+        <Star size={14} className="context-icon-favorite" />
+        <span>Add Favorite</span>
+      </button>
     </div>
   );
 };

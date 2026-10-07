@@ -133,6 +133,18 @@ describe('MapView Component', () => {
       events: [],
       setEvents: vi.fn(),
       onClearSelection: vi.fn(),
+      landmarkModal: {
+        isOpen: false,
+        landmark: null,
+        initialCoordinates: null,
+      },
+      setLandmarkModal: vi.fn(),
+      openCreateLandmarkModal: vi.fn(),
+      openEditLandmarkModal: vi.fn(),
+      closeLandmarkModal: vi.fn(),
+      onCreateLandmark: vi.fn(),
+      onUpdateLandmark: vi.fn(),
+      onDeleteLandmark: vi.fn(),
     };
   });
 

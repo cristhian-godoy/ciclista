@@ -55,7 +55,9 @@ describe('LandmarksPanel Component', () => {
     onCenterMap = vi.fn();
   });
 
-  it('renders panel header, form fields, and empty list message when empty', () => {
+  it('renders panel header, add favorite button, and empty list message when empty', async () => {
+    const user = userEvent.setup();
+
     render(
       <LandmarksPanel
         landmarks={[]}
@@ -66,15 +68,19 @@ describe('LandmarksPanel Component', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Landmarks & Favorites' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Latitude')).toBeInTheDocument();
-    expect(screen.getByLabelText('Longitude')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument();
     expect(
       screen.getByText(
         'No favorite places configured yet. Add your home, office, doctor, or regular destinations above.',
       ),
     ).toBeInTheDocument();
+
+    // Opening modal via button reveals form fields
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Category')).toBeInTheDocument();
+    expect(screen.getByLabelText('Latitude')).toBeInTheDocument();
+    expect(screen.getByLabelText('Longitude')).toBeInTheDocument();
   });
 
   it('renders list of saved landmarks with names and categories', () => {
@@ -105,6 +111,7 @@ describe('LandmarksPanel Component', () => {
       />,
     );
 
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
     const submitBtn = screen.getByRole('button', { name: 'Add Favorite Place' });
     await user.click(submitBtn);
 
@@ -124,6 +131,8 @@ describe('LandmarksPanel Component', () => {
         onDeleteLandmark={onDeleteLandmark}
       />,
     );
+
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
 
     await user.type(screen.getByLabelText('Name'), 'Boutique Gym');
     await user.selectOptions(screen.getByLabelText('Category'), 'leisure');
@@ -156,6 +165,8 @@ describe('LandmarksPanel Component', () => {
         startCoord={{ lat: 48.111, lng: 11.222 }}
       />,
     );
+
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
 
     const mapCenterBtn = screen.getByRole('button', { name: /Map Center/i });
     await user.click(mapCenterBtn);
@@ -221,8 +232,7 @@ describe('LandmarksPanel Component', () => {
     const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
     await user.click(cancelBtn);
 
-    expect(screen.getByText('Add New Favorite Place')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.queryByText('Edit Favorite Place')).not.toBeInTheDocument();
   });
 
   it('deletes landmark when clicking delete button', async () => {

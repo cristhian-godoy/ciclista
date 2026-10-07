@@ -4,11 +4,12 @@ import React, { useEffect, useRef } from 'react';
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
+import { LandmarkModal } from './LandmarkModal';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { InspectorLayer } from './map/InspectorLayer';
 import { LandmarksLayer } from './map/LandmarksLayer';
-import { useMapContext } from './map/MapContext';
+import { type LandmarkModalState, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
 import { NavigationLayer } from './map/NavigationLayer';
@@ -54,6 +55,13 @@ const MapViewContent: React.FC<{
     setSelectedEdgeIds,
     selectionTool,
     brushRadius,
+    landmarks,
+    openCreateLandmarkModal,
+    openEditLandmarkModal,
+    landmarkModal,
+    closeLandmarkModal,
+    onCreateLandmark,
+    onUpdateLandmark,
   } = useMapContext();
 
   const startCoordRef = useRef(startCoord);
@@ -63,6 +71,9 @@ const MapViewContent: React.FC<{
   const selectionToolRef = useRef(selectionTool);
   const brushRadiusRef = useRef(brushRadius);
   const graphRef = useRef(graph);
+  const landmarksRef = useRef(landmarks);
+  const openCreateLandmarkModalRef = useRef(openCreateLandmarkModal);
+  const openEditLandmarkModalRef = useRef(openEditLandmarkModal);
 
   // Keep refs synchronized for event handlers
   useEffect(() => {
@@ -73,7 +84,21 @@ const MapViewContent: React.FC<{
     selectionToolRef.current = selectionTool;
     brushRadiusRef.current = brushRadius;
     graphRef.current = graph;
-  }, [startCoord, endCoord, appMode, selectedEdgeIds, selectionTool, brushRadius, graph]);
+    landmarksRef.current = landmarks;
+    openCreateLandmarkModalRef.current = openCreateLandmarkModal;
+    openEditLandmarkModalRef.current = openEditLandmarkModal;
+  }, [
+    startCoord,
+    endCoord,
+    appMode,
+    selectedEdgeIds,
+    selectionTool,
+    brushRadius,
+    graph,
+    landmarks,
+    openCreateLandmarkModal,
+    openEditLandmarkModal,
+  ]);
 
   // Window click listener to close context menu
   useEffect(() => {
@@ -208,6 +233,33 @@ const MapViewContent: React.FC<{
       return;
     }
 
+    const availableLandmarkLayers: string[] = [];
+    if (map.getLayer('landmarks-circle-layer'))
+      availableLandmarkLayers.push('landmarks-circle-layer');
+    if (map.getLayer('landmarks-label-layer'))
+      availableLandmarkLayers.push('landmarks-label-layer');
+
+    const landmarkFeatures =
+      availableLandmarkLayers.length > 0 && typeof map.queryRenderedFeatures === 'function'
+        ? map.queryRenderedFeatures(
+            [
+              [e.point.x - 8, e.point.y - 8],
+              [e.point.x + 8, e.point.y + 8],
+            ],
+            { layers: availableLandmarkLayers },
+          )
+        : [];
+
+    if (landmarkFeatures.length > 0 && landmarkFeatures[0]?.properties?.id) {
+      const landmarkId = String(landmarkFeatures[0].properties.id);
+      const targetLandmark = landmarksRef.current?.find((lm) => lm.id === landmarkId);
+      if (targetLandmark) {
+        e.originalEvent?.preventDefault?.();
+        openEditLandmarkModalRef.current?.(targetLandmark);
+        return;
+      }
+    }
+
     const features = map.queryRenderedFeatures(e.point, {
       layers: ['traffic-lights-cluster'],
     });
@@ -281,6 +333,11 @@ const MapViewContent: React.FC<{
           });
         }
       }
+      return;
+    }
+
+    if (appModeRef.current === 'landmarks') {
+      openCreateLandmarkModalRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
       return;
     }
 
@@ -362,6 +419,30 @@ const MapViewContent: React.FC<{
 
       <NavigationHUD />
       <ArrivalPanel />
+      {(() => {
+        const activeLandmarkModal: LandmarkModalState = landmarkModal ?? {
+          isOpen: false,
+          landmark: null,
+          initialCoordinates: null,
+        };
+        return (
+          <LandmarkModal
+            isOpen={activeLandmarkModal.isOpen}
+            landmark={activeLandmarkModal.landmark}
+            initialCoordinates={activeLandmarkModal.initialCoordinates}
+            onClose={closeLandmarkModal ?? (() => {})}
+            onCreateLandmark={onCreateLandmark}
+            onUpdateLandmark={onUpdateLandmark}
+            currentMapCenter={
+              map && typeof map.getCenter === 'function'
+                ? { lat: map.getCenter().lat, lng: map.getCenter().lng }
+                : (startCoord ?? endCoord ?? null)
+            }
+            startCoord={startCoord}
+            endCoord={endCoord}
+          />
+        );
+      })()}
     </div>
   );
 };
