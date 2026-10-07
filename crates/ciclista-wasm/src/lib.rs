@@ -5,7 +5,10 @@ use wasm_bindgen::prelude::*;
 use ciclista_core::geo::Coordinate;
 use ciclista_core::graph::{NodeEntry, StreetGraph};
 use ciclista_core::parser::{load_mock_graph, parse_osm_json};
-use ciclista_core::router::{find_route_variants, LocalOverrides, StrategyRouteVariant};
+use ciclista_core::router::{
+    find_route_variants, find_route_variants_astar, find_route_variants_dijkstra, LocalOverrides,
+    StrategyRouteVariant,
+};
 
 #[wasm_bindgen]
 pub struct WasmStreetGraph {
@@ -126,6 +129,62 @@ impl WasmEngine {
 
         let variants: Vec<StrategyRouteVariant> =
             find_route_variants(&graph.inner, start, end, &local_overrides);
+
+        let serializer = serde_wasm_bindgen::Serializer::json_compatible();
+        variants
+            .serialize(&serializer)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    #[wasm_bindgen]
+    pub fn find_route_variants_astar(
+        graph: &WasmStreetGraph,
+        start_coord: JsValue,
+        end_coord: JsValue,
+        overrides: JsValue,
+    ) -> Result<JsValue, JsValue> {
+        let start: Coordinate = serde_wasm_bindgen::from_value(start_coord)
+            .map_err(|e| JsValue::from_str(&format!("Invalid start_coord: {}", e)))?;
+        let end: Coordinate = serde_wasm_bindgen::from_value(end_coord)
+            .map_err(|e| JsValue::from_str(&format!("Invalid end_coord: {}", e)))?;
+
+        let local_overrides: LocalOverrides = if overrides.is_null() || overrides.is_undefined() {
+            LocalOverrides::default()
+        } else {
+            serde_wasm_bindgen::from_value(overrides)
+                .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
+        };
+
+        let variants: Vec<StrategyRouteVariant> =
+            find_route_variants_astar(&graph.inner, start, end, &local_overrides);
+
+        let serializer = serde_wasm_bindgen::Serializer::json_compatible();
+        variants
+            .serialize(&serializer)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+    }
+
+    #[wasm_bindgen]
+    pub fn find_route_variants_dijkstra(
+        graph: &WasmStreetGraph,
+        start_coord: JsValue,
+        end_coord: JsValue,
+        overrides: JsValue,
+    ) -> Result<JsValue, JsValue> {
+        let start: Coordinate = serde_wasm_bindgen::from_value(start_coord)
+            .map_err(|e| JsValue::from_str(&format!("Invalid start_coord: {}", e)))?;
+        let end: Coordinate = serde_wasm_bindgen::from_value(end_coord)
+            .map_err(|e| JsValue::from_str(&format!("Invalid end_coord: {}", e)))?;
+
+        let local_overrides: LocalOverrides = if overrides.is_null() || overrides.is_undefined() {
+            LocalOverrides::default()
+        } else {
+            serde_wasm_bindgen::from_value(overrides)
+                .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
+        };
+
+        let variants: Vec<StrategyRouteVariant> =
+            find_route_variants_dijkstra(&graph.inner, start, end, &local_overrides);
 
         let serializer = serde_wasm_bindgen::Serializer::json_compatible();
         variants

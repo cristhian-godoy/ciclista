@@ -1,5 +1,7 @@
 lib.rs
-	Root module re-exporting geo, graph, parser, router, and rules modules.
+	Root module re-exporting astar, geo, graph, parser, router, and rules modules.
+astar.rs
+	Bidirectional A* ("meet in the middle") router with consistent heuristics, strategy profiles, and turn penalties.
 geo.rs
 	Geodesic calculations, projection onto line segments, and spherical bearing computation.
 graph.rs
