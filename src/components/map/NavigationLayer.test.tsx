@@ -160,6 +160,19 @@ describe('NavigationLayer', () => {
       customNodeTurns: new Map(),
       onSaveNodeTurns: vi.fn(),
       inspectorBranches: [],
+      appMode: 'routing',
+      setAppMode: vi.fn(),
+      landmarks: [],
+      setLandmarks: vi.fn(),
+      selectedEdgeIds: [],
+      setSelectedEdgeIds: vi.fn(),
+      selectionTool: 'click',
+      setSelectionTool: vi.fn(),
+      brushRadius: 20,
+      setBrushRadius: vi.fn(),
+      events: [],
+      setEvents: vi.fn(),
+      onClearSelection: vi.fn(),
     };
   });
 

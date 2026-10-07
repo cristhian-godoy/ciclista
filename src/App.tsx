@@ -15,6 +15,7 @@ import type {
   WorkerRoutingResponse,
 } from './core/router/types';
 import { useInspectorMode } from './hooks/useInspectorMode';
+import { useLandmarks } from './hooks/useLandmarks';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
@@ -31,6 +32,8 @@ function DashboardApp() {
   const [appMode, setAppMode] = useState<ToolbarMode>('routing');
   const [events, setEvents] = useState<MapEvent[]>([]);
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
+
+  const { landmarks, addLandmark, updateLandmark, deleteLandmark, setLandmarks } = useLandmarks();
 
   const {
     isInspectorModeActive,
@@ -200,6 +203,8 @@ function DashboardApp() {
       onStopNavigation={navigation.stopNavigation}
       appMode={appMode}
       onAppModeChange={setAppMode}
+      landmarks={landmarks}
+      onLandmarksChange={setLandmarks}
       events={events}
       onEventsChange={setEvents}
       selectedEdgeIds={selectedEdgeIds}
@@ -244,6 +249,12 @@ function DashboardApp() {
           events={events}
           selectedEdgeIds={selectedEdgeIds}
           onClearSelection={() => setSelectedEdgeIds([])}
+          landmarks={landmarks}
+          onCreateLandmark={addLandmark}
+          onUpdateLandmark={updateLandmark}
+          onDeleteLandmark={deleteLandmark}
+          onSetStartCoord={handleStartDrag}
+          onSetEndCoord={handleEndDrag}
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
         <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />

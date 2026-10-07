@@ -7,6 +7,7 @@ import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { InspectorLayer } from './map/InspectorLayer';
+import { LandmarksLayer } from './map/LandmarksLayer';
 import { useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
@@ -346,6 +347,7 @@ const MapViewContent: React.FC<{
           <StreetGraphLayer />
           <SelectedEdgesLayer />
           <BlockedEdgesLayer />
+          <LandmarksLayer />
           <RouteVariantsLayer />
           <BBoxBoundaryLayer />
           <StartEndMarkers />

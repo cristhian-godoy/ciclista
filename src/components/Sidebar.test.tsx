@@ -202,4 +202,24 @@ describe('Sidebar Integration', () => {
     await user.click(deleteBtn);
     expect(handleDeleteEvent).toHaveBeenCalledWith('event-1');
   });
+
+  it('swaps content to LandmarksPanel when in landmarks mode', () => {
+    const mockLandmarks = [
+      {
+        id: 'lm-test-1',
+        name: 'Home Sanctuary',
+        category: 'home' as const,
+        lat: 48.137,
+        lng: 11.575,
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+    ];
+
+    render(<Sidebar {...defaultProps} appMode="landmarks" landmarks={mockLandmarks} />);
+
+    expect(screen.getByRole('heading', { name: 'Landmarks & Favorites' })).toBeInTheDocument();
+    expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
+    expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
+  });
 });

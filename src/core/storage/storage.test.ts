@@ -85,4 +85,37 @@ describe('LocalStorageProvider', () => {
     expect(loaded?.nodeDelays.signalSeconds).toBe(15);
     expect(loaded?.signs['shared_path']?.baseSpeedKmh).toBe(15);
   });
+
+  it('correctly saves, loads, and retrieves landmarks', async () => {
+    const mockLandmarks = [
+      {
+        id: 'landmark-1',
+        name: 'Home',
+        category: 'home' as const,
+        lat: 48.137,
+        lng: 11.575,
+        description: 'Downtown home',
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+      {
+        id: 'landmark-2',
+        name: 'Office',
+        category: 'work' as const,
+        lat: 48.145,
+        lng: 11.585,
+        createdAt: 2000,
+        updatedAt: 2000,
+      },
+    ];
+
+    await provider.saveLandmarks(mockLandmarks);
+    const loaded = await provider.getLandmarks();
+    expect(loaded).toHaveLength(2);
+    expect(loaded[0]?.name).toBe('Home');
+    expect(loaded[1]?.name).toBe('Office');
+
+    const syncLoaded = provider.loadLandmarksSync();
+    expect(syncLoaded).toEqual(loaded);
+  });
 });

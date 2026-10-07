@@ -14,16 +14,24 @@ import React, { useContext, useState } from 'react';
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, RulesConfiguration } from '../core/config';
 import type { MapEvent } from '../core/events';
+import {
+  createLandmark as createLandmarkDomain,
+  deleteLandmark as deleteLandmarkDomain,
+  updateLandmark as updateLandmarkDomain,
+} from '../core/landmarks/landmarks';
+import type { CreateLandmarkInput, Landmark, UpdateLandmarkInput } from '../core/landmarks/types';
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
 import { EventManagementPanel } from './EventManagementPanel';
 import { InspectorPanel } from './InspectorPanel';
+import { LandmarksPanel } from './LandmarksPanel';
 import { MapContext } from './map/MapContext';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
 import { RulesConfigPanel } from './RulesConfigPanel';
+import type { ToolbarMode } from './SideToolbar';
 
 /**
  * Properties for the main dashboard Sidebar component.
@@ -54,9 +62,9 @@ export interface SidebarProps {
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
   /**
-   * Active application workflow mode ('routing' or 'studio').
+   * Active application workflow mode ('routing', 'landmarks', or 'studio').
    */
-  appMode?: 'routing' | 'studio';
+  appMode?: ToolbarMode;
   /**
    * Current list of studio map events.
    */
@@ -65,6 +73,10 @@ export interface SidebarProps {
    * Currently selected road segment IDs.
    */
   selectedEdgeIds?: string[];
+  /**
+   * Current list of favorite places and landmarks.
+   */
+  landmarks?: Landmark[];
   /**
    * Callback fired when creating a new event in Studio mode.
    */
@@ -81,6 +93,26 @@ export interface SidebarProps {
    * Callback fired when clearing the active edge selection.
    */
   onClearSelection?: () => void;
+  /**
+   * Callback fired when creating a new landmark.
+   */
+  onCreateLandmark?: (input: CreateLandmarkInput) => void;
+  /**
+   * Callback fired when modifying a landmark.
+   */
+  onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
+  /**
+   * Callback fired when deleting a landmark.
+   */
+  onDeleteLandmark?: (id: string) => void;
+  /**
+   * Callback fired when setting start route pin from a landmark.
+   */
+  onSetStartCoord?: (coord: Coordinate) => void;
+  /**
+   * Callback fired when setting end route pin from a landmark.
+   */
+  onSetEndCoord?: (coord: Coordinate) => void;
 }
 
 /**
@@ -88,6 +120,8 @@ export interface SidebarProps {
  * and detailed comparison or analytics panels.
  */
 export const Sidebar: React.FC<SidebarProps> = ({
+  startCoord,
+  endCoord,
   routeResult,
   routeVariants,
   routingStrategy,
@@ -113,10 +147,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   appMode,
   events,
   selectedEdgeIds,
+  landmarks,
   onCreateEvent,
   onToggleEvent,
   onDeleteEvent,
   onClearSelection,
+  onCreateLandmark,
+  onUpdateLandmark,
+  onDeleteLandmark,
+  onSetStartCoord,
+  onSetEndCoord,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -125,6 +165,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentAppMode = appMode ?? mapCtx?.appMode ?? 'routing';
   const currentEvents = events ?? mapCtx?.events ?? [];
   const currentSelectedEdgeIds = selectedEdgeIds ?? mapCtx?.selectedEdgeIds ?? [];
+  const currentLandmarks = landmarks ?? mapCtx?.landmarks ?? [];
+
+  const handleCreateLandmark = (input: CreateLandmarkInput) => {
+    if (onCreateLandmark) {
+      onCreateLandmark(input);
+      return;
+    }
+    const created = createLandmarkDomain(input);
+    mapCtx?.setLandmarks((prev) => [created, ...prev]);
+  };
+
+  const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
+    if (onUpdateLandmark) {
+      onUpdateLandmark(id, updates);
+      return;
+    }
+    mapCtx?.setLandmarks((prev) =>
+      prev.map((item) => (item.id === id ? updateLandmarkDomain(item, updates) : item)),
+    );
+  };
+
+  const handleDeleteLandmark = (id: string) => {
+    if (onDeleteLandmark) {
+      onDeleteLandmark(id);
+      return;
+    }
+    mapCtx?.setLandmarks((prev) => deleteLandmarkDomain(prev, id));
+  };
+
+  const handleSetStartCoord = (coord: Coordinate) => {
+    if (onSetStartCoord) {
+      onSetStartCoord(coord);
+    } else {
+      mapCtx?.onStartDrag(coord);
+    }
+  };
+
+  const handleSetEndCoord = (coord: Coordinate) => {
+    if (onSetEndCoord) {
+      onSetEndCoord(coord);
+    } else {
+      mapCtx?.onEndDrag(coord);
+    }
+  };
+
+  const handleCenterMap = (coord: Coordinate) => {
+    if (mapCtx?.map) {
+      mapCtx.map.easeTo({
+        center: [coord.lng, coord.lat],
+        zoom: 15,
+      });
+    }
+  };
+
+  const currentMapCenter: Coordinate | null = (() => {
+    if (mapCtx?.map && typeof mapCtx.map.getCenter === 'function') {
+      const c = mapCtx.map.getCenter();
+      return { lat: c.lat, lng: c.lng };
+    }
+    return startCoord ?? endCoord ?? null;
+  })();
 
   const handleCreateEvent = (name: string, description?: string) => {
     if (onCreateEvent) {
@@ -189,6 +290,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onToggleEvent={handleToggleEvent}
               onDeleteEvent={handleDeleteEvent}
               onClearSelection={handleClearSelection}
+            />
+          ) : currentAppMode === 'landmarks' ? (
+            <LandmarksPanel
+              landmarks={currentLandmarks}
+              onCreateLandmark={handleCreateLandmark}
+              onUpdateLandmark={handleUpdateLandmark}
+              onDeleteLandmark={handleDeleteLandmark}
+              onSetStartCoord={handleSetStartCoord}
+              onSetEndCoord={handleSetEndCoord}
+              onCenterMap={handleCenterMap}
+              currentMapCenter={currentMapCenter}
+              startCoord={startCoord}
+              endCoord={endCoord}
             />
           ) : (
             <>

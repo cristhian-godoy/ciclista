@@ -1,21 +1,21 @@
-import { FlaskConical, Navigation, Route, ShieldAlert } from 'lucide-react';
+import { FlaskConical, Navigation, Route, ShieldAlert, Star } from 'lucide-react';
 import React from 'react';
 
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
  */
-export type ToolbarMode = 'routing' | 'studio';
+export type ToolbarMode = 'routing' | 'landmarks' | 'studio';
 
 /**
  * Properties for the SideToolbar component.
  */
 export interface SideToolbarProps {
   /**
-   * The currently active mode ('routing' or 'studio').
+   * The currently active mode ('routing', 'landmarks', or 'studio').
    */
   mode: ToolbarMode;
   /**
-   * Callback fired when changing between routing and studio modes.
+   * Callback fired when changing between toolbar modes.
    */
   onModeChange: (mode: ToolbarMode) => void;
   /**
@@ -58,6 +58,17 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
           aria-pressed={mode === 'routing'}
         >
           <Route size={20} className="ciclista-toolbar-icon" />
+        </button>
+
+        <button
+          type="button"
+          className={`ciclista-toolbar-btn ${mode === 'landmarks' ? 'active ciclista-toolbar-btn--active' : ''}`}
+          onClick={() => onModeChange('landmarks')}
+          aria-label="Landmarks Mode"
+          title="Landmarks (Favorites & POI)"
+          aria-pressed={mode === 'landmarks'}
+        >
+          <Star size={20} className="ciclista-toolbar-icon" />
         </button>
 
         <button

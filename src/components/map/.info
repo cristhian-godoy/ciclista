@@ -20,6 +20,10 @@ MapLayerDock.tsx
 	Collapsible bottom-right dock controlling map overlay filters.
 InspectorLayer.tsx
 	Map overlay rendering clickable route nodes and divergent alternative path segments in inspector mode.
+LandmarksLayer.test.tsx
+	Unit tests verifying landmarks and favorite places layer MapLibre integration.
+LandmarksLayer.tsx
+	Map overlay rendering favorite places and landmarks as styled point markers with category glows and labels.
 NavigationLayer.test.tsx
 	Integration tests verifying coordinates synchronization and camera easing.
 NavigationLayer.tsx

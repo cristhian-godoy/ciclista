@@ -18,6 +18,10 @@ IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 InspectorPanel.tsx
 	Panel displaying side-by-side comparison of chosen routing edge vs alternatives.
+LandmarksPanel.test.tsx
+	Unit tests for favorite places and landmarks panel creation, editing, and routing delegation.
+LandmarksPanel.tsx
+	Sidebar panel managing favorite places, POI landmarks, and quick routing points.
 MapView.test.tsx
 	Unit tests for MapView container, studio mode selection tools, and drag interactions.
 MapView.tsx

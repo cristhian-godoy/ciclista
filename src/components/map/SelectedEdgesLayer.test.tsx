@@ -36,7 +36,7 @@ describe('SelectedEdgesLayer', () => {
       addLayer: addLayerMock,
       removeLayer: removeLayerMock,
       removeSource: removeSourceMock,
-    };
+    } as unknown as Partial<maplibregl.Map>;
 
     const nodes = new Map();
     nodes.set('node-1', {
@@ -104,15 +104,20 @@ describe('SelectedEdgesLayer', () => {
       setContextMenu: vi.fn(),
       navigationState: {
         status: 'idle',
-        cameraMode: 'free',
+        cameraMode: 'north-up',
+        snapped: null,
+        raw: null,
         progress: null,
         routeCoordinates: [],
+        startTimestamp: null,
       },
       isNavigating: false,
       rideStats: null,
       onStopNavigation: vi.fn(),
       appMode: 'studio',
       setAppMode: vi.fn(),
+      landmarks: [],
+      setLandmarks: vi.fn(),
       selectedEdgeIds: ['node-1->node-2'],
       setSelectedEdgeIds: vi.fn(),
       selectionTool: 'click',

@@ -1,5 +1,7 @@
 import { logger } from '../common/logger';
 import type { LocalOverrides, RulesConfiguration, SemanticTurnType } from '../config';
+import { deserializeLandmarks, serializeLandmarks } from '../landmarks/landmarks';
+import type { Landmark } from '../landmarks/types';
 import type { IStorageProvider } from './types';
 
 /**
@@ -10,6 +12,7 @@ import type { IStorageProvider } from './types';
 export class LocalStorageProvider implements IStorageProvider {
   private STORAGE_KEY = 'ciclista_custom_nodes';
   private RULES_KEY = 'ciclista_rules_config';
+  private LANDMARKS_KEY = 'ciclista_landmarks';
   private inMemoryStorage = new Map<string, string>();
 
   // In-memory cache for overrides data to avoid parse/stringify on every operation
@@ -231,6 +234,36 @@ export class LocalStorageProvider implements IStorageProvider {
     } catch (e) {
       logger.error('Failed to load rules config from localStorage:', e);
       return null;
+    }
+  }
+
+  /**
+   * Retrieves all user-defined landmarks from localStorage.
+   * Discards malformed records safely.
+   */
+  async getLandmarks(): Promise<Landmark[]> {
+    return this.loadLandmarksSync();
+  }
+
+  /**
+   * Synchronously loads all user-defined landmarks from localStorage.
+   */
+  loadLandmarksSync(): Landmark[] {
+    const raw = this.getItem(this.LANDMARKS_KEY);
+    if (!raw) return [];
+    return deserializeLandmarks(raw);
+  }
+
+  /**
+   * Persists the collection of user-defined landmarks to localStorage.
+   *
+   * @param landmarks - Array of landmarks to save.
+   */
+  async saveLandmarks(landmarks: Landmark[]): Promise<void> {
+    try {
+      this.setItem(this.LANDMARKS_KEY, serializeLandmarks(landmarks));
+    } catch (e) {
+      logger.error('Failed to save landmarks to localStorage:', e);
     }
   }
 }

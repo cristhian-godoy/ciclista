@@ -1,0 +1,8 @@
+index.ts
+	Barrel exports for the landmarks and favorite places domain.
+landmarks.test.ts
+	Unit tests for landmark validation, CRUD operations, filtering, sorting, distance calculations, and serialization.
+landmarks.ts
+	Pure domain logic and validation algorithms for landmark management, spatial search, and serialization.
+types.ts
+	Type definitions for landmarks, categories, inputs, and validation results.

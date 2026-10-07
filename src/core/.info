@@ -10,6 +10,8 @@ graph
 	OSM Overpass JSON data parsing and graph construction.
 inspector
 	On-demand evaluator and GeoJSON builders for intersection details.
+landmarks
+	Domain models, validation, and spatial search for favorite places and ALT landmarks.
 navigation
 	Real-time navigation engine and position providers.
 router
@@ -20,3 +22,5 @@ rendering
 	Pure functions, types, and theme definitions for unified path rendering.
 storage
 	Local browser storage persistence adapters.
+wasm
+	WebAssembly module bindings and initialization helpers for compiled Rust routing engine.

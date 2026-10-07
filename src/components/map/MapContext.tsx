@@ -6,9 +6,11 @@ import type { BikeConfig, RulesConfiguration, SemanticTurnType } from '../../cor
 import type { MapEvent } from '../../core/events/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { InspectorBranchEvaluation } from '../../core/inspector/types';
+import type { Landmark } from '../../core/landmarks/types';
 import type { NavigationState, RideStats } from '../../core/navigation/types';
 import type { StrategyRouteVariant } from '../../core/router/types';
 import { useIntersectionBranches } from '../../hooks/useIntersectionBranches';
+import type { ToolbarMode } from '../SideToolbar';
 
 /**
  * Context menu display state structure.
@@ -86,8 +88,10 @@ export interface MapContextType {
   onStopNavigation: () => void;
 
   // Studio & Selection states
-  appMode: 'routing' | 'studio';
-  setAppMode: (mode: 'routing' | 'studio') => void;
+  appMode: ToolbarMode;
+  setAppMode: (mode: ToolbarMode) => void;
+  landmarks: Landmark[];
+  setLandmarks: React.Dispatch<React.SetStateAction<Landmark[]>>;
   selectedEdgeIds: string[];
   setSelectedEdgeIds: React.Dispatch<React.SetStateAction<string[]>>;
   selectionTool: 'click' | 'brush';
@@ -134,9 +138,12 @@ interface MapProviderProps {
   isNavigating: boolean;
   rideStats: RideStats | null;
   onStopNavigation: () => void;
-  appMode?: 'routing' | 'studio';
-  onAppModeChange?: (mode: 'routing' | 'studio') => void;
-  initialAppMode?: 'routing' | 'studio';
+  appMode?: ToolbarMode;
+  onAppModeChange?: (mode: ToolbarMode) => void;
+  initialAppMode?: ToolbarMode;
+  landmarks?: Landmark[];
+  onLandmarksChange?: React.Dispatch<React.SetStateAction<Landmark[]>>;
+  initialLandmarks?: Landmark[];
   selectedEdgeIds?: string[];
   onSelectedEdgeIdsChange?: React.Dispatch<React.SetStateAction<string[]>>;
   initialSelectedEdgeIds?: string[];
@@ -189,6 +196,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   appMode: controlledAppMode,
   onAppModeChange,
   initialAppMode,
+  landmarks: controlledLandmarks,
+  onLandmarksChange,
+  initialLandmarks,
   selectedEdgeIds: controlledSelectedEdgeIds,
   onSelectedEdgeIdsChange,
   initialSelectedEdgeIds,
@@ -233,11 +243,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     nodeIds: null,
   });
 
-  const [internalAppMode, setInternalAppMode] = useState<'routing' | 'studio'>(
-    initialAppMode ?? 'routing',
-  );
+  const [internalAppMode, setInternalAppMode] = useState<ToolbarMode>(initialAppMode ?? 'routing');
   const appMode = controlledAppMode ?? internalAppMode;
   const setAppMode = onAppModeChange ?? setInternalAppMode;
+
+  const [internalLandmarks, setInternalLandmarks] = useState<Landmark[]>(initialLandmarks ?? []);
+  const landmarks = controlledLandmarks ?? internalLandmarks;
+  const setLandmarks = onLandmarksChange ?? setInternalLandmarks;
 
   const [internalSelectedEdgeIds, setInternalSelectedEdgeIds] = useState<string[]>(
     initialSelectedEdgeIds ?? [],
@@ -309,6 +321,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onStopNavigation,
         appMode,
         setAppMode,
+        landmarks,
+        setLandmarks,
         selectedEdgeIds,
         setSelectedEdgeIds,
         selectionTool,
