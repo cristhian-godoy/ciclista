@@ -1,0 +1,2 @@
+lib.rs
+	WebAssembly interface binding StreetGraph and routing calculations to JavaScript.

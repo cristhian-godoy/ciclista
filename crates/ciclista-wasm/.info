@@ -1,0 +1,4 @@
+Cargo.toml
+	Crate configuration and dependencies for ciclista-wasm (cdylib/rlib).
+src
+	Rust WebAssembly bindings exposing WasmStreetGraph and WasmEngine.

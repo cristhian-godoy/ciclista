@@ -1,0 +1,12 @@
+lib.rs
+	Root module re-exporting geo, graph, parser, router, and rules modules.
+geo.rs
+	Geodesic calculations, projection onto line segments, and spherical bearing computation.
+graph.rs
+	GraphNode, GraphEdge, NodeEntry, and StreetGraph data structures with graph merging.
+parser.rs
+	Overpass OSM JSON response parsing into StreetGraph adjacency list and mock graph generation.
+router.rs
+	BinaryHeap Dijkstra pathfinding, multi-strategy cost functions, turn penalties, and route statistics.
+rules.rs
+	OSM tag mapping to infrastructure types, road classes, traffic controls, and surface types.

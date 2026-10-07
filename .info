@@ -1,5 +1,11 @@
 README.md
 	Project documentation, design decisions, and setup instructions.
+Cargo.lock
+	Lockfile for Rust dependencies and crates.
+Cargo.toml
+	Rust workspace configuration for ciclista crates.
+crates
+	Rust workspace members for core routing algorithms and WebAssembly bindings.
 docs
 	Planning documents, implementation plans, and active task checklists.
 eslint.config.js

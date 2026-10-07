@@ -1,0 +1,4 @@
+ciclista-core
+	Pure Rust implementation of geographic algorithms, graph structures, OSM rule matching, and Dijkstra routing.
+ciclista-wasm
+	WebAssembly interface binding ciclista-core algorithms into high-performance web worker entry points.

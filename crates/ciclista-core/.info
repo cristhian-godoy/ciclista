@@ -1,0 +1,4 @@
+Cargo.toml
+	Crate configuration and dependencies for ciclista-core.
+src
+	Rust modules for geography, network graph, OSM parsing, rules, and Dijkstra routing.

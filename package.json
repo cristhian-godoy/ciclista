@@ -6,7 +6,8 @@
   "type": "module",
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
   "scripts": {
-    "build": "tsc -b && vite build",
+    "build": "pnpm run build:wasm && tsc -b && vite build",
+    "build:wasm": "wasm-pack build crates/ciclista-wasm --target web --out-dir ../../src/core/wasm/pkg --release && node -e \"const p='src/core/wasm/pkg/package.json',fs=require('fs');if(fs.existsSync(p)){const j=JSON.parse(fs.readFileSync(p,'utf8'));j.license='MIT';j.author='ciclista';j.repository={type:'git',url:'https://github.com/cgodoy/ciclista'};j.exports={'.':{types:'./ciclista_wasm.d.ts',import:'./ciclista_wasm.js'}};j.files=['ciclista_wasm_bg.wasm','ciclista_wasm.d.ts'];fs.writeFileSync(p,JSON.stringify(j,null,2)+'\\n');}\"",
     "dev": "vite",
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint . && stylelint 'src/**/*.css'",

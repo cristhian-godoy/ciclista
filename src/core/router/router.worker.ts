@@ -1,3 +1,4 @@
+import { ensureWasmInitialized, WasmEngine } from '../wasm';
 import { DijkstraRouter } from './router';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
 import type { StrategyRouteVariant, WorkerRoutingRequest, WorkerRoutingResponse } from './types';
@@ -10,10 +11,30 @@ const STRATEGIES = [
   { label: 'quiet-streets', costFn: avoidBusyRoadsCost },
 ] as const;
 
-self.onmessage = (e: MessageEvent<WorkerRoutingRequest>) => {
+self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
   const { requestId, graph, startCoord, endCoord, overrides } = e.data;
 
   try {
+    const wasmReady = await ensureWasmInitialized();
+    if (wasmReady) {
+      try {
+        const variants = WasmEngine.find_route_variants_from_js_graph(
+          graph,
+          startCoord,
+          endCoord,
+          overrides,
+        ) as StrategyRouteVariant[];
+
+        if (Array.isArray(variants) && variants.length > 0) {
+          const response: WorkerRoutingResponse = { requestId, routeVariants: variants };
+          self.postMessage(response);
+          return;
+        }
+      } catch {
+        // Fall back cleanly to TypeScript DijkstraRouter
+      }
+    }
+
     const alts: StrategyRouteVariant[] = [];
 
     for (const strategy of STRATEGIES) {

@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crates/ciclista-core",
+    "crates/ciclista-wasm",
+]
+resolver = "2"
