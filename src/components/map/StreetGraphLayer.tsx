@@ -226,7 +226,8 @@ export const StreetGraphLayer: React.FC = () => {
         e.originalEvent.preventDefault?.();
         e.originalEvent.stopPropagation?.();
       }
-      if (typeof map.isDragging === 'function' && map.isDragging()) return;
+      const mapWithDrag = map as unknown as { isDragging?: () => boolean };
+      if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const properties = feature.properties;
@@ -276,7 +277,8 @@ export const StreetGraphLayer: React.FC = () => {
         e.originalEvent.preventDefault?.();
         e.originalEvent.stopPropagation?.();
       }
-      if (typeof map.isDragging === 'function' && map.isDragging()) return;
+      const mapWithDrag = map as unknown as { isDragging?: () => boolean };
+      if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const geometry = feature.geometry;

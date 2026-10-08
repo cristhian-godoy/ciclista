@@ -168,7 +168,8 @@ export const useMapInstance = ({
       if (isInteractingRef.current) {
         return;
       }
-      if (typeof mapInstance.isDragging === 'function' && mapInstance.isDragging()) {
+      const mapWithDrag = mapInstance as unknown as { isDragging?: () => boolean };
+      if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) {
         return;
       }
 
