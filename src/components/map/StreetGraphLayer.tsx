@@ -222,6 +222,11 @@ export const StreetGraphLayer: React.FC = () => {
     // Click handler for unclustered traffic signals
     const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
+      if (e.originalEvent) {
+        e.originalEvent.preventDefault?.();
+        e.originalEvent.stopPropagation?.();
+      }
+      if (typeof map.isDragging === 'function' && map.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const properties = feature.properties;
@@ -246,16 +251,15 @@ export const StreetGraphLayer: React.FC = () => {
         }
 
         if (onNodeSelectRef.current) {
-          onNodeSelectRef.current(
-            nodeEntry?.node ?? {
-              id: nodeId,
-              lat: coords[1],
-              lng: coords[0],
-              tags:
-                nodeEntry?.node.tags ??
-                (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
-            },
-          );
+          const target = nodeEntry?.node ?? {
+            id: nodeId,
+            lat: coords[1],
+            lng: coords[0],
+            tags:
+              nodeEntry?.node.tags ??
+              (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
+          };
+          onNodeSelectRef.current({ ...target });
         }
 
         map.easeTo({
@@ -268,6 +272,11 @@ export const StreetGraphLayer: React.FC = () => {
     // Click handler for crossing clusters
     const handleClusterClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
+      if (e.originalEvent) {
+        e.originalEvent.preventDefault?.();
+        e.originalEvent.stopPropagation?.();
+      }
+      if (typeof map.isDragging === 'function' && map.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
       const geometry = feature.geometry;
@@ -296,23 +305,9 @@ export const StreetGraphLayer: React.FC = () => {
           setManagedNodeIdsRef.current(nodeIds);
         }
 
-        if (nodeIds.length > 0 && onNodeSelectRef.current) {
-          const selectedId = String(nodeIds[0]);
-          const currentGraph = graphRef.current;
-          const graphEntry = currentGraph?.nodes.get(selectedId);
-          onNodeSelectRef.current(
-            graphEntry?.node ?? {
-              id: selectedId,
-              lat: coords[1],
-              lng: coords[0],
-              tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
-            },
-          );
-        }
-
         map.easeTo({
           center: [coords[0], coords[1]],
-          zoom: nodeIds.length > 1 ? 17.5 : map.getZoom(),
+          zoom: 17.5,
           duration: 400,
         });
       }

@@ -78,7 +78,7 @@ export const NodePopup: React.FC = () => {
   });
 
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(() => {
-    if (!selectedNode || !map) return null;
+    if (!selectedNode || !map || typeof map.project !== 'function') return null;
     const pos = map.project([selectedNode.lng, selectedNode.lat]);
     return { x: pos.x, y: pos.y };
   });
@@ -181,12 +181,14 @@ export const NodePopup: React.FC = () => {
 
   // Project map coordinates on map move/zoom
   useEffect(() => {
-    if (!map || !selectedNode) return;
+    if (!map || !selectedNode || typeof map.project !== 'function') return;
 
     const updatePosition = () => {
       const pos = map.project([selectedNode.lng, selectedNode.lat]);
       setPopupPos({ x: pos.x, y: pos.y });
     };
+
+    updatePosition();
 
     map.on('move', updatePosition);
     map.on('zoom', updatePosition);

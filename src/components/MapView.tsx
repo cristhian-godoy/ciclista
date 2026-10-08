@@ -1,6 +1,7 @@
 import type maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { haversineDistance } from '../core/common/geo';
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
@@ -40,7 +41,9 @@ const MapViewContent: React.FC<{
     selectedPreset,
     theme,
     setContextMenu,
+    managedClusterId,
     setManagedClusterId,
+    managedNodeIds,
     setManagedNodeIds,
     onNodeSelect,
     onStartDrag,
@@ -166,15 +169,66 @@ const MapViewContent: React.FC<{
     };
   }, [setContextMenu]);
 
-  // Reset managed cluster state if selectedNode becomes null
-  const prevSelectedNodeRef = useRef<GraphNode | null>(null);
+  // Auto-collapse expanded crossing cluster when zoomed out below threshold or panned far away
   useEffect(() => {
-    if (prevSelectedNodeRef.current !== null && selectedNode === null) {
-      setManagedClusterId(null);
-      setManagedNodeIds([]);
+    if (!map || !managedClusterId || managedNodeIds.length === 0) return;
+
+    let clusterLat = 0;
+    let clusterLng = 0;
+    let foundCount = 0;
+
+    const currentGraph = graphRef.current;
+    if (currentGraph) {
+      for (const id of managedNodeIds) {
+        const nodeEntry = currentGraph.nodes.get(id);
+        if (nodeEntry) {
+          clusterLat += nodeEntry.node.lat;
+          clusterLng += nodeEntry.node.lng;
+          foundCount++;
+        }
+      }
     }
-    prevSelectedNodeRef.current = selectedNode;
-  }, [selectedNode, setManagedClusterId, setManagedNodeIds]);
+
+    if (foundCount > 0) {
+      clusterLat /= foundCount;
+      clusterLng /= foundCount;
+    }
+
+    const checkClusterProximity = () => {
+      // Check zoom threshold (below 15.5)
+      if (typeof map.getZoom === 'function') {
+        const currentZoom = map.getZoom();
+        if (currentZoom < 15.5) {
+          setManagedClusterIdRef.current?.(null);
+          setManagedNodeIdsRef.current?.([]);
+          return;
+        }
+      }
+
+      // Check distance threshold if cluster coordinates are resolved
+      if (foundCount > 0 && typeof map.getCenter === 'function') {
+        const center = map.getCenter();
+        if (center && typeof center.lat === 'number' && typeof center.lng === 'number') {
+          const dist = haversineDistance(center.lat, center.lng, clusterLat, clusterLng);
+          // If camera center has panned farther than 450 meters away from the crossing
+          if (dist > 450) {
+            setManagedClusterIdRef.current?.(null);
+            setManagedNodeIdsRef.current?.([]);
+          }
+        }
+      }
+    };
+
+    if (typeof map.on === 'function') {
+      map.on('moveend', checkClusterProximity);
+    }
+
+    return () => {
+      if (typeof map.off === 'function') {
+        map.off('moveend', checkClusterProximity);
+      }
+    };
+  }, [map, managedClusterId, managedNodeIds, graph]);
 
   // Studio mode drag gestures: left-click drag for Radius Brush, right-click drag for Deselection
   useEffect(() => {
@@ -366,7 +420,11 @@ const MapViewContent: React.FC<{
   const handleClick = (e: maplibregl.MapMouseEvent) => {
     setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 
-    if (e.defaultPrevented || isNavigating) {
+    if (
+      e.defaultPrevented ||
+      (e.originalEvent && e.originalEvent.defaultPrevented) ||
+      isNavigating
+    ) {
       return;
     }
 
@@ -409,112 +467,98 @@ const MapViewContent: React.FC<{
     }
 
     if (trafficFeatures.length > 0) {
-      const trafficFeature =
-        trafficFeatures.find(
-          (f) => f.layer?.id === 'traffic-lights-unclustered' || f.properties?.type === 'signal',
-        ) ?? trafficFeatures[0];
+      // Priority A: Crossing cluster feature (ALWAYS expand/zoom, NEVER select individual light)
+      const clusterFeature = trafficFeatures.find(
+        (f) =>
+          f.layer?.id === 'traffic-lights-cluster' ||
+          f.properties?.type === 'crossing' ||
+          Boolean(f.properties?.crossingId && f.properties?.nodeIds),
+      );
 
-      const props = trafficFeature.properties ?? {};
-      const currentGraph = graphRef.current;
-      const coords = (trafficFeature.geometry as { coordinates?: number[] })?.coordinates;
-      const lat = coords ? coords[1] : e.lngLat.lat;
-      const lng = coords ? coords[0] : e.lngLat.lng;
+      if (clusterFeature) {
+        const props = clusterFeature.properties ?? {};
+        const coords = (clusterFeature.geometry as { coordinates?: number[] })?.coordinates;
+        const lat = coords ? coords[1] : e.lngLat.lat;
+        const lng = coords ? coords[0] : e.lngLat.lng;
 
-      // Case A: Unclustered individual signal node
-      if (props.id) {
-        const nodeId = String(props.id);
-        const graphEntry = currentGraph?.nodes.get(nodeId);
-
-        let tags: Record<string, string> = {};
-        if (props.tags) {
-          if (typeof props.tags === 'string') {
+        let nodeIds: string[] = [];
+        if (props.nodeIds) {
+          if (typeof props.nodeIds === 'string') {
             try {
-              tags = JSON.parse(props.tags);
+              nodeIds = JSON.parse(props.nodeIds);
             } catch {
-              tags = {};
+              nodeIds = [];
             }
-          } else if (typeof props.tags === 'object') {
-            tags = props.tags as Record<string, string>;
+          } else if (Array.isArray(props.nodeIds)) {
+            nodeIds = props.nodeIds.map(String);
           }
         }
 
-        const targetNode: GraphNode = graphEntry?.node ?? {
-          id: nodeId,
-          lat,
-          lng,
-          tags:
-            graphEntry?.node.tags ??
-            (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
-        };
+        const crossingId = props.crossingId ? String(props.crossingId) : null;
 
-        onNodeSelectRef.current?.(targetNode);
+        if (crossingId) {
+          setManagedClusterIdRef.current?.(crossingId);
+          setManagedNodeIdsRef.current?.(nodeIds);
+        }
+
         map.easeTo?.({
           center: [lng, lat],
-          duration: 400,
+          zoom: 17.5,
         });
         return;
       }
 
-      // Case B: Crossing cluster feature
-      let nodeIds: string[] = [];
-      if (props.nodeIds) {
-        if (typeof props.nodeIds === 'string') {
-          try {
-            nodeIds = JSON.parse(props.nodeIds);
-          } catch {
-            nodeIds = [];
+      // Priority B: Individual unclustered signal feature (select light and open popup)
+      const signalFeature = trafficFeatures.find(
+        (f) =>
+          f.layer?.id === 'traffic-lights-unclustered' ||
+          f.properties?.type === 'signal' ||
+          (Boolean(f.properties?.id) && !f.properties?.crossingId) ||
+          (f.id !== undefined && f.id !== null && !f.properties?.crossingId),
+      );
+
+      if (signalFeature) {
+        const props = signalFeature.properties ?? {};
+        const currentGraph = graphRef.current;
+        const coords = (signalFeature.geometry as { coordinates?: number[] })?.coordinates;
+        const lat = coords ? coords[1] : e.lngLat.lat;
+        const lng = coords ? coords[0] : e.lngLat.lng;
+        const nodeId = String(props.id ?? signalFeature.id ?? '');
+
+        if (nodeId) {
+          const graphEntry = currentGraph?.nodes.get(nodeId);
+
+          let tags: Record<string, string> = {};
+          if (props.tags) {
+            if (typeof props.tags === 'string') {
+              try {
+                tags = JSON.parse(props.tags);
+              } catch {
+                tags = {};
+              }
+            } else if (typeof props.tags === 'object') {
+              tags = props.tags as Record<string, string>;
+            }
           }
-        } else if (Array.isArray(props.nodeIds)) {
-          nodeIds = props.nodeIds.map(String);
-        }
-      }
 
-      const crossingId = props.crossingId ? String(props.crossingId) : null;
+          const targetNode: GraphNode = {
+            ...(graphEntry?.node ?? {
+              id: nodeId,
+              lat,
+              lng,
+              tags:
+                graphEntry?.node.tags ??
+                (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
+            }),
+          };
 
-      if (nodeIds.length > 0) {
-        const selectedId = nodeIds[0];
-        const graphEntry = currentGraph?.nodes.get(selectedId);
-        const targetNode: GraphNode = graphEntry?.node ?? {
-          id: selectedId,
-          lat,
-          lng,
-          tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
-        };
-
-        if (nodeIds.length > 1 && crossingId) {
-          setManagedClusterIdRef.current?.(crossingId);
-          setManagedNodeIdsRef.current?.(nodeIds);
-          map.easeTo?.({
-            center: [lng, lat],
-            zoom: 17.5,
-          });
-        } else {
+          onNodeSelectRef.current?.(targetNode);
           map.easeTo?.({
             center: [lng, lat],
             duration: 400,
           });
+          return;
         }
-
-        onNodeSelectRef.current?.(targetNode);
-        return;
-      }
-
-      // Case C: Fallback if node ID is present directly on feature
-      if (trafficFeature.id !== undefined && trafficFeature.id !== null) {
-        const fallbackId = String(trafficFeature.id);
-        const graphEntry = currentGraph?.nodes.get(fallbackId);
-        const targetNode: GraphNode = graphEntry?.node ?? {
-          id: fallbackId,
-          lat,
-          lng,
-          tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
-        };
-        onNodeSelectRef.current?.(targetNode);
-        map.easeTo?.({
-          center: [lng, lat],
-          duration: 400,
-        });
-        return;
       }
     }
 
@@ -571,8 +615,6 @@ const MapViewContent: React.FC<{
       return;
     }
 
-    setManagedClusterIdRef.current?.(null);
-    setManagedNodeIdsRef.current?.([]);
     onNodeSelectRef.current?.(null);
 
     const sCoord = startCoordRef.current;
