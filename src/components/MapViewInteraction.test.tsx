@@ -45,6 +45,7 @@ describe('MapView Contextual Map Interactions', () => {
   let setManagedClusterIdMock: Mock<(id: string | null) => void>;
   let setManagedNodeIdsMock: Mock<React.Dispatch<React.SetStateAction<string[]>>>;
   let setContextMenuMock: ReturnType<typeof vi.fn>;
+  let setIsPlacingPlaceMock: Mock<(val: boolean) => void>;
 
   const sampleLandmark: Landmark = {
     id: 'lm-market',
@@ -66,6 +67,7 @@ describe('MapView Contextual Map Interactions', () => {
     setManagedClusterIdMock = vi.fn();
     setManagedNodeIdsMock = vi.fn();
     setContextMenuMock = vi.fn();
+    setIsPlacingPlaceMock = vi.fn();
 
     mockMapInstance = {
       on: vi.fn(),
@@ -195,6 +197,8 @@ describe('MapView Contextual Map Interactions', () => {
       onCreateLandmark: vi.fn(),
       onUpdateLandmark: vi.fn(),
       onDeleteLandmark: vi.fn(),
+      isPlacingPlace: false,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
       ...contextOverrides,
     };
 
@@ -397,6 +401,38 @@ describe('MapView Contextual Map Interactions', () => {
     expect(setManagedClusterIdMock).toHaveBeenCalledWith(null);
     expect(setManagedNodeIdsMock).toHaveBeenCalledWith([]);
     expect(onNodeSelectMock).toHaveBeenCalledWith(null);
+  });
+
+  it('changes cursor to crosshair and applies map-pin-placement-mode class in pin placement mode', () => {
+    const mockCanvas = { style: { cursor: '' } };
+    mockMapInstance.getCanvas = vi.fn(() => mockCanvas) as unknown as () => HTMLCanvasElement;
+
+    const { container } = renderMapViewWithContext({ isPlacingPlace: true });
+
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+    expect(container.querySelector('.map-wrapper')).toHaveClass('map-pin-placement-mode');
+  });
+
+  it('captures clicked coordinates, exits pin placement mode, and opens place modal on map click', () => {
+    renderMapViewWithContext({
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 220 },
+      lngLat: { lat: 48.139, lng: 11.578 },
+    });
+
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+    expect(openCreateLandmarkModalMock).toHaveBeenCalledWith({
+      lat: 48.139,
+      lng: 11.578,
+    });
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
   });
 
   it('unselects a single edge on right-click contextmenu when in studio mode with click tool', () => {

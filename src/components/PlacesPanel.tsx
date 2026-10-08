@@ -12,12 +12,13 @@ import {
   Trash2,
   Trees,
 } from 'lucide-react';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import { filterLandmarks, LANDMARK_CATEGORIES, sortLandmarks } from '../core/landmarks/landmarks';
 import type { LandmarkCategory } from '../core/landmarks/types';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
+import { Toast } from './common/Toast';
 import { MapContext } from './map/MapContext';
 import { PlaceModal } from './PlaceModal';
 
@@ -106,6 +107,14 @@ export interface PlacesPanelProps {
    * Optional active destination coordinates for fallback creation position.
    */
   endCoord?: Coordinate | null;
+  /**
+   * Whether the application is currently in pin placement mode for a new place.
+   */
+  isPlacingPlace?: boolean;
+  /**
+   * Callback fired when pin placement mode changes.
+   */
+  onPlacingPlaceChange?: (isPlacing: boolean) => void;
 }
 
 /**
@@ -127,6 +136,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
   currentMapCenter,
   startCoord,
   endCoord,
+  isPlacingPlace: isPlacingPlaceProp,
+  onPlacingPlaceChange: onPlacingPlaceChangeProp,
 }) => {
   const mapCtx = useContext(MapContext);
 
@@ -138,22 +149,33 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
   const [localModalOpen, setLocalModalOpen] = useState(false);
   const [localEditingPlace, setLocalEditingPlace] = useState<Place | null>(null);
 
+  const [localIsPlacingPlace, setLocalIsPlacingPlace] = useState(false);
+  const isPlacingPlace = isPlacingPlaceProp ?? mapCtx?.isPlacingPlace ?? localIsPlacingPlace;
+  const setIsPlacingPlace =
+    onPlacingPlaceChangeProp ?? mapCtx?.setIsPlacingPlace ?? setLocalIsPlacingPlace;
+
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<LandmarkCategory | 'all'>(
     'all',
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'category'>('name');
 
-  const handleOpenCreateModal = () => {
-    if (mapCtx?.openCreatePlaceModal) {
-      mapCtx.openCreatePlaceModal(currentMapCenter ?? startCoord ?? endCoord ?? null);
-    } else if (mapCtx?.openCreateLandmarkModal) {
-      mapCtx.openCreateLandmarkModal(currentMapCenter ?? startCoord ?? endCoord ?? null);
-    } else {
-      setLocalEditingPlace(null);
-      setLocalModalOpen(true);
-    }
+  const handleStartAddPlace = () => {
+    setIsPlacingPlace(true);
   };
+
+  useEffect(() => {
+    if (!isPlacingPlace) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPlacingPlace(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPlacingPlace, setIsPlacingPlace]);
 
   const handleStartEdit = (place: Place) => {
     if (mapCtx?.openEditPlaceModal) {
@@ -183,7 +205,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
         <button
           type="button"
           className="ciclista-btn ciclista-btn--primary ciclista-places-add-btn ciclista-landmark-add-btn"
-          onClick={handleOpenCreateModal}
+          onClick={handleStartAddPlace}
         >
           <Plus size={16} /> Add Place
         </button>
@@ -365,6 +387,17 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
           currentMapCenter={currentMapCenter}
           startCoord={startCoord}
           endCoord={endCoord}
+        />
+      )}
+
+      {/* Persistent toast notifying user to pick a location on the map */}
+      {isPlacingPlace && (
+        <Toast
+          message="Click on the map to set place location"
+          icon={<MapPin size={16} />}
+          position="bottom-right"
+          persistent
+          onClose={() => setIsPlacingPlace(false)}
         />
       )}
     </div>

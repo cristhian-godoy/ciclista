@@ -115,9 +115,9 @@ interface PlaceFormContentProps {
 }
 
 /**
- * Normalizes any category string into a supported PlaceCategory.
+ * Normalizes any category string into a supported PlaceCategory or empty string placeholder.
  */
-function normalizeCategory(category?: string): PlaceCategory {
+function normalizeCategory(category?: string): PlaceCategory | '' {
   if (
     category === 'home' ||
     category === 'work' ||
@@ -127,7 +127,7 @@ function normalizeCategory(category?: string): PlaceCategory {
   ) {
     return category;
   }
-  return category ? 'other' : 'home';
+  return '';
 }
 
 const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
@@ -140,7 +140,9 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
   startCoord,
   endCoord,
 }) => {
-  const [category, setCategory] = useState<PlaceCategory>(() => normalizeCategory(place?.category));
+  const [category, setCategory] = useState<PlaceCategory | ''>(() =>
+    place ? normalizeCategory(place.category) : '',
+  );
   const [name, setName] = useState(place ? place.name : '');
   const [description, setDescription] = useState(place?.description ?? '');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -163,14 +165,10 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
   }, [searchFilter]);
 
   const selectedCategoryOption = useMemo(() => {
-    return (
-      CATEGORY_MAP.get(category) ?? {
-        category: 'other' as PlaceCategory,
-        label: 'Other',
-        defaultName: 'Other',
-        icon: <MapPin size={16} />,
-      }
-    );
+    if (!category) {
+      return null;
+    }
+    return CATEGORY_MAP.get(category) ?? null;
   }, [category]);
 
   // Handle outside click to close category dropdown
@@ -242,6 +240,11 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    if (!category) {
+      setErrorMessage('Please select a category.');
+      return;
+    }
+
     const targetLat =
       place?.lat ??
       initialCoordinates?.lat ??
@@ -311,8 +314,14 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
             onKeyDown={handleTriggerKeyDown}
           >
             <span className="ciclista-category-trigger-content">
-              {selectedCategoryOption.icon}
-              <span>{selectedCategoryOption.label}</span>
+              {selectedCategoryOption ? (
+                <>
+                  {selectedCategoryOption.icon}
+                  <span>{selectedCategoryOption.label}</span>
+                </>
+              ) : (
+                <span className="ciclista-placeholder-text">Select category...</span>
+              )}
             </span>
             <ChevronDown
               size={16}

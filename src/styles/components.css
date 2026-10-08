@@ -2544,3 +2544,116 @@ h2 {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-muted);
 }
+
+.ciclista-placeholder-text {
+  color: var(--ciclista-color-text-muted);
+}
+
+/* Reusable Toast Notification */
+.ciclista-toast {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+  padding: var(--ciclista-spacing-sm) var(--ciclista-spacing-md);
+  background: var(--ciclista-glass-bg-base);
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+  box-shadow: var(--ciclista-shadow-md);
+  color: var(--ciclista-color-text-primary);
+  font-size: var(--ciclista-font-875);
+  font-weight: 500;
+  max-width: 420px;
+  animation: ciclista-toast-fade-in var(--ciclista-transition-fast) ease-out;
+  pointer-events: auto;
+}
+
+@keyframes ciclista-toast-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ciclista-toast--bottom-right {
+  bottom: var(--ciclista-spacing-lg);
+  right: var(--ciclista-spacing-lg);
+}
+
+.ciclista-toast--bottom-left {
+  bottom: var(--ciclista-spacing-lg);
+  left: var(--ciclista-spacing-lg);
+}
+
+.ciclista-toast--top-right {
+  top: var(--ciclista-spacing-lg);
+  right: var(--ciclista-spacing-lg);
+}
+
+.ciclista-toast--top-left {
+  top: var(--ciclista-spacing-lg);
+  left: var(--ciclista-spacing-lg);
+}
+
+.ciclista-toast--bottom-center {
+  bottom: var(--ciclista-spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ciclista-toast--top-center {
+  top: var(--ciclista-spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ciclista-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ciclista-color-brand-secondary);
+  flex-shrink: 0;
+}
+
+.ciclista-toast-content {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.ciclista-toast-action {
+  flex-shrink: 0;
+}
+
+.ciclista-toast-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-text-muted);
+  cursor: pointer;
+  padding: var(--ciclista-spacing-xs);
+  border-radius: var(--ciclista-radius-xs);
+  transition: var(--ciclista-transition-fast);
+  flex-shrink: 0;
+}
+
+.ciclista-toast-close-btn:hover {
+  color: var(--ciclista-color-text-primary);
+  background: var(--ciclista-glass-bg-hover);
+}
+
+/* Map pin placement cursor */
+.map-pin-placement-mode,
+.map-pin-placement-mode .map-container,
+.map-pin-placement-mode canvas {
+  cursor: crosshair !important;
+}

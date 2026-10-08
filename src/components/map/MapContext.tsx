@@ -130,6 +130,10 @@ export interface MapContextType {
   onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
   onDeleteLandmark?: (id: string) => void;
   onDeletePlace?: (id: string) => void;
+
+  // Place pin placement mode
+  isPlacingPlace?: boolean;
+  setIsPlacingPlace?: React.Dispatch<React.SetStateAction<boolean>> | ((val: boolean) => void);
 }
 
 /**
@@ -204,6 +208,9 @@ interface MapProviderProps {
   onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
   onDeleteLandmark?: (id: string) => void;
   onDeletePlace?: (id: string) => void;
+  isPlacingPlace?: boolean;
+  onPlacingPlaceChange?: React.Dispatch<React.SetStateAction<boolean>>;
+  initialIsPlacingPlace?: boolean;
   children: React.ReactNode;
 }
 
@@ -268,6 +275,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   onUpdatePlace: onUpdatePlaceProp,
   onDeleteLandmark: onDeleteLandmarkProp,
   onDeletePlace: onDeletePlaceProp,
+  isPlacingPlace: controlledIsPlacingPlace,
+  onPlacingPlaceChange,
+  initialIsPlacingPlace,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -328,6 +338,12 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const [internalEvents, setInternalEvents] = useState<MapEvent[]>(initialEvents ?? []);
   const events = controlledEvents ?? internalEvents;
   const setEvents = onEventsChange ?? setInternalEvents;
+
+  const [internalIsPlacingPlace, setInternalIsPlacingPlace] = useState(
+    initialIsPlacingPlace ?? false,
+  );
+  const isPlacingPlace = controlledIsPlacingPlace ?? internalIsPlacingPlace;
+  const setIsPlacingPlace = onPlacingPlaceChange ?? setInternalIsPlacingPlace;
 
   const [landmarkModal, setLandmarkModal] = useState<LandmarkModalState>({
     isOpen: false,
@@ -469,6 +485,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onUpdatePlace: handleUpdateLandmark,
         onDeleteLandmark: handleDeleteLandmark,
         onDeletePlace: handleDeleteLandmark,
+        isPlacingPlace,
+        setIsPlacingPlace,
       }}
     >
       {children}
