@@ -627,7 +627,7 @@ const MapViewContent: React.FC<{
     }
 
     if (appModeRef.current === 'places' || (appModeRef.current as string) === 'landmarks') {
-      openCreatePlaceModalRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      onNodeSelectRef.current?.(null);
       return;
     }
 

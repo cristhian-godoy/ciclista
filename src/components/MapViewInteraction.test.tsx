@@ -214,8 +214,8 @@ describe('MapView Contextual Map Interactions', () => {
     );
   };
 
-  it('opens landmark creation modal on left click when in landmarks mode and does not place route pins', () => {
-    renderMapViewWithContext({ appMode: 'landmarks' });
+  it('does NOT open place modal on left click when in places mode and isPlacingPlace is false', () => {
+    renderMapViewWithContext({ appMode: 'places', isPlacingPlace: false });
 
     expect(capturedOptions).not.toBeNull();
 
@@ -224,6 +224,27 @@ describe('MapView Contextual Map Interactions', () => {
       lngLat: { lat: 48.137, lng: 11.575 },
     });
 
+    expect(openCreateLandmarkModalMock).not.toHaveBeenCalled();
+    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+  });
+
+  it('opens place modal on left click when in places mode and isPlacingPlace is true', () => {
+    renderMapViewWithContext({
+      appMode: 'places',
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 250 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    });
+
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
     expect(openCreateLandmarkModalMock).toHaveBeenCalledWith({
       lat: 48.137,
       lng: 11.575,
