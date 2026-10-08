@@ -45,6 +45,8 @@ export const useMapInstance = ({
   const onZoomStartRef = useRef(onZoomStart);
   const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInteractingRef = useRef(false);
+  const interactionEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     onMapBoundsChangeRef.current = onMapBoundsChange;
@@ -105,6 +107,10 @@ export const useMapInstance = ({
 
     mapInstance.on('mousedown', (e) => {
       mouseDownPosRef.current = { x: e.point.x, y: e.point.y };
+      if (!isInteractingRef.current && interactionEndTimeoutRef.current) {
+        clearTimeout(interactionEndTimeoutRef.current);
+        interactionEndTimeoutRef.current = null;
+      }
     });
 
     mapInstance.on('dblclick', () => {
@@ -114,7 +120,58 @@ export const useMapInstance = ({
       }
     });
 
+    const handleInteractionStart = () => {
+      isInteractingRef.current = true;
+      if (interactionEndTimeoutRef.current) {
+        clearTimeout(interactionEndTimeoutRef.current);
+        interactionEndTimeoutRef.current = null;
+      }
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+      }
+    };
+
+    const handleInteractionEnd = () => {
+      if (interactionEndTimeoutRef.current) {
+        clearTimeout(interactionEndTimeoutRef.current);
+      }
+      interactionEndTimeoutRef.current = setTimeout(() => {
+        isInteractingRef.current = false;
+        interactionEndTimeoutRef.current = null;
+      }, 100);
+    };
+
+    mapInstance.on('dragstart', () => {
+      handleInteractionStart();
+      if (onDragStartRef.current) {
+        onDragStartRef.current();
+      }
+    });
+    mapInstance.on('dragend', handleInteractionEnd);
+
+    mapInstance.on('rotatestart', handleInteractionStart);
+    mapInstance.on('rotateend', handleInteractionEnd);
+
+    mapInstance.on('pitchstart', handleInteractionStart);
+    mapInstance.on('pitchend', handleInteractionEnd);
+
+    mapInstance.on('zoomstart', () => {
+      handleInteractionStart();
+      if (onZoomStartRef.current) {
+        onZoomStartRef.current();
+      }
+    });
+    mapInstance.on('zoomend', handleInteractionEnd);
+
     mapInstance.on('click', (e) => {
+      if (isInteractingRef.current) {
+        return;
+      }
+      if (typeof mapInstance.isDragging === 'function' && mapInstance.isDragging()) {
+        return;
+      }
+
       if (mouseDownPosRef.current) {
         const dx = e.point.x - mouseDownPosRef.current.x;
         const dy = e.point.y - mouseDownPosRef.current.y;
@@ -132,22 +189,10 @@ export const useMapInstance = ({
 
       clickTimeoutRef.current = setTimeout(() => {
         clickTimeoutRef.current = null;
-        if (onClickRef.current) {
+        if (!isInteractingRef.current && onClickRef.current) {
           onClickRef.current(e);
         }
       }, 200);
-    });
-
-    mapInstance.on('dragstart', () => {
-      if (onDragStartRef.current) {
-        onDragStartRef.current();
-      }
-    });
-
-    mapInstance.on('zoomstart', () => {
-      if (onZoomStartRef.current) {
-        onZoomStartRef.current();
-      }
     });
 
     mapInstance.on('moveend', () => {
@@ -238,6 +283,9 @@ export const useMapInstance = ({
       }
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
+      }
+      if (interactionEndTimeoutRef.current) {
+        clearTimeout(interactionEndTimeoutRef.current);
       }
       mapInstance.remove();
       setMap(null);

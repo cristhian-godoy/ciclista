@@ -3,7 +3,7 @@ import type maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { Coordinate } from '../core/common/types';
-import type { GraphNode } from '../core/graph/types';
+import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { Landmark } from '../core/landmarks/types';
 import type { MapContextType } from './map/MapContext';
 import { MapContext } from './map/MapContext';
@@ -73,6 +73,10 @@ describe('MapView Contextual Map Interactions', () => {
       on: vi.fn(),
       off: vi.fn(),
       easeTo: vi.fn(),
+      project: vi.fn((coords: [number, number]) => ({
+        x: coords[0] * 10,
+        y: coords[1] * 10,
+      })) as unknown as maplibregl.Map['project'],
       getSource: vi.fn(() => undefined),
       addSource: vi.fn(),
       getLayer: vi.fn((id: string) =>
@@ -348,7 +352,7 @@ describe('MapView Contextual Map Interactions', () => {
     });
   });
 
-  it('selects traffic light node, expands cluster, and prevents marker placement when clicking on crossing cluster', () => {
+  it('expands cluster, zooms in, and does NOT select node or open popup when clicking on crossing cluster', () => {
     (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
       {
         layer: { id: 'traffic-lights-cluster' },
@@ -361,7 +365,7 @@ describe('MapView Contextual Map Interactions', () => {
       },
     ]);
 
-    renderMapViewWithContext({ appMode: 'routing' });
+    const { container } = renderMapViewWithContext({ appMode: 'routing' });
 
     expect(capturedOptions).not.toBeNull();
 
@@ -372,12 +376,8 @@ describe('MapView Contextual Map Interactions', () => {
 
     expect(setManagedClusterIdMock).toHaveBeenCalledWith('crossing-node-1');
     expect(setManagedNodeIdsMock).toHaveBeenCalledWith(['node-1', 'node-2']);
-    expect(onNodeSelectMock).toHaveBeenCalledWith({
-      id: 'node-1',
-      lat: 48.14,
-      lng: 11.58,
-      tags: { highway: 'traffic_signals' },
-    });
+    expect(onNodeSelectMock).not.toHaveBeenCalled();
+    expect(container.querySelector('.map-popup')).not.toBeInTheDocument();
     expect(onStartDragMock).not.toHaveBeenCalled();
     expect(onEndDragMock).not.toHaveBeenCalled();
     expect(mockMapInstance.easeTo).toHaveBeenCalledWith({
@@ -386,10 +386,14 @@ describe('MapView Contextual Map Interactions', () => {
     });
   });
 
-  it('clears node selection and managed clusters when clicking empty map space', () => {
+  it('clears node selection but keeps expanded cluster when clicking empty map space', () => {
     (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([]);
 
-    renderMapViewWithContext({ appMode: 'routing' });
+    renderMapViewWithContext({
+      appMode: 'routing',
+      managedClusterId: 'crossing-node-1',
+      managedNodeIds: ['node-1', 'node-2'],
+    });
 
     expect(capturedOptions).not.toBeNull();
 
@@ -398,9 +402,118 @@ describe('MapView Contextual Map Interactions', () => {
       lngLat: { lat: 48.15, lng: 11.59 },
     });
 
+    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(setManagedNodeIdsMock).not.toHaveBeenCalled();
+  });
+
+  it('collapses expanded crossing cluster when zooming out below threshold', () => {
+    mockMapInstance.getZoom = vi.fn(() => 15);
+    mockMapInstance.getCenter = vi.fn(
+      () => ({ lat: 48.14, lng: 11.58 }) as unknown as maplibregl.LngLat,
+    );
+
+    renderMapViewWithContext({
+      appMode: 'routing',
+      managedClusterId: 'crossing-node-1',
+      managedNodeIds: ['node-1', 'node-2'],
+    });
+
+    const moveendHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'moveend',
+    )?.[1];
+
+    expect(moveendHandler).toBeDefined();
+
+    moveendHandler();
+
     expect(setManagedClusterIdMock).toHaveBeenCalledWith(null);
     expect(setManagedNodeIdsMock).toHaveBeenCalledWith([]);
-    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
+  });
+
+  it('collapses expanded crossing cluster when panning far away from crossing', () => {
+    mockMapInstance.getZoom = vi.fn(() => 17);
+    mockMapInstance.getCenter = vi.fn(
+      () => ({ lat: 48.2, lng: 11.58 }) as unknown as maplibregl.LngLat,
+    );
+
+    const nodes = new Map();
+    nodes.set('node-1', {
+      node: { id: 'node-1', lat: 48.14, lng: 11.58, tags: {} },
+      edges: [],
+    });
+    const sampleGraph = { nodes } as unknown as StreetGraph;
+
+    renderMapViewWithContext({
+      appMode: 'routing',
+      graph: sampleGraph,
+      managedClusterId: 'crossing-node-1',
+      managedNodeIds: ['node-1'],
+    });
+
+    const moveendHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'moveend',
+    )?.[1];
+
+    expect(moveendHandler).toBeDefined();
+
+    moveendHandler();
+
+    expect(setManagedClusterIdMock).toHaveBeenCalledWith(null);
+    expect(setManagedNodeIdsMock).toHaveBeenCalledWith([]);
+  });
+
+  it('preserves expanded crossing cluster when rotating or panning nearby', () => {
+    mockMapInstance.getZoom = vi.fn(() => 17);
+    mockMapInstance.getCenter = vi.fn(
+      () => ({ lat: 48.1405, lng: 11.5805 }) as unknown as maplibregl.LngLat,
+    );
+
+    const nodes = new Map();
+    nodes.set('node-1', {
+      node: { id: 'node-1', lat: 48.14, lng: 11.58, tags: {} },
+      edges: [],
+    });
+    const sampleGraph = { nodes } as unknown as StreetGraph;
+
+    renderMapViewWithContext({
+      appMode: 'routing',
+      graph: sampleGraph,
+      managedClusterId: 'crossing-node-1',
+      managedNodeIds: ['node-1'],
+    });
+
+    const moveendHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'moveend',
+    )?.[1];
+
+    expect(moveendHandler).toBeDefined();
+
+    moveendHandler();
+
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(setManagedNodeIdsMock).not.toHaveBeenCalled();
+  });
+
+  it('renders TrafficLightPopup / NodePopup when a traffic light node is selected', () => {
+    const selectedSignalNode = {
+      id: 'node-signal-1',
+      lat: 48.137,
+      lng: 11.575,
+      tags: { highway: 'traffic_signals', name: 'Sendlinger Tor' },
+    };
+
+    const { container } = renderMapViewWithContext({
+      appMode: 'routing',
+      selectedNode: selectedSignalNode,
+    });
+
+    const popup = container.querySelector('.map-popup');
+    expect(popup).toBeInTheDocument();
+    expect(popup).toHaveTextContent('Configure Control Point');
+    expect(popup).toHaveTextContent('Traffic Signal');
+    expect(popup).toHaveTextContent('node-signal-1');
+    expect(popup).toHaveTextContent('Sendlinger Tor');
   });
 
   it('changes cursor to crosshair and applies map-pin-placement-mode class in pin placement mode', () => {
