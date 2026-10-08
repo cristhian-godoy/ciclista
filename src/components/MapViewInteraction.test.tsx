@@ -398,4 +398,76 @@ describe('MapView Contextual Map Interactions', () => {
     expect(setManagedNodeIdsMock).toHaveBeenCalledWith([]);
     expect(onNodeSelectMock).toHaveBeenCalledWith(null);
   });
+
+  it('unselects a single edge on right-click contextmenu when in studio mode with click tool', () => {
+    const preventDefaultMock = vi.fn();
+    const setSelectedEdgeIdsMock = vi.fn();
+
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValueOnce([
+      { properties: { edgeId: 'edge-1->edge-2' } },
+    ]);
+
+    renderMapViewWithContext({
+      appMode: 'studio',
+      selectionTool: 'click',
+      selectedEdgeIds: ['edge-1->edge-2', 'edge-3->edge-4'],
+      setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+        React.SetStateAction<string[]>
+      >,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.1375, lng: 11.575 },
+      originalEvent: { preventDefault: preventDefaultMock },
+    });
+
+    expect(preventDefaultMock).toHaveBeenCalled();
+    expect(setSelectedEdgeIdsMock).toHaveBeenCalledTimes(1);
+    const updater = setSelectedEdgeIdsMock.mock.calls[0][0];
+    if (typeof updater === 'function') {
+      const remaining = updater(['edge-1->edge-2', 'edge-3->edge-4']);
+      expect(remaining).toEqual(['edge-3->edge-4']);
+    }
+  });
+
+  it('erases all edges in brush radius on right-click contextmenu when in studio mode with brush tool', () => {
+    const preventDefaultMock = vi.fn();
+    const setSelectedEdgeIdsMock = vi.fn();
+
+    const nodes = new Map();
+    nodes.set('node-1', {
+      node: { id: 'node-1', lat: 48.137, lng: 11.575, tags: {} },
+      edges: [{ target: 'node-2', distance: 100, tags: {} }],
+    });
+    nodes.set('node-2', {
+      node: { id: 'node-2', lat: 48.138, lng: 11.576, tags: {} },
+      edges: [{ target: 'node-1', distance: 100, tags: {} }],
+    });
+    const mockGraph = { nodes };
+
+    renderMapViewWithContext({
+      appMode: 'studio',
+      selectionTool: 'brush',
+      brushRadius: 100,
+      graph: mockGraph,
+      selectedEdgeIds: ['node-1->node-2'],
+      setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+        React.SetStateAction<string[]>
+      >,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.1375, lng: 11.575 },
+      originalEvent: { preventDefault: preventDefaultMock },
+    });
+
+    expect(preventDefaultMock).toHaveBeenCalled();
+    expect(setSelectedEdgeIdsMock).toHaveBeenCalledTimes(1);
+  });
 });

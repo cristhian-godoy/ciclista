@@ -132,10 +132,10 @@ describe('Sidebar Integration', () => {
     expect(toggleButton).toHaveAttribute('aria-label', 'Collapse sidebar');
   });
 
-  it('swaps content to EventManagementPanel when in studio mode', () => {
+  it('swaps content to EventsPanel when in studio mode', () => {
     render(<Sidebar {...defaultProps} appMode="studio" selectedEdgeIds={['n1->n2']} />);
 
-    expect(screen.getByText('Studio: Event Management')).toBeInTheDocument();
+    expect(screen.getByText('Events')).toBeInTheDocument();
     expect(screen.getByText('1 road segment selected')).toBeInTheDocument();
     expect(screen.queryByText('City Preset')).not.toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
@@ -242,7 +242,7 @@ describe('Sidebar Integration', () => {
 
     // 3. Studio mode
     render(<Sidebar {...defaultProps} appMode="studio" />);
-    expect(screen.getByRole('heading', { name: 'Studio: Event Management' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Events' })).toBeInTheDocument();
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
   });
 });

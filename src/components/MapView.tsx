@@ -6,6 +6,7 @@ import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
+import { BrushCircleLayer } from './map/BrushCircleLayer';
 import { InspectorLayer } from './map/InspectorLayer';
 import { type PlaceModalState, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
@@ -179,8 +180,8 @@ const MapViewContent: React.FC<{
 
     const handleDeselectAt = (coord: { lat: number; lng: number }) => {
       const currentGraph = graphRef.current;
-      if (!currentGraph) return;
-      const currentRadius = selectionToolRef.current === 'brush' ? brushRadiusRef.current : 25;
+      if (!currentGraph || selectionToolRef.current !== 'brush') return;
+      const currentRadius = brushRadiusRef.current;
       const matching = findEdgesWithinRadius(currentGraph, coord, currentRadius);
       if (matching.length > 0) {
         const toRemove = new Set(matching);
@@ -193,7 +194,7 @@ const MapViewContent: React.FC<{
         isLeftDown = true;
         map.dragPan?.disable?.();
         handleBrushAt({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-      } else if (e.originalEvent.button === 2) {
+      } else if (e.originalEvent.button === 2 && selectionToolRef.current === 'brush') {
         isRightDown = true;
         e.originalEvent.preventDefault();
         map.dragPan?.disable?.();
@@ -205,7 +206,7 @@ const MapViewContent: React.FC<{
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
       if (isLeftDown && selectionToolRef.current === 'brush') {
         handleBrushAt({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-      } else if (isRightDown) {
+      } else if (isRightDown && selectionToolRef.current === 'brush') {
         handleDeselectAt({ lat: e.lngLat.lat, lng: e.lngLat.lng });
       }
     };
@@ -242,24 +243,51 @@ const MapViewContent: React.FC<{
     if (!map) return;
 
     if (appModeRef.current === 'studio') {
-      e.originalEvent?.preventDefault?.();
       const currentGraph = graphRef.current;
-      if (currentGraph) {
-        const coord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
-        const radius = selectionToolRef.current === 'brush' ? brushRadiusRef.current : 25;
-        const matching = findEdgesWithinRadius(currentGraph, coord, radius);
-        if (matching.length > 0) {
-          const toRemove = new Set(matching);
-          setSelectedEdgeIds((prev) => prev.filter((id) => !toRemove.has(id)));
-        } else {
-          const nearest = findNearestEdge(currentGraph, coord);
-          if (nearest && nearest.distance <= 30) {
-            const idToRemove = `${nearest.uId}->${nearest.vId}`;
-            setSelectedEdgeIds((prev) => prev.filter((id) => id !== idToRemove));
+      const coord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+
+      if (selectionToolRef.current === 'brush') {
+        e.originalEvent?.preventDefault?.();
+        if (currentGraph) {
+          const matching = findEdgesWithinRadius(currentGraph, coord, brushRadiusRef.current);
+          if (matching.length > 0) {
+            const toRemove = new Set(matching);
+            setSelectedEdgeIds((prev) => prev.filter((id) => !toRemove.has(id)));
           }
         }
+        return;
       }
-      return;
+
+      if (selectionToolRef.current === 'click') {
+        let edgeId: string | undefined = undefined;
+
+        const edgeFeatures =
+          typeof map.queryRenderedFeatures === 'function'
+            ? map.queryRenderedFeatures(e.point, {
+                layers: ['street-graph-layer-interactive', 'street-graph-layer'],
+              })
+            : [];
+
+        if (
+          edgeFeatures.length > 0 &&
+          edgeFeatures[0]?.properties &&
+          edgeFeatures[0].properties.edgeId
+        ) {
+          edgeId = edgeFeatures[0].properties.edgeId;
+        } else if (currentGraph) {
+          const nearest = findNearestEdge(currentGraph, coord);
+          if (nearest && nearest.distance <= 30) {
+            edgeId = `${nearest.uId}->${nearest.vId}`;
+          }
+        }
+
+        if (edgeId) {
+          e.originalEvent?.preventDefault?.();
+          const targetId = edgeId;
+          setSelectedEdgeIds((prev) => prev.filter((id) => id !== targetId));
+          return;
+        }
+      }
     }
 
     const availableLandmarkLayers: string[] = [];
@@ -573,6 +601,7 @@ const MapViewContent: React.FC<{
         <>
           <StreetGraphLayer />
           <SelectedEdgesLayer />
+          <BrushCircleLayer />
           <BlockedEdgesLayer />
           <PlacesLayer />
           <RouteVariantsLayer />

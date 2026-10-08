@@ -11,7 +11,7 @@ describe('SideToolbar Component', () => {
     expect(screen.getByLabelText('Ciclista')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Routing Mode' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Places Mode' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Studio Mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Events' })).toBeInTheDocument();
 
     const testRunnerLink = screen.getByRole('link', { name: 'Test Runner' });
     expect(testRunnerLink).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe('SideToolbar Component', () => {
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
     const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
-    const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
+    const studioBtn = screen.getByRole('button', { name: 'Events' });
 
     expect(routingBtn).toHaveClass('active');
     expect(routingBtn).toHaveAttribute('aria-pressed', 'true');
@@ -38,7 +38,7 @@ describe('SideToolbar Component', () => {
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
     const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
-    const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
+    const studioBtn = screen.getByRole('button', { name: 'Events' });
 
     expect(placesBtn).toHaveClass('active');
     expect(placesBtn).toHaveAttribute('aria-pressed', 'true');
@@ -53,7 +53,7 @@ describe('SideToolbar Component', () => {
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
     const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
-    const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
+    const studioBtn = screen.getByRole('button', { name: 'Events' });
 
     expect(studioBtn).toHaveClass('active');
     expect(studioBtn).toHaveAttribute('aria-pressed', 'true');
@@ -89,13 +89,13 @@ describe('SideToolbar Component', () => {
     expect(handleModeChange).toHaveBeenCalledWith('places');
   });
 
-  it('invokes onModeChange with studio when Studio Mode button is clicked', async () => {
+  it('invokes onModeChange with studio when Events button is clicked', async () => {
     const user = userEvent.setup();
     const handleModeChange = vi.fn();
 
     render(<SideToolbar mode="routing" onModeChange={handleModeChange} />);
 
-    const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
+    const studioBtn = screen.getByRole('button', { name: 'Events' });
     await user.click(studioBtn);
 
     expect(handleModeChange).toHaveBeenCalledTimes(1);

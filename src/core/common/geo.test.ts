@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../graph/types';
 import { coordToChunkId, getChunkBBox, getChunksInBBox, mergeChunksToBBox } from './geo';
-import { findEdgesWithinRadius } from './geometry';
+import { createGeoJSONCircle, findEdgesWithinRadius } from './geometry';
 import { logger } from './logger';
 
 vi.mock('./logger', () => ({
@@ -126,5 +126,46 @@ describe('findEdgesWithinRadius', () => {
     expect(result).toContain('node-2->node-1');
     expect(result).toContain('node-1->node-3');
     expect(result).toContain('node-3->node-1');
+  });
+});
+
+describe('createGeoJSONCircle', () => {
+  it('returns empty ring when radius is zero or negative', () => {
+    const zeroCircle = createGeoJSONCircle({ lat: 48.137, lng: 11.575 }, 0);
+    expect(zeroCircle.type).toBe('Polygon');
+    expect(zeroCircle.coordinates).toEqual([[]]);
+
+    const negCircle = createGeoJSONCircle({ lat: 48.137, lng: 11.575 }, -10);
+    expect(negCircle.coordinates).toEqual([[]]);
+  });
+
+  it('generates a closed polygon ring with the requested number of vertices', () => {
+    const points = 32;
+    const circle = createGeoJSONCircle({ lat: 48.137, lng: 11.575 }, 50, points);
+    expect(circle.type).toBe('Polygon');
+    expect(circle.coordinates).toHaveLength(1);
+
+    const ring = circle.coordinates[0];
+    // ring should have points + 1 vertices (closed ring)
+    expect(ring).toHaveLength(points + 1);
+    // first and last coordinates must match
+    expect(ring[0]).toEqual(ring[ring.length - 1]);
+  });
+
+  it('generates vertices at approximately radius distance from center', () => {
+    const center = { lat: 48.137, lng: 11.575 };
+    const radiusMeters = 100;
+    const circle = createGeoJSONCircle(center, radiusMeters, 16);
+    const ring = circle.coordinates[0];
+
+    // Check each vertex distance from center
+    for (const [lng, lat] of ring) {
+      // 1 deg lat ~= 111,000m
+      const dLatM = (lat - center.lat) * 111320;
+      const dLngM = (lng - center.lng) * 111320 * Math.cos((center.lat * Math.PI) / 180);
+      const dist = Math.hypot(dLatM, dLngM);
+      expect(dist).toBeGreaterThan(95);
+      expect(dist).toBeLessThan(105);
+    }
   });
 });

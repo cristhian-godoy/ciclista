@@ -225,4 +225,33 @@ describe('MapView Component', () => {
     expect(preventDefaultMock).toHaveBeenCalled();
     expect(setSelectedEdgeIdsMock).toHaveBeenCalled();
   });
+
+  it('does NOT trigger radius deselect on right-click drag when selectionTool is click', () => {
+    const preventDefaultMock = vi.fn();
+    const contextWithClick = {
+      ...defaultContext,
+      selectionTool: 'click' as const,
+      selectedEdgeIds: ['node-1->node-2'],
+    };
+
+    render(
+      <MapContext.Provider value={contextWithClick}>
+        <MapView />
+      </MapContext.Provider>,
+    );
+
+    const mouseDownHandler = (mockMap.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'mousedown',
+    )?.[1];
+
+    expect(mouseDownHandler).toBeDefined();
+
+    mouseDownHandler({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.1375, lng: 11.575 },
+      originalEvent: { button: 2, preventDefault: preventDefaultMock },
+    });
+
+    expect(setSelectedEdgeIdsMock).not.toHaveBeenCalled();
+  });
 });

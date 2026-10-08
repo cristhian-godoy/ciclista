@@ -4,6 +4,10 @@ BlockedEdgesLayer.test.tsx
 	Unit tests verifying active road blockage barricade layer rendering.
 BlockedEdgesLayer.tsx
 	MapLibre layer rendering warning barricade dashed LineStrings for active road blockages.
+BrushCircleLayer.test.tsx
+	Unit tests for dynamic radius brush cursor circle overlay and MapLibre event synchronization.
+BrushCircleLayer.tsx
+	MapLibre layer rendering dynamic circular radius preview under cursor during studio brush mode.
 SelectedEdgesLayer.test.tsx
 	Unit tests for selected edges highlight layer and GeoJSON synchronization.
 SelectedEdgesLayer.tsx

@@ -25,7 +25,7 @@ import type { CreateLandmarkInput, Landmark, UpdateLandmarkInput } from '../core
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
-import { EventManagementPanel } from './EventManagementPanel';
+import { EventsPanel } from './EventsPanel';
 import { InspectorPanel } from './InspectorPanel';
 import { MapContext } from './map/MapContext';
 import { PlacesPanel } from './PlacesPanel';
@@ -305,7 +305,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {currentAppMode === 'studio' ? (
             <>
               <ShieldAlert size={20} className="sidebar-header-icon" />
-              <h2>Studio: Event Management</h2>
+              <h2>Events</h2>
             </>
           ) : currentAppMode === 'places' || (currentAppMode as string) === 'landmarks' ? (
             <>
@@ -322,7 +322,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="sidebar-content">
           {currentAppMode === 'studio' ? (
-            <EventManagementPanel
+            <EventsPanel
               events={currentEvents}
               selectedEdgeCount={currentSelectedEdgeIds.length}
               onCreateEvent={handleCreateEvent}

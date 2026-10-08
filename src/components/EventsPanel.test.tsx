@@ -2,13 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  EventManagementPanel,
-  type EventManagementPanelProps,
-  type StudioEvent,
-} from './EventManagementPanel';
+import { EventsPanel, type EventsPanelProps, type StudioEvent } from './EventsPanel';
 
-describe('EventManagementPanel Component', () => {
+describe('EventsPanel Component', () => {
   const mockEvents: StudioEvent[] = [
     {
       id: 'event-1',
@@ -33,7 +29,7 @@ describe('EventManagementPanel Component', () => {
     },
   ];
 
-  const defaultProps: EventManagementPanelProps = {
+  const defaultProps: EventsPanelProps = {
     events: mockEvents,
     selectedEdgeCount: 0,
     onCreateEvent: vi.fn(),
@@ -42,9 +38,10 @@ describe('EventManagementPanel Component', () => {
     onClearSelection: vi.fn(),
   };
 
-  it('renders selection card and configured events list', () => {
-    render(<EventManagementPanel {...defaultProps} />);
+  it('renders selection card and configured events list with Events aria label', () => {
+    render(<EventsPanel {...defaultProps} />);
 
+    expect(screen.getByLabelText('Events')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Configured Events' })).toBeInTheDocument();
     expect(screen.getByText(/0 road segments selected/i)).toBeInTheDocument();
     expect(screen.getByText('City Marathon')).toBeInTheDocument();
@@ -54,14 +51,14 @@ describe('EventManagementPanel Component', () => {
   });
 
   it('handles empty events list gracefully', () => {
-    render(<EventManagementPanel {...defaultProps} events={[]} />);
+    render(<EventsPanel {...defaultProps} events={[]} />);
 
     expect(screen.getByText('No events created yet.')).toBeInTheDocument();
   });
 
   describe('Edge Selection Status & Clear Selection', () => {
     it('does not display clear button when selectedEdgeCount is 0', () => {
-      render(<EventManagementPanel {...defaultProps} selectedEdgeCount={0} />);
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={0} />);
 
       expect(screen.queryByRole('button', { name: 'Clear Selection' })).not.toBeInTheDocument();
     });
@@ -71,11 +68,7 @@ describe('EventManagementPanel Component', () => {
       const onClearSelection = vi.fn();
 
       render(
-        <EventManagementPanel
-          {...defaultProps}
-          selectedEdgeCount={1}
-          onClearSelection={onClearSelection}
-        />,
+        <EventsPanel {...defaultProps} selectedEdgeCount={1} onClearSelection={onClearSelection} />,
       );
 
       expect(screen.getByText(/1 road segment selected/i)).toBeInTheDocument();
@@ -87,7 +80,7 @@ describe('EventManagementPanel Component', () => {
     });
 
     it('displays clear button and pluralization when selectedEdgeCount > 1', () => {
-      render(<EventManagementPanel {...defaultProps} selectedEdgeCount={3} />);
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={3} />);
 
       expect(screen.getByText(/3 road segments selected/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Clear Selection' })).toBeInTheDocument();
@@ -96,7 +89,7 @@ describe('EventManagementPanel Component', () => {
 
   describe('Effect Gating and Event Creation', () => {
     it('disables effect configuration and displays explanatory hint when selectedEdgeCount is 0', () => {
-      render(<EventManagementPanel {...defaultProps} selectedEdgeCount={0} />);
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={0} />);
 
       const effectSelect = screen.getByLabelText(/Effect Configuration/i);
       expect(effectSelect).toBeDisabled();
@@ -110,7 +103,7 @@ describe('EventManagementPanel Component', () => {
     });
 
     it('enables effect configuration and hides hint when selectedEdgeCount > 0', () => {
-      render(<EventManagementPanel {...defaultProps} selectedEdgeCount={2} />);
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={2} />);
 
       const effectSelect = screen.getByLabelText(/Effect Configuration/i);
       expect(effectSelect).not.toBeDisabled();
@@ -119,7 +112,7 @@ describe('EventManagementPanel Component', () => {
     });
 
     it('keeps apply button disabled when name is empty even if edges are selected', async () => {
-      render(<EventManagementPanel {...defaultProps} selectedEdgeCount={2} />);
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={2} />);
 
       const submitButton = screen.getByRole('button', {
         name: 'Apply Road Blockage to Selection',
@@ -131,13 +124,7 @@ describe('EventManagementPanel Component', () => {
       const user = userEvent.setup();
       const onCreateEvent = vi.fn();
 
-      render(
-        <EventManagementPanel
-          {...defaultProps}
-          selectedEdgeCount={3}
-          onCreateEvent={onCreateEvent}
-        />,
-      );
+      render(<EventsPanel {...defaultProps} selectedEdgeCount={3} onCreateEvent={onCreateEvent} />);
 
       const nameInput = screen.getByLabelText(/Event Name/i);
       const descInput = screen.getByLabelText(/Description \(Optional\)/i);
@@ -166,7 +153,7 @@ describe('EventManagementPanel Component', () => {
       const user = userEvent.setup();
       const onToggleEvent = vi.fn();
 
-      render(<EventManagementPanel {...defaultProps} onToggleEvent={onToggleEvent} />);
+      render(<EventsPanel {...defaultProps} onToggleEvent={onToggleEvent} />);
 
       const checkbox = screen.getByRole('checkbox', { name: 'Toggle City Marathon' });
       expect(checkbox).toBeChecked();
@@ -180,7 +167,7 @@ describe('EventManagementPanel Component', () => {
       const user = userEvent.setup();
       const onDeleteEvent = vi.fn();
 
-      render(<EventManagementPanel {...defaultProps} onDeleteEvent={onDeleteEvent} />);
+      render(<EventsPanel {...defaultProps} onDeleteEvent={onDeleteEvent} />);
 
       const deleteBtn = screen.getByRole('button', { name: 'Delete Water Main Repair' });
       await user.click(deleteBtn);

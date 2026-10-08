@@ -77,8 +77,8 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
           type="button"
           className={`ciclista-toolbar-btn ${mode === 'studio' ? 'active ciclista-toolbar-btn--active' : ''}`}
           onClick={() => onModeChange('studio')}
-          aria-label="Studio Mode"
-          title="Studio Mode"
+          aria-label="Events"
+          title="Events"
           aria-pressed={mode === 'studio'}
         >
           <ShieldAlert size={20} className="ciclista-toolbar-icon" />

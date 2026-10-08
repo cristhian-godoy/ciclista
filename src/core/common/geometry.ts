@@ -149,3 +149,64 @@ export function findEdgesWithinRadius(
 
   return Array.from(matchingEdgeKeys);
 }
+
+/**
+ * GeoJSON Polygon geometry representing an enclosed geographical boundary.
+ */
+export interface GeoPolygonGeometry {
+  type: 'Polygon';
+  coordinates: [number, number][][];
+}
+
+/**
+ * Generates a GeoJSON Polygon representing a circle on the globe
+ * centered at a given coordinate with a specified radius in meters.
+ *
+ * @param center - Central geographic coordinate { lat, lng }.
+ * @param radiusMeters - Radius in meters.
+ * @param points - Number of polygon vertices (default: 64).
+ * @returns GeoJSON Polygon geometry.
+ */
+export function createGeoJSONCircle(
+  center: Coordinate,
+  radiusMeters: number,
+  points: number = 64,
+): GeoPolygonGeometry {
+  if (radiusMeters <= 0) {
+    return {
+      type: 'Polygon',
+      coordinates: [[]],
+    };
+  }
+
+  const coords: [number, number][] = [];
+  const km = radiusMeters / 1000;
+  const earthRadiusKm = 6371;
+  const distanceRatio = km / earthRadiusKm;
+  const centerLatRad = (center.lat * Math.PI) / 180;
+  const centerLngRad = (center.lng * Math.PI) / 180;
+
+  for (let i = 0; i < points; i++) {
+    const bearing = (i * 2 * Math.PI) / points;
+    const latRad = Math.asin(
+      Math.sin(centerLatRad) * Math.cos(distanceRatio) +
+        Math.cos(centerLatRad) * Math.sin(distanceRatio) * Math.cos(bearing),
+    );
+    const lngRad =
+      centerLngRad +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(distanceRatio) * Math.cos(centerLatRad),
+        Math.cos(distanceRatio) - Math.sin(centerLatRad) * Math.sin(latRad),
+      );
+    coords.push([(lngRad * 180) / Math.PI, (latRad * 180) / Math.PI]);
+  }
+
+  if (coords.length > 0) {
+    coords.push(coords[0]);
+  }
+
+  return {
+    type: 'Polygon',
+    coordinates: [coords],
+  };
+}

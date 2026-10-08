@@ -6,9 +6,11 @@ AttributionPanel.tsx
 	Accordion-style panel displaying third-party licensing and attributions.
 DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
-EventManagementPanel.test.tsx
-	Unit tests for Studio EventManagementPanel selection, effect gating, and event list interactions.
 EventManagementPanel.tsx
+	Backwards-compatibility re-export module forwarding to EventsPanel.
+EventsPanel.test.tsx
+	Unit tests for Studio EventsPanel selection, effect gating, and event list interactions.
+EventsPanel.tsx
 	Sidebar panel managing studio events, road blockages, and edge selections.
 GlobalControlsPanel.tsx
 	Global controls overlay panel housing theme toggles and data saver options.
