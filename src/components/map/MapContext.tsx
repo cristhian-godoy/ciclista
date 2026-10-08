@@ -101,6 +101,8 @@ export interface MapContextType {
   setAppMode: (mode: ToolbarMode) => void;
   landmarks: Landmark[];
   setLandmarks: React.Dispatch<React.SetStateAction<Landmark[]>>;
+  places?: Landmark[];
+  setPlaces?: React.Dispatch<React.SetStateAction<Landmark[]>>;
   selectedEdgeIds: string[];
   setSelectedEdgeIds: React.Dispatch<React.SetStateAction<string[]>>;
   selectionTool: 'click' | 'brush';
@@ -111,25 +113,38 @@ export interface MapContextType {
   setEvents: React.Dispatch<React.SetStateAction<MapEvent[]>>;
   onClearSelection: () => void;
 
-  // Landmark modal and operations
+  // Landmark/Place modal and operations
   landmarkModal?: LandmarkModalState;
   setLandmarkModal?: React.Dispatch<React.SetStateAction<LandmarkModalState>>;
+  placeModal?: PlaceModalState;
+  setPlaceModal?: React.Dispatch<React.SetStateAction<PlaceModalState>>;
   openCreateLandmarkModal?: (coord?: Coordinate | null) => void;
+  openCreatePlaceModal?: (coord?: Coordinate | null) => void;
   openEditLandmarkModal?: (landmark: Landmark) => void;
+  openEditPlaceModal?: (place: Landmark) => void;
   closeLandmarkModal?: () => void;
+  closePlaceModal?: () => void;
   onCreateLandmark?: (input: CreateLandmarkInput) => void;
+  onCreatePlace?: (input: CreateLandmarkInput) => void;
   onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
+  onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
   onDeleteLandmark?: (id: string) => void;
+  onDeletePlace?: (id: string) => void;
 }
 
 /**
- * State representing landmark creation or editing modal visibility and data.
+ * State representing landmark/place creation or editing modal visibility and data.
  */
 export interface LandmarkModalState {
   isOpen: boolean;
   landmark: Landmark | null;
   initialCoordinates: Coordinate | null;
 }
+
+/**
+ * State representing place modal visibility, entity data, and spatial coordinates.
+ */
+export type PlaceModalState = LandmarkModalState;
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const MapContext = createContext<MapContextType | null>(null);
@@ -172,6 +187,9 @@ interface MapProviderProps {
   landmarks?: Landmark[];
   onLandmarksChange?: React.Dispatch<React.SetStateAction<Landmark[]>>;
   initialLandmarks?: Landmark[];
+  places?: Landmark[];
+  onPlacesChange?: React.Dispatch<React.SetStateAction<Landmark[]>>;
+  initialPlaces?: Landmark[];
   selectedEdgeIds?: string[];
   onSelectedEdgeIdsChange?: React.Dispatch<React.SetStateAction<string[]>>;
   initialSelectedEdgeIds?: string[];
@@ -181,8 +199,11 @@ interface MapProviderProps {
   onEventsChange?: React.Dispatch<React.SetStateAction<MapEvent[]>>;
   initialEvents?: MapEvent[];
   onCreateLandmark?: (input: CreateLandmarkInput) => void;
+  onCreatePlace?: (input: CreateLandmarkInput) => void;
   onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
+  onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
   onDeleteLandmark?: (id: string) => void;
+  onDeletePlace?: (id: string) => void;
   children: React.ReactNode;
 }
 
@@ -230,6 +251,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   landmarks: controlledLandmarks,
   onLandmarksChange,
   initialLandmarks,
+  places: controlledPlaces,
+  onPlacesChange,
+  initialPlaces,
   selectedEdgeIds: controlledSelectedEdgeIds,
   onSelectedEdgeIdsChange,
   initialSelectedEdgeIds,
@@ -239,8 +263,11 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   onEventsChange,
   initialEvents,
   onCreateLandmark: onCreateLandmarkProp,
+  onCreatePlace: onCreatePlaceProp,
   onUpdateLandmark: onUpdateLandmarkProp,
+  onUpdatePlace: onUpdatePlaceProp,
   onDeleteLandmark: onDeleteLandmarkProp,
+  onDeletePlace: onDeletePlaceProp,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -281,9 +308,11 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const appMode = controlledAppMode ?? internalAppMode;
   const setAppMode = onAppModeChange ?? setInternalAppMode;
 
-  const [internalLandmarks, setInternalLandmarks] = useState<Landmark[]>(initialLandmarks ?? []);
-  const landmarks = controlledLandmarks ?? internalLandmarks;
-  const setLandmarks = onLandmarksChange ?? setInternalLandmarks;
+  const [internalLandmarks, setInternalLandmarks] = useState<Landmark[]>(
+    initialPlaces ?? initialLandmarks ?? [],
+  );
+  const landmarks = controlledPlaces ?? controlledLandmarks ?? internalLandmarks;
+  const setLandmarks = onPlacesChange ?? onLandmarksChange ?? setInternalLandmarks;
 
   const [internalSelectedEdgeIds, setInternalSelectedEdgeIds] = useState<string[]>(
     initialSelectedEdgeIds ?? [],
@@ -327,8 +356,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   };
 
   const handleCreateLandmark = (input: CreateLandmarkInput) => {
-    if (onCreateLandmarkProp) {
-      onCreateLandmarkProp(input);
+    const fn = onCreatePlaceProp ?? onCreateLandmarkProp;
+    if (fn) {
+      fn(input);
     } else {
       const created = createLandmarkDomain(input);
       setLandmarks((prev) => [created, ...prev]);
@@ -336,8 +366,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   };
 
   const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
-    if (onUpdateLandmarkProp) {
-      onUpdateLandmarkProp(id, updates);
+    const fn = onUpdatePlaceProp ?? onUpdateLandmarkProp;
+    if (fn) {
+      fn(id, updates);
     } else {
       setLandmarks((prev) =>
         prev.map((item) => (item.id === id ? updateLandmarkDomain(item, updates) : item)),
@@ -346,8 +377,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   };
 
   const handleDeleteLandmark = (id: string) => {
-    if (onDeleteLandmarkProp) {
-      onDeleteLandmarkProp(id);
+    const fn = onDeletePlaceProp ?? onDeleteLandmarkProp;
+    if (fn) {
+      fn(id);
     } else {
       setLandmarks((prev) => deleteLandmarkDomain(prev, id));
     }
@@ -410,6 +442,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         setAppMode,
         landmarks,
         setLandmarks,
+        places: landmarks,
+        setPlaces: setLandmarks,
         selectedEdgeIds,
         setSelectedEdgeIds,
         selectionTool,
@@ -421,12 +455,20 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onClearSelection,
         landmarkModal,
         setLandmarkModal,
+        placeModal: landmarkModal,
+        setPlaceModal: setLandmarkModal,
         openCreateLandmarkModal,
+        openCreatePlaceModal: openCreateLandmarkModal,
         openEditLandmarkModal,
+        openEditPlaceModal: openEditLandmarkModal,
         closeLandmarkModal,
+        closePlaceModal: closeLandmarkModal,
         onCreateLandmark: handleCreateLandmark,
+        onCreatePlace: handleCreateLandmark,
         onUpdateLandmark: handleUpdateLandmark,
+        onUpdatePlace: handleUpdateLandmark,
         onDeleteLandmark: handleDeleteLandmark,
+        onDeletePlace: handleDeleteLandmark,
       }}
     >
       {children}

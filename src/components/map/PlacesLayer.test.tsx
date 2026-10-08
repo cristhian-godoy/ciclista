@@ -2,12 +2,12 @@ import { render } from '@testing-library/react';
 import type maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Landmark } from '../../core/landmarks/types';
-import { LandmarksLayer } from './LandmarksLayer';
+import type { Place } from '../../hooks/usePlaces';
 import type { MapContextType } from './MapContext';
 import { MapContext } from './MapContext';
+import { PlacesLayer } from './PlacesLayer';
 
-describe('LandmarksLayer', () => {
+describe('PlacesLayer', () => {
   let mockMap: Partial<maplibregl.Map>;
   let mockSource: { setData: ReturnType<typeof vi.fn> };
   let addSourceMock: ReturnType<typeof vi.fn>;
@@ -17,9 +17,9 @@ describe('LandmarksLayer', () => {
   let onMock: ReturnType<typeof vi.fn>;
   let offMock: ReturnType<typeof vi.fn>;
 
-  const sampleLandmarks: Landmark[] = [
+  const samplePlaces: Place[] = [
     {
-      id: 'lm-1',
+      id: 'place-1',
       name: 'Home',
       category: 'home',
       lat: 48.137,
@@ -29,7 +29,7 @@ describe('LandmarksLayer', () => {
       updatedAt: 1000,
     },
     {
-      id: 'lm-2',
+      id: 'place-2',
       name: 'Office',
       category: 'work',
       lat: 48.145,
@@ -130,9 +130,10 @@ describe('LandmarksLayer', () => {
       isNavigating: false,
       rideStats: null,
       onStopNavigation: vi.fn(),
-      appMode: 'landmarks',
+      appMode: 'places',
       setAppMode: vi.fn(),
-      landmarks: sampleLandmarks,
+      places: samplePlaces,
+      landmarks: samplePlaces,
       setLandmarks: vi.fn(),
       selectedEdgeIds: [],
       setSelectedEdgeIds: vi.fn(),
@@ -160,7 +161,7 @@ describe('LandmarksLayer', () => {
 
     return render(
       <MapContext.Provider value={defaultContext}>
-        <LandmarksLayer />
+        <PlacesLayer />
       </MapContext.Provider>,
     );
   };
@@ -199,8 +200,8 @@ describe('LandmarksLayer', () => {
     );
   });
 
-  it('synchronizes landmarks data to the GeoJSON source', () => {
-    renderWithContext({ landmarks: sampleLandmarks });
+  it('synchronizes places data to the GeoJSON source', () => {
+    renderWithContext({ places: samplePlaces });
 
     expect(mockSource.setData).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -233,7 +234,7 @@ describe('LandmarksLayer', () => {
     );
   });
 
-  it('registers click and contextmenu listeners on landmark layers and cleans up on unmount', () => {
+  it('registers click and contextmenu listeners on place layers and cleans up on unmount', () => {
     const { unmount } = renderWithContext();
 
     expect(onMock).toHaveBeenCalledWith('click', 'landmarks-circle-layer', expect.any(Function));
@@ -263,12 +264,12 @@ describe('LandmarksLayer', () => {
     );
   });
 
-  it('opens edit modal when clicking existing landmark in landmarks mode', () => {
+  it('opens edit modal when clicking existing place in places mode', () => {
     const openEditLandmarkModalMock = vi.fn();
     const onStartDragMock = vi.fn();
 
     renderWithContext({
-      appMode: 'landmarks',
+      appMode: 'places',
       openEditLandmarkModal: openEditLandmarkModalMock,
       onStartDrag: onStartDragMock,
     });
@@ -282,17 +283,17 @@ describe('LandmarksLayer', () => {
     clickHandler({
       features: [
         {
-          properties: { id: 'lm-1', lat: 48.137, lng: 11.575 },
+          properties: { id: 'place-1', lat: 48.137, lng: 11.575 },
         },
       ],
       originalEvent: { shiftKey: false },
     });
 
-    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(sampleLandmarks[0]);
+    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(samplePlaces[0]);
     expect(onStartDragMock).not.toHaveBeenCalled();
   });
 
-  it('sets routing start pin when clicking existing landmark in routing mode', () => {
+  it('sets routing start pin when clicking existing place in routing mode', () => {
     const openEditLandmarkModalMock = vi.fn();
     const onStartDragMock = vi.fn();
 
@@ -311,7 +312,7 @@ describe('LandmarksLayer', () => {
     clickHandler({
       features: [
         {
-          properties: { id: 'lm-1', lat: 48.137, lng: 11.575 },
+          properties: { id: 'place-1', lat: 48.137, lng: 11.575 },
         },
       ],
       originalEvent: { shiftKey: false },
@@ -321,7 +322,7 @@ describe('LandmarksLayer', () => {
     expect(onStartDragMock).toHaveBeenCalledWith({ lat: 48.137, lng: 11.575 });
   });
 
-  it('opens edit modal when right clicking an existing landmark marker', () => {
+  it('opens edit modal when right clicking an existing place marker', () => {
     const openEditLandmarkModalMock = vi.fn();
     const preventDefaultMock = vi.fn();
 
@@ -339,13 +340,13 @@ describe('LandmarksLayer', () => {
     contextMenuHandler({
       features: [
         {
-          properties: { id: 'lm-2', lat: 48.145, lng: 11.585 },
+          properties: { id: 'place-2', lat: 48.145, lng: 11.585 },
         },
       ],
       originalEvent: { preventDefault: preventDefaultMock },
     });
 
     expect(preventDefaultMock).toHaveBeenCalled();
-    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(sampleLandmarks[1]);
+    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(samplePlaces[1]);
   });
 });

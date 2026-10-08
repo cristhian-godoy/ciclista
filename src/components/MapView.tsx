@@ -1,19 +1,18 @@
 import type maplibregl from 'maplibre-gl';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
-import { LandmarkModal } from './LandmarkModal';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { InspectorLayer } from './map/InspectorLayer';
-import { LandmarksLayer } from './map/LandmarksLayer';
-import { type LandmarkModalState, useMapContext } from './map/MapContext';
+import { type PlaceModalState, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
 import { NavigationLayer } from './map/NavigationLayer';
 import { NodePopup } from './map/NodePopup';
+import { PlacesLayer } from './map/PlacesLayer';
 import { RouteVariantsLayer } from './map/RouteVariantsLayer';
 import { SelectedEdgesLayer } from './map/SelectedEdgesLayer';
 import { SelectionToolsDock } from './map/SelectionToolsDock';
@@ -21,6 +20,7 @@ import { StartEndMarkers } from './map/StartEndMarkers';
 import { StreetGraphLayer } from './map/StreetGraphLayer';
 import { useMapInstance } from './map/useMapInstance';
 import { NavigationHUD } from './NavigationHUD';
+import { PlaceModal } from './PlaceModal';
 
 interface MapViewProps {
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
@@ -56,13 +56,27 @@ const MapViewContent: React.FC<{
     selectionTool,
     brushRadius,
     landmarks,
+    places,
     openCreateLandmarkModal,
+    openCreatePlaceModal,
     openEditLandmarkModal,
+    openEditPlaceModal,
     landmarkModal,
+    placeModal,
     closeLandmarkModal,
+    closePlaceModal,
     onCreateLandmark,
+    onCreatePlace,
     onUpdateLandmark,
+    onUpdatePlace,
   } = useMapContext();
+
+  const currentPlaces = useMemo(() => places ?? landmarks ?? [], [places, landmarks]);
+  const openCreatePlace = openCreatePlaceModal ?? openCreateLandmarkModal;
+  const openEditPlace = openEditPlaceModal ?? openEditLandmarkModal;
+  const closePlace = closePlaceModal ?? closeLandmarkModal;
+  const handleCreatePlace = onCreatePlace ?? onCreateLandmark;
+  const handleUpdatePlace = onUpdatePlace ?? onUpdateLandmark;
 
   const startCoordRef = useRef(startCoord);
   const endCoordRef = useRef(endCoord);
@@ -71,9 +85,9 @@ const MapViewContent: React.FC<{
   const selectionToolRef = useRef(selectionTool);
   const brushRadiusRef = useRef(brushRadius);
   const graphRef = useRef(graph);
-  const landmarksRef = useRef(landmarks);
-  const openCreateLandmarkModalRef = useRef(openCreateLandmarkModal);
-  const openEditLandmarkModalRef = useRef(openEditLandmarkModal);
+  const placesRef = useRef(currentPlaces);
+  const openCreatePlaceModalRef = useRef(openCreatePlace);
+  const openEditPlaceModalRef = useRef(openEditPlace);
   const onNodeSelectRef = useRef(onNodeSelect);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
@@ -89,9 +103,9 @@ const MapViewContent: React.FC<{
     selectionToolRef.current = selectionTool;
     brushRadiusRef.current = brushRadius;
     graphRef.current = graph;
-    landmarksRef.current = landmarks;
-    openCreateLandmarkModalRef.current = openCreateLandmarkModal;
-    openEditLandmarkModalRef.current = openEditLandmarkModal;
+    placesRef.current = currentPlaces;
+    openCreatePlaceModalRef.current = openCreatePlace;
+    openEditPlaceModalRef.current = openEditPlace;
     onNodeSelectRef.current = onNodeSelect;
     setManagedClusterIdRef.current = setManagedClusterId;
     setManagedNodeIdsRef.current = setManagedNodeIds;
@@ -105,9 +119,9 @@ const MapViewContent: React.FC<{
     selectionTool,
     brushRadius,
     graph,
-    landmarks,
-    openCreateLandmarkModal,
-    openEditLandmarkModal,
+    currentPlaces,
+    openCreatePlace,
+    openEditPlace,
     onNodeSelect,
     setManagedClusterId,
     setManagedNodeIds,
@@ -267,10 +281,10 @@ const MapViewContent: React.FC<{
 
     if (landmarkFeatures.length > 0 && landmarkFeatures[0]?.properties?.id) {
       const landmarkId = String(landmarkFeatures[0].properties.id);
-      const targetLandmark = landmarksRef.current?.find((lm) => lm.id === landmarkId);
-      if (targetLandmark) {
+      const targetPlace = placesRef.current?.find((lm) => lm.id === landmarkId);
+      if (targetPlace) {
         e.originalEvent?.preventDefault?.();
-        openEditLandmarkModalRef.current?.(targetLandmark);
+        openEditPlaceModalRef.current?.(targetPlace);
         return;
       }
     }
@@ -492,8 +506,8 @@ const MapViewContent: React.FC<{
       return;
     }
 
-    if (appModeRef.current === 'landmarks') {
-      openCreateLandmarkModalRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+    if (appModeRef.current === 'places' || (appModeRef.current as string) === 'landmarks') {
+      openCreatePlaceModalRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
       return;
     }
 
@@ -560,7 +574,7 @@ const MapViewContent: React.FC<{
           <StreetGraphLayer />
           <SelectedEdgesLayer />
           <BlockedEdgesLayer />
-          <LandmarksLayer />
+          <PlacesLayer />
           <RouteVariantsLayer />
           <BBoxBoundaryLayer />
           <StartEndMarkers />
@@ -576,19 +590,20 @@ const MapViewContent: React.FC<{
       <NavigationHUD />
       <ArrivalPanel />
       {(() => {
-        const activeLandmarkModal: LandmarkModalState = landmarkModal ?? {
-          isOpen: false,
-          landmark: null,
-          initialCoordinates: null,
-        };
+        const activeModal: PlaceModalState = placeModal ??
+          landmarkModal ?? {
+            isOpen: false,
+            landmark: null,
+            initialCoordinates: null,
+          };
         return (
-          <LandmarkModal
-            isOpen={activeLandmarkModal.isOpen}
-            landmark={activeLandmarkModal.landmark}
-            initialCoordinates={activeLandmarkModal.initialCoordinates}
-            onClose={closeLandmarkModal ?? (() => {})}
-            onCreateLandmark={onCreateLandmark}
-            onUpdateLandmark={onUpdateLandmark}
+          <PlaceModal
+            isOpen={activeModal.isOpen}
+            place={activeModal.landmark}
+            initialCoordinates={activeModal.initialCoordinates}
+            onClose={closePlace ?? (() => {})}
+            onCreatePlace={handleCreatePlace}
+            onUpdatePlace={handleUpdatePlace}
             currentMapCenter={
               map && typeof map.getCenter === 'function'
                 ? { lat: map.getCenter().lat, lng: map.getCenter().lng }

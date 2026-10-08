@@ -1,5 +1,5 @@
 import type maplibregl from 'maplibre-gl';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import { useMapContext } from './MapContext';
@@ -13,14 +13,25 @@ const BRAND_COLOR = '#38bdf8'; // Sky blue brand token
 const GLOW_COLOR = '#0284c7';
 
 /**
- * Map overlay layer rendering registered favorite places and landmarks as
- * distinct interactive points with category glows and labels.
+ * Map overlay layer rendering registered places as distinct interactive
+ * points with category glows and labels.
  *
  * @returns Null as this component orchestrates MapLibre imperative layers.
  */
-export const LandmarksLayer: React.FC = () => {
-  const { map, landmarks, onStartDrag, onEndDrag, appMode, openEditLandmarkModal } =
-    useMapContext();
+export const PlacesLayer: React.FC = () => {
+  const {
+    map,
+    places,
+    landmarks,
+    onStartDrag,
+    onEndDrag,
+    appMode,
+    openEditPlaceModal,
+    openEditLandmarkModal,
+  } = useMapContext();
+
+  const currentPlaces = useMemo(() => places ?? landmarks ?? [], [places, landmarks]);
+  const handleOpenEdit = openEditPlaceModal ?? openEditLandmarkModal;
 
   // Register GeoJSON source and layers
   useEffect(() => {
@@ -100,26 +111,26 @@ export const LandmarksLayer: React.FC = () => {
     };
   }, [map]);
 
-  // Synchronize landmarks state to GeoJSON source data
+  // Synchronize places state to GeoJSON source data
   useEffect(() => {
     if (!map) return;
 
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (!source || typeof source.setData !== 'function') return;
 
-    const features: GeoJSON.Feature<GeoJSON.Point>[] = (landmarks || []).map((landmark) => ({
+    const features: GeoJSON.Feature<GeoJSON.Point>[] = currentPlaces.map((place) => ({
       type: 'Feature',
       geometry: {
         type: 'Point',
-        coordinates: [landmark.lng, landmark.lat],
+        coordinates: [place.lng, place.lat],
       },
       properties: {
-        id: landmark.id,
-        name: landmark.name,
-        category: landmark.category,
-        description: landmark.description ?? '',
-        lat: landmark.lat,
-        lng: landmark.lng,
+        id: place.id,
+        name: place.name,
+        category: place.category,
+        description: place.description ?? '',
+        lat: place.lat,
+        lng: place.lng,
       },
     }));
 
@@ -127,9 +138,9 @@ export const LandmarksLayer: React.FC = () => {
       type: 'FeatureCollection',
       features,
     });
-  }, [map, landmarks]);
+  }, [map, currentPlaces]);
 
-  // Click and contextmenu handlers on landmark layers
+  // Click and contextmenu handlers on place layers
   useEffect(() => {
     if (!map) return;
 
@@ -137,13 +148,13 @@ export const LandmarksLayer: React.FC = () => {
       const feat = e.features?.[0];
       if (!feat || !feat.properties) return;
 
-      const landmarkId = String(feat.properties.id);
-      const target = (landmarks || []).find((lm) => lm.id === landmarkId);
+      const placeId = String(feat.properties.id);
+      const target = currentPlaces.find((lm) => lm.id === placeId);
 
-      // In landmarks mode: clicking existing landmark opens edit modal rather than routing pins
-      if (appMode === 'landmarks') {
+      // In places mode: clicking existing place opens edit modal rather than routing pins
+      if (appMode === 'places' || (appMode as string) === 'landmarks') {
         if (target) {
-          openEditLandmarkModal?.(target);
+          handleOpenEdit?.(target);
         }
         return;
       }
@@ -165,10 +176,10 @@ export const LandmarksLayer: React.FC = () => {
       if (!feat || !feat.properties) return;
       e.originalEvent?.preventDefault?.();
 
-      const landmarkId = String(feat.properties.id);
-      const target = (landmarks || []).find((lm) => lm.id === landmarkId);
+      const placeId = String(feat.properties.id);
+      const target = currentPlaces.find((lm) => lm.id === placeId);
       if (target) {
-        openEditLandmarkModal?.(target);
+        handleOpenEdit?.(target);
       }
     };
 
@@ -181,7 +192,9 @@ export const LandmarksLayer: React.FC = () => {
       map.off('contextmenu', CIRCLE_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
       map.off('contextmenu', LABEL_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
     };
-  }, [map, landmarks, appMode, onStartDrag, onEndDrag, openEditLandmarkModal]);
+  }, [map, currentPlaces, appMode, onStartDrag, onEndDrag, handleOpenEdit]);
 
   return null;
 };
+
+export { PlacesLayer as LandmarksLayer };

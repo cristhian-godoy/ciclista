@@ -15,10 +15,10 @@ import type {
   WorkerRoutingResponse,
 } from './core/router/types';
 import { useInspectorMode } from './hooks/useInspectorMode';
-import { useLandmarks } from './hooks/useLandmarks';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
+import { usePlaces } from './hooks/usePlaces';
 import { useRoutingState } from './hooks/useRoutingState';
 
 const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage'));
@@ -33,7 +33,7 @@ function DashboardApp() {
   const [events, setEvents] = useState<MapEvent[]>([]);
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
 
-  const { landmarks, addLandmark, updateLandmark, deleteLandmark, setLandmarks } = useLandmarks();
+  const { places, addPlace, updatePlace, deletePlace, setPlaces } = usePlaces();
 
   const {
     isInspectorModeActive,
@@ -203,11 +203,16 @@ function DashboardApp() {
       onStopNavigation={navigation.stopNavigation}
       appMode={appMode}
       onAppModeChange={setAppMode}
-      landmarks={landmarks}
-      onLandmarksChange={setLandmarks}
-      onCreateLandmark={addLandmark}
-      onUpdateLandmark={updateLandmark}
-      onDeleteLandmark={deleteLandmark}
+      places={places}
+      onPlacesChange={setPlaces}
+      onCreatePlace={addPlace}
+      onUpdatePlace={updatePlace}
+      onDeletePlace={deletePlace}
+      landmarks={places}
+      onLandmarksChange={setPlaces}
+      onCreateLandmark={addPlace}
+      onUpdateLandmark={updatePlace}
+      onDeleteLandmark={deletePlace}
       events={events}
       onEventsChange={setEvents}
       selectedEdgeIds={selectedEdgeIds}
@@ -252,10 +257,14 @@ function DashboardApp() {
           events={events}
           selectedEdgeIds={selectedEdgeIds}
           onClearSelection={() => setSelectedEdgeIds([])}
-          landmarks={landmarks}
-          onCreateLandmark={addLandmark}
-          onUpdateLandmark={updateLandmark}
-          onDeleteLandmark={deleteLandmark}
+          places={places}
+          onCreatePlace={addPlace}
+          onUpdatePlace={updatePlace}
+          onDeletePlace={deletePlace}
+          landmarks={places}
+          onCreateLandmark={addPlace}
+          onUpdateLandmark={updatePlace}
+          onDeleteLandmark={deletePlace}
           onSetStartCoord={handleStartDrag}
           onSetEndCoord={handleEndDrag}
         />

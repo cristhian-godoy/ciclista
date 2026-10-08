@@ -75,10 +75,10 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
         </svg>
       </button>
       <button
-        aria-label="Landmarks Mode"
+        aria-label="Places Mode"
         aria-pressed="false"
         class="ciclista-toolbar-btn "
-        title="Landmarks (Favorites & POI)"
+        title="Places"
         type="button"
       >
         <svg

@@ -4,14 +4,14 @@ import React from 'react';
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
  */
-export type ToolbarMode = 'routing' | 'landmarks' | 'studio';
+export type ToolbarMode = 'routing' | 'places' | 'studio' | 'landmarks';
 
 /**
  * Properties for the SideToolbar component.
  */
 export interface SideToolbarProps {
   /**
-   * The currently active mode ('routing', 'landmarks', or 'studio').
+   * The currently active mode ('routing', 'places', or 'studio').
    */
   mode: ToolbarMode;
   /**
@@ -40,6 +40,8 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
     }
   };
 
+  const isPlacesActive = mode === 'places' || (mode as string) === 'landmarks';
+
   return (
     <aside className="ciclista-toolbar" aria-label="Main application toolbar">
       <div className="ciclista-toolbar-header">
@@ -62,11 +64,11 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
 
         <button
           type="button"
-          className={`ciclista-toolbar-btn ${mode === 'landmarks' ? 'active ciclista-toolbar-btn--active' : ''}`}
-          onClick={() => onModeChange('landmarks')}
-          aria-label="Landmarks Mode"
-          title="Landmarks (Favorites & POI)"
-          aria-pressed={mode === 'landmarks'}
+          className={`ciclista-toolbar-btn ${isPlacesActive ? 'active ciclista-toolbar-btn--active' : ''}`}
+          onClick={() => onModeChange('places')}
+          aria-label="Places Mode"
+          title="Places"
+          aria-pressed={isPlacesActive}
         >
           <Star size={20} className="ciclista-toolbar-icon" />
         </button>

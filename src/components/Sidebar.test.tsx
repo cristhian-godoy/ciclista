@@ -204,10 +204,10 @@ describe('Sidebar Integration', () => {
     expect(handleDeleteEvent).toHaveBeenCalledWith('event-1');
   });
 
-  it('swaps content to LandmarksPanel when in landmarks mode', () => {
-    const mockLandmarks = [
+  it('swaps content to PlacesPanel when in places mode', () => {
+    const mockPlaces = [
       {
-        id: 'lm-test-1',
+        id: 'place-test-1',
         name: 'Home Sanctuary',
         category: 'home' as const,
         lat: 48.137,
@@ -217,9 +217,9 @@ describe('Sidebar Integration', () => {
       },
     ];
 
-    render(<Sidebar {...defaultProps} appMode="landmarks" landmarks={mockLandmarks} />);
+    render(<Sidebar {...defaultProps} appMode="places" landmarks={mockPlaces} />);
 
-    expect(screen.getByRole('heading', { name: 'Favorites' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Places' })).toBeInTheDocument();
     expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
   });
@@ -231,14 +231,14 @@ describe('Sidebar Integration', () => {
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
     unmount();
 
-    // 2. Landmarks mode
-    const { unmount: unmountLandmarks } = render(<Sidebar {...defaultProps} appMode="landmarks" />);
-    expect(screen.getByRole('heading', { name: 'Favorites' })).toBeInTheDocument();
+    // 2. Places mode
+    const { unmount: unmountPlaces } = render(<Sidebar {...defaultProps} appMode="places" />);
+    expect(screen.getByRole('heading', { name: 'Places' })).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: 'Landmarks & Favorites' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
-    unmountLandmarks();
+    unmountPlaces();
 
     // 3. Studio mode
     render(<Sidebar {...defaultProps} appMode="studio" />);

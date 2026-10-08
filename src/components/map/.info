@@ -13,7 +13,7 @@ SelectionToolsDock.test.tsx
 SelectionToolsDock.tsx
 	Floating controls dock managing studio selection modes, radius brush, and counters.
 MapContextMenu.test.tsx
-	Unit tests for floating map context menu and Add Favorite actions.
+	Unit tests for floating map context menu and Add Place actions.
 MapContextMenu.tsx
 	Floating context menu for setting start/end route points on right-click.
 MapLayerDock.test.tsx
@@ -22,10 +22,10 @@ MapLayerDock.tsx
 	Collapsible bottom-right dock controlling map overlay filters.
 InspectorLayer.tsx
 	Map overlay rendering clickable route nodes and divergent alternative path segments in inspector mode.
-LandmarksLayer.test.tsx
-	Unit tests verifying landmarks and favorite places layer MapLibre integration.
-LandmarksLayer.tsx
-	Map overlay rendering favorite places and landmarks as styled point markers with category glows and labels.
+PlacesLayer.test.tsx
+	Unit tests verifying places layer MapLibre integration and click/contextmenu actions.
+PlacesLayer.tsx
+	Map overlay rendering favorite places as styled point markers with category glows and labels.
 NavigationLayer.test.tsx
 	Integration tests verifying coordinates synchronization and camera easing.
 NavigationLayer.tsx

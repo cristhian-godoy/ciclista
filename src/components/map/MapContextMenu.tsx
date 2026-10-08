@@ -17,6 +17,7 @@ export const MapContextMenu: React.FC = () => {
     onStartDrag,
     onEndDrag,
     isNavigating,
+    openCreatePlaceModal,
     openCreateLandmarkModal,
   } = useMapContext();
 
@@ -109,12 +110,13 @@ export const MapContextMenu: React.FC = () => {
       <button
         className="map-context-menu-item"
         onClick={() => {
-          openCreateLandmarkModal?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+          const createModalFn = openCreatePlaceModal ?? openCreateLandmarkModal;
+          createModalFn?.({ lat: contextMenu.lat, lng: contextMenu.lng });
           setContextMenu((prev) => ({ ...prev, visible: false }));
         }}
       >
-        <Star size={14} className="context-icon-favorite" />
-        <span>Add Favorite</span>
+        <Star size={14} className="context-icon-place context-icon-favorite" />
+        <span>Add Place</span>
       </button>
     </div>
   );

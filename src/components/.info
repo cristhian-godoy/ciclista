@@ -18,14 +18,14 @@ IntersectionDelaySection.tsx
 	Render control node delay configuration input fields.
 InspectorPanel.tsx
 	Panel displaying side-by-side comparison of chosen routing edge vs alternatives.
-LandmarksPanel.test.tsx
-	Unit tests for favorite places and landmarks panel creation, editing, and routing delegation.
-LandmarksPanel.tsx
-	Sidebar panel managing favorite places, POI landmarks, and quick routing points.
-LandmarkModal.test.tsx
-	Unit tests for landmark creation and editing modal dialog.
-LandmarkModal.tsx
-	Modal dialog housing the favorite place creation and editing form.
+PlacesPanel.test.tsx
+	Unit tests for places panel creation, editing, category filtering, and routing delegation.
+PlacesPanel.tsx
+	Sidebar panel managing favorite places with category filtering, search, and quick routing points.
+PlaceModal.test.tsx
+	Unit tests for category-first searchable place creation and editing modal dialog.
+PlaceModal.tsx
+	Modal dialog housing the category-first searchable place creation and editing form.
 Modal.test.tsx
 	Unit tests for reusable Modal component accessibility and interactions.
 Modal.tsx
@@ -35,7 +35,7 @@ common
 MapView.test.tsx
 	Unit tests for MapView container, studio mode selection tools, and drag interactions.
 MapViewInteraction.test.tsx
-	Unit tests for contextual left click, right click landmark interactions, and traffic light selection.
+	Unit tests for contextual left click, right click place interactions, and traffic light selection.
 MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers, studio selection tools, and interactive layers.
 NavigationHUD.tsx
@@ -65,7 +65,7 @@ RulesSelectorFields.tsx
 Sidebar.test.tsx
 	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx
-	Dashboard sidebar layout rendering dynamic active section headers, route configurations, favorites, and studio panels.
+	Dashboard sidebar layout rendering dynamic active section headers, route configurations, places, and studio panels.
 SideToolbar.test.tsx
 	Unit tests for SideToolbar branding, navigation mode buttons, and test runner link.
 SideToolbar.tsx

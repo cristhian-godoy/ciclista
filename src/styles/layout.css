@@ -534,25 +534,29 @@
   padding: var(--ciclista-spacing-md) 0;
 }
 
-/* Landmarks & Favorite Places Panel */
+/* Places Panel */
+.ciclista-places-panel,
 .ciclista-landmark-panel {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-md);
 }
 
+.ciclista-places-header,
 .ciclista-landmark-header {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-xs);
 }
 
+.ciclista-places-header-title,
 .ciclista-landmark-header-title {
   display: flex;
   align-items: center;
   gap: var(--ciclista-spacing-sm);
 }
 
+.ciclista-places-header-title h2,
 .ciclista-landmark-header-title h2 {
   font-size: var(--ciclista-font-lg);
   font-weight: 600;
@@ -560,35 +564,41 @@
   margin-bottom: 0;
 }
 
+.ciclista-places-header-icon,
 .ciclista-landmark-header-icon {
   color: var(--ciclista-color-brand-secondary);
   flex-shrink: 0;
 }
 
+.ciclista-places-subtitle,
 .ciclista-landmark-subtitle {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-muted);
   margin: 0;
 }
 
+.ciclista-place-form,
 .ciclista-landmark-form {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-md);
 }
 
+.ciclista-place-form-header,
 .ciclista-landmark-form-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+.ciclista-place-cancel-btn,
 .ciclista-landmark-cancel-btn {
   padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
   font-size: var(--ciclista-font-xs);
   width: auto;
 }
 
+.ciclista-place-error,
 .ciclista-landmark-error {
   padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
   border-radius: var(--ciclista-radius-xs);
@@ -600,12 +610,14 @@
   font-size: var(--ciclista-font-xs);
 }
 
+.ciclista-place-coords-grid,
 .ciclista-landmark-coords-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ciclista-spacing-sm);
 }
 
+.ciclista-place-prefill-group,
 .ciclista-landmark-prefill-group {
   display: flex;
   flex-wrap: wrap;
@@ -613,11 +625,13 @@
   gap: var(--ciclista-spacing-xs);
 }
 
+.ciclista-place-prefill-label,
 .ciclista-landmark-prefill-label {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-muted);
 }
 
+.ciclista-place-prefill-btn,
 .ciclista-landmark-prefill-btn {
   padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
   font-size: var(--ciclista-font-xs);
@@ -625,18 +639,21 @@
   gap: var(--ciclista-spacing-xs);
 }
 
+.ciclista-places-controls-card,
 .ciclista-landmark-controls-card {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-sm);
 }
 
+.ciclista-places-search-bar,
 .ciclista-landmark-search-bar {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+.ciclista-places-search-icon,
 .ciclista-landmark-search-icon {
   position: absolute;
   left: var(--ciclista-spacing-sm);
@@ -644,32 +661,38 @@
   pointer-events: none;
 }
 
+.ciclista-places-search-input,
 .ciclista-landmark-search-input {
   padding-left: var(--ciclista-spacing-xl);
 }
 
+.ciclista-places-filters-row,
 .ciclista-landmark-filters-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ciclista-spacing-sm);
 }
 
+.ciclista-places-filter-group,
 .ciclista-landmark-filter-group {
   gap: var(--ciclista-spacing-2xs);
 }
 
+.ciclista-places-list-card,
 .ciclista-landmark-list-card {
   display: flex;
   flex-direction: column;
   gap: var(--ciclista-spacing-md);
 }
 
+.ciclista-places-list-header,
 .ciclista-landmark-list-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+.ciclista-places-list,
 .ciclista-landmark-list {
   list-style: none;
   display: flex;
@@ -679,6 +702,7 @@
   margin: 0;
 }
 
+.ciclista-places-empty,
 .ciclista-landmark-empty {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-muted);
@@ -686,6 +710,7 @@
   padding: var(--ciclista-spacing-md) 0;
 }
 
+.ciclista-places-item,
 .ciclista-landmark-item {
   display: flex;
   flex-direction: column;
@@ -698,6 +723,7 @@
   border-style: solid;
 }
 
+.ciclista-places-item-header,
 .ciclista-landmark-item-header {
   display: flex;
   align-items: center;
@@ -705,6 +731,7 @@
   gap: var(--ciclista-spacing-sm);
 }
 
+.ciclista-places-item-title-group,
 .ciclista-landmark-item-title-group {
   display: flex;
   align-items: center;
@@ -712,6 +739,7 @@
   min-width: 0;
 }
 
+.ciclista-places-category-badge,
 .ciclista-landmark-category-badge {
   display: inline-flex;
   align-items: center;
@@ -724,6 +752,7 @@
   text-transform: capitalize;
 }
 
+.ciclista-places-item-name,
 .ciclista-landmark-item-name {
   font-size: var(--ciclista-font-sm);
   font-weight: 600;
@@ -733,6 +762,7 @@
   white-space: nowrap;
 }
 
+.ciclista-places-item-actions,
 .ciclista-landmark-item-actions {
   display: flex;
   align-items: center;
@@ -740,29 +770,34 @@
   flex-shrink: 0;
 }
 
+.ciclista-places-action-btn,
 .ciclista-landmark-action-btn {
   padding: var(--ciclista-spacing-xs);
   width: auto;
   border-radius: var(--ciclista-radius-xs);
 }
 
+.ciclista-places-item-desc,
 .ciclista-landmark-item-desc {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-secondary);
   margin: 0;
 }
 
+.ciclista-places-item-meta,
 .ciclista-landmark-item-meta {
   display: flex;
   align-items: center;
 }
 
+.ciclista-places-item-coords,
 .ciclista-landmark-item-coords {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-muted);
   font-family: monospace;
 }
 
+.ciclista-places-routing-actions,
 .ciclista-landmark-routing-actions {
   display: flex;
   align-items: center;
@@ -770,6 +805,7 @@
   margin-top: var(--ciclista-spacing-2xs);
 }
 
+.ciclista-places-route-btn,
 .ciclista-landmark-route-btn {
   padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-xs);
   font-size: var(--ciclista-font-xs);

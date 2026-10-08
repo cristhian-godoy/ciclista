@@ -10,7 +10,7 @@ describe('SideToolbar Component', () => {
 
     expect(screen.getByLabelText('Ciclista')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Routing Mode' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Landmarks Mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Places Mode' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Studio Mode' })).toBeInTheDocument();
 
     const testRunnerLink = screen.getByRole('link', { name: 'Test Runner' });
@@ -22,26 +22,26 @@ describe('SideToolbar Component', () => {
     render(<SideToolbar mode="routing" onModeChange={vi.fn()} />);
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
-    const landmarksBtn = screen.getByRole('button', { name: 'Landmarks Mode' });
+    const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
     const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
 
     expect(routingBtn).toHaveClass('active');
     expect(routingBtn).toHaveAttribute('aria-pressed', 'true');
-    expect(landmarksBtn).not.toHaveClass('active');
-    expect(landmarksBtn).toHaveAttribute('aria-pressed', 'false');
+    expect(placesBtn).not.toHaveClass('active');
+    expect(placesBtn).toHaveAttribute('aria-pressed', 'false');
     expect(studioBtn).not.toHaveClass('active');
     expect(studioBtn).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('marks landmarks mode as active when mode is landmarks', () => {
-    render(<SideToolbar mode="landmarks" onModeChange={vi.fn()} />);
+  it('marks places mode as active when mode is places', () => {
+    render(<SideToolbar mode="places" onModeChange={vi.fn()} />);
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
-    const landmarksBtn = screen.getByRole('button', { name: 'Landmarks Mode' });
+    const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
     const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
 
-    expect(landmarksBtn).toHaveClass('active');
-    expect(landmarksBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(placesBtn).toHaveClass('active');
+    expect(placesBtn).toHaveAttribute('aria-pressed', 'true');
     expect(routingBtn).not.toHaveClass('active');
     expect(routingBtn).toHaveAttribute('aria-pressed', 'false');
     expect(studioBtn).not.toHaveClass('active');
@@ -52,15 +52,15 @@ describe('SideToolbar Component', () => {
     render(<SideToolbar mode="studio" onModeChange={vi.fn()} />);
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
-    const landmarksBtn = screen.getByRole('button', { name: 'Landmarks Mode' });
+    const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
     const studioBtn = screen.getByRole('button', { name: 'Studio Mode' });
 
     expect(studioBtn).toHaveClass('active');
     expect(studioBtn).toHaveAttribute('aria-pressed', 'true');
     expect(routingBtn).not.toHaveClass('active');
     expect(routingBtn).toHaveAttribute('aria-pressed', 'false');
-    expect(landmarksBtn).not.toHaveClass('active');
-    expect(landmarksBtn).toHaveAttribute('aria-pressed', 'false');
+    expect(placesBtn).not.toHaveClass('active');
+    expect(placesBtn).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('invokes onModeChange with routing when Routing Mode button is clicked', async () => {
@@ -76,17 +76,17 @@ describe('SideToolbar Component', () => {
     expect(handleModeChange).toHaveBeenCalledWith('routing');
   });
 
-  it('invokes onModeChange with landmarks when Landmarks Mode button is clicked', async () => {
+  it('invokes onModeChange with places when Places Mode button is clicked', async () => {
     const user = userEvent.setup();
     const handleModeChange = vi.fn();
 
     render(<SideToolbar mode="routing" onModeChange={handleModeChange} />);
 
-    const landmarksBtn = screen.getByRole('button', { name: 'Landmarks Mode' });
-    await user.click(landmarksBtn);
+    const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
+    await user.click(placesBtn);
 
     expect(handleModeChange).toHaveBeenCalledTimes(1);
-    expect(handleModeChange).toHaveBeenCalledWith('landmarks');
+    expect(handleModeChange).toHaveBeenCalledWith('places');
   });
 
   it('invokes onModeChange with studio when Studio Mode button is clicked', async () => {

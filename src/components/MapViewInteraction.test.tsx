@@ -43,7 +43,7 @@ describe('MapView Contextual Map Interactions', () => {
   let openEditLandmarkModalMock: Mock<(landmark: Landmark) => void>;
   let onNodeSelectMock: Mock<(node: GraphNode | null) => void>;
   let setManagedClusterIdMock: Mock<(id: string | null) => void>;
-  let setManagedNodeIdsMock: Mock<(ids: string[]) => void>;
+  let setManagedNodeIdsMock: Mock<React.Dispatch<React.SetStateAction<string[]>>>;
   let setContextMenuMock: ReturnType<typeof vi.fn>;
 
   const sampleLandmark: Landmark = {

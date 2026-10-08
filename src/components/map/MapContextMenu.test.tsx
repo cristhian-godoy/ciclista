@@ -125,20 +125,20 @@ describe('MapContextMenu Component', () => {
     );
   };
 
-  it('renders context menu options including Add Favorite', () => {
+  it('renders context menu options including Add Place', () => {
     renderWithContext();
 
-    expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Place/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Start Route Here/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /End Route Here/i })).toBeInTheDocument();
   });
 
-  it('calls openCreateLandmarkModal with spatial coordinates on clicking Add Favorite', async () => {
+  it('calls openCreateLandmarkModal with spatial coordinates on clicking Add Place', async () => {
     const user = userEvent.setup();
     renderWithContext();
 
-    const addFavoriteBtn = screen.getByRole('button', { name: /Add Favorite/i });
-    await user.click(addFavoriteBtn);
+    const addPlaceBtn = screen.getByRole('button', { name: /Add Place/i });
+    await user.click(addPlaceBtn);
 
     expect(openCreateLandmarkModalMock).toHaveBeenCalledWith({
       lat: 48.137,
@@ -147,10 +147,10 @@ describe('MapContextMenu Component', () => {
     expect(setContextMenuMock).toHaveBeenCalled();
   });
 
-  it('renders Add Favorite even when active navigation is in progress', () => {
+  it('renders Add Place even when active navigation is in progress', () => {
     renderWithContext({ isNavigating: true });
 
-    expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Place/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Start Route Here/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /End Route Here/i })).not.toBeInTheDocument();
   });

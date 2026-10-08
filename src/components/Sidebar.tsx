@@ -27,8 +27,8 @@ import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
 import { EventManagementPanel } from './EventManagementPanel';
 import { InspectorPanel } from './InspectorPanel';
-import { LandmarksPanel } from './LandmarksPanel';
 import { MapContext } from './map/MapContext';
+import { PlacesPanel } from './PlacesPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
@@ -80,6 +80,10 @@ export interface SidebarProps {
    */
   landmarks?: Landmark[];
   /**
+   * Alias for landmarks collection.
+   */
+  places?: Landmark[];
+  /**
    * Callback fired when creating a new event in Studio mode.
    */
   onCreateEvent?: (name: string, description?: string) => void;
@@ -96,17 +100,29 @@ export interface SidebarProps {
    */
   onClearSelection?: () => void;
   /**
-   * Callback fired when creating a new landmark.
+   * Callback fired when creating a new landmark or place.
    */
   onCreateLandmark?: (input: CreateLandmarkInput) => void;
   /**
-   * Callback fired when modifying a landmark.
+   * Callback fired when creating a new place.
+   */
+  onCreatePlace?: (input: CreateLandmarkInput) => void;
+  /**
+   * Callback fired when modifying a landmark or place.
    */
   onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
   /**
-   * Callback fired when deleting a landmark.
+   * Callback fired when modifying a place.
+   */
+  onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
+  /**
+   * Callback fired when deleting a landmark or place.
    */
   onDeleteLandmark?: (id: string) => void;
+  /**
+   * Callback fired when deleting a place.
+   */
+  onDeletePlace?: (id: string) => void;
   /**
    * Callback fired when setting start route pin from a landmark.
    */
@@ -150,13 +166,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   events,
   selectedEdgeIds,
   landmarks,
+  places,
   onCreateEvent,
   onToggleEvent,
   onDeleteEvent,
   onClearSelection,
   onCreateLandmark,
+  onCreatePlace,
   onUpdateLandmark,
+  onUpdatePlace,
   onDeleteLandmark,
+  onDeletePlace,
   onSetStartCoord,
   onSetEndCoord,
 }) => {
@@ -167,11 +187,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentAppMode = appMode ?? mapCtx?.appMode ?? 'routing';
   const currentEvents = events ?? mapCtx?.events ?? [];
   const currentSelectedEdgeIds = selectedEdgeIds ?? mapCtx?.selectedEdgeIds ?? [];
-  const currentLandmarks = landmarks ?? mapCtx?.landmarks ?? [];
+  const currentLandmarks = places ?? landmarks ?? mapCtx?.places ?? mapCtx?.landmarks ?? [];
 
   const handleCreateLandmark = (input: CreateLandmarkInput) => {
-    if (onCreateLandmark) {
-      onCreateLandmark(input);
+    const fn = onCreatePlace ?? onCreateLandmark;
+    if (fn) {
+      fn(input);
       return;
     }
     const created = createLandmarkDomain(input);
@@ -179,8 +200,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
-    if (onUpdateLandmark) {
-      onUpdateLandmark(id, updates);
+    const fn = onUpdatePlace ?? onUpdateLandmark;
+    if (fn) {
+      fn(id, updates);
       return;
     }
     mapCtx?.setLandmarks((prev) =>
@@ -189,8 +211,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleDeleteLandmark = (id: string) => {
-    if (onDeleteLandmark) {
-      onDeleteLandmark(id);
+    const fn = onDeletePlace ?? onDeleteLandmark;
+    if (fn) {
+      fn(id);
       return;
     }
     mapCtx?.setLandmarks((prev) => deleteLandmarkDomain(prev, id));
@@ -284,10 +307,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ShieldAlert size={20} className="sidebar-header-icon" />
               <h2>Studio: Event Management</h2>
             </>
-          ) : currentAppMode === 'landmarks' ? (
+          ) : currentAppMode === 'places' || (currentAppMode as string) === 'landmarks' ? (
             <>
               <Star size={20} className="sidebar-header-icon" />
-              <h2>Favorites</h2>
+              <h2>Places</h2>
             </>
           ) : (
             <>
@@ -307,12 +330,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onDeleteEvent={handleDeleteEvent}
               onClearSelection={handleClearSelection}
             />
-          ) : currentAppMode === 'landmarks' ? (
-            <LandmarksPanel
-              landmarks={currentLandmarks}
-              onCreateLandmark={handleCreateLandmark}
-              onUpdateLandmark={handleUpdateLandmark}
-              onDeleteLandmark={handleDeleteLandmark}
+          ) : currentAppMode === 'places' || (currentAppMode as string) === 'landmarks' ? (
+            <PlacesPanel
+              places={currentLandmarks}
+              onCreatePlace={handleCreateLandmark}
+              onUpdatePlace={handleUpdateLandmark}
+              onDeletePlace={handleDeleteLandmark}
               onSetStartCoord={handleSetStartCoord}
               onSetEndCoord={handleSetEndCoord}
               onCenterMap={handleCenterMap}
