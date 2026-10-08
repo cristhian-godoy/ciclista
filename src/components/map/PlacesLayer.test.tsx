@@ -322,13 +322,17 @@ describe('PlacesLayer', () => {
     expect(onStartDragMock).toHaveBeenCalledWith({ lat: 48.137, lng: 11.575 });
   });
 
-  it('opens edit modal when right clicking an existing place marker', () => {
+  it('opens context menu and does NOT directly open edit modal when right clicking an existing place marker', () => {
     const openEditLandmarkModalMock = vi.fn();
+    const setContextMenuMock = vi.fn();
     const preventDefaultMock = vi.fn();
 
     renderWithContext({
       appMode: 'routing',
       openEditLandmarkModal: openEditLandmarkModalMock,
+      setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+        React.SetStateAction<import('./MapContext').ContextMenuData>
+      >,
     });
 
     const contextMenuHandler = onMock.mock.calls.find(
@@ -338,6 +342,7 @@ describe('PlacesLayer', () => {
     expect(contextMenuHandler).toBeDefined();
 
     contextMenuHandler({
+      point: { x: 120, y: 180 },
       features: [
         {
           properties: { id: 'place-2', lat: 48.145, lng: 11.585 },
@@ -347,6 +352,16 @@ describe('PlacesLayer', () => {
     });
 
     expect(preventDefaultMock).toHaveBeenCalled();
-    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(samplePlaces[1]);
+    expect(openEditLandmarkModalMock).not.toHaveBeenCalled();
+    expect(setContextMenuMock).toHaveBeenCalledWith({
+      visible: true,
+      x: 120,
+      y: 180,
+      lng: 11.585,
+      lat: 48.145,
+      crossingId: null,
+      nodeIds: null,
+      placeId: 'place-2',
+    });
   });
 });

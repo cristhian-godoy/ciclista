@@ -32,6 +32,7 @@ export interface ContextMenuData {
   lat: number;
   crossingId: string | null;
   nodeIds: string | null;
+  placeId?: string | null;
 }
 
 /**
@@ -312,6 +313,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     lat: 0,
     crossingId: null,
     nodeIds: null,
+    placeId: null,
   });
 
   const [internalAppMode, setInternalAppMode] = useState<ToolbarMode>(initialAppMode ?? 'routing');

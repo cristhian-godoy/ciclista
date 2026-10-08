@@ -37,6 +37,7 @@ export const StreetGraphLayer: React.FC = () => {
     setManagedClusterId,
     setManagedNodeIds,
     onNodeSelect,
+    isPlacingPlace,
   } = useMapContext();
 
   // Keep callback handlers in refs to prevent stale closures in map listeners
@@ -44,6 +45,11 @@ export const StreetGraphLayer: React.FC = () => {
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
   const graphRef = useRef(graph);
+  const isPlacingPlaceRef = useRef(isPlacingPlace);
+
+  useEffect(() => {
+    isPlacingPlaceRef.current = isPlacingPlace;
+  }, [isPlacingPlace]);
 
   useEffect(() => {
     graphRef.current = graph;
@@ -208,9 +214,11 @@ export const StreetGraphLayer: React.FC = () => {
 
     // Set cursor handlers
     const setPointerCursor = () => {
+      if (isPlacingPlaceRef.current) return;
       map.getCanvas().style.cursor = 'pointer';
     };
     const resetCursor = () => {
+      if (isPlacingPlaceRef.current) return;
       map.getCanvas().style.cursor = '';
     };
 
@@ -221,6 +229,10 @@ export const StreetGraphLayer: React.FC = () => {
 
     // Click handler for unclustered traffic signals
     const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (isPlacingPlaceRef.current) {
+        // In pin placement mode: bypass signal selection so map click handles coordinate picking
+        return;
+      }
       e.preventDefault();
       if (e.originalEvent) {
         e.originalEvent.preventDefault?.();
@@ -272,6 +284,10 @@ export const StreetGraphLayer: React.FC = () => {
 
     // Click handler for crossing clusters
     const handleClusterClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (isPlacingPlaceRef.current) {
+        // In pin placement mode: bypass cluster expansion so map click handles coordinate picking
+        return;
+      }
       e.preventDefault();
       if (e.originalEvent) {
         e.originalEvent.preventDefault?.();

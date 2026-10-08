@@ -28,6 +28,8 @@ export const PlacesLayer: React.FC = () => {
     appMode,
     openEditPlaceModal,
     openEditLandmarkModal,
+    isPlacingPlace,
+    setContextMenu,
   } = useMapContext();
 
   const currentPlaces = useMemo(() => places ?? landmarks ?? [], [places, landmarks]);
@@ -145,6 +147,7 @@ export const PlacesLayer: React.FC = () => {
     if (!map) return;
 
     const handleClick = (e: maplibregl.MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
+      if (isPlacingPlace) return;
       const feat = e.features?.[0];
       if (!feat || !feat.properties) return;
 
@@ -178,8 +181,17 @@ export const PlacesLayer: React.FC = () => {
 
       const placeId = String(feat.properties.id);
       const target = currentPlaces.find((lm) => lm.id === placeId);
-      if (target) {
-        handleOpenEdit?.(target);
+      if (target && setContextMenu) {
+        setContextMenu({
+          visible: true,
+          x: e.point.x,
+          y: e.point.y,
+          lng: target.lng,
+          lat: target.lat,
+          crossingId: null,
+          nodeIds: null,
+          placeId: target.id,
+        });
       }
     };
 
@@ -192,7 +204,16 @@ export const PlacesLayer: React.FC = () => {
       map.off('contextmenu', CIRCLE_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
       map.off('contextmenu', LABEL_LAYER_ID, handleContextMenu as (...args: unknown[]) => void);
     };
-  }, [map, currentPlaces, appMode, onStartDrag, onEndDrag, handleOpenEdit]);
+  }, [
+    map,
+    currentPlaces,
+    appMode,
+    isPlacingPlace,
+    onStartDrag,
+    onEndDrag,
+    handleOpenEdit,
+    setContextMenu,
+  ]);
 
   return null;
 };

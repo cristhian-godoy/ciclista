@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react';
 import type maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo, useRef } from 'react';
 
@@ -5,6 +6,7 @@ import { haversineDistance } from '../core/common/geo';
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
+import { Toast } from './common/Toast';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { BrushCircleLayer } from './map/BrushCircleLayer';
@@ -157,6 +159,20 @@ const MapViewContent: React.FC<{
       }
     };
   }, [map, isPlacingPlace]);
+
+  // Handle Escape key to cancel pin placement mode
+  useEffect(() => {
+    if (!isPlacingPlace) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPlacingPlace?.(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPlacingPlace, setIsPlacingPlace]);
 
   // Window click listener to close context menu
   useEffect(() => {
@@ -386,13 +402,12 @@ const MapViewContent: React.FC<{
           )
         : [];
 
+    let clickedPlaceId: string | null = null;
     if (landmarkFeatures.length > 0 && landmarkFeatures[0]?.properties?.id) {
       const landmarkId = String(landmarkFeatures[0].properties.id);
       const targetPlace = placesRef.current?.find((lm) => lm.id === landmarkId);
       if (targetPlace) {
-        e.originalEvent?.preventDefault?.();
-        openEditPlaceModalRef.current?.(targetPlace);
-        return;
+        clickedPlaceId = targetPlace.id;
       }
     }
 
@@ -413,6 +428,7 @@ const MapViewContent: React.FC<{
       lat: e.lngLat.lat,
       crossingId,
       nodeIds,
+      placeId: clickedPlaceId,
     });
   };
 
@@ -717,6 +733,17 @@ const MapViewContent: React.FC<{
           />
         );
       })()}
+
+      {/* Persistent toast notifying user to pick a location on the map */}
+      {isPlacingPlace && (
+        <Toast
+          message="Click on the map to set place location"
+          icon={<MapPin size={16} />}
+          position="bottom-right"
+          persistent
+          onClose={() => setIsPlacingPlace?.(false)}
+        />
+      )}
     </div>
   );
 };

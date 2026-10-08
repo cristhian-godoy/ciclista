@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
@@ -269,14 +270,13 @@ describe('MapView Contextual Map Interactions', () => {
     });
   });
 
-  it('opens edit modal when right clicking an existing landmark marker feature on the map', () => {
+  it('opens context menu with placeId and does NOT open edit modal when right clicking an existing landmark marker feature', () => {
     (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
         properties: { id: 'lm-market' },
       },
     ]);
 
-    const preventDefaultMock = vi.fn();
     renderMapViewWithContext({ landmarks: [sampleLandmark] });
 
     expect(capturedOptions).not.toBeNull();
@@ -284,12 +284,19 @@ describe('MapView Contextual Map Interactions', () => {
     capturedOptions!.onContextMenu({
       point: { x: 100, y: 100 },
       lngLat: { lat: 48.1351, lng: 11.5761 },
-      originalEvent: { preventDefault: preventDefaultMock },
     });
 
-    expect(preventDefaultMock).toHaveBeenCalled();
-    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(sampleLandmark);
-    expect(setContextMenuMock).not.toHaveBeenCalled();
+    expect(openEditLandmarkModalMock).not.toHaveBeenCalled();
+    expect(setContextMenuMock).toHaveBeenCalledWith({
+      visible: true,
+      x: 100,
+      y: 100,
+      lng: 11.5761,
+      lat: 48.1351,
+      crossingId: null,
+      nodeIds: null,
+      placeId: 'lm-market',
+    });
   });
 
   it('opens standard context menu when right clicking map with no landmark marker hit', () => {
@@ -313,6 +320,7 @@ describe('MapView Contextual Map Interactions', () => {
       lat: 48.12,
       crossingId: null,
       nodeIds: null,
+      placeId: null,
     });
   });
 
@@ -546,6 +554,144 @@ describe('MapView Contextual Map Interactions', () => {
     });
     expect(onStartDragMock).not.toHaveBeenCalled();
     expect(onEndDragMock).not.toHaveBeenCalled();
+  });
+
+  it('renders persistent toast when in pin placement mode and dismisses via close button or Escape key', async () => {
+    const user = userEvent.setup();
+
+    renderMapViewWithContext({
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+
+    const dismissBtn = screen.getByRole('button', { name: 'Dismiss notification' });
+    await user.click(dismissBtn);
+
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+
+    setIsPlacingPlaceMock.mockClear();
+    await user.keyboard('{Escape}');
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+  });
+
+  it('bypasses traffic light node selection when clicking on unclustered signal in placement mode', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-unclustered' },
+        geometry: { coordinates: [11.575, 48.137] },
+        properties: {
+          id: 'node-signal-1',
+          tags: JSON.stringify({ highway: 'traffic_signals', name: 'Sendlinger Tor' }),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 250 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    });
+
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+    expect(openCreateLandmarkModalMock).toHaveBeenCalledWith({
+      lat: 48.137,
+      lng: 11.575,
+    });
+    expect(onNodeSelectMock).not.toHaveBeenCalled();
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+  });
+
+  it('bypasses crossing cluster expansion when clicking on cluster in placement mode', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-cluster' },
+        geometry: { coordinates: [11.58, 48.14] },
+        properties: {
+          type: 'crossing',
+          crossingId: 'crossing-node-1',
+          nodeIds: JSON.stringify(['node-1', 'node-2']),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 200, y: 300 },
+      lngLat: { lat: 48.14, lng: 11.58 },
+    });
+
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+    expect(openCreateLandmarkModalMock).toHaveBeenCalledWith({
+      lat: 48.14,
+      lng: 11.58,
+    });
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(onNodeSelectMock).not.toHaveBeenCalled();
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+  });
+
+  it('bypasses direct layer clicks on StreetGraphLayer when in pin placement mode', () => {
+    renderMapViewWithContext({
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    const unclusteredClickHandler = (
+      mockMapInstance.on as ReturnType<typeof vi.fn>
+    ).mock.calls.find(
+      (call) => call[0] === 'click' && call[1] === 'traffic-lights-unclustered',
+    )?.[2];
+
+    const clusterClickHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'click' && call[1] === 'traffic-lights-cluster',
+    )?.[2];
+
+    expect(unclusteredClickHandler).toBeDefined();
+    expect(clusterClickHandler).toBeDefined();
+
+    const mockPreventDefault = vi.fn();
+    unclusteredClickHandler({
+      preventDefault: mockPreventDefault,
+      features: [
+        {
+          properties: { id: 'node-1' },
+          geometry: { coordinates: [11.575, 48.137] },
+        },
+      ],
+    });
+
+    expect(mockPreventDefault).not.toHaveBeenCalled();
+    expect(onNodeSelectMock).not.toHaveBeenCalled();
+
+    clusterClickHandler({
+      preventDefault: mockPreventDefault,
+      features: [
+        {
+          properties: { crossingId: 'c-1', nodeIds: '["node-1"]' },
+          geometry: { coordinates: [11.575, 48.137] },
+        },
+      ],
+    });
+
+    expect(mockPreventDefault).not.toHaveBeenCalled();
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
   });
 
   it('unselects a single edge on right-click contextmenu when in studio mode with click tool', () => {

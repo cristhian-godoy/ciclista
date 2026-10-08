@@ -131,6 +131,14 @@ export interface SidebarProps {
    * Callback fired when setting end route pin from a landmark.
    */
   onSetEndCoord?: (coord: Coordinate) => void;
+  /**
+   * Whether the application is currently in pin placement mode for a new place.
+   */
+  isPlacingPlace?: boolean;
+  /**
+   * Callback fired when pin placement mode changes.
+   */
+  onPlacingPlaceChange?: (isPlacing: boolean) => void;
 }
 
 /**
@@ -179,6 +187,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeletePlace,
   onSetStartCoord,
   onSetEndCoord,
+  isPlacingPlace: isPlacingPlaceProp,
+  onPlacingPlaceChange: onPlacingPlaceChangeProp,
 }) => {
   // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -188,6 +198,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentEvents = events ?? mapCtx?.events ?? [];
   const currentSelectedEdgeIds = selectedEdgeIds ?? mapCtx?.selectedEdgeIds ?? [];
   const currentLandmarks = places ?? landmarks ?? mapCtx?.places ?? mapCtx?.landmarks ?? [];
+  const isPlacingPlace = isPlacingPlaceProp ?? mapCtx?.isPlacingPlace;
+  const onPlacingPlaceChange = onPlacingPlaceChangeProp ?? mapCtx?.setIsPlacingPlace;
 
   const handleCreateLandmark = (input: CreateLandmarkInput) => {
     const fn = onCreatePlace ?? onCreateLandmark;
@@ -342,6 +354,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               currentMapCenter={currentMapCenter}
               startCoord={startCoord}
               endCoord={endCoord}
+              isPlacingPlace={isPlacingPlace}
+              onPlacingPlaceChange={onPlacingPlaceChange}
             />
           ) : (
             <>

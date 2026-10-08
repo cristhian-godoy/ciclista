@@ -81,7 +81,10 @@ describe('PlacesPanel Component', () => {
 
     // Clicking Add Place enters pin placement mode and displays persistent toast
     await user.click(screen.getByRole('button', { name: /Add Place/i }));
-    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+    const toast = screen.getByRole('status');
+    expect(toast).toBeInTheDocument();
+    expect(toast).toHaveTextContent('Click on the map to set place location');
+    expect(toast).toHaveClass('ciclista-toast--bottom-right');
     // Modal is NOT opened directly
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });

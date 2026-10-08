@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * Screen anchor position variants for the toast container.
@@ -90,7 +91,7 @@ export const Toast: React.FC<ToastProps> = ({
     };
   }, [persistent, duration, onClose]);
 
-  return (
+  const content = (
     <div
       role="status"
       aria-live={ariaLive}
@@ -112,4 +113,10 @@ export const Toast: React.FC<ToastProps> = ({
       )}
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 };

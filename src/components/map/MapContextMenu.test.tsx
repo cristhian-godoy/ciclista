@@ -4,6 +4,7 @@ import type maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { Coordinate } from '../../core/common/types';
+import type { Landmark } from '../../core/landmarks/types';
 import type { MapContextType } from './MapContext';
 import { MapContext } from './MapContext';
 import { MapContextMenu } from './MapContextMenu';
@@ -14,12 +15,16 @@ describe('MapContextMenu Component', () => {
   let onStartDragMock: Mock<(coord: Coordinate | null) => void>;
   let onEndDragMock: Mock<(coord: Coordinate | null) => void>;
   let openCreateLandmarkModalMock: Mock<(coord?: Coordinate | null) => void>;
+  let openEditLandmarkModalMock: Mock<(landmark: Landmark) => void>;
+  let onDeleteLandmarkMock: Mock<(id: string) => void>;
 
   beforeEach(() => {
     setContextMenuMock = vi.fn();
     onStartDragMock = vi.fn();
     onEndDragMock = vi.fn();
     openCreateLandmarkModalMock = vi.fn();
+    openEditLandmarkModalMock = vi.fn();
+    onDeleteLandmarkMock = vi.fn();
 
     mockMap = {
       easeTo: vi.fn(),
@@ -110,11 +115,11 @@ describe('MapContextMenu Component', () => {
       },
       setLandmarkModal: vi.fn(),
       openCreateLandmarkModal: openCreateLandmarkModalMock,
-      openEditLandmarkModal: vi.fn(),
+      openEditLandmarkModal: openEditLandmarkModalMock,
       closeLandmarkModal: vi.fn(),
       onCreateLandmark: vi.fn(),
       onUpdateLandmark: vi.fn(),
-      onDeleteLandmark: vi.fn(),
+      onDeleteLandmark: onDeleteLandmarkMock,
       ...contextOverrides,
     };
 
@@ -164,6 +169,80 @@ describe('MapContextMenu Component', () => {
 
     await user.click(screen.getByRole('button', { name: /End Route Here/i }));
     expect(onEndDragMock).toHaveBeenCalledWith({ lat: 48.137, lng: 11.575 });
+  });
+
+  it('renders place-specific options when right clicking an existing place', async () => {
+    const user = userEvent.setup();
+    const samplePlace: Landmark = {
+      id: 'place-home',
+      name: 'Home',
+      category: 'home',
+      lat: 48.137,
+      lng: 11.575,
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+
+    renderWithContext({
+      landmarks: [samplePlace],
+      contextMenu: {
+        visible: true,
+        x: 150,
+        y: 200,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+        placeId: 'place-home',
+      },
+    });
+
+    expect(screen.getByRole('button', { name: /Edit Place/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Set as Start/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Set as Destination/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Delete Place/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Add Place/i })).not.toBeInTheDocument();
+
+    // Clicking Edit Place opens edit modal
+    await user.click(screen.getByRole('button', { name: /Edit Place/i }));
+    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(samplePlace);
+    expect(setContextMenuMock).toHaveBeenCalled();
+  });
+
+  it('triggers set as start, set as destination, and delete for a right-clicked place', async () => {
+    const user = userEvent.setup();
+    const samplePlace: Landmark = {
+      id: 'place-office',
+      name: 'Office',
+      category: 'work',
+      lat: 48.145,
+      lng: 11.585,
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+
+    renderWithContext({
+      landmarks: [samplePlace],
+      contextMenu: {
+        visible: true,
+        x: 150,
+        y: 200,
+        lat: 48.145,
+        lng: 11.585,
+        crossingId: null,
+        nodeIds: null,
+        placeId: 'place-office',
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: /Set as Start/i }));
+    expect(onStartDragMock).toHaveBeenCalledWith({ lat: 48.145, lng: 11.585 });
+
+    await user.click(screen.getByRole('button', { name: /Set as Destination/i }));
+    expect(onEndDragMock).toHaveBeenCalledWith({ lat: 48.145, lng: 11.585 });
+
+    await user.click(screen.getByRole('button', { name: /Delete Place/i }));
+    expect(onDeleteLandmarkMock).toHaveBeenCalledWith('place-office');
   });
 
   it('does not render when contextMenu.visible is false', () => {

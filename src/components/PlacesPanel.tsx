@@ -390,8 +390,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
         />
       )}
 
-      {/* Persistent toast notifying user to pick a location on the map */}
-      {isPlacingPlace && (
+      {/* Persistent toast notifying user to pick a location on the map (rendered in MapView when mapCtx is mounted, or here as standalone fallback) */}
+      {!mapCtx && isPlacingPlace && (
         <Toast
           message="Click on the map to set place location"
           icon={<MapPin size={16} />}

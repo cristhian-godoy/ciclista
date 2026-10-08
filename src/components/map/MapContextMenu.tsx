@@ -1,11 +1,12 @@
-import { MapPin, Star, ZoomIn } from 'lucide-react';
+import { Edit2, MapPin, Star, Trash2, ZoomIn } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 
 import { useMapContext } from './MapContext';
 
 /**
  * Interactive floating context menu triggered by right-clicking on the map canvas.
- * Provides quick actions to set the start (origin) or end (destination) navigation pins.
+ * Provides quick actions to set the start (origin) or end (destination) navigation pins
+ * or manage places and traffic light clusters.
  */
 export const MapContextMenu: React.FC = () => {
   const {
@@ -19,6 +20,12 @@ export const MapContextMenu: React.FC = () => {
     isNavigating,
     openCreatePlaceModal,
     openCreateLandmarkModal,
+    openEditPlaceModal,
+    openEditLandmarkModal,
+    onDeletePlace,
+    onDeleteLandmark,
+    places,
+    landmarks,
   } = useMapContext();
 
   const onStartDragRef = useRef(onStartDrag);
@@ -44,6 +51,11 @@ export const MapContextMenu: React.FC = () => {
 
   if (!map || !contextMenu.visible) return null;
 
+  const currentPlaces = places ?? landmarks ?? [];
+  const targetPlace = contextMenu.placeId
+    ? currentPlaces.find((p) => p.id === contextMenu.placeId)
+    : null;
+
   return (
     <div
       className="map-context-menu"
@@ -54,70 +66,135 @@ export const MapContextMenu: React.FC = () => {
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {contextMenu.crossingId !== null && (
-        <button
-          className="map-context-menu-item"
-          onClick={() => {
-            if (contextMenu.crossingId !== null) {
-              const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
-              if (setManagedClusterIdRef.current) {
-                setManagedClusterIdRef.current(contextMenu.crossingId);
-              }
-              if (setManagedNodeIdsRef.current) {
-                setManagedNodeIdsRef.current(nodeIds);
-              }
-
-              map.easeTo({
-                center: [contextMenu.lng, contextMenu.lat],
-                zoom: 17.5,
-              });
-            }
-            setContextMenu((prev) => ({ ...prev, visible: false }));
-          }}
-        >
-          <ZoomIn size={14} className="context-icon-warn" />
-          <span>Manage Traffic Lights</span>
-        </button>
-      )}
-      {!isNavigating && (
+      {targetPlace ? (
         <>
           <button
+            type="button"
             className="map-context-menu-item"
             onClick={() => {
-              if (onStartDragRef.current) {
-                onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-              }
+              const editModalFn = openEditPlaceModal ?? openEditLandmarkModal;
+              editModalFn?.(targetPlace);
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
           >
-            <MapPin size={14} className="context-icon-success" />
-            <span>Start Route Here</span>
+            <Edit2 size={14} className="context-icon-place" />
+            <span>Edit Place</span>
           </button>
+          {!isNavigating && (
+            <>
+              <button
+                type="button"
+                className="map-context-menu-item"
+                onClick={() => {
+                  if (onStartDragRef.current) {
+                    onStartDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
+                  }
+                  setContextMenu((prev) => ({ ...prev, visible: false }));
+                }}
+              >
+                <MapPin size={14} className="context-icon-success" />
+                <span>Set as Start</span>
+              </button>
+              <button
+                type="button"
+                className="map-context-menu-item"
+                onClick={() => {
+                  if (onEndDragRef.current) {
+                    onEndDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
+                  }
+                  setContextMenu((prev) => ({ ...prev, visible: false }));
+                }}
+              >
+                <MapPin size={14} className="context-icon-danger" />
+                <span>Set as Destination</span>
+              </button>
+            </>
+          )}
           <button
-            className="map-context-menu-item"
+            type="button"
+            className="map-context-menu-item map-context-menu-item--danger"
             onClick={() => {
-              if (onEndDragRef.current) {
-                onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-              }
+              const deleteFn = onDeletePlace ?? onDeleteLandmark;
+              deleteFn?.(targetPlace.id);
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
           >
-            <MapPin size={14} className="context-icon-danger" />
-            <span>End Route Here</span>
+            <Trash2 size={14} className="context-icon-danger" />
+            <span>Delete Place</span>
+          </button>
+        </>
+      ) : (
+        <>
+          {contextMenu.crossingId !== null && (
+            <button
+              type="button"
+              className="map-context-menu-item"
+              onClick={() => {
+                if (contextMenu.crossingId !== null) {
+                  const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
+                  if (setManagedClusterIdRef.current) {
+                    setManagedClusterIdRef.current(contextMenu.crossingId);
+                  }
+                  if (setManagedNodeIdsRef.current) {
+                    setManagedNodeIdsRef.current(nodeIds);
+                  }
+
+                  map.easeTo({
+                    center: [contextMenu.lng, contextMenu.lat],
+                    zoom: 17.5,
+                  });
+                }
+                setContextMenu((prev) => ({ ...prev, visible: false }));
+              }}
+            >
+              <ZoomIn size={14} className="context-icon-warn" />
+              <span>Manage Traffic Lights</span>
+            </button>
+          )}
+          {!isNavigating && (
+            <>
+              <button
+                type="button"
+                className="map-context-menu-item"
+                onClick={() => {
+                  if (onStartDragRef.current) {
+                    onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+                  }
+                  setContextMenu((prev) => ({ ...prev, visible: false }));
+                }}
+              >
+                <MapPin size={14} className="context-icon-success" />
+                <span>Start Route Here</span>
+              </button>
+              <button
+                type="button"
+                className="map-context-menu-item"
+                onClick={() => {
+                  if (onEndDragRef.current) {
+                    onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+                  }
+                  setContextMenu((prev) => ({ ...prev, visible: false }));
+                }}
+              >
+                <MapPin size={14} className="context-icon-danger" />
+                <span>End Route Here</span>
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="map-context-menu-item"
+            onClick={() => {
+              const createModalFn = openCreatePlaceModal ?? openCreateLandmarkModal;
+              createModalFn?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <Star size={14} className="context-icon-place context-icon-favorite" />
+            <span>Add Place</span>
           </button>
         </>
       )}
-      <button
-        className="map-context-menu-item"
-        onClick={() => {
-          const createModalFn = openCreatePlaceModal ?? openCreateLandmarkModal;
-          createModalFn?.({ lat: contextMenu.lat, lng: contextMenu.lng });
-          setContextMenu((prev) => ({ ...prev, visible: false }));
-        }}
-      >
-        <Star size={14} className="context-icon-place context-icon-favorite" />
-        <span>Add Place</span>
-      </button>
     </div>
   );
 };
