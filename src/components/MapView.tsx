@@ -74,6 +74,11 @@ const MapViewContent: React.FC<{
   const landmarksRef = useRef(landmarks);
   const openCreateLandmarkModalRef = useRef(openCreateLandmarkModal);
   const openEditLandmarkModalRef = useRef(openEditLandmarkModal);
+  const onNodeSelectRef = useRef(onNodeSelect);
+  const setManagedClusterIdRef = useRef(setManagedClusterId);
+  const setManagedNodeIdsRef = useRef(setManagedNodeIds);
+  const onStartDragRef = useRef(onStartDrag);
+  const onEndDragRef = useRef(onEndDrag);
 
   // Keep refs synchronized for event handlers
   useEffect(() => {
@@ -87,6 +92,11 @@ const MapViewContent: React.FC<{
     landmarksRef.current = landmarks;
     openCreateLandmarkModalRef.current = openCreateLandmarkModal;
     openEditLandmarkModalRef.current = openEditLandmarkModal;
+    onNodeSelectRef.current = onNodeSelect;
+    setManagedClusterIdRef.current = setManagedClusterId;
+    setManagedNodeIdsRef.current = setManagedNodeIds;
+    onStartDragRef.current = onStartDrag;
+    onEndDragRef.current = onEndDrag;
   }, [
     startCoord,
     endCoord,
@@ -98,6 +108,11 @@ const MapViewContent: React.FC<{
     landmarks,
     openCreateLandmarkModal,
     openEditLandmarkModal,
+    onNodeSelect,
+    setManagedClusterId,
+    setManagedNodeIds,
+    onStartDrag,
+    onEndDrag,
   ]);
 
   // Window click listener to close context menu
@@ -280,12 +295,153 @@ const MapViewContent: React.FC<{
     });
   };
 
-  // Handle left click on map (deselect / dropping markers / studio click selection)
+  // Handle left click on map (deselect / dropping markers / studio click selection / traffic light selection)
   const handleClick = (e: maplibregl.MapMouseEvent) => {
     setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 
     if (e.defaultPrevented || isNavigating) {
       return;
+    }
+
+    if (!map) return;
+
+    // Prioritize traffic lights and crossing clusters across all modes
+    const availableTrafficLayers: string[] = [];
+    if (typeof map.getLayer === 'function') {
+      if (map.getLayer('traffic-lights-unclustered'))
+        availableTrafficLayers.push('traffic-lights-unclustered');
+      if (map.getLayer('traffic-lights-cluster'))
+        availableTrafficLayers.push('traffic-lights-cluster');
+    }
+    const trafficLayersToQuery =
+      availableTrafficLayers.length > 0
+        ? availableTrafficLayers
+        : ['traffic-lights-unclustered', 'traffic-lights-cluster'];
+
+    const trafficBbox: [maplibregl.PointLike, maplibregl.PointLike] = [
+      [e.point.x - 10, e.point.y - 10],
+      [e.point.x + 10, e.point.y + 10],
+    ];
+
+    let trafficFeatures: maplibregl.MapGeoJSONFeature[] = [];
+    if (typeof map.queryRenderedFeatures === 'function') {
+      try {
+        trafficFeatures = map.queryRenderedFeatures(trafficBbox, {
+          layers: trafficLayersToQuery,
+        });
+      } catch {
+        trafficFeatures = [];
+      }
+    }
+
+    if (trafficFeatures.length > 0) {
+      const trafficFeature =
+        trafficFeatures.find(
+          (f) => f.layer?.id === 'traffic-lights-unclustered' || f.properties?.type === 'signal',
+        ) ?? trafficFeatures[0];
+
+      const props = trafficFeature.properties ?? {};
+      const currentGraph = graphRef.current;
+      const coords = (trafficFeature.geometry as { coordinates?: number[] })?.coordinates;
+      const lat = coords ? coords[1] : e.lngLat.lat;
+      const lng = coords ? coords[0] : e.lngLat.lng;
+
+      // Case A: Unclustered individual signal node
+      if (props.id) {
+        const nodeId = String(props.id);
+        const graphEntry = currentGraph?.nodes.get(nodeId);
+
+        let tags: Record<string, string> = {};
+        if (props.tags) {
+          if (typeof props.tags === 'string') {
+            try {
+              tags = JSON.parse(props.tags);
+            } catch {
+              tags = {};
+            }
+          } else if (typeof props.tags === 'object') {
+            tags = props.tags as Record<string, string>;
+          }
+        }
+
+        const targetNode: GraphNode = graphEntry?.node ?? {
+          id: nodeId,
+          lat,
+          lng,
+          tags:
+            graphEntry?.node.tags ??
+            (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
+        };
+
+        onNodeSelectRef.current?.(targetNode);
+        map.easeTo?.({
+          center: [lng, lat],
+          duration: 400,
+        });
+        return;
+      }
+
+      // Case B: Crossing cluster feature
+      let nodeIds: string[] = [];
+      if (props.nodeIds) {
+        if (typeof props.nodeIds === 'string') {
+          try {
+            nodeIds = JSON.parse(props.nodeIds);
+          } catch {
+            nodeIds = [];
+          }
+        } else if (Array.isArray(props.nodeIds)) {
+          nodeIds = props.nodeIds.map(String);
+        }
+      }
+
+      const crossingId = props.crossingId ? String(props.crossingId) : null;
+
+      if (nodeIds.length > 0) {
+        const selectedId = nodeIds[0];
+        const graphEntry = currentGraph?.nodes.get(selectedId);
+        const targetNode: GraphNode = graphEntry?.node ?? {
+          id: selectedId,
+          lat,
+          lng,
+          tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
+        };
+
+        if (nodeIds.length > 1 && crossingId) {
+          setManagedClusterIdRef.current?.(crossingId);
+          setManagedNodeIdsRef.current?.(nodeIds);
+          map.easeTo?.({
+            center: [lng, lat],
+            zoom: 17.5,
+          });
+        } else {
+          map.easeTo?.({
+            center: [lng, lat],
+            duration: 400,
+          });
+        }
+
+        onNodeSelectRef.current?.(targetNode);
+        return;
+      }
+
+      // Case C: Fallback if node ID is present directly on feature
+      if (trafficFeature.id !== undefined && trafficFeature.id !== null) {
+        const fallbackId = String(trafficFeature.id);
+        const graphEntry = currentGraph?.nodes.get(fallbackId);
+        const targetNode: GraphNode = graphEntry?.node ?? {
+          id: fallbackId,
+          lat,
+          lng,
+          tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
+        };
+        onNodeSelectRef.current?.(targetNode);
+        map.easeTo?.({
+          center: [lng, lat],
+          duration: 400,
+        });
+        return;
+      }
     }
 
     if (appModeRef.current === 'studio') {
@@ -341,9 +497,9 @@ const MapViewContent: React.FC<{
       return;
     }
 
-    setManagedClusterId(null);
-    setManagedNodeIds([]);
-    onNodeSelect(null);
+    setManagedClusterIdRef.current?.(null);
+    setManagedNodeIdsRef.current?.([]);
+    onNodeSelectRef.current?.(null);
 
     const sCoord = startCoordRef.current;
     const eCoord = endCoordRef.current;
@@ -356,10 +512,10 @@ const MapViewContent: React.FC<{
     }
 
     if (!sCoord) {
-      onStartDrag(clickedCoord);
-      onEndDrag(null);
+      onStartDragRef.current?.(clickedCoord);
+      onEndDragRef.current?.(null);
     } else {
-      onEndDrag(clickedCoord);
+      onEndDragRef.current?.(clickedCoord);
     }
   };
 

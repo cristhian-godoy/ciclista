@@ -43,6 +43,11 @@ export const StreetGraphLayer: React.FC = () => {
   const onNodeSelectRef = useRef(onNodeSelect);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
+  const graphRef = useRef(graph);
+
+  useEffect(() => {
+    graphRef.current = graph;
+  }, [graph]);
 
   useEffect(() => {
     onNodeSelectRef.current = onNodeSelect;
@@ -224,13 +229,33 @@ export const StreetGraphLayer: React.FC = () => {
 
       if (geometry && 'coordinates' in geometry && properties && properties.id) {
         const coords = (geometry as { coordinates: number[] }).coordinates;
+        const nodeId = String(properties.id);
+        const nodeEntry = graphRef.current?.nodes.get(nodeId);
+
+        let tags: Record<string, string> = {};
+        if (properties.tags) {
+          if (typeof properties.tags === 'string') {
+            try {
+              tags = JSON.parse(properties.tags);
+            } catch {
+              tags = {};
+            }
+          } else if (typeof properties.tags === 'object') {
+            tags = properties.tags as Record<string, string>;
+          }
+        }
+
         if (onNodeSelectRef.current) {
-          onNodeSelectRef.current({
-            id: properties.id,
-            lat: coords[1],
-            lng: coords[0],
-            tags: JSON.parse((properties.tags as string) || '{}'),
-          });
+          onNodeSelectRef.current(
+            nodeEntry?.node ?? {
+              id: nodeId,
+              lat: coords[1],
+              lng: coords[0],
+              tags:
+                nodeEntry?.node.tags ??
+                (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
+            },
+          );
         }
 
         map.easeTo({
@@ -251,7 +276,18 @@ export const StreetGraphLayer: React.FC = () => {
       if (geometry && 'coordinates' in geometry && properties) {
         const coords = (geometry as { coordinates: number[] }).coordinates;
         const crossingId = properties.crossingId as string;
-        const nodeIds = JSON.parse((properties.nodeIds as string) || '[]');
+        let nodeIds: string[] = [];
+        if (properties.nodeIds) {
+          if (typeof properties.nodeIds === 'string') {
+            try {
+              nodeIds = JSON.parse(properties.nodeIds);
+            } catch {
+              nodeIds = [];
+            }
+          } else if (Array.isArray(properties.nodeIds)) {
+            nodeIds = properties.nodeIds.map(String);
+          }
+        }
 
         if (setManagedClusterIdRef.current) {
           setManagedClusterIdRef.current(crossingId);
@@ -260,9 +296,24 @@ export const StreetGraphLayer: React.FC = () => {
           setManagedNodeIdsRef.current(nodeIds);
         }
 
+        if (nodeIds.length > 0 && onNodeSelectRef.current) {
+          const selectedId = String(nodeIds[0]);
+          const currentGraph = graphRef.current;
+          const graphEntry = currentGraph?.nodes.get(selectedId);
+          onNodeSelectRef.current(
+            graphEntry?.node ?? {
+              id: selectedId,
+              lat: coords[1],
+              lng: coords[0],
+              tags: graphEntry?.node.tags ?? { highway: 'traffic_signals' },
+            },
+          );
+        }
+
         map.easeTo({
           center: [coords[0], coords[1]],
-          zoom: 17.5,
+          zoom: nodeIds.length > 1 ? 17.5 : map.getZoom(),
+          duration: 400,
         });
       }
     };

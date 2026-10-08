@@ -3,6 +3,7 @@ import type maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { Coordinate } from '../core/common/types';
+import type { GraphNode } from '../core/graph/types';
 import type { Landmark } from '../core/landmarks/types';
 import type { MapContextType } from './map/MapContext';
 import { MapContext } from './map/MapContext';
@@ -40,6 +41,9 @@ describe('MapView Contextual Map Interactions', () => {
   let onEndDragMock: Mock<(coord: Coordinate | null) => void>;
   let openCreateLandmarkModalMock: Mock<(coord?: Coordinate | null) => void>;
   let openEditLandmarkModalMock: Mock<(landmark: Landmark) => void>;
+  let onNodeSelectMock: Mock<(node: GraphNode | null) => void>;
+  let setManagedClusterIdMock: Mock<(id: string | null) => void>;
+  let setManagedNodeIdsMock: Mock<(ids: string[]) => void>;
   let setContextMenuMock: ReturnType<typeof vi.fn>;
 
   const sampleLandmark: Landmark = {
@@ -58,17 +62,23 @@ describe('MapView Contextual Map Interactions', () => {
     onEndDragMock = vi.fn();
     openCreateLandmarkModalMock = vi.fn();
     openEditLandmarkModalMock = vi.fn();
+    onNodeSelectMock = vi.fn();
+    setManagedClusterIdMock = vi.fn();
+    setManagedNodeIdsMock = vi.fn();
     setContextMenuMock = vi.fn();
 
     mockMapInstance = {
       on: vi.fn(),
       off: vi.fn(),
+      easeTo: vi.fn(),
       getSource: vi.fn(() => undefined),
       addSource: vi.fn(),
       getLayer: vi.fn((id: string) =>
-        id === 'landmarks-circle-layer'
+        id === 'landmarks-circle-layer' ||
+        id === 'traffic-lights-unclustered' ||
+        id === 'traffic-lights-cluster'
           ? ({
-              id: 'landmarks-circle-layer',
+              id,
               type: 'circle',
             } as unknown as maplibregl.StyleLayer)
           : undefined,
@@ -116,7 +126,7 @@ describe('MapView Contextual Map Interactions', () => {
       selectedNode: null,
       onStartDrag: onStartDragMock,
       onEndDrag: onEndDragMock,
-      onNodeSelect: vi.fn(),
+      onNodeSelect: onNodeSelectMock,
       onSaveNodeOverride: vi.fn(),
       onSaveNodeTurns: vi.fn(),
       onClearNodeOverride: vi.fn(),
@@ -135,9 +145,9 @@ describe('MapView Contextual Map Interactions', () => {
       dockExpanded: false,
       setDockExpanded: vi.fn(),
       managedClusterId: null,
-      setManagedClusterId: vi.fn(),
+      setManagedClusterId: setManagedClusterIdMock,
       managedNodeIds: [],
-      setManagedNodeIds: vi.fn(),
+      setManagedNodeIds: setManagedNodeIdsMock,
       contextMenu: {
         visible: false,
         x: 0,
@@ -296,5 +306,96 @@ describe('MapView Contextual Map Interactions', () => {
       crossingId: null,
       nodeIds: null,
     });
+  });
+
+  it('selects traffic light node and prevents marker placement when clicking on unclustered signal', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-unclustered' },
+        geometry: { coordinates: [11.575, 48.137] },
+        properties: {
+          id: 'node-signal-1',
+          tags: JSON.stringify({ highway: 'traffic_signals', name: 'Sendlinger Tor' }),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({ appMode: 'routing', startCoord: null, endCoord: null });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 250 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    });
+
+    expect(onNodeSelectMock).toHaveBeenCalledWith({
+      id: 'node-signal-1',
+      lat: 48.137,
+      lng: 11.575,
+      tags: { highway: 'traffic_signals', name: 'Sendlinger Tor' },
+    });
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+    expect(openCreateLandmarkModalMock).not.toHaveBeenCalled();
+    expect(mockMapInstance.easeTo).toHaveBeenCalledWith({
+      center: [11.575, 48.137],
+      duration: 400,
+    });
+  });
+
+  it('selects traffic light node, expands cluster, and prevents marker placement when clicking on crossing cluster', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-cluster' },
+        geometry: { coordinates: [11.58, 48.14] },
+        properties: {
+          type: 'crossing',
+          crossingId: 'crossing-node-1',
+          nodeIds: JSON.stringify(['node-1', 'node-2']),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({ appMode: 'routing' });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 200, y: 300 },
+      lngLat: { lat: 48.14, lng: 11.58 },
+    });
+
+    expect(setManagedClusterIdMock).toHaveBeenCalledWith('crossing-node-1');
+    expect(setManagedNodeIdsMock).toHaveBeenCalledWith(['node-1', 'node-2']);
+    expect(onNodeSelectMock).toHaveBeenCalledWith({
+      id: 'node-1',
+      lat: 48.14,
+      lng: 11.58,
+      tags: { highway: 'traffic_signals' },
+    });
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+    expect(mockMapInstance.easeTo).toHaveBeenCalledWith({
+      center: [11.58, 48.14],
+      zoom: 17.5,
+    });
+  });
+
+  it('clears node selection and managed clusters when clicking empty map space', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([]);
+
+    renderMapViewWithContext({ appMode: 'routing' });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.15, lng: 11.59 },
+    });
+
+    expect(setManagedClusterIdMock).toHaveBeenCalledWith(null);
+    expect(setManagedNodeIdsMock).toHaveBeenCalledWith([]);
+    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
   });
 });

@@ -35,7 +35,7 @@ common
 MapView.test.tsx
 	Unit tests for MapView container, studio mode selection tools, and drag interactions.
 MapViewInteraction.test.tsx
-	Unit tests for contextual left click and right click landmark interactions.
+	Unit tests for contextual left click, right click landmark interactions, and traffic light selection.
 MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers, studio selection tools, and interactive layers.
 NavigationHUD.tsx
