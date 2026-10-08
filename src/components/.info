@@ -70,5 +70,7 @@ SideToolbar.test.tsx
 	Unit tests for SideToolbar branding, navigation mode buttons, and test runner link.
 SideToolbar.tsx
 	Non-floating left side toolbar providing switching between routing mode, studio mode, and test runner.
+Toast.tsx
+	Re-export of reusable configurable Toast notification component.
 map
 	Directory containing map layer subcomponents and map hooks.

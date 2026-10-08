@@ -1,2 +1,6 @@
 Modal.tsx
 	Reusable accessible glassmorphic modal dialog component.
+Toast.test.tsx
+	Unit tests for reusable Toast component auto-dismissal, positioning, and accessibility.
+Toast.tsx
+	Reusable configurable glassmorphic toast notification component adhering to design tokens.

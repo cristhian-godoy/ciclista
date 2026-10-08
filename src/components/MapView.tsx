@@ -69,6 +69,8 @@ const MapViewContent: React.FC<{
     onCreatePlace,
     onUpdateLandmark,
     onUpdatePlace,
+    isPlacingPlace,
+    setIsPlacingPlace,
   } = useMapContext();
 
   const currentPlaces = useMemo(() => places ?? landmarks ?? [], [places, landmarks]);
@@ -93,6 +95,8 @@ const MapViewContent: React.FC<{
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
+  const isPlacingPlaceRef = useRef(isPlacingPlace);
+  const setIsPlacingPlaceRef = useRef(setIsPlacingPlace);
 
   // Keep refs synchronized for event handlers
   useEffect(() => {
@@ -111,6 +115,8 @@ const MapViewContent: React.FC<{
     setManagedNodeIdsRef.current = setManagedNodeIds;
     onStartDragRef.current = onStartDrag;
     onEndDragRef.current = onEndDrag;
+    isPlacingPlaceRef.current = isPlacingPlace;
+    setIsPlacingPlaceRef.current = setIsPlacingPlace;
   }, [
     startCoord,
     endCoord,
@@ -127,7 +133,26 @@ const MapViewContent: React.FC<{
     setManagedNodeIds,
     onStartDrag,
     onEndDrag,
+    isPlacingPlace,
+    setIsPlacingPlace,
   ]);
+
+  // Set map canvas cursor to crosshair during pin placement mode
+  useEffect(() => {
+    if (!map) return;
+    const canvas = map.getCanvas?.();
+    if (!canvas) return;
+    if (isPlacingPlace) {
+      canvas.style.cursor = 'crosshair';
+    } else {
+      canvas.style.cursor = '';
+    }
+    return () => {
+      if (canvas) {
+        canvas.style.cursor = '';
+      }
+    };
+  }, [map, isPlacingPlace]);
 
   // Window click listener to close context menu
   useEffect(() => {
@@ -318,6 +343,13 @@ const MapViewContent: React.FC<{
     }
 
     if (!map) return;
+
+    if (isPlacingPlaceRef.current) {
+      const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      setIsPlacingPlaceRef.current?.(false);
+      openCreatePlaceModalRef.current?.(clickedCoord);
+      return;
+    }
 
     // Prioritize traffic lights and crossing clusters across all modes
     const availableTrafficLayers: string[] = [];
@@ -566,7 +598,7 @@ const MapViewContent: React.FC<{
   }, [mapInstance, mapInstanceReady, setMap, setMapReady]);
 
   return (
-    <div className="map-wrapper">
+    <div className={`map-wrapper ${isPlacingPlace ? 'map-pin-placement-mode' : ''}`.trim()}>
       <div ref={mapContainerRef} className="map-container" />
 
       {map && mapReady && (

@@ -1,10 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React, { useState } from 'react';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Coordinate } from '../core/common/types';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
+import { PlaceModal } from './PlaceModal';
 import { PlacesPanel } from './PlacesPanel';
 
 describe('PlacesPanel Component', () => {
@@ -77,12 +79,39 @@ describe('PlacesPanel Component', () => {
       ),
     ).toBeInTheDocument();
 
-    // Opening modal via button reveals PlaceModal fields
+    // Clicking Add Place enters pin placement mode and displays persistent toast
     await user.click(screen.getByRole('button', { name: /Add Place/i }));
-    expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/latitude/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/longitude/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+    // Modal is NOT opened directly
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('enters pin placement mode and can dismiss via close button or Escape key', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PlacesPanel
+        places={samplePlaces}
+        onCreatePlace={onCreatePlace}
+        onUpdatePlace={onUpdatePlace}
+        onDeletePlace={onDeletePlace}
+      />,
+    );
+
+    // Enter pin placement mode
+    await user.click(screen.getByRole('button', { name: /Add Place/i }));
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+
+    // Dismissing the toast cancels placement mode
+    const dismissBtn = screen.getByRole('button', { name: 'Dismiss notification' });
+    await user.click(dismissBtn);
+    expect(screen.queryByText('Click on the map to set place location')).not.toBeInTheDocument();
+
+    // Re-entering and pressing Escape cancels placement mode
+    await user.click(screen.getByRole('button', { name: /Add Place/i }));
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByText('Click on the map to set place location')).not.toBeInTheDocument();
   });
 
   it('renders list of saved places with names and categories', () => {
@@ -101,35 +130,66 @@ describe('PlacesPanel Component', () => {
     expect(screen.getByText('First floor with bike rack')).toBeInTheDocument();
   });
 
-  it('creates a new place on valid form submission', async () => {
+  it('integrates with pin placement mode to open PlaceModal on map click and create place', async () => {
     const user = userEvent.setup();
 
-    render(
-      <PlacesPanel
-        places={samplePlaces}
-        onCreatePlace={onCreatePlace}
-        onUpdatePlace={onUpdatePlace}
-        onDeletePlace={onDeletePlace}
-        currentMapCenter={{ lat: 48.15, lng: 11.59 }}
-      />,
-    );
+    const Wrapper: React.FC = () => {
+      const [isPlacing, setIsPlacing] = useState(false);
+      const [modalCoord, setModalCoord] = useState<Coordinate | null>(null);
+
+      return (
+        <div>
+          <PlacesPanel
+            places={samplePlaces}
+            onCreatePlace={onCreatePlace}
+            isPlacingPlace={isPlacing}
+            onPlacingPlaceChange={setIsPlacing}
+          />
+          {isPlacing && (
+            <button
+              type="button"
+              data-testid="mock-map-click"
+              onClick={() => {
+                setIsPlacing(false);
+                setModalCoord({ lat: 48.15, lng: 11.59 });
+              }}
+            >
+              Simulate Map Click
+            </button>
+          )}
+          {modalCoord && (
+            <PlaceModal
+              isOpen={true}
+              initialCoordinates={modalCoord}
+              onClose={() => setModalCoord(null)}
+              onCreatePlace={onCreatePlace}
+            />
+          )}
+        </div>
+      );
+    };
+
+    render(<Wrapper />);
 
     await user.click(screen.getByRole('button', { name: /Add Place/i }));
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
 
-    // Select category "school"
-    const trigger = screen.getByLabelText('Category');
+    await user.click(screen.getByTestId('mock-map-click'));
+    expect(screen.queryByText('Click on the map to set place location')).not.toBeInTheDocument();
+
+    // Modal is now open
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Add New Place')).toBeInTheDocument();
+    const trigger = within(dialog).getByRole('combobox');
     await user.click(trigger);
-    const schoolOpt = within(screen.getByRole('listbox')).getByRole('option', { name: 'School' });
+    const schoolOpt = within(dialog).getByRole('option', { name: 'School' });
     await user.click(schoolOpt);
 
-    // Name is prefilled with "School", let's customize it
-    const nameInput = screen.getByLabelText('Name');
+    const nameInput = within(dialog).getByLabelText('Name');
     expect(nameInput).toHaveValue('School');
     await user.type(nameInput, ' Campus');
 
-    await user.type(screen.getByLabelText('Notes / Description (Optional)'), 'Main library');
-
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Place' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Add Place' }));
 
     expect(onCreatePlace).toHaveBeenCalledTimes(1);
     expect(onCreatePlace).toHaveBeenCalledWith({
@@ -137,7 +197,7 @@ describe('PlacesPanel Component', () => {
       category: 'school',
       lat: 48.15,
       lng: 11.59,
-      description: 'Main library',
+      description: undefined,
     });
   });
 

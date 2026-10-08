@@ -49,6 +49,41 @@ describe('PlaceModal Component', () => {
     expect(screen.queryByRole('button', { name: /map center/i })).not.toBeInTheDocument();
   });
 
+  it('defaults category dropdown to unselected placeholder "Select category..." and leaves name empty', () => {
+    render(
+      <PlaceModal
+        isOpen={true}
+        onClose={onCloseMock}
+        onCreatePlace={onCreatePlaceMock}
+        onUpdatePlace={onUpdatePlaceMock}
+      />,
+    );
+
+    const trigger = screen.getByRole('combobox');
+    expect(trigger).toHaveTextContent('Select category...');
+
+    const nameInput = screen.getByLabelText('Name');
+    expect(nameInput).toHaveValue('');
+  });
+
+  it('prevents submission and displays error when no category is selected', async () => {
+    const user = userEvent.setup();
+    render(
+      <PlaceModal
+        isOpen={true}
+        onClose={onCloseMock}
+        onCreatePlace={onCreatePlaceMock}
+        onUpdatePlace={onUpdatePlaceMock}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add Place' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Please select a category.');
+    expect(onCreatePlaceMock).not.toHaveBeenCalled();
+    expect(onCloseMock).not.toHaveBeenCalled();
+  });
+
   it('verifies form field order: Category comes first, then Name, then Notes', () => {
     render(
       <PlaceModal
