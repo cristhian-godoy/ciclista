@@ -84,11 +84,6 @@
       "baseline-browser-mapping": ">=2.11.0",
       "source-map-js": ">=1.2.2",
       "maplibre-gl": ">=6.4.1"
-    },
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-vfj7-8cjw-p6xm"
-      ]
     }
   }
 }
