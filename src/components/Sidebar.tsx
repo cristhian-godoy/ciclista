@@ -4,6 +4,7 @@ import {
   ChevronRight,
   ChevronUp,
   Compass,
+  GitFork,
   Navigation2,
   Play,
   Route,
@@ -25,6 +26,7 @@ import type { CreateLandmarkInput, Landmark, UpdateLandmarkInput } from '../core
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
+import { CrossingEditPanel } from './CrossingEditPanel';
 import { EventsPanel } from './EventsPanel';
 import { InspectorPanel } from './InspectorPanel';
 import { MapContext } from './map/MapContext';
@@ -333,6 +335,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ShieldAlert size={20} className="sidebar-header-icon" />
               <h2>Events</h2>
             </>
+          ) : currentAppMode === 'edit' ? (
+            <>
+              <GitFork size={20} className="sidebar-header-icon" />
+              <h2>Edit</h2>
+            </>
           ) : currentAppMode === 'places' || (currentAppMode as string) === 'landmarks' ? (
             <>
               <Star size={20} className="sidebar-header-icon" />
@@ -356,6 +363,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onDeleteEvent={handleDeleteEvent}
               onClearSelection={handleClearSelection}
             />
+          ) : currentAppMode === 'edit' ? (
+            <CrossingEditPanel />
           ) : currentAppMode === 'places' || (currentAppMode as string) === 'landmarks' ? (
             <PlacesPanel
               places={currentLandmarks}

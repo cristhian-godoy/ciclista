@@ -1,17 +1,17 @@
-import { FlaskConical, Navigation, Route, ShieldAlert, Star } from 'lucide-react';
+import { FlaskConical, GitFork, Navigation, Route, ShieldAlert, Star } from 'lucide-react';
 import React from 'react';
 
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
  */
-export type ToolbarMode = 'routing' | 'places' | 'studio' | 'landmarks';
+export type ToolbarMode = 'routing' | 'places' | 'studio' | 'landmarks' | 'edit';
 
 /**
  * Properties for the SideToolbar component.
  */
 export interface SideToolbarProps {
   /**
-   * The currently active mode ('routing', 'places', or 'studio').
+   * The currently active mode ('routing', 'places', 'studio', or 'edit').
    */
   mode: ToolbarMode;
   /**
@@ -82,6 +82,17 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
           aria-pressed={mode === 'studio'}
         >
           <ShieldAlert size={20} className="ciclista-toolbar-icon" />
+        </button>
+
+        <button
+          type="button"
+          className={`ciclista-toolbar-btn ${mode === 'edit' ? 'active ciclista-toolbar-btn--active' : ''}`}
+          onClick={() => onModeChange('edit')}
+          aria-label="Edit"
+          title="Edit"
+          aria-pressed={mode === 'edit'}
+        >
+          <GitFork size={20} className="ciclista-toolbar-icon" />
         </button>
       </nav>
 

@@ -11,6 +11,7 @@ import { MinHeap } from '../common/MinHeap';
 import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import { getCrossingTurnEffect } from './crossing-turns';
 import {
   buildRouteStatistics,
   getEffectiveTurnPenalty,
@@ -156,6 +157,11 @@ export class DijkstraRouter implements IRouter {
             );
           }
         }
+
+        const parentId = parentInt !== -1 ? intToNodeId[parentInt] : null;
+        const crossingEffect = getCrossingTurnEffect(parentId, currentId, neighborId, overrides);
+        if (crossingEffect.isBanned) continue;
+        edgeCost += crossingEffect.timeDelta;
 
         const altDist = currentDist + edgeCost;
 

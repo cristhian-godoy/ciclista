@@ -11,6 +11,7 @@ import { MinHeap } from '../common/MinHeap';
 import type { Coordinate } from '../common/types';
 import { DEFAULT_RULES_CONFIG, type LocalOverrides } from '../config';
 import type { GraphEdge, GraphNode, StreetGraph } from '../graph/types';
+import { getCrossingTurnEffect } from './crossing-turns';
 import {
   buildRouteStatistics,
   getEffectiveTurnPenalty,
@@ -235,13 +236,24 @@ export class AStarRouter implements IRouter {
 
         // Check meeting at node u
         if (distB[u] < Infinity) {
-          let candCost = distF[u] + distB[u];
-          if (parentF[u] !== -1 && succB[u] !== -1) {
-            candCost += computeTurnPenalty(parentF[u], u, succB[u]);
+          const parentIdStr = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
+          const succIdStr = succB[u] !== -1 ? intToNodeId[succB[u]] : null;
+          let nodeCrossingDelta = 0;
+          let nodeBanned = false;
+          if (parentIdStr && succIdStr) {
+            const effect = getCrossingTurnEffect(parentIdStr, uId, succIdStr, overrides);
+            if (effect.isBanned) nodeBanned = true;
+            nodeCrossingDelta = effect.timeDelta;
           }
-          if (candCost < mu) {
-            mu = candCost;
-            bestMeeting = { type: 'node', node: u };
+          if (!nodeBanned) {
+            let candCost = distF[u] + distB[u] + nodeCrossingDelta;
+            if (parentF[u] !== -1 && succB[u] !== -1) {
+              candCost += computeTurnPenalty(parentF[u], u, succB[u]);
+            }
+            if (candCost < mu) {
+              mu = candCost;
+              bestMeeting = { type: 'node', node: u };
+            }
           }
         }
 
@@ -256,15 +268,30 @@ export class AStarRouter implements IRouter {
             stepCost += computeTurnPenalty(parentF[u], u, v);
           }
 
+          const parentId = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
+          const crossingEffect = getCrossingTurnEffect(parentId, uId, vId, overrides);
+          if (crossingEffect.isBanned) continue;
+          stepCost += crossingEffect.timeDelta;
+
           // Check meeting across edge u -> v
           if (distB[v] < Infinity) {
-            let edgeMeetingCost = distF[u] + stepCost + distB[v];
-            if (succB[v] !== -1) {
-              edgeMeetingCost += computeTurnPenalty(u, v, succB[v]);
+            const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
+            let edgeTurnBanned = false;
+            let edgeTurnDelta = 0;
+            if (succIdStr) {
+              const effect = getCrossingTurnEffect(uId, vId, succIdStr, overrides);
+              if (effect.isBanned) edgeTurnBanned = true;
+              edgeTurnDelta = effect.timeDelta;
             }
-            if (edgeMeetingCost < mu) {
-              mu = edgeMeetingCost;
-              bestMeeting = { type: 'edge', u, v };
+            if (!edgeTurnBanned) {
+              let edgeMeetingCost = distF[u] + stepCost + distB[v] + edgeTurnDelta;
+              if (succB[v] !== -1) {
+                edgeMeetingCost += computeTurnPenalty(u, v, succB[v]);
+              }
+              if (edgeMeetingCost < mu) {
+                mu = edgeMeetingCost;
+                bestMeeting = { type: 'edge', u, v };
+              }
             }
           }
 
@@ -286,13 +313,24 @@ export class AStarRouter implements IRouter {
 
         // Check meeting at node v
         if (distF[v] < Infinity) {
-          let candCost = distF[v] + distB[v];
-          if (parentF[v] !== -1 && succB[v] !== -1) {
-            candCost += computeTurnPenalty(parentF[v], v, succB[v]);
+          const parentIdStr = parentF[v] !== -1 ? intToNodeId[parentF[v]] : null;
+          const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
+          let nodeCrossingDelta = 0;
+          let nodeBanned = false;
+          if (parentIdStr && succIdStr) {
+            const effect = getCrossingTurnEffect(parentIdStr, vId, succIdStr, overrides);
+            if (effect.isBanned) nodeBanned = true;
+            nodeCrossingDelta = effect.timeDelta;
           }
-          if (candCost < mu) {
-            mu = candCost;
-            bestMeeting = { type: 'node', node: v };
+          if (!nodeBanned) {
+            let candCost = distF[v] + distB[v] + nodeCrossingDelta;
+            if (parentF[v] !== -1 && succB[v] !== -1) {
+              candCost += computeTurnPenalty(parentF[v], v, succB[v]);
+            }
+            if (candCost < mu) {
+              mu = candCost;
+              bestMeeting = { type: 'node', node: v };
+            }
           }
         }
 
@@ -307,15 +345,36 @@ export class AStarRouter implements IRouter {
             stepCost += computeTurnPenalty(u, v, succB[v]);
           }
 
+          const crossingEffect = getCrossingTurnEffect(null, uId, vId, overrides);
+          if (crossingEffect.isBanned) continue;
+          stepCost += crossingEffect.timeDelta;
+
+          const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
+          if (succIdStr) {
+            const turnEffect = getCrossingTurnEffect(uId, vId, succIdStr, overrides);
+            if (turnEffect.isBanned) continue;
+            stepCost += turnEffect.timeDelta;
+          }
+
           // Check meeting across edge u -> v
           if (distF[u] < Infinity) {
-            let edgeMeetingCost = distF[u] + stepCost + distB[v];
-            if (parentF[u] !== -1) {
-              edgeMeetingCost += computeTurnPenalty(parentF[u], u, v);
+            const parentIdStr = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
+            let edgeTurnBanned = false;
+            let edgeTurnDelta = 0;
+            if (parentIdStr) {
+              const effect = getCrossingTurnEffect(parentIdStr, uId, vId, overrides);
+              if (effect.isBanned) edgeTurnBanned = true;
+              edgeTurnDelta = effect.timeDelta;
             }
-            if (edgeMeetingCost < mu) {
-              mu = edgeMeetingCost;
-              bestMeeting = { type: 'edge', u, v };
+            if (!edgeTurnBanned) {
+              let edgeMeetingCost = distF[u] + stepCost + distB[v] + edgeTurnDelta;
+              if (parentF[u] !== -1) {
+                edgeMeetingCost += computeTurnPenalty(parentF[u], u, v);
+              }
+              if (edgeMeetingCost < mu) {
+                mu = edgeMeetingCost;
+                bestMeeting = { type: 'edge', u, v };
+              }
             }
           }
 

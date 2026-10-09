@@ -118,4 +118,55 @@ describe('LocalStorageProvider', () => {
     const syncLoaded = provider.loadLandmarksSync();
     expect(syncLoaded).toEqual(loaded);
   });
+
+  it('correctly saves, retrieves, updates, and deletes crossing turn overrides', async () => {
+    const turn1 = {
+      id: 'cto-1',
+      crossingId: 'crossing-100',
+      fromNodeId: 'node-a',
+      toNodeId: 'node-b',
+      pathNodeIds: ['node-a', 'node-b'],
+      timeDeltaSeconds: 15,
+      banned: false,
+      turnType: 'direct' as const,
+    };
+    const turn2 = {
+      id: 'cto-2',
+      crossingId: 'crossing-100',
+      fromNodeId: 'node-a',
+      toNodeId: 'node-c',
+      pathNodeIds: ['node-a', 'node-m', 'node-c'],
+      timeDeltaSeconds: 0,
+      banned: true,
+      turnType: 'copenhagen_two_stage' as const,
+    };
+
+    await provider.saveCrossingTurn(turn1);
+    await provider.saveCrossingTurn(turn2);
+
+    let turns = await provider.getCrossingTurns();
+    expect(turns).toHaveLength(2);
+    expect(turns.find((t) => t.id === 'cto-1')?.timeDeltaSeconds).toBe(15);
+    expect(turns.find((t) => t.id === 'cto-2')?.banned).toBe(true);
+
+    const overrides = await provider.getOverrides();
+    expect(overrides.crossingTurns).toHaveLength(2);
+
+    // Update existing turn
+    await provider.saveCrossingTurn({ ...turn1, timeDeltaSeconds: 25 });
+    turns = await provider.getCrossingTurns();
+    expect(turns).toHaveLength(2);
+    expect(turns.find((t) => t.id === 'cto-1')?.timeDeltaSeconds).toBe(25);
+
+    // Delete turn1
+    await provider.deleteCrossingTurn('cto-1');
+    turns = await provider.getCrossingTurns();
+    expect(turns).toHaveLength(1);
+    expect(turns[0]?.id).toBe('cto-2');
+
+    // Clear turns for crossing-100
+    await provider.clearCrossingTurns('crossing-100');
+    turns = await provider.getCrossingTurns();
+    expect(turns).toHaveLength(0);
+  });
 });

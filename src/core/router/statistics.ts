@@ -9,6 +9,7 @@ import {
   mapOSMNodeToControl,
   mapOSMToSignAndRoad,
 } from '../rules';
+import { getCrossingTurnEffect } from './crossing-turns';
 import { calculateDisplayCost } from './edge-metrics';
 import type { RouteResult } from './types';
 
@@ -201,6 +202,15 @@ export function buildRouteStatistics(
               );
             }
           }
+
+          const crossingParentId = k > 0 ? pathNodeIds[k - 1] : null;
+          const { timeDelta: crossingDelta } = getCrossingTurnEffect(
+            crossingParentId,
+            nodeId,
+            nextNodeId,
+            overrides,
+          );
+          accumulatedDuration += crossingDelta;
         }
       }
     }
@@ -305,7 +315,15 @@ export function buildRouteStatistics(
           }
         }
 
-        totalDisplayCost += displayCost + turnPenalty;
+        const crossingParentId = i > 0 ? pathNodeIds[i - 1] : null;
+        const { timeDelta: crossingDelta } = getCrossingTurnEffect(
+          crossingParentId,
+          nodeId,
+          nextNodeId,
+          overrides,
+        );
+
+        totalDisplayCost += displayCost + turnPenalty + crossingDelta;
 
         const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
         roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
@@ -324,7 +342,7 @@ export function buildRouteStatistics(
           distance: edge.distance,
           highway: edge.tags.highway || 'unknown',
           tags: edge.tags,
-          cost: displayCost + turnPenalty,
+          cost: displayCost + turnPenalty + crossingDelta,
           matchedSign,
           matchedRoad,
         });

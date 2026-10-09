@@ -1,4 +1,4 @@
-import type { LocalOverrides, SemanticTurnType } from '../config';
+import type { CrossingTurnOverride, LocalOverrides, SemanticTurnType } from '../config';
 import type { Landmark } from '../landmarks/types';
 
 /**
@@ -10,6 +10,10 @@ export interface IStorageProvider {
   saveNodeNotes(nodeId: string, notes: string): Promise<void>;
   saveNodeTurns(nodeId: string, turns: Record<string, SemanticTurnType>): Promise<void>;
   clearNodeOverrides(nodeId: string): Promise<void>;
+  getCrossingTurns(): Promise<CrossingTurnOverride[]>;
+  saveCrossingTurn(override: CrossingTurnOverride): Promise<void>;
+  deleteCrossingTurn(id: string): Promise<void>;
+  clearCrossingTurns(crossingId?: string): Promise<void>;
   getLandmarks(): Promise<Landmark[]>;
   saveLandmarks(landmarks: Landmark[]): Promise<void>;
 }

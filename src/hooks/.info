@@ -3,7 +3,7 @@ useNavigation.ts
 useOSMData.ts
 	React hook managing fetch cycles and caching for Overpass API datasets.
 useOverrides.ts
-	React hook persisting traffic light status overrides to local storage.
+	React hook managing node delays, notes, custom routing rules, and crossing turn overrides in local storage.
 useRoutingState.ts
 	React hook managing coordinates, routing options, and active route paths.
 useInspectorMode.ts

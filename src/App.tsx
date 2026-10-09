@@ -49,6 +49,7 @@ function DashboardApp() {
     nodeDelays,
     nodeNotes,
     nodeTurns,
+    crossingTurns,
     rulesConfig,
     setRulesConfig,
     bikeConfig,
@@ -57,6 +58,8 @@ function DashboardApp() {
     handleSaveNodeOverride,
     handleSaveNodeTurns,
     handleClearNodeOverride,
+    handleSaveCrossingTurn,
+    handleDeleteCrossingTurn,
   } = useOverrides();
 
   // Instantiate hooks to manage routing state and OSM fetching
@@ -212,6 +215,9 @@ function DashboardApp() {
       onEventsChange={setEvents}
       selectedEdgeIds={selectedEdgeIds}
       onSelectedEdgeIdsChange={setSelectedEdgeIds}
+      crossingTurns={crossingTurns}
+      onSaveCrossingTurn={handleSaveCrossingTurn}
+      onDeleteCrossingTurn={handleDeleteCrossingTurn}
     >
       <div className="app-container">
         <SideToolbar

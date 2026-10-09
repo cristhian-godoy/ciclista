@@ -88,6 +88,7 @@ export function convertGraphToGeoJSON(
     nodeIds: string[];
     controlType: 'signal' | 'yield' | 'stop' | 'crossing';
     hasCustomDelay: boolean;
+    radiusMeters: number;
   }[] = [];
 
   const CELL_SIZE = 0.000315; // roughly 35 meters in degrees
@@ -150,6 +151,15 @@ export function convertGraphToGeoJSON(
 
     const hasCustomDelay = clusterNodes.some((n) => n.customDelay !== null);
 
+    let maxDistanceToNodes = 0;
+    for (const n of clusterNodes) {
+      const dist = getDistance(avgLat, avgLng, n.lat, n.lng);
+      if (dist > maxDistanceToNodes) {
+        maxDistanceToNodes = dist;
+      }
+    }
+    const radiusMeters = Math.max(35, maxDistanceToNodes + 10);
+
     crossings.push({
       id: crossingId,
       lat: avgLat,
@@ -157,6 +167,7 @@ export function convertGraphToGeoJSON(
       nodeIds: clusterNodes.map((n) => n.id),
       controlType: clusterControlType,
       hasCustomDelay,
+      radiusMeters,
     });
   }
 
@@ -174,6 +185,7 @@ export function convertGraphToGeoJSON(
         nodeIds: JSON.stringify(crossing.nodeIds),
         controlType: crossing.controlType,
         hasCustomDelay: crossing.hasCustomDelay ? 'true' : 'false',
+        radiusMeters: crossing.radiusMeters,
       },
     });
   });

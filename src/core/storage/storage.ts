@@ -1,5 +1,10 @@
 import { logger } from '../common/logger';
-import type { LocalOverrides, RulesConfiguration, SemanticTurnType } from '../config';
+import type {
+  CrossingTurnOverride,
+  LocalOverrides,
+  RulesConfiguration,
+  SemanticTurnType,
+} from '../config';
 import { deserializeLandmarks, serializeLandmarks } from '../landmarks/landmarks';
 import type { Landmark } from '../landmarks/types';
 import type { IStorageProvider } from './types';
@@ -13,6 +18,7 @@ export class LocalStorageProvider implements IStorageProvider {
   private STORAGE_KEY = 'ciclista_custom_nodes';
   private RULES_KEY = 'ciclista_rules_config';
   private LANDMARKS_KEY = 'ciclista_landmarks';
+  private CROSSING_TURNS_KEY = 'ciclista_crossing_turns';
   private inMemoryStorage = new Map<string, string>();
 
   // In-memory cache for overrides data to avoid parse/stringify on every operation
@@ -161,10 +167,13 @@ export class LocalStorageProvider implements IStorageProvider {
       }
     });
 
+    const crossingTurns = this.loadCrossingTurnsSync();
+
     return {
       nodeDelays,
       nodeNotes,
       nodeTurns,
+      crossingTurns,
     };
   }
 
@@ -264,6 +273,101 @@ export class LocalStorageProvider implements IStorageProvider {
       this.setItem(this.LANDMARKS_KEY, serializeLandmarks(landmarks));
     } catch (e) {
       logger.error('Failed to save landmarks to localStorage:', e);
+    }
+  }
+
+  /**
+   * Retrieves all user-configured crossing turn overrides from localStorage.
+   */
+  async getCrossingTurns(): Promise<CrossingTurnOverride[]> {
+    return this.loadCrossingTurnsSync();
+  }
+
+  /**
+   * Synchronously loads all user-configured crossing turn overrides from localStorage.
+   */
+  loadCrossingTurnsSync(): CrossingTurnOverride[] {
+    const raw = this.getItem(this.CROSSING_TURNS_KEY);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (item) =>
+            item &&
+            typeof item === 'object' &&
+            typeof item.id === 'string' &&
+            typeof item.crossingId === 'string' &&
+            typeof item.fromNodeId === 'string' &&
+            typeof item.toNodeId === 'string',
+        ) as CrossingTurnOverride[];
+      }
+    } catch (e) {
+      logger.error('Failed to parse crossing turns from localStorage:', e);
+    }
+    return [];
+  }
+
+  /**
+   * Saves a crossing turn override to localStorage. Updates existing override by id or appends.
+   */
+  async saveCrossingTurn(override: CrossingTurnOverride): Promise<void> {
+    const existing = this.loadCrossingTurnsSync();
+    const index = existing.findIndex((t) => t.id === override.id);
+    if (index >= 0) {
+      existing[index] = override;
+    } else {
+      existing.push(override);
+    }
+    try {
+      this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify(existing));
+    } catch (e) {
+      logger.error('Failed to save crossing turn to localStorage:', e);
+    }
+  }
+
+  /**
+   * Persists an array of crossing turn overrides directly to localStorage.
+   */
+  async saveCrossingTurns(overrides: CrossingTurnOverride[]): Promise<void> {
+    try {
+      this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify(overrides));
+    } catch (e) {
+      logger.error('Failed to save crossing turns to localStorage:', e);
+    }
+  }
+
+  /**
+   * Deletes a crossing turn override by its unique identifier.
+   */
+  async deleteCrossingTurn(id: string): Promise<void> {
+    const existing = this.loadCrossingTurnsSync();
+    const filtered = existing.filter((t) => t.id !== id);
+    try {
+      this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      logger.error('Failed to delete crossing turn from localStorage:', e);
+    }
+  }
+
+  /**
+   * Clears all crossing turn overrides, optionally filtered by crossing cluster id.
+   */
+  async clearCrossingTurns(crossingId?: string): Promise<void> {
+    if (!crossingId) {
+      try {
+        this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify([]));
+      } catch (e) {
+        logger.error('Failed to clear crossing turns from localStorage:', e);
+      }
+      return;
+    }
+    const existing = this.loadCrossingTurnsSync();
+    const filtered = existing.filter((t) => t.crossingId !== crossingId);
+    try {
+      this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      logger.error('Failed to clear crossing turns for cluster from localStorage:', e);
     }
   }
 }

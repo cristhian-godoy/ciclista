@@ -2,7 +2,12 @@ import type maplibregl from 'maplibre-gl';
 import React, { createContext, useContext, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
-import type { BikeConfig, RulesConfiguration, SemanticTurnType } from '../../core/config';
+import type {
+  BikeConfig,
+  CrossingTurnOverride,
+  RulesConfiguration,
+  SemanticTurnType,
+} from '../../core/config';
 import type { MapEvent } from '../../core/events/types';
 import type { GraphNode, StreetGraph } from '../../core/graph/types';
 import type { InspectorBranchEvaluation } from '../../core/inspector/types';
@@ -134,6 +139,25 @@ export interface MapContextType {
   // Place pin placement mode
   isPlacingPlace?: boolean;
   setIsPlacingPlace?: React.Dispatch<React.SetStateAction<boolean>> | ((val: boolean) => void);
+
+  // Crossing Editor states
+  activeCrossingId?: string | null;
+  setActiveCrossingId?: (id: string | null) => void;
+  activeTurnSelection?: {
+    fromNodeId: string | null;
+    toNodeId: string | null;
+    waypointNodeIds: string[];
+  };
+  setActiveTurnSelection?: React.Dispatch<
+    React.SetStateAction<{
+      fromNodeId: string | null;
+      toNodeId: string | null;
+      waypointNodeIds: string[];
+    }>
+  >;
+  crossingTurns?: CrossingTurnOverride[];
+  onSaveCrossingTurn?: (override: CrossingTurnOverride) => void;
+  onDeleteCrossingTurn?: (id: string) => void;
 }
 
 /**
@@ -210,6 +234,9 @@ interface MapProviderProps {
   isPlacingPlace?: boolean;
   onPlacingPlaceChange?: React.Dispatch<React.SetStateAction<boolean>>;
   initialIsPlacingPlace?: boolean;
+  crossingTurns?: CrossingTurnOverride[];
+  onSaveCrossingTurn?: (override: CrossingTurnOverride) => void;
+  onDeleteCrossingTurn?: (id: string) => void;
   children: React.ReactNode;
 }
 
@@ -276,6 +303,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   isPlacingPlace: controlledIsPlacingPlace,
   onPlacingPlaceChange,
   initialIsPlacingPlace,
+  crossingTurns: controlledCrossingTurns,
+  onSaveCrossingTurn: onSaveCrossingTurnProp,
+  onDeleteCrossingTurn: onDeleteCrossingTurnProp,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -343,6 +373,43 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   );
   const isPlacingPlace = controlledIsPlacingPlace ?? internalIsPlacingPlace;
   const setIsPlacingPlace = onPlacingPlaceChange ?? setInternalIsPlacingPlace;
+
+  const [activeCrossingId, setActiveCrossingId] = useState<string | null>(null);
+  const [activeTurnSelection, setActiveTurnSelection] = useState<{
+    fromNodeId: string | null;
+    toNodeId: string | null;
+    waypointNodeIds: string[];
+  }>({
+    fromNodeId: null,
+    toNodeId: null,
+    waypointNodeIds: [],
+  });
+  const [internalCrossingTurns, setInternalCrossingTurns] = useState<CrossingTurnOverride[]>([]);
+  const crossingTurns = controlledCrossingTurns ?? internalCrossingTurns;
+
+  const handleSaveCrossingTurn = (override: CrossingTurnOverride) => {
+    if (onSaveCrossingTurnProp) {
+      onSaveCrossingTurnProp(override);
+    } else {
+      setInternalCrossingTurns((prev) => {
+        const idx = prev.findIndex((t) => t.id === override.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = override;
+          return next;
+        }
+        return [...prev, override];
+      });
+    }
+  };
+
+  const handleDeleteCrossingTurn = (id: string) => {
+    if (onDeleteCrossingTurnProp) {
+      onDeleteCrossingTurnProp(id);
+    } else {
+      setInternalCrossingTurns((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
 
   const [landmarkModal, setLandmarkModal] = useState<LandmarkModalState>({
     isOpen: false,
@@ -485,6 +552,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         onDeletePlace: handleDeleteLandmark,
         isPlacingPlace,
         setIsPlacingPlace,
+        activeCrossingId,
+        setActiveCrossingId,
+        activeTurnSelection,
+        setActiveTurnSelection,
+        crossingTurns,
+        onSaveCrossingTurn: handleSaveCrossingTurn,
+        onDeleteCrossingTurn: handleDeleteCrossingTurn,
       }}
     >
       {children}

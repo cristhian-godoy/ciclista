@@ -1,3 +1,7 @@
+crossing.test.ts
+	Unit tests for crossing clustering, bounding radius calculation, and subgraph mini A* search.
+crossing.ts
+	Crossing extraction, spatial clustering, dynamic bounding circle GeoJSON generation, and mini A* pathfinder.
 geojson.test.ts
 	Unit tests for GeoJSON features builders and coordinate mapping.
 geojson.ts

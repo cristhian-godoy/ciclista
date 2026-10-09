@@ -11,6 +11,7 @@ import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { BrushCircleLayer } from './map/BrushCircleLayer';
 import { InspectorLayer } from './map/InspectorLayer';
+import { CrossingEditorLayer } from './map/layers/CrossingEditorLayer';
 import { type PlaceModalState, useMapContext } from './map/MapContext';
 import { MapContextMenu } from './map/MapContextMenu';
 import { MapLayerDock } from './map/MapLayerDock';
@@ -697,6 +698,7 @@ const MapViewContent: React.FC<{
           <StartEndMarkers />
           <NavigationLayer />
           <InspectorLayer />
+          <CrossingEditorLayer />
           <NodePopup key={selectedNode?.id} />
           <MapContextMenu />
           <MapLayerDock />

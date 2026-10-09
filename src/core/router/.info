@@ -2,6 +2,10 @@ astar.test.ts
 	Unit tests for bidirectional A* pathfinding, strategy profiles, and parity with Dijkstra.
 astar.ts
 	Bidirectional A* pathfinding engine using meet-in-the-middle search and consistent geodesic heuristics.
+crossing-turns.test.ts
+	Unit tests for crossing turn override matching, direct bans, and multi-node penalty evaluation.
+crossing-turns.ts
+	Utility functions for resolving crossing turn penalties and ban restrictions during routing.
 edge-metrics.test.ts
 	Unit tests for display cost calculations, turn penalties, and default delays.
 edge-metrics.ts

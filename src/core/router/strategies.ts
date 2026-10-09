@@ -8,6 +8,7 @@ import {
   mapRoadConfigToImpacts,
   mapSignConfigToImpacts,
 } from '../rules';
+import { isCrossingTurnDirectlyBanned } from './crossing-turns';
 import {
   applyRestrictedPathPenalty,
   getDefaultNodeDelay,
@@ -29,6 +30,10 @@ export function isEdgeBlocked(
   overrides?: LocalOverrides,
 ): boolean {
   if (!overrides) return false;
+
+  if (isCrossingTurnDirectlyBanned(sourceId, targetId, overrides)) {
+    return true;
+  }
 
   const key1 = `${sourceId}->${targetId}`;
   const key2 = `${targetId}->${sourceId}`;

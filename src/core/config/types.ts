@@ -57,6 +57,27 @@ export type SemanticTurnType =
   | 'u_turn';
 
 /**
+ * Semantic classifications for crossing turn overrides configured in edit mode.
+ */
+export type CrossingTurnType = 'direct' | 'copenhagen_two_stage' | 'green_arrow' | 'custom';
+
+/**
+ * Represents a user-configured turn override on a crossing cluster subgraph,
+ * containing time penalties, hard bans, and path node sequences.
+ */
+export interface CrossingTurnOverride {
+  id: string;
+  crossingId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  pathNodeIds?: string[];
+  timeDeltaSeconds: number;
+  banned: boolean;
+  turnType: CrossingTurnType;
+  description?: string;
+}
+
+/**
  * Configuration parameters for specific traffic sign speed rules and penalties.
  */
 export interface SignRuleConfig {
@@ -122,6 +143,7 @@ export interface LocalOverrides {
   nodeDelays: Map<string, number>;
   nodeNotes: Map<string, string>;
   nodeTurns: Map<string, Record<string, SemanticTurnType>>;
+  crossingTurns?: CrossingTurnOverride[];
   rulesConfig?: RulesConfiguration;
   bikeConfig?: BikeConfig;
   events?: MapEvent[];

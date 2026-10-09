@@ -157,6 +157,29 @@ where
     }))
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrossingTurnOverride {
+    pub id: String,
+    #[serde(rename = "crossingId")]
+    pub crossing_id: String,
+    #[serde(rename = "fromNodeId")]
+    pub from_node_id: String,
+    #[serde(rename = "toNodeId")]
+    pub to_node_id: String,
+    #[serde(rename = "pathNodeIds", skip_serializing_if = "Option::is_none")]
+    pub path_node_ids: Option<Vec<String>>,
+    #[serde(rename = "timeDeltaSeconds", default)]
+    pub time_delta_seconds: f64,
+    #[serde(default)]
+    pub banned: bool,
+    #[serde(rename = "turnType", default)]
+    pub turn_type: String,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub description: Option<String>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none", default)]
+    pub created_at: Option<f64>,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LocalOverrides {
     #[serde(rename = "nodeDelays", default)]
@@ -165,6 +188,8 @@ pub struct LocalOverrides {
     pub node_notes: HashMap<String, String>,
     #[serde(rename = "nodeTurns", default)]
     pub node_turns: HashMap<String, HashMap<String, String>>,
+    #[serde(rename = "crossingTurns", skip_serializing_if = "Option::is_none", default)]
+    pub crossing_turns: Option<Vec<CrossingTurnOverride>>,
     #[serde(rename = "rulesConfig", skip_serializing_if = "Option::is_none")]
     pub rules_config: Option<RulesConfiguration>,
     #[serde(rename = "bikeConfig", skip_serializing_if = "Option::is_none")]
@@ -229,8 +254,87 @@ pub struct StrategyRouteVariant {
     pub result: RouteResult,
 }
 
+pub fn get_crossing_turn_effect(
+    parent_id: Option<&str>,
+    current_id: &str,
+    next_id: &str,
+    overrides: &LocalOverrides,
+) -> (bool, f64) {
+    let Some(turns) = &overrides.crossing_turns else {
+        return (false, 0.0);
+    };
+
+    let mut cumulative_delta = 0.0;
+
+    for turn in turns {
+        let mut matches = false;
+        let mut applies_delta = false;
+
+        if let Some(path) = &turn.path_node_ids {
+            if path.len() == 2 {
+                if current_id == path[0] && next_id == path[1] {
+                    matches = true;
+                    applies_delta = true;
+                }
+            } else if path.len() == 3 {
+                if parent_id == Some(path[0].as_str())
+                    && current_id == path[1]
+                    && next_id == path[2]
+                {
+                    matches = true;
+                    applies_delta = true;
+                }
+            } else if path.len() > 3 {
+                for i in 0..path.len() - 1 {
+                    if current_id == path[i] && next_id == path[i + 1] {
+                        matches = true;
+                        break;
+                    }
+                }
+                if current_id == path[path.len() - 2] && next_id == path[path.len() - 1] {
+                    applies_delta = true;
+                }
+            }
+        } else {
+            if current_id == turn.from_node_id && next_id == turn.to_node_id {
+                matches = true;
+                applies_delta = true;
+            } else if parent_id == Some(turn.from_node_id.as_str()) && next_id == turn.to_node_id {
+                matches = true;
+                applies_delta = true;
+            }
+        }
+
+        if matches && turn.banned {
+            return (true, 0.0);
+        }
+
+        if applies_delta && turn.time_delta_seconds.abs() > 1e-9 {
+            cumulative_delta += turn.time_delta_seconds;
+        }
+    }
+
+    (false, cumulative_delta)
+}
+
 pub fn is_edge_blocked(source_id: &str, target_id: &str, overrides: Option<&LocalOverrides>) -> bool {
     let Some(overrides) = overrides else { return false; };
+
+    if let Some(turns) = &overrides.crossing_turns {
+        for turn in turns {
+            if turn.banned {
+                if turn.from_node_id == source_id && turn.to_node_id == target_id {
+                    return true;
+                }
+                if let Some(path) = &turn.path_node_ids {
+                    if path.len() == 2 && path[0] == source_id && path[1] == target_id {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
     let key1 = format!("{}->{}", source_id, target_id);
     let key2 = format!("{}->{}", target_id, source_id);
 
@@ -832,6 +936,22 @@ impl DijkstraRouter {
                     }
                 }
 
+                let parent_id_str = if parent_int != isize::MAX {
+                    Some(int_to_node_id[parent_int as usize].as_str())
+                } else {
+                    None
+                };
+                let (is_banned, crossing_delta) = get_crossing_turn_effect(
+                    parent_id_str,
+                    current_id,
+                    neighbor_id,
+                    overrides,
+                );
+                if is_banned {
+                    continue;
+                }
+                edge_cost += crossing_delta;
+
                 let alt_dist = current_dist + edge_cost;
                 if alt_dist < distances[neighbor_int] {
                     distances[neighbor_int] = alt_dist;
@@ -1377,7 +1497,19 @@ pub(crate) fn build_route_statistics(
                     }
                 }
 
-                total_display_cost += display_cost + turn_penalty;
+                let parent_id_str = if i > 0 {
+                    Some(path_node_ids[i - 1].as_str())
+                } else {
+                    None
+                };
+                let (_, crossing_delta) = get_crossing_turn_effect(
+                    parent_id_str,
+                    node_id,
+                    next_node_id,
+                    overrides,
+                );
+
+                total_display_cost += display_cost + turn_penalty + crossing_delta;
 
                 let highway = edge.tags.get("highway").map(|s| s.as_str()).unwrap_or("unknown");
                 let cat = get_road_type_category(highway, &edge.tags);
@@ -1395,7 +1527,7 @@ pub(crate) fn build_route_statistics(
                     distance: edge.distance,
                     highway: highway.to_string(),
                     tags: edge.tags.clone(),
-                    cost: display_cost + turn_penalty,
+                    cost: display_cost + turn_penalty + crossing_delta,
                     matched_sign: match_res.sign.map(|s| s.as_str().to_string()),
                     matched_road: match_res.road.as_str().to_string(),
                 });
@@ -1548,4 +1680,49 @@ mod tests {
         assert!(is_edge_blocked("2", "1", Some(&overrides)));
         assert!(!is_edge_blocked("2", "7", Some(&overrides)));
     }
+
+    #[test]
+    fn test_crossing_turn_banned_and_penalty() {
+        let graph = load_mock_graph();
+        let router = DijkstraRouter::new();
+        let mut overrides = LocalOverrides::default();
+
+        let start = Coordinate { lat: 48.13715, lng: 11.5754 };
+        let end = Coordinate { lat: 48.135, lng: 11.582 };
+
+        let clean_res = router.find_route(&graph, start, end, standard_cost, &overrides).unwrap();
+
+        let turn_override = CrossingTurnOverride {
+            id: "turn-1".to_string(),
+            crossing_id: "cluster-1".to_string(),
+            from_node_id: "1".to_string(),
+            to_node_id: "2".to_string(),
+            path_node_ids: Some(vec!["1".to_string(), "2".to_string()]),
+            time_delta_seconds: 45.0,
+            banned: false,
+            turn_type: "direct".to_string(),
+            description: None,
+            created_at: None,
+        };
+        overrides.crossing_turns = Some(vec![turn_override]);
+
+        let penalized_res = router.find_route(&graph, start, end, standard_cost, &overrides).unwrap();
+        assert!(penalized_res.total_duration_seconds > clean_res.total_duration_seconds);
+
+        overrides.crossing_turns = Some(vec![CrossingTurnOverride {
+            id: "turn-1".to_string(),
+            crossing_id: "cluster-1".to_string(),
+            from_node_id: "1".to_string(),
+            to_node_id: "2".to_string(),
+            path_node_ids: Some(vec!["1".to_string(), "2".to_string()]),
+            time_delta_seconds: 0.0,
+            banned: true,
+            turn_type: "direct".to_string(),
+            description: None,
+            created_at: None,
+        }]);
+
+        assert!(is_edge_blocked("1", "2", Some(&overrides)));
+    }
 }
+

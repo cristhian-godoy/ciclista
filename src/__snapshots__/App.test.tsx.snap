@@ -130,6 +130,49 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
           />
         </svg>
       </button>
+      <button
+        aria-label="Edit"
+        aria-pressed="false"
+        class="ciclista-toolbar-btn "
+        title="Edit"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-git-fork ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="18"
+            r="3"
+          />
+          <circle
+            cx="6"
+            cy="6"
+            r="3"
+          />
+          <circle
+            cx="18"
+            cy="6"
+            r="3"
+          />
+          <path
+            d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"
+          />
+          <path
+            d="M12 12v3"
+          />
+        </svg>
+      </button>
     </nav>
     <div
       class="ciclista-toolbar-footer"

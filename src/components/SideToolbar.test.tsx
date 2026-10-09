@@ -12,6 +12,7 @@ describe('SideToolbar Component', () => {
     expect(screen.getByRole('button', { name: 'Routing Mode' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Places Mode' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Events' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
 
     const testRunnerLink = screen.getByRole('link', { name: 'Test Runner' });
     expect(testRunnerLink).toBeInTheDocument();
@@ -24,6 +25,7 @@ describe('SideToolbar Component', () => {
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
     const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
     const studioBtn = screen.getByRole('button', { name: 'Events' });
+    const editBtn = screen.getByRole('button', { name: 'Edit' });
 
     expect(routingBtn).toHaveClass('active');
     expect(routingBtn).toHaveAttribute('aria-pressed', 'true');
@@ -31,6 +33,23 @@ describe('SideToolbar Component', () => {
     expect(placesBtn).toHaveAttribute('aria-pressed', 'false');
     expect(studioBtn).not.toHaveClass('active');
     expect(studioBtn).toHaveAttribute('aria-pressed', 'false');
+    expect(editBtn).not.toHaveClass('active');
+    expect(editBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('marks edit mode as active when mode is edit', () => {
+    render(<SideToolbar mode="edit" onModeChange={vi.fn()} />);
+
+    const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
+    const placesBtn = screen.getByRole('button', { name: 'Places Mode' });
+    const studioBtn = screen.getByRole('button', { name: 'Events' });
+    const editBtn = screen.getByRole('button', { name: 'Edit' });
+
+    expect(editBtn).toHaveClass('active');
+    expect(editBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(routingBtn).not.toHaveClass('active');
+    expect(placesBtn).not.toHaveClass('active');
+    expect(studioBtn).not.toHaveClass('active');
   });
 
   it('marks places mode as active when mode is places', () => {
@@ -100,6 +119,19 @@ describe('SideToolbar Component', () => {
 
     expect(handleModeChange).toHaveBeenCalledTimes(1);
     expect(handleModeChange).toHaveBeenCalledWith('studio');
+  });
+
+  it('invokes onModeChange with edit when Edit button is clicked', async () => {
+    const user = userEvent.setup();
+    const handleModeChange = vi.fn();
+
+    render(<SideToolbar mode="routing" onModeChange={handleModeChange} />);
+
+    const editBtn = screen.getByRole('button', { name: 'Edit' });
+    await user.click(editBtn);
+
+    expect(handleModeChange).toHaveBeenCalledTimes(1);
+    expect(handleModeChange).toHaveBeenCalledWith('edit');
   });
 
   it('triggers onOpenTestRunner callback when clicking test runner link if provided', async () => {

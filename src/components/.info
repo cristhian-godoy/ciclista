@@ -4,6 +4,10 @@ AttributionPanel.test.tsx
 	Unit tests for AttributionPanel collapsed/expanded states.
 AttributionPanel.tsx
 	Accordion-style panel displaying third-party licensing and attributions.
+CrossingEditPanel.test.tsx
+	Unit tests for crossing edit panel edge classification legend, turn configuration, and penalty overrides.
+CrossingEditPanel.tsx
+	Sidebar panel for TM:PE-style crossing turn penalty configuration and edge inspection.
 DataSaverPanel.tsx
 	Visual widgets for tracking data usage and adjusting cellular caching constraints.
 EventManagementPanel.tsx
@@ -67,11 +71,11 @@ RulesSelectorFields.tsx
 Sidebar.test.tsx
 	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx
-	Dashboard sidebar layout rendering dynamic active section headers, route configurations, places, and studio panels.
+	Dashboard sidebar layout rendering dynamic active section headers, route configurations, places, studio, and crossing edit panels.
 SideToolbar.test.tsx
 	Unit tests for SideToolbar branding, navigation mode buttons, and test runner link.
 SideToolbar.tsx
-	Non-floating left side toolbar providing switching between routing mode, studio mode, and test runner.
+	Non-floating left side toolbar providing switching between routing, places, studio, crossing edit mode, and test runner.
 Toast.tsx
 	Re-export of reusable configurable Toast notification component.
 map

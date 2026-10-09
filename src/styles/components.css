@@ -2721,3 +2721,328 @@ h2 {
 .map-pin-placement-mode canvas {
   cursor: crosshair !important;
 }
+
+/* Crossing Editor Panel & Controls */
+.ciclista-crossing-edit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
+.ciclista-crossing-summary-card {
+  padding: var(--ciclista-spacing-12);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ciclista-crossing-summary-title {
+  font-size: var(--ciclista-font-md);
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-crossing-summary-badge {
+  font-size: var(--ciclista-font-xs);
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-6);
+  border-radius: var(--ciclista-radius-xs);
+  background: var(--ciclista-color-surface-tertiary);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-crossing-summary-details {
+  display: flex;
+  gap: var(--ciclista-spacing-md);
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-crossing-legend-container {
+  padding: var(--ciclista-spacing-10);
+  background: var(--ciclista-color-surface-elevated);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-legend-title {
+  font-size: var(--ciclista-font-xs);
+  text-transform: uppercase;
+  color: var(--ciclista-color-text-muted);
+  font-weight: 600;
+}
+
+.ciclista-crossing-legend-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-6);
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-crossing-legend-swatch {
+  width: 12px;
+  height: 4px;
+  border-radius: var(--ciclista-radius-3xs);
+  flex-shrink: 0;
+}
+
+.ciclista-crossing-legend-swatch--cycleway {
+  background-color: var(--ciclista-color-crossing-cycleway);
+}
+
+.ciclista-crossing-legend-swatch--residential {
+  background-color: var(--ciclista-color-crossing-residential);
+}
+
+.ciclista-crossing-legend-swatch--pedestrian {
+  background-color: var(--ciclista-color-crossing-pedestrian);
+}
+
+.ciclista-crossing-legend-swatch--arterial {
+  background-color: var(--ciclista-color-crossing-arterial);
+}
+
+.ciclista-crossing-legend-swatch--other {
+  background-color: var(--ciclista-color-crossing-other);
+}
+
+.ciclista-crossing-legend-swatch--active-turn {
+  background-color: var(--ciclista-color-crossing-turn-active);
+}
+
+.ciclista-crossing-turn-config {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-12);
+  padding: var(--ciclista-spacing-12);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+}
+
+.ciclista-crossing-turn-nodes-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--ciclista-font-sm);
+}
+
+.ciclista-crossing-turn-type-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-tag-btn {
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-sm);
+  font-size: var(--ciclista-font-xs);
+  border-radius: var(--ciclista-radius-xs);
+  border: 1px solid var(--ciclista-glass-border-base);
+  background: var(--ciclista-color-surface-tertiary);
+  color: var(--ciclista-color-text-secondary);
+  cursor: pointer;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-crossing-tag-btn:hover {
+  background: var(--ciclista-glass-bg-hover);
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-crossing-tag-btn.active {
+  background: var(--ciclista-color-brand-main);
+  border-color: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-crossing-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-crossing-slider-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-crossing-slider {
+  flex: 1;
+}
+
+.ciclista-crossing-number-input {
+  width: 60px;
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-xs);
+  background: var(--ciclista-color-surface-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-xs);
+  color: var(--ciclista-color-text-primary);
+  font-size: var(--ciclista-font-sm);
+  text-align: right;
+}
+
+.ciclista-crossing-ban-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-crossing-actions-row {
+  display: flex;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-crossing-btn-save {
+  flex: 1;
+  padding: var(--ciclista-spacing-sm) var(--ciclista-spacing-md);
+  background: var(--ciclista-color-brand-secondary);
+  border: none;
+  border-radius: var(--ciclista-radius-xs);
+  color: var(--ciclista-color-surface-base);
+  font-weight: 600;
+  font-size: var(--ciclista-font-sm);
+  cursor: pointer;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-crossing-btn-save:hover {
+  background: var(--ciclista-color-brand-secondary-hover);
+}
+
+.ciclista-crossing-btn-delete {
+  padding: var(--ciclista-spacing-sm) var(--ciclista-spacing-md);
+  background: var(--ciclista-color-danger-bg);
+  border: 1px solid var(--ciclista-color-danger-border);
+  border-radius: var(--ciclista-radius-xs);
+  color: var(--ciclista-color-danger-text);
+  font-weight: 600;
+  font-size: var(--ciclista-font-sm);
+  cursor: pointer;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-crossing-btn-delete:hover {
+  background: var(--ciclista-color-brand-danger);
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-crossing-overrides-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-override-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ciclista-spacing-sm);
+  background: var(--ciclista-color-surface-elevated);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-xs);
+  font-size: var(--ciclista-font-sm);
+}
+
+.ciclista-crossing-override-item--interactive {
+  cursor: pointer;
+}
+
+.ciclista-crossing-override-subtext {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+}
+
+.ciclista-crossing-override-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-crossing-badge--banned {
+  color: var(--ciclista-color-brand-danger);
+}
+
+.ciclista-crossing-waypoints-list {
+  display: flex;
+  gap: var(--ciclista-spacing-xs);
+  flex-wrap: wrap;
+}
+
+.ciclista-crossing-turn-path-status {
+  font-size: var(--ciclista-font-xs);
+}
+
+.ciclista-crossing-turn-path-status--success {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.ciclista-crossing-turn-path-status--error {
+  color: var(--ciclista-color-brand-danger);
+}
+
+.ciclista-crossing-slider-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-crossing-ban-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-6);
+}
+
+.ciclista-crossing-btn-icon-prefix {
+  margin-right: var(--ciclista-spacing-xs);
+  vertical-align: middle;
+}
+
+.ciclista-crossing-empty-state-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
+.ciclista-crossing-empty-state-card {
+  text-align: center;
+  padding: var(--ciclista-spacing-lg) var(--ciclista-spacing-md);
+}
+
+.ciclista-crossing-empty-state-icon {
+  margin: 0 auto var(--ciclista-spacing-sm) auto;
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.ciclista-crossing-empty-state-desc {
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-secondary);
+  margin-top: var(--ciclista-spacing-6);
+}

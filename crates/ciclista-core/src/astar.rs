@@ -6,7 +6,7 @@ use crate::geo::{
 use crate::graph::{GraphEdge, GraphNode, StreetGraph};
 use crate::router::{
     build_route_statistics, find_nearest_edge, find_nearest_node, get_bike_impacts,
-    get_effective_turn_penalty, HeapItem, LocalOverrides, RouteResult,
+    get_crossing_turn_effect, get_effective_turn_penalty, HeapItem, LocalOverrides, RouteResult,
     VirtualRoutingConfig,
 };
 
@@ -269,13 +269,29 @@ impl AStarRouter {
 
                 // Check meeting at node u
                 if dist_b[u] < f64::INFINITY {
-                    let mut cand_cost = dist_f[u] + dist_b[u];
-                    if parent_f[u] != -1 && succ_b[u] != -1 {
-                        cand_cost += compute_turn_penalty(parent_f[u], u, succ_b[u]);
-                    }
-                    if cand_cost < mu {
-                        mu = cand_cost;
-                        best_meeting = Some(MeetingPoint::Node(u));
+                    let parent_id_str = if parent_f[u] != -1 {
+                        Some(int_to_node_id[parent_f[u] as usize].as_str())
+                    } else {
+                        None
+                    };
+                    let succ_id_str = if succ_b[u] != -1 {
+                        Some(int_to_node_id[succ_b[u] as usize].as_str())
+                    } else {
+                        None
+                    };
+                    let (banned, node_delta) = match (parent_id_str, succ_id_str) {
+                        (Some(p), Some(s)) => get_crossing_turn_effect(Some(p), u_id, s, overrides),
+                        _ => (false, 0.0),
+                    };
+                    if !banned {
+                        let mut cand_cost = dist_f[u] + dist_b[u] + node_delta;
+                        if parent_f[u] != -1 && succ_b[u] != -1 {
+                            cand_cost += compute_turn_penalty(parent_f[u], u, succ_b[u]);
+                        }
+                        if cand_cost < mu {
+                            mu = cand_cost;
+                            best_meeting = Some(MeetingPoint::Node(u));
+                        }
                     }
                 }
 
@@ -292,15 +308,42 @@ impl AStarRouter {
                         step_cost += compute_turn_penalty(parent_f[u], u, v as isize);
                     }
 
+                    let parent_id_str = if parent_f[u] != -1 {
+                        Some(int_to_node_id[parent_f[u] as usize].as_str())
+                    } else {
+                        None
+                    };
+                    let (is_banned, crossing_delta) = get_crossing_turn_effect(
+                        parent_id_str,
+                        u_id,
+                        v_id,
+                        overrides,
+                    );
+                    if is_banned {
+                        continue;
+                    }
+                    step_cost += crossing_delta;
+
                     // Check meeting across edge u -> v
                     if dist_b[v] < f64::INFINITY {
-                        let mut edge_meeting_cost = dist_f[u] + step_cost + dist_b[v];
-                        if succ_b[v] != -1 {
-                            edge_meeting_cost += compute_turn_penalty(u as isize, v, succ_b[v]);
-                        }
-                        if edge_meeting_cost < mu {
-                            mu = edge_meeting_cost;
-                            best_meeting = Some(MeetingPoint::Edge(u, v));
+                        let succ_id_str = if succ_b[v] != -1 {
+                            Some(int_to_node_id[succ_b[v] as usize].as_str())
+                        } else {
+                            None
+                        };
+                        let (banned, edge_delta) = match succ_id_str {
+                            Some(s) => get_crossing_turn_effect(Some(u_id), v_id, s, overrides),
+                            None => (false, 0.0),
+                        };
+                        if !banned {
+                            let mut edge_meeting_cost = dist_f[u] + step_cost + dist_b[v] + edge_delta;
+                            if succ_b[v] != -1 {
+                                edge_meeting_cost += compute_turn_penalty(u as isize, v, succ_b[v]);
+                            }
+                            if edge_meeting_cost < mu {
+                                mu = edge_meeting_cost;
+                                best_meeting = Some(MeetingPoint::Edge(u, v));
+                            }
                         }
                     }
 
@@ -328,13 +371,29 @@ impl AStarRouter {
 
                 // Check meeting at node v
                 if dist_f[v] < f64::INFINITY {
-                    let mut cand_cost = dist_f[v] + dist_b[v];
-                    if parent_f[v] != -1 && succ_b[v] != -1 {
-                        cand_cost += compute_turn_penalty(parent_f[v], v, succ_b[v]);
-                    }
-                    if cand_cost < mu {
-                        mu = cand_cost;
-                        best_meeting = Some(MeetingPoint::Node(v));
+                    let parent_id_str = if parent_f[v] != -1 {
+                        Some(int_to_node_id[parent_f[v] as usize].as_str())
+                    } else {
+                        None
+                    };
+                    let succ_id_str = if succ_b[v] != -1 {
+                        Some(int_to_node_id[succ_b[v] as usize].as_str())
+                    } else {
+                        None
+                    };
+                    let (banned, node_delta) = match (parent_id_str, succ_id_str) {
+                        (Some(p), Some(s)) => get_crossing_turn_effect(Some(p), v_id, s, overrides),
+                        _ => (false, 0.0),
+                    };
+                    if !banned {
+                        let mut cand_cost = dist_f[v] + dist_b[v] + node_delta;
+                        if parent_f[v] != -1 && succ_b[v] != -1 {
+                            cand_cost += compute_turn_penalty(parent_f[v], v, succ_b[v]);
+                        }
+                        if cand_cost < mu {
+                            mu = cand_cost;
+                            best_meeting = Some(MeetingPoint::Node(v));
+                        }
                     }
                 }
 
@@ -351,15 +410,42 @@ impl AStarRouter {
                         step_cost += compute_turn_penalty(u as isize, v, succ_b[v]);
                     }
 
+                    let (is_banned, delta) = get_crossing_turn_effect(None, u_id, v_id, overrides);
+                    if is_banned {
+                        continue;
+                    }
+                    step_cost += delta;
+
+                    if succ_b[v] != -1 {
+                        let succ_id_str = &int_to_node_id[succ_b[v] as usize];
+                        let (turn_banned, turn_delta) =
+                            get_crossing_turn_effect(Some(u_id), v_id, succ_id_str, overrides);
+                        if turn_banned {
+                            continue;
+                        }
+                        step_cost += turn_delta;
+                    }
+
                     // Check meeting across edge u -> v
                     if dist_f[u] < f64::INFINITY {
-                        let mut edge_meeting_cost = dist_f[u] + step_cost + dist_b[v];
-                        if parent_f[u] != -1 {
-                            edge_meeting_cost += compute_turn_penalty(parent_f[u], u, v as isize);
-                        }
-                        if edge_meeting_cost < mu {
-                            mu = edge_meeting_cost;
-                            best_meeting = Some(MeetingPoint::Edge(u, v));
+                        let parent_id_str = if parent_f[u] != -1 {
+                            Some(int_to_node_id[parent_f[u] as usize].as_str())
+                        } else {
+                            None
+                        };
+                        let (banned, edge_delta) = match parent_id_str {
+                            Some(p) => get_crossing_turn_effect(Some(p), u_id, v_id, overrides),
+                            None => (false, 0.0),
+                        };
+                        if !banned {
+                            let mut edge_meeting_cost = dist_f[u] + step_cost + dist_b[v] + edge_delta;
+                            if parent_f[u] != -1 {
+                                edge_meeting_cost += compute_turn_penalty(parent_f[u], u, v as isize);
+                            }
+                            if edge_meeting_cost < mu {
+                                mu = edge_meeting_cost;
+                                best_meeting = Some(MeetingPoint::Edge(u, v));
+                            }
                         }
                     }
 
@@ -863,4 +949,34 @@ mod tests {
         );
         assert!(res.is_none());
     }
+
+    #[test]
+    fn test_astar_crossing_turn_penalty() {
+        let graph = load_mock_graph();
+        let router = AStarRouter::new();
+        let mut overrides = LocalOverrides::default();
+
+        let start = Coordinate { lat: 48.13715, lng: 11.5754 };
+        let end = Coordinate { lat: 48.135, lng: 11.582 };
+
+        let clean_res = router.find_route(&graph, start, end, standard_cost, &overrides).unwrap();
+
+        let turn_override = crate::router::CrossingTurnOverride {
+            id: "turn-1".to_string(),
+            crossing_id: "cluster-1".to_string(),
+            from_node_id: "1".to_string(),
+            to_node_id: "2".to_string(),
+            path_node_ids: Some(vec!["1".to_string(), "2".to_string()]),
+            time_delta_seconds: 30.0,
+            banned: false,
+            turn_type: "direct".to_string(),
+            description: None,
+            created_at: None,
+        };
+        overrides.crossing_turns = Some(vec![turn_override]);
+
+        let penalized_res = router.find_route(&graph, start, end, standard_cost, &overrides).unwrap();
+        assert!(penalized_res.total_duration_seconds > clean_res.total_duration_seconds);
+    }
 }
+

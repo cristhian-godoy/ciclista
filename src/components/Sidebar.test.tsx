@@ -244,8 +244,23 @@ describe('Sidebar Integration', () => {
     unmountPlaces();
 
     // 3. Studio mode
-    render(<Sidebar {...defaultProps} appMode="studio" />);
+    const { unmount: unmountStudio } = render(<Sidebar {...defaultProps} appMode="studio" />);
     expect(screen.getByRole('heading', { name: 'Events' })).toBeInTheDocument();
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
+    unmountStudio();
+
+    // 4. Edit mode
+    render(<Sidebar {...defaultProps} appMode="edit" />);
+    expect(screen.getByRole('heading', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
+  });
+
+  it('swaps content to CrossingEditPanel when in edit mode', () => {
+    render(<Sidebar {...defaultProps} appMode="edit" />);
+
+    expect(screen.getByRole('heading', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByText('Crossing Edge Classification')).toBeInTheDocument();
+    expect(screen.getByText('Select a Crossing')).toBeInTheDocument();
+    expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
   });
 });

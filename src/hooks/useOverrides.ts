@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   type BikeConfig,
+  type CrossingTurnOverride,
   DEFAULT_RULES_CONFIG,
   type LocalOverrides,
   type RulesConfiguration,
@@ -21,6 +22,7 @@ export function useOverrides() {
   const [nodeTurns, setNodeTurns] = useState<Map<string, Record<string, SemanticTurnType>>>(
     new Map(),
   );
+  const [crossingTurns, setCrossingTurns] = useState<CrossingTurnOverride[]>([]);
   const [rulesConfig, setRulesConfig] = useState<RulesConfiguration>(() => {
     const saved = storage.loadRulesConfig();
     if (!saved) return DEFAULT_RULES_CONFIG;
@@ -65,6 +67,7 @@ export function useOverrides() {
     setNodeDelays(overrides.nodeDelays);
     setNodeNotes(overrides.nodeNotes);
     setNodeTurns(overrides.nodeTurns);
+    setCrossingTurns(overrides.crossingTurns ?? []);
   };
 
   // Load custom settings on startup
@@ -93,6 +96,16 @@ export function useOverrides() {
     await loadCustomOverrides();
   };
 
+  const handleSaveCrossingTurn = async (override: CrossingTurnOverride) => {
+    await storage.saveCrossingTurn(override);
+    await loadCustomOverrides();
+  };
+
+  const handleDeleteCrossingTurn = async (id: string) => {
+    await storage.deleteCrossingTurn(id);
+    await loadCustomOverrides();
+  };
+
   const currentOverrides: LocalOverrides = useMemo(() => {
     return {
       nodeDelays,
@@ -100,13 +113,15 @@ export function useOverrides() {
       nodeTurns,
       rulesConfig,
       bikeConfig,
+      crossingTurns,
     };
-  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeConfig]);
+  }, [nodeDelays, nodeNotes, nodeTurns, rulesConfig, bikeConfig, crossingTurns]);
 
   return {
     nodeDelays,
     nodeNotes,
     nodeTurns,
+    crossingTurns,
     rulesConfig,
     setRulesConfig,
     bikeConfig,
@@ -115,5 +130,7 @@ export function useOverrides() {
     handleSaveNodeOverride,
     handleSaveNodeTurns,
     handleClearNodeOverride,
+    handleSaveCrossingTurn,
+    handleDeleteCrossingTurn,
   };
 }
