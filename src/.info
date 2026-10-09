@@ -16,3 +16,5 @@ styles
 	Theme variables, widgets, and absolute layouts.
 test
 	Setup files and general test utility helpers.
+vite-env.d.ts
+	TypeScript environment declarations for Vite client and GeoJSON types.

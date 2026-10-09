@@ -50,11 +50,7 @@ export type ComfortLevel = 'very_low' | 'low' | 'neutral' | 'high' | 'very_high'
  * Semantic classifications for custom turn overrides.
  */
 export type SemanticTurnType =
-  | 'right_turn'
-  | 'left_turn'
-  | 'green_arrow_right'
-  | 'indirect_left'
-  | 'u_turn';
+  'right_turn' | 'left_turn' | 'green_arrow_right' | 'indirect_left' | 'u_turn';
 
 /**
  * Semantic classifications for crossing turn overrides configured in edit mode.

@@ -63,7 +63,7 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.fontWeight = 'bold';
         startEl.style.fontSize = '12px';
         startEl.style.fontFamily = 'inherit';
-        startEl.innerHTML = 'A';
+        startEl.textContent = 'A';
 
         const startMarker = new maplibregl.Marker({ element: startEl, draggable: !isNavigating })
           .setLngLat([startCoord.lng, startCoord.lat])
@@ -113,7 +113,7 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.fontWeight = 'bold';
         endEl.style.fontSize = '12px';
         endEl.style.fontFamily = 'inherit';
-        endEl.innerHTML = 'B';
+        endEl.textContent = 'B';
 
         const endMarker = new maplibregl.Marker({ element: endEl, draggable: !isNavigating })
           .setLngLat([endCoord.lng, endCoord.lat])

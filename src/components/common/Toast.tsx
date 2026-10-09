@@ -6,12 +6,7 @@ import { createPortal } from 'react-dom';
  * Screen anchor position variants for the toast container.
  */
 export type ToastPosition =
-  | 'bottom-right'
-  | 'bottom-left'
-  | 'top-right'
-  | 'top-left'
-  | 'bottom-center'
-  | 'top-center';
+  'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center' | 'top-center';
 
 /**
  * Properties for the configurable Toast notification component.

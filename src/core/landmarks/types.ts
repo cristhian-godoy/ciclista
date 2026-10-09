@@ -2,14 +2,7 @@
  * Predefined semantic categories for favorite places and points of interest.
  */
 export type LandmarkCategory =
-  | 'home'
-  | 'work'
-  | 'doctor'
-  | 'school'
-  | 'shop'
-  | 'transit'
-  | 'leisure'
-  | 'other';
+  'home' | 'work' | 'doctor' | 'school' | 'shop' | 'transit' | 'leisure' | 'other';
 
 /**
  * Domain entity representing a user-defined landmark, favorite destination, or ALT preprocessing anchor.
