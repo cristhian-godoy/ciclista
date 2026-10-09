@@ -14,15 +14,7 @@ export const API_CONFIG = {
 } as const;
 
 export const MAP_CONFIG = {
-  PRESETS: {
-    munich: {
-      center: { lat: 48.13715, lng: 11.5754 },
-    },
-    amsterdam: {
-      center: { lat: 52.3725, lng: 4.89 },
-    },
-  },
-  DEFAULT_PRESET: 'munich' as const,
+  DEFAULT_CENTER: { lat: 48.13715, lng: 11.5754 },
   // Limit bounding box size to prevent Overpass query timeouts (max ~35km span)
   MAX_LAT_SPAN: 0.32,
   MAX_LNG_SPAN: 0.42,

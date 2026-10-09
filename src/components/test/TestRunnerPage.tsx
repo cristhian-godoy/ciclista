@@ -109,7 +109,6 @@ export default function TestRunnerPage() {
               >
                 <div>
                   <div className="ciclista-case-name">{tc.name}</div>
-                  <div className="ciclista-case-preset">Preset: {tc.preset}</div>
                 </div>
                 <div>
                   {res ? (
@@ -174,7 +173,6 @@ export default function TestRunnerPage() {
           routeVariants={routeVariants}
           activeAlternativeLabel={activeAlternativeLabel}
           onSelectAlternative={() => {}}
-          selectedPreset={selectedTestCase?.preset ?? 'munich'}
           customNodeDelays={new Map()}
           customNodeNotes={new Map()}
           customNodeTurns={new Map()}

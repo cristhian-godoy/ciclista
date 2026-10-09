@@ -49,7 +49,6 @@ export interface MapContextType {
   routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
   customNodeTurns: Map<string, Record<string, SemanticTurnType>>;
@@ -161,7 +160,6 @@ interface MapProviderProps {
   routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  selectedPreset: 'munich' | 'amsterdam';
   customNodeDelays: Map<string, number>;
   customNodeNotes: Map<string, string>;
   customNodeTurns: Map<string, Record<string, SemanticTurnType>>;
@@ -228,7 +226,6 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   routeVariants,
   activeAlternativeLabel,
   onSelectAlternative,
-  selectedPreset,
   customNodeDelays,
   customNodeNotes,
   customNodeTurns,
@@ -419,7 +416,6 @@ export const MapProvider: React.FC<MapProviderProps> = ({
         routeVariants,
         activeAlternativeLabel,
         onSelectAlternative,
-        selectedPreset,
         customNodeDelays,
         customNodeNotes,
         customNodeTurns,

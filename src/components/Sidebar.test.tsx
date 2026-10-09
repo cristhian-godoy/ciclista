@@ -50,8 +50,7 @@ describe('Sidebar Integration', () => {
     routingStrategy: 'standard' as const,
     isFetchingOSM: false,
     onStrategyChange: vi.fn(),
-    selectedPreset: 'munich' as const,
-    onPresetChange: vi.fn(),
+    onSwapCoords: vi.fn(),
     rulesConfig: DEFAULT_RULES_CONFIG,
     onRulesChange: vi.fn(),
     bikeConfig: { id: 'normal' as const },
@@ -78,7 +77,10 @@ describe('Sidebar Integration', () => {
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
 
     // Check elements from RoutingConfigPanel
-    expect(screen.getByText('City Preset')).toBeInTheDocument();
+    expect(screen.getByText('Route Points')).toBeInTheDocument();
+    expect(screen.getByLabelText('Start')).toBeInTheDocument();
+    expect(screen.getByLabelText('Destination')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Swap start and destination/i })).toBeInTheDocument();
 
     // Check elements from RouteStatsPanel
     expect(screen.getByText('Route Alternatives')).toBeInTheDocument();
@@ -90,22 +92,23 @@ describe('Sidebar Integration', () => {
     expect(screen.getByText('Route Comparison')).toBeInTheDocument();
   });
 
-  it('delegates preset changes and strategy selections to parent callbacks', async () => {
+  it('delegates swap coordinates and strategy selections to parent callbacks', async () => {
     const user = userEvent.setup();
-    const handlePresetChange = vi.fn();
+    const handleSwapCoords = vi.fn();
     const handleStrategyChange = vi.fn();
 
     render(
       <Sidebar
         {...defaultProps}
-        onPresetChange={handlePresetChange}
+        onSwapCoords={handleSwapCoords}
         onStrategyChange={handleStrategyChange}
       />,
     );
 
-    // Test preset dropdown change
-    await user.selectOptions(screen.getByRole('combobox', { name: /City Preset/i }), 'amsterdam');
-    expect(handlePresetChange).toHaveBeenCalledWith('amsterdam');
+    // Test swap button click
+    const swapBtn = screen.getByRole('button', { name: /Swap start and destination/i });
+    await user.click(swapBtn);
+    expect(handleSwapCoords).toHaveBeenCalledTimes(1);
 
     // Test stats strategy card click
     const activeRouteCard = screen.getAllByText('Speed')[0];
@@ -137,7 +140,7 @@ describe('Sidebar Integration', () => {
 
     expect(screen.getByText('Events')).toBeInTheDocument();
     expect(screen.getByText('1 road segment selected')).toBeInTheDocument();
-    expect(screen.queryByText('City Preset')).not.toBeInTheDocument();
+    expect(screen.queryByText('Route Points')).not.toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
     expect(
       screen.getByText('Click or drag brush on roads to select and configure blockages.'),

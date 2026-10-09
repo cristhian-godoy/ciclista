@@ -79,7 +79,6 @@ describe('PlacesLayer', () => {
       routeVariants: [],
       activeAlternativeLabel: 'standard',
       onSelectAlternative: vi.fn(),
-      selectedPreset: 'munich',
       customNodeDelays: new Map(),
       customNodeNotes: new Map(),
       customNodeTurns: new Map(),
