@@ -9,6 +9,7 @@ vi.mock('maplibre-gl', () => {
     return {
       on: vi.fn(),
       off: vi.fn(),
+      once: vi.fn(),
       remove: vi.fn(),
       addControl: vi.fn(),
       getCanvas: vi.fn(() => ({ style: {} })),
@@ -20,10 +21,13 @@ vi.mock('maplibre-gl', () => {
       easeTo: vi.fn(),
     };
   }
+  const MockNav = vi.fn();
   return {
+    Map: MockMap,
+    NavigationControl: MockNav,
     default: {
       Map: MockMap,
-      NavigationControl: vi.fn(),
+      NavigationControl: MockNav,
     },
   };
 });

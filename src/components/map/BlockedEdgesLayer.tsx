@@ -1,4 +1,4 @@
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect } from 'react';
 
 import { useMapContext } from './MapContext';

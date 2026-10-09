@@ -1,4 +1,4 @@
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
 import type { PathSegmentFeature, PathStyleConfig } from '../../../core/rendering/types';

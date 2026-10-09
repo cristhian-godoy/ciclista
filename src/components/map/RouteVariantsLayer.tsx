@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
 import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper';

@@ -1,4 +1,4 @@
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import React, { createContext, useContext, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';

@@ -1,5 +1,5 @@
 import { MapPin } from 'lucide-react';
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { haversineDistance } from '../core/common/geo';

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { Coordinate } from '../core/common/types';

@@ -187,6 +187,25 @@ vi.mock('maplibre-gl', () => {
       }
     }
 
+    once(event: string, arg1: string | Handler, arg2?: Handler) {
+      if (typeof arg1 === 'string' && typeof arg2 === 'function') {
+        const layerId = arg1;
+        const handler = arg2;
+        const wrapped: Handler = (...args: unknown[]) => {
+          this.off(event, layerId, wrapped);
+          handler(...args);
+        };
+        this.on(event, layerId, wrapped);
+      } else if (typeof arg1 === 'function') {
+        const handler = arg1;
+        const wrapped: Handler = (...args: unknown[]) => {
+          this.off(event, wrapped);
+          handler(...args);
+        };
+        this.on(event, wrapped);
+      }
+    }
+
     _trigger(event: string, ...args: unknown[]) {
       if (this.events[event]) {
         this.events[event].forEach((handler) => {

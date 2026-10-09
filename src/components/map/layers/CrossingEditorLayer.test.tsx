@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../../../core/graph/types';

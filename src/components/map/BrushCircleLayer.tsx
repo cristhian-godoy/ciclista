@@ -1,4 +1,4 @@
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { createGeoJSONCircle } from '../../core/common/geometry';

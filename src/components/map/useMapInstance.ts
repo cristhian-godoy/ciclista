@@ -1,6 +1,6 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
 import { fetchFilteredStyle } from '../../core/api/style';
@@ -97,14 +97,14 @@ export const useMapInstance = ({
     }
 
     // Attach basic map event listeners
-    mapInstance.on('contextmenu', (e) => {
+    mapInstance.on('contextmenu', (e: maplibregl.MapMouseEvent) => {
       e.originalEvent.preventDefault();
       if (onContextMenuRef.current) {
         onContextMenuRef.current(e);
       }
     });
 
-    mapInstance.on('mousedown', (e) => {
+    mapInstance.on('mousedown', (e: maplibregl.MapMouseEvent) => {
       mouseDownPosRef.current = { x: e.point.x, y: e.point.y };
       if (!isInteractingRef.current && interactionEndTimeoutRef.current) {
         clearTimeout(interactionEndTimeoutRef.current);
@@ -163,7 +163,7 @@ export const useMapInstance = ({
     });
     mapInstance.on('zoomend', handleInteractionEnd);
 
-    mapInstance.on('click', (e) => {
+    mapInstance.on('click', (e: maplibregl.MapMouseEvent) => {
       if (isInteractingRef.current) {
         return;
       }
