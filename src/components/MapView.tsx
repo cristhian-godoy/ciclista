@@ -77,6 +77,7 @@ const MapViewContent: React.FC<{
     onUpdatePlace,
     isPlacingPlace,
     setIsPlacingPlace,
+    setActiveCrossingId,
   } = useMapContext();
 
   const currentPlaces = useMemo(() => places ?? landmarks ?? [], [places, landmarks]);
@@ -99,6 +100,7 @@ const MapViewContent: React.FC<{
   const onNodeSelectRef = useRef(onNodeSelect);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
+  const setActiveCrossingIdRef = useRef(setActiveCrossingId);
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
   const isPlacingPlaceRef = useRef(isPlacingPlace);
@@ -119,6 +121,7 @@ const MapViewContent: React.FC<{
     onNodeSelectRef.current = onNodeSelect;
     setManagedClusterIdRef.current = setManagedClusterId;
     setManagedNodeIdsRef.current = setManagedNodeIds;
+    setActiveCrossingIdRef.current = setActiveCrossingId;
     onStartDragRef.current = onStartDrag;
     onEndDragRef.current = onEndDrag;
     isPlacingPlaceRef.current = isPlacingPlace;
@@ -137,6 +140,7 @@ const MapViewContent: React.FC<{
     onNodeSelect,
     setManagedClusterId,
     setManagedNodeIds,
+    setActiveCrossingId,
     onStartDrag,
     onEndDrag,
     isPlacingPlace,
@@ -515,6 +519,7 @@ const MapViewContent: React.FC<{
         if (crossingId) {
           setManagedClusterIdRef.current?.(crossingId);
           setManagedNodeIdsRef.current?.(nodeIds);
+          setActiveCrossingIdRef.current?.(crossingId);
         }
 
         map.easeTo?.({
@@ -632,6 +637,11 @@ const MapViewContent: React.FC<{
     }
 
     onNodeSelectRef.current?.(null);
+
+    // Placing start/end pins must be strictly restricted to appMode === 'routing'.
+    if (appModeRef.current !== 'routing') {
+      return;
+    }
 
     const sCoord = startCoordRef.current;
     const eCoord = endCoordRef.current;

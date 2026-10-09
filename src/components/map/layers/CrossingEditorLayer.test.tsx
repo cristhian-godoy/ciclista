@@ -63,6 +63,7 @@ describe('CrossingEditorLayer', () => {
     onMock = vi.fn();
     offMock = vi.fn();
 
+    const mockCanvas = { style: { cursor: '' } } as HTMLCanvasElement;
     mockMap = {
       getSource: vi.fn((id: string) => mockSources.get(id) as unknown as maplibregl.GeoJSONSource),
       getLayer: vi.fn((id: string) =>
@@ -74,7 +75,7 @@ describe('CrossingEditorLayer', () => {
       removeSource: vi.fn((id: string) => mockSources.delete(id)),
       on: onMock,
       off: offMock,
-      getCanvas: vi.fn(() => ({ style: {} }) as HTMLCanvasElement),
+      getCanvas: vi.fn(() => mockCanvas),
     } as unknown as Partial<maplibregl.Map>;
   });
 
@@ -171,13 +172,19 @@ describe('CrossingEditorLayer', () => {
     );
   };
 
-  it('registers all required MapLibre sources and layers on mount', () => {
+  it('registers active crossing MapLibre sources and layers without duplicate clusters', () => {
     renderWithContext();
 
-    expect(addSourceMock).toHaveBeenCalledWith(
+    // Zero duplicate cluster source or layer
+    expect(addSourceMock).not.toHaveBeenCalledWith(
       'crossing-editor-clusters-source',
       expect.any(Object),
     );
+    expect(addLayerMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'crossing-editor-clusters-circle' }),
+    );
+
+    // Active crossing sources registered
     expect(addSourceMock).toHaveBeenCalledWith('crossing-editor-circle-source', expect.any(Object));
     expect(addSourceMock).toHaveBeenCalledWith('crossing-editor-edges-source', expect.any(Object));
     expect(addSourceMock).toHaveBeenCalledWith(
@@ -186,14 +193,18 @@ describe('CrossingEditorLayer', () => {
     );
     expect(addSourceMock).toHaveBeenCalledWith('crossing-editor-nodes-source', expect.any(Object));
 
-    expect(addLayerMock).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'crossing-editor-clusters-circle' }),
-    );
+    // Interactive layers registered
     expect(addLayerMock).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'crossing-editor-circle-fill' }),
     );
     expect(addLayerMock).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'crossing-editor-edges-line' }),
+    );
+    expect(addLayerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'crossing-edges-layer' }),
+    );
+    expect(addLayerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'crossing-editor-turn-path-casing' }),
     );
     expect(addLayerMock).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'crossing-editor-turn-path-line' }),
@@ -203,20 +214,30 @@ describe('CrossingEditorLayer', () => {
     );
   });
 
-  it('populates cluster features when in edit mode', () => {
-    renderWithContext();
+  it('keeps active sources empty when no crossing is selected', () => {
+    renderWithContext({ activeCrossingId: null });
 
-    const clusterSource = mockSources.get('crossing-editor-clusters-source');
-    expect(clusterSource?.setData).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'FeatureCollection',
-        features: expect.arrayContaining([
-          expect.objectContaining({
-            properties: expect.objectContaining({ crossingId: 'crossing-node-1' }),
-          }),
-        ]),
-      }),
-    );
+    const circleSource = mockSources.get('crossing-editor-circle-source');
+    const edgesSource = mockSources.get('crossing-editor-edges-source');
+    const nodesSource = mockSources.get('crossing-editor-nodes-source');
+    const turnPathSource = mockSources.get('crossing-editor-turn-path-source');
+
+    expect(circleSource?.setData).toHaveBeenCalledWith({
+      type: 'FeatureCollection',
+      features: [],
+    });
+    expect(edgesSource?.setData).toHaveBeenCalledWith({
+      type: 'FeatureCollection',
+      features: [],
+    });
+    expect(nodesSource?.setData).toHaveBeenCalledWith({
+      type: 'FeatureCollection',
+      features: [],
+    });
+    expect(turnPathSource?.setData).toHaveBeenCalledWith({
+      type: 'FeatureCollection',
+      features: [],
+    });
   });
 
   it('updates bounding circle and subgraph data when active crossing is set', () => {
@@ -251,6 +272,98 @@ describe('CrossingEditorLayer', () => {
         ]),
       }),
     );
+  });
+
+  it('does NOT auto-populate end node when start node is clicked', () => {
+    const setActiveTurnSelectionMock = vi.fn();
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: setActiveTurnSelectionMock,
+    });
+
+    const nodeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-editor-nodes-circle',
+    )?.[2];
+    expect(nodeClickHandler).toBeDefined();
+
+    nodeClickHandler({
+      features: [{ properties: { nodeId: 'node-1' } }],
+    });
+
+    expect(setActiveTurnSelectionMock).toHaveBeenCalled();
+    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const updated = updateFn({ fromNodeId: null, toNodeId: null, waypointNodeIds: [] });
+    expect(updated.fromNodeId).toBe('node-1');
+    expect(updated.toNodeId).toBeNull();
+  });
+
+  it('makes crossing edges clickable and does not auto-populate end node on first edge click', () => {
+    const setActiveTurnSelectionMock = vi.fn();
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: setActiveTurnSelectionMock,
+    });
+
+    const edgeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-edges-layer',
+    )?.[2];
+    expect(edgeClickHandler).toBeDefined();
+
+    edgeClickHandler({
+      features: [{ properties: { sourceId: 'node-1', targetId: 'node-2' } }],
+    });
+
+    expect(setActiveTurnSelectionMock).toHaveBeenCalled();
+    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const updated = updateFn({ fromNodeId: null, toNodeId: null, waypointNodeIds: [] });
+    expect(updated.fromNodeId).toBe('node-1');
+    expect(updated.toNodeId).toBeNull();
+  });
+
+  it('sets end node when second edge is clicked', () => {
+    const setActiveTurnSelectionMock = vi.fn();
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: setActiveTurnSelectionMock,
+    });
+
+    const edgeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-edges-layer',
+    )?.[2];
+    expect(edgeClickHandler).toBeDefined();
+
+    edgeClickHandler({
+      features: [{ properties: { sourceId: 'node-1', targetId: 'node-2' } }],
+    });
+
+    expect(setActiveTurnSelectionMock).toHaveBeenCalled();
+    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const updated = updateFn({ fromNodeId: 'node-1', toNodeId: null, waypointNodeIds: [] });
+    expect(updated.toNodeId).toBe('node-2');
+  });
+
+  it('sets pointer cursor on crossing edges hover', () => {
+    renderWithContext();
+
+    const mouseEnterHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'mouseenter' && c[1] === 'crossing-edges-layer',
+    )?.[2];
+    expect(mouseEnterHandler).toBeDefined();
+
+    const canvas = mockMap.getCanvas!();
+    mouseEnterHandler();
+    expect(canvas.style.cursor).toBe('pointer');
+
+    const mouseLeaveHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'mouseleave' && c[1] === 'crossing-edges-layer',
+    )?.[2];
+    expect(mouseLeaveHandler).toBeDefined();
+
+    mouseLeaveHandler();
+    expect(canvas.style.cursor).toBe('');
   });
 
   it('clears all sources when mode is not edit', () => {

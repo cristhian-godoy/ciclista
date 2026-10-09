@@ -38,12 +38,14 @@ export const StreetGraphLayer: React.FC = () => {
     setManagedNodeIds,
     onNodeSelect,
     isPlacingPlace,
+    setActiveCrossingId,
   } = useMapContext();
 
   // Keep callback handlers in refs to prevent stale closures in map listeners
   const onNodeSelectRef = useRef(onNodeSelect);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
+  const setActiveCrossingIdRef = useRef(setActiveCrossingId);
   const graphRef = useRef(graph);
   const isPlacingPlaceRef = useRef(isPlacingPlace);
 
@@ -66,6 +68,10 @@ export const StreetGraphLayer: React.FC = () => {
   useEffect(() => {
     setManagedNodeIdsRef.current = setManagedNodeIds;
   }, [setManagedNodeIds]);
+
+  useEffect(() => {
+    setActiveCrossingIdRef.current = setActiveCrossingId;
+  }, [setActiveCrossingId]);
 
   // Setup layers and sources
   useEffect(() => {
@@ -321,6 +327,9 @@ export const StreetGraphLayer: React.FC = () => {
         }
         if (setManagedNodeIdsRef.current) {
           setManagedNodeIdsRef.current(nodeIds);
+        }
+        if (setActiveCrossingIdRef.current) {
+          setActiveCrossingIdRef.current(crossingId);
         }
 
         map.easeTo({

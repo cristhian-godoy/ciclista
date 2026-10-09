@@ -41,6 +41,8 @@ export const CrossingEditPanel: React.FC = () => {
   const crossingTurns = mapCtx?.crossingTurns ?? DEFAULT_CROSSING_TURNS;
   const onSaveCrossingTurn = mapCtx?.onSaveCrossingTurn ?? (() => {});
   const onDeleteCrossingTurn = mapCtx?.onDeleteCrossingTurn ?? (() => {});
+  const setManagedClusterId = mapCtx?.setManagedClusterId;
+  const setManagedNodeIds = mapCtx?.setManagedNodeIds;
   const customNodeDelays = mapCtx?.customNodeDelays;
   const showMinorControls = mapCtx?.showMinorControls ?? true;
 
@@ -200,6 +202,8 @@ export const CrossingEditPanel: React.FC = () => {
                 title="Deselect crossing"
                 onClick={() => {
                   setActiveCrossingId(null);
+                  setManagedClusterId?.(null);
+                  setManagedNodeIds?.([]);
                   handleClearSelection();
                 }}
               >

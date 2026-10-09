@@ -252,6 +252,20 @@ describe('MapView Contextual Map Interactions', () => {
     expect(onEndDragMock).not.toHaveBeenCalled();
   });
 
+  it('never places start or end route pins on left click when in edit mode', () => {
+    renderMapViewWithContext({ appMode: 'edit', startCoord: null, endCoord: null });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 250 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    });
+
+    expect(onStartDragMock).not.toHaveBeenCalled();
+    expect(onEndDragMock).not.toHaveBeenCalled();
+  });
+
   it('places start route pin on left click when in routing mode', () => {
     renderMapViewWithContext({ appMode: 'routing', startCoord: null, endCoord: null });
 

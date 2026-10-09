@@ -9,10 +9,6 @@ import {
 } from '../../../core/graph/crossing';
 import { useMapContext } from '../MapContext';
 
-const CLUSTERS_SOURCE_ID = 'crossing-editor-clusters-source';
-const CLUSTERS_GLOW_LAYER_ID = 'crossing-editor-clusters-glow';
-const CLUSTERS_CIRCLE_LAYER_ID = 'crossing-editor-clusters-circle';
-
 const CIRCLE_SOURCE_ID = 'crossing-editor-circle-source';
 const CIRCLE_FILL_LAYER_ID = 'crossing-editor-circle-fill';
 const CIRCLE_STROKE_LAYER_ID = 'crossing-editor-circle-stroke';
@@ -20,22 +16,22 @@ const CIRCLE_STROKE_LAYER_ID = 'crossing-editor-circle-stroke';
 const EDGES_SOURCE_ID = 'crossing-editor-edges-source';
 const EDGES_GLOW_LAYER_ID = 'crossing-editor-edges-glow';
 const EDGES_LINE_LAYER_ID = 'crossing-editor-edges-line';
+const CROSSING_EDGES_LAYER_ID = 'crossing-edges-layer';
 
 const NODES_SOURCE_ID = 'crossing-editor-nodes-source';
 const NODES_CIRCLE_LAYER_ID = 'crossing-editor-nodes-circle';
 
 const TURN_PATH_SOURCE_ID = 'crossing-editor-turn-path-source';
-const TURN_PATH_GLOW_LAYER_ID = 'crossing-editor-turn-path-glow';
+const TURN_PATH_CASING_LAYER_ID = 'crossing-editor-turn-path-casing';
 const TURN_PATH_LINE_LAYER_ID = 'crossing-editor-turn-path-line';
-const TURN_PATH_CUE_LAYER_ID = 'crossing-editor-turn-path-cue';
 
 /**
  * Interactive map layer for Crossing Edit mode:
- * - Highlights crossing clusters
- * - Draws dynamic bounding circle around active crossing
- * - Highlights crossing subgraph edges with semantic colors
- * - Displays interactive nodes for selecting turn start, end, and waypoints
- * - Renders computed turn path in amber with directional cues
+ * - Visualizes active crossing bounding circle and internal subgraph edges
+ * - Enables direct interaction on crossing edges and nodes
+ * - Renders computed turn path with black casing underlay and vibrant inner line
+ *
+ * @returns Null as this component imperatively manages MapLibre layers.
  */
 export const CrossingEditorLayer: React.FC = () => {
   const {
@@ -43,7 +39,6 @@ export const CrossingEditorLayer: React.FC = () => {
     graph,
     appMode,
     activeCrossingId = null,
-    setActiveCrossingId = () => {},
     activeTurnSelection = { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
     setActiveTurnSelection = () => {},
     customNodeDelays,
@@ -97,34 +92,6 @@ export const CrossingEditorLayer: React.FC = () => {
         });
       }
     };
-
-    // Clusters source
-    addSourceIfMissing(CLUSTERS_SOURCE_ID, { type: 'FeatureCollection', features: [] });
-    if (!map.getLayer(CLUSTERS_GLOW_LAYER_ID)) {
-      map.addLayer({
-        id: CLUSTERS_GLOW_LAYER_ID,
-        type: 'circle',
-        source: CLUSTERS_SOURCE_ID,
-        paint: {
-          'circle-radius': 14,
-          'circle-color': '#6366f1',
-          'circle-opacity': 0.25,
-        },
-      });
-    }
-    if (!map.getLayer(CLUSTERS_CIRCLE_LAYER_ID)) {
-      map.addLayer({
-        id: CLUSTERS_CIRCLE_LAYER_ID,
-        type: 'circle',
-        source: CLUSTERS_SOURCE_ID,
-        paint: {
-          'circle-radius': 9,
-          'circle-color': '#6366f1',
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-        },
-      });
-    }
 
     // Bounding circle source & layers
     addSourceIfMissing(CIRCLE_SOURCE_ID, { type: 'FeatureCollection', features: [] });
@@ -186,18 +153,33 @@ export const CrossingEditorLayer: React.FC = () => {
         },
       });
     }
-
-    // Turn path source & layers
-    addSourceIfMissing(TURN_PATH_SOURCE_ID, { type: 'FeatureCollection', features: [] });
-    if (!map.getLayer(TURN_PATH_GLOW_LAYER_ID)) {
+    if (!map.getLayer(CROSSING_EDGES_LAYER_ID)) {
       map.addLayer({
-        id: TURN_PATH_GLOW_LAYER_ID,
+        id: CROSSING_EDGES_LAYER_ID,
+        type: 'line',
+        source: EDGES_SOURCE_ID,
+        paint: {
+          'line-width': 16,
+          'line-opacity': 0.001,
+        },
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+        },
+      });
+    }
+
+    // Turn path source & layers (Underlay casing + vibrant inner line)
+    addSourceIfMissing(TURN_PATH_SOURCE_ID, { type: 'FeatureCollection', features: [] });
+    if (!map.getLayer(TURN_PATH_CASING_LAYER_ID)) {
+      map.addLayer({
+        id: TURN_PATH_CASING_LAYER_ID,
         type: 'line',
         source: TURN_PATH_SOURCE_ID,
         paint: {
-          'line-color': '#f59e0b',
-          'line-width': 10,
-          'line-opacity': 0.45,
+          'line-color': '#000000',
+          'line-width': 7,
+          'line-opacity': 1.0,
         },
         layout: {
           'line-cap': 'round',
@@ -212,24 +194,8 @@ export const CrossingEditorLayer: React.FC = () => {
         source: TURN_PATH_SOURCE_ID,
         paint: {
           'line-color': '#f59e0b',
-          'line-width': 5.5,
+          'line-width': 4,
           'line-opacity': 1.0,
-        },
-        layout: {
-          'line-cap': 'round',
-          'line-join': 'round',
-        },
-      });
-    }
-    if (!map.getLayer(TURN_PATH_CUE_LAYER_ID)) {
-      map.addLayer({
-        id: TURN_PATH_CUE_LAYER_ID,
-        type: 'line',
-        source: TURN_PATH_SOURCE_ID,
-        paint: {
-          'line-color': '#ffffff',
-          'line-width': 2.5,
-          'line-dasharray': [1.5, 2],
         },
         layout: {
           'line-cap': 'round',
@@ -265,14 +231,6 @@ export const CrossingEditorLayer: React.FC = () => {
     }
 
     // Interaction Listeners
-    const handleClusterClick = (e: maplibregl.MapLayerMouseEvent) => {
-      const feat = e.features?.[0];
-      const crossingId = feat?.properties?.crossingId;
-      if (crossingId) {
-        setActiveCrossingId(String(crossingId));
-      }
-    };
-
     const handleNodeClick = (e: maplibregl.MapLayerMouseEvent) => {
       const feat = e.features?.[0];
       const nodeId = feat?.properties?.nodeId ? String(feat.properties.nodeId) : null;
@@ -280,7 +238,12 @@ export const CrossingEditorLayer: React.FC = () => {
 
       const current = activeTurnSelectionRef.current;
       if (!current.fromNodeId) {
-        setActiveTurnSelection((prev) => ({ ...prev, fromNodeId: nodeId }));
+        setActiveTurnSelection((prev) => ({
+          ...prev,
+          fromNodeId: nodeId,
+          toNodeId: null,
+          waypointNodeIds: [],
+        }));
       } else if (!current.toNodeId) {
         if (nodeId !== current.fromNodeId) {
           setActiveTurnSelection((prev) => ({ ...prev, toNodeId: nodeId }));
@@ -311,7 +274,28 @@ export const CrossingEditorLayer: React.FC = () => {
 
       const current = activeTurnSelectionRef.current;
       if (!current.fromNodeId) {
-        setActiveTurnSelection((prev) => ({ ...prev, fromNodeId: sourceId, toNodeId: targetId }));
+        setActiveTurnSelection((prev) => ({
+          ...prev,
+          fromNodeId: sourceId,
+          toNodeId: null,
+          waypointNodeIds: [],
+        }));
+      } else if (!current.toNodeId) {
+        const chosenEndId = targetId !== current.fromNodeId ? targetId : sourceId;
+        if (chosenEndId !== current.fromNodeId) {
+          setActiveTurnSelection((prev) => ({ ...prev, toNodeId: chosenEndId }));
+        }
+      } else if (sourceId === current.fromNodeId || targetId === current.fromNodeId) {
+        setActiveTurnSelection((prev) => ({ ...prev, fromNodeId: null }));
+      } else if (sourceId === current.toNodeId || targetId === current.toNodeId) {
+        setActiveTurnSelection((prev) => ({ ...prev, toNodeId: null }));
+      } else {
+        setActiveTurnSelection((prev) => ({
+          ...prev,
+          fromNodeId: sourceId,
+          toNodeId: null,
+          waypointNodeIds: [],
+        }));
       }
     };
 
@@ -322,41 +306,39 @@ export const CrossingEditorLayer: React.FC = () => {
       if (map.getCanvas?.()) map.getCanvas().style.cursor = '';
     };
 
-    map.on('click', CLUSTERS_CIRCLE_LAYER_ID, handleClusterClick);
-    map.on('mouseenter', CLUSTERS_CIRCLE_LAYER_ID, setCursorPointer);
-    map.on('mouseleave', CLUSTERS_CIRCLE_LAYER_ID, resetCursor);
-
     map.on('click', NODES_CIRCLE_LAYER_ID, handleNodeClick);
     map.on('mouseenter', NODES_CIRCLE_LAYER_ID, setCursorPointer);
     map.on('mouseleave', NODES_CIRCLE_LAYER_ID, resetCursor);
+
+    map.on('click', CROSSING_EDGES_LAYER_ID, handleEdgeClick);
+    map.on('mouseenter', CROSSING_EDGES_LAYER_ID, setCursorPointer);
+    map.on('mouseleave', CROSSING_EDGES_LAYER_ID, resetCursor);
 
     map.on('click', EDGES_LINE_LAYER_ID, handleEdgeClick);
     map.on('mouseenter', EDGES_LINE_LAYER_ID, setCursorPointer);
     map.on('mouseleave', EDGES_LINE_LAYER_ID, resetCursor);
 
     return () => {
-      map.off('click', CLUSTERS_CIRCLE_LAYER_ID, handleClusterClick);
-      map.off('mouseenter', CLUSTERS_CIRCLE_LAYER_ID, setCursorPointer);
-      map.off('mouseleave', CLUSTERS_CIRCLE_LAYER_ID, resetCursor);
-
       map.off('click', NODES_CIRCLE_LAYER_ID, handleNodeClick);
       map.off('mouseenter', NODES_CIRCLE_LAYER_ID, setCursorPointer);
       map.off('mouseleave', NODES_CIRCLE_LAYER_ID, resetCursor);
+
+      map.off('click', CROSSING_EDGES_LAYER_ID, handleEdgeClick);
+      map.off('mouseenter', CROSSING_EDGES_LAYER_ID, setCursorPointer);
+      map.off('mouseleave', CROSSING_EDGES_LAYER_ID, resetCursor);
 
       map.off('click', EDGES_LINE_LAYER_ID, handleEdgeClick);
       map.off('mouseenter', EDGES_LINE_LAYER_ID, setCursorPointer);
       map.off('mouseleave', EDGES_LINE_LAYER_ID, resetCursor);
 
       const layersToRemove = [
-        CLUSTERS_CIRCLE_LAYER_ID,
-        CLUSTERS_GLOW_LAYER_ID,
         CIRCLE_STROKE_LAYER_ID,
         CIRCLE_FILL_LAYER_ID,
+        CROSSING_EDGES_LAYER_ID,
         EDGES_LINE_LAYER_ID,
         EDGES_GLOW_LAYER_ID,
-        TURN_PATH_CUE_LAYER_ID,
         TURN_PATH_LINE_LAYER_ID,
-        TURN_PATH_GLOW_LAYER_ID,
+        TURN_PATH_CASING_LAYER_ID,
         NODES_CIRCLE_LAYER_ID,
       ];
       for (const layerId of layersToRemove) {
@@ -366,7 +348,6 @@ export const CrossingEditorLayer: React.FC = () => {
       }
 
       const sourcesToRemove = [
-        CLUSTERS_SOURCE_ID,
         CIRCLE_SOURCE_ID,
         EDGES_SOURCE_ID,
         TURN_PATH_SOURCE_ID,
@@ -378,7 +359,7 @@ export const CrossingEditorLayer: React.FC = () => {
         }
       }
     };
-  }, [map, setActiveCrossingId, setActiveTurnSelection]);
+  }, [map, setActiveTurnSelection]);
 
   // 2. Synchronize Data into Sources
   useEffect(() => {
@@ -393,7 +374,6 @@ export const CrossingEditorLayer: React.FC = () => {
 
     if (!isEditMode) {
       // Clear all sources when not in edit mode
-      setSourceData(CLUSTERS_SOURCE_ID, { type: 'FeatureCollection', features: [] });
       setSourceData(CIRCLE_SOURCE_ID, { type: 'FeatureCollection', features: [] });
       setSourceData(EDGES_SOURCE_ID, { type: 'FeatureCollection', features: [] });
       setSourceData(NODES_SOURCE_ID, { type: 'FeatureCollection', features: [] });
@@ -401,26 +381,7 @@ export const CrossingEditorLayer: React.FC = () => {
       return;
     }
 
-    // A. Clusters GeoJSON
-    const clusterFeatures: GeoJSON.Feature<GeoJSON.Point>[] = clusters.map((c) => ({
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [c.lng, c.lat],
-      },
-      properties: {
-        crossingId: c.id,
-        nodeCount: c.nodeIds.length,
-        radiusMeters: c.radiusMeters,
-        controlType: c.controlType,
-      },
-    }));
-    setSourceData(CLUSTERS_SOURCE_ID, {
-      type: 'FeatureCollection',
-      features: clusterFeatures,
-    });
-
-    // B. Active Bounding Circle GeoJSON
+    // A. Active Bounding Circle GeoJSON
     if (activeCluster) {
       const circleFeat = createCrossingBoundingCircleGeoJSON(activeCluster);
       setSourceData(CIRCLE_SOURCE_ID, {
@@ -431,7 +392,7 @@ export const CrossingEditorLayer: React.FC = () => {
       setSourceData(CIRCLE_SOURCE_ID, { type: 'FeatureCollection', features: [] });
     }
 
-    // C. Subgraph Edges GeoJSON
+    // B. Subgraph Edges GeoJSON
     if (crossingSubgraph) {
       const edgeFeatures: GeoJSON.Feature<GeoJSON.LineString>[] = crossingSubgraph.edges.map(
         (edge) => {
@@ -461,7 +422,7 @@ export const CrossingEditorLayer: React.FC = () => {
         features: edgeFeatures,
       });
 
-      // D. Subgraph Nodes GeoJSON
+      // C. Subgraph Nodes GeoJSON
       const nodeFeatures: GeoJSON.Feature<GeoJSON.Point>[] = [];
       crossingSubgraph.nodes.forEach((node) => {
         let status: 'start' | 'end' | 'waypoint' | 'normal' = 'normal';
@@ -495,7 +456,7 @@ export const CrossingEditorLayer: React.FC = () => {
       setSourceData(NODES_SOURCE_ID, { type: 'FeatureCollection', features: [] });
     }
 
-    // E. Computed Turn Path GeoJSON
+    // D. Computed Turn Path GeoJSON
     if (crossingSubgraph && computedTurnPath && computedTurnPath.length >= 2) {
       const coords: [number, number][] = [];
       for (const id of computedTurnPath) {

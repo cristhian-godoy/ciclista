@@ -1,6 +1,6 @@
 CrossingEditorLayer.test.tsx
 	Unit tests for CrossingEditorLayer sources, layers, and active cluster data synchronization.
 CrossingEditorLayer.tsx
-	Map layer visualizing crossing clusters, dynamic bounding circles, semantic colored edges, interactive nodes, and amber turn path cues.
+	Map layer visualizing active crossing dynamic bounding circle, interactive crossing edges, nodes, and bordered turn path casing.
 UnifiedPathLayer.tsx
 	Unified path rendering component managing Glow, Core, and Semantic layers under the hood.
