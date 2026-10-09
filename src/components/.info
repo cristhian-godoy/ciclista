@@ -51,9 +51,9 @@ RouteStatsPanel.test.tsx
 RouteStatsPanel.tsx
 	View panel showcasing routing strategies and active route info cards.
 RoutingConfigPanel.test.tsx
-	Unit tests for preset selection and custom parameters.
+	Unit tests for route coordinates, swap button, and bike profile configurations.
 RoutingConfigPanel.tsx
-	Configuration widgets for city presets and profile selections.
+	Configuration panel for route coordinates, swap button, and bike profile selections.
 RulesConfigPanel.test.tsx
 	Unit tests for road type and traffic sign penalty selectors.
 RulesConfigPanel.tsx

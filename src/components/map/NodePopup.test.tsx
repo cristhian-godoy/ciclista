@@ -20,7 +20,6 @@ const defaultContextValue: MapContextType = {
   routeVariants: [],
   activeAlternativeLabel: 'standard',
   onSelectAlternative: vi.fn(),
-  selectedPreset: 'munich',
   customNodeDelays: new Map(),
   customNodeNotes: new Map(),
   selectedNode: null,

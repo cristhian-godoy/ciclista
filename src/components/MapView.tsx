@@ -40,7 +40,6 @@ const MapViewContent: React.FC<{
     setMap,
     mapReady,
     setMapReady,
-    selectedPreset,
     theme,
     setContextMenu,
     managedClusterId,
@@ -667,7 +666,6 @@ const MapViewContent: React.FC<{
     mapContainerRef,
     mapReady: mapInstanceReady,
   } = useMapInstance({
-    selectedPreset,
     theme,
     tileless,
     onMapBoundsChange,

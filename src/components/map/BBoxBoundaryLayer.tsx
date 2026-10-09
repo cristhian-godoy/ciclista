@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { useMapContext } from './MapContext';
 
 /**
- * Map overlay layer component that renders the bounding box (BBox) boundary
- * for the currently active City preset (e.g. Munich or Amsterdam) as a polygon.
+ * Map overlay layer component that renders bounding box (BBox) boundaries
+ * for currently loaded OSM network regions as polygons.
  */
 export const BBoxBoundaryLayer: React.FC = () => {
   const { map, loadedBBoxes } = useMapContext();

@@ -49,12 +49,6 @@ exports[`TestRunnerPage layout and design system compliance > renders test dashb
           >
             Marienplatz to Isartor Standard Route
           </div>
-          <div
-            class="ciclista-case-preset"
-          >
-            Preset: 
-            munich
-          </div>
         </div>
         <div>
           <span

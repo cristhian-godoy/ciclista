@@ -4,12 +4,12 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
 import { fetchFilteredStyle } from '../../core/api/style';
+import { MAP_CONFIG } from '../../core/common/constants';
 import { logger } from '../../core/common/logger';
 import { CustomNavigationControl } from './CustomNavigationControl';
 import { useCustomMapControls } from './useCustomMapControls';
 
 interface UseMapInstanceOptions {
-  selectedPreset: 'munich' | 'amsterdam';
   theme: 'bright' | 'liberty' | 'dark';
   tileless?: boolean;
   onMapBoundsChange?: (bbox: [number, number, number, number], zoom: number) => void;
@@ -24,7 +24,6 @@ interface UseMapInstanceOptions {
  * initializes container attachments, and binds viewport or click event callbacks.
  */
 export const useMapInstance = ({
-  selectedPreset,
   theme,
   tileless = false,
   onMapBoundsChange,
@@ -79,7 +78,7 @@ export const useMapInstance = ({
     const mapInstance = new maplibregl.Map({
       container: mapContainerRef.current,
       style: { version: 8, sources: {}, layers: [] },
-      center: selectedPreset === 'munich' ? [11.5754, 48.13715] : [4.89, 52.3725],
+      center: [MAP_CONFIG.DEFAULT_CENTER.lng, MAP_CONFIG.DEFAULT_CENTER.lat],
       zoom: 14.5,
       dragRotate: false,
       pitchWithRotate: false,
@@ -294,26 +293,6 @@ export const useMapInstance = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Handle fly/ease preset switches
-  const lastPresetRef = useRef(selectedPreset);
-  useEffect(() => {
-    if (!map || !mapReady) return;
-
-    if (lastPresetRef.current !== selectedPreset) {
-      lastPresetRef.current = selectedPreset;
-      const centers = {
-        munich: [11.5754, 48.13715] as [number, number],
-        amsterdam: [4.89, 52.3725] as [number, number],
-      };
-
-      map.easeTo({
-        center: centers[selectedPreset],
-        zoom: 14.5,
-        duration: 800,
-      });
-    }
-  }, [selectedPreset, mapReady, map]);
 
   // Handle theme changes
   const isFirstTheme = useRef(true);

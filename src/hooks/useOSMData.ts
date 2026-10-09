@@ -26,7 +26,6 @@ const parser = new OSMGraphParser();
 interface UseOSMDataProps {
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
-  setSelectedPreset: (preset: 'munich' | 'amsterdam') => void;
   setSelectedNode: (node: GraphNode | null) => void;
   onFetchFallback?: () => void;
 }
@@ -37,7 +36,6 @@ interface UseOSMDataProps {
 export function useOSMData({
   startCoord,
   endCoord,
-  setSelectedPreset,
   setSelectedNode,
   onFetchFallback,
 }: UseOSMDataProps) {
@@ -242,14 +240,6 @@ export function useOSMData({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCoord, endCoord, loadedBBoxes]);
 
-  // Handler for preset selections
-  const handlePresetChange = (preset: 'munich' | 'amsterdam') => {
-    setSelectedPreset(preset);
-    setGraph(null);
-    setLoadedBBoxes([]);
-    setLoadedChunkIds(new Set());
-  };
-
   // Handler to load OSM data as one moves through the map
   const handleMapBoundsChange = (viewportBBox: [number, number, number, number], zoom: number) => {
     if (zoom < 13) return;
@@ -262,7 +252,6 @@ export function useOSMData({
     graph,
     loadedBBoxes,
     isFetchingOSM,
-    handlePresetChange,
     handleMapBoundsChange,
   };
 }

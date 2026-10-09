@@ -89,7 +89,7 @@ export const DataSaverPanel: React.FC = () => {
   return (
     <section className="ciclista-card data-saver-panel">
       <h2>
-        <Database size={16} className="preset-header-icon" />
+        <Database size={16} className="data-saver-header-icon" />
         Data & Cache Saver
       </h2>
       <p className="config-panel-desc">

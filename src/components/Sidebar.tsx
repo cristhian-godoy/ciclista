@@ -46,8 +46,10 @@ export interface SidebarProps {
   routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
   onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
-  selectedPreset: 'munich' | 'amsterdam';
-  onPresetChange: (presetName: 'munich' | 'amsterdam') => void;
+  /**
+   * Callback fired when swapping start and end route coordinates.
+   */
+  onSwapCoords?: () => void;
   rulesConfig: RulesConfiguration;
   onRulesChange: (config: RulesConfiguration) => void;
   bikeConfig: BikeConfig;
@@ -153,8 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   routingStrategy,
   isFetchingOSM,
   onStrategyChange,
-  selectedPreset,
-  onPresetChange,
+  onSwapCoords,
   rulesConfig,
   onRulesChange,
   bikeConfig,
@@ -264,6 +265,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return startCoord ?? endCoord ?? null;
   })();
 
+  const handleSwapCoords = () => {
+    if (onSwapCoords) {
+      onSwapCoords();
+      return;
+    }
+    if (startCoord && endCoord) {
+      const prevStart = startCoord;
+      const prevEnd = endCoord;
+      handleSetStartCoord(prevEnd);
+      handleSetEndCoord(prevStart);
+    }
+  };
+
   const handleCreateEvent = (name: string, description?: string) => {
     if (onCreateEvent) {
       onCreateEvent(name, description);
@@ -361,8 +375,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <>
               {/* Section 1 & 2b: Routing configuration inputs */}
               <RoutingConfigPanel
-                selectedPreset={selectedPreset}
-                onPresetChange={onPresetChange}
+                startCoord={startCoord}
+                endCoord={endCoord}
+                onSwapCoords={handleSwapCoords}
+                onSetStartCoord={handleSetStartCoord}
+                onSetEndCoord={handleSetEndCoord}
                 isFetchingOSM={isFetchingOSM}
                 bikeConfig={bikeConfig}
                 onBikeConfigChange={onBikeConfigChange}

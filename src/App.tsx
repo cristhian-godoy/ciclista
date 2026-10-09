@@ -27,7 +27,6 @@ const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage
  * Primary dashboard view component executing main map and routing hooks.
  */
 function DashboardApp() {
-  const [selectedPreset, setSelectedPreset] = useState<'munich' | 'amsterdam'>('munich');
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
   const [appMode, setAppMode] = useState<ToolbarMode>('routing');
   const [events, setEvents] = useState<MapEvent[]>([]);
@@ -65,7 +64,6 @@ function DashboardApp() {
   const osmData = useOSMData({
     startCoord: routing.startCoord,
     endCoord: routing.endCoord,
-    setSelectedPreset,
     setSelectedNode: routing.setSelectedNode,
     onFetchFallback: () => {
       routing.setStartCoord(null);
@@ -73,7 +71,7 @@ function DashboardApp() {
     },
   });
 
-  const { graph, loadedBBoxes, isFetchingOSM, handlePresetChange, handleMapBoundsChange } = osmData;
+  const { graph, loadedBBoxes, isFetchingOSM, handleMapBoundsChange } = osmData;
   const {
     startCoord,
     setStartCoord,
@@ -98,11 +96,9 @@ function DashboardApp() {
     setEndCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
 
-  // Wrapper for preset changes to also reset active markers
-  const onPresetChange = (preset: 'munich' | 'amsterdam') => {
-    setStartCoord(null);
-    setEndCoord(null);
-    handlePresetChange(preset);
+  const handleSwapCoords = () => {
+    setStartCoord(endCoord);
+    setEndCoord(startCoord);
   };
 
   const effectiveOverrides: LocalOverrides = useMemo(() => {
@@ -177,7 +173,6 @@ function DashboardApp() {
       routeVariants={routeVariants}
       activeAlternativeLabel={routingStrategy}
       onSelectAlternative={setRoutingStrategy}
-      selectedPreset={selectedPreset}
       customNodeDelays={nodeDelays}
       customNodeNotes={nodeNotes}
       customNodeTurns={nodeTurns}
@@ -234,8 +229,7 @@ function DashboardApp() {
           routingStrategy={routingStrategy}
           isFetchingOSM={isFetchingOSM}
           onStrategyChange={setRoutingStrategy}
-          selectedPreset={selectedPreset}
-          onPresetChange={onPresetChange}
+          onSwapCoords={handleSwapCoords}
           rulesConfig={rulesConfig}
           onRulesChange={setRulesConfig}
           bikeConfig={bikeConfig}

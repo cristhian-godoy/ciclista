@@ -21,7 +21,6 @@ export interface RoutingTestCase {
   id: string;
   name: string;
   description: string;
-  preset: 'munich' | 'amsterdam';
   startCoord: Coordinate;
   endCoord: Coordinate;
   strategy?: 'standard' | 'stop_avoidance' | 'quiet_streets';

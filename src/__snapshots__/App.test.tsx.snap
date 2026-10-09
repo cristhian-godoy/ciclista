@@ -207,63 +207,111 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       class="sidebar-content"
     >
       <section
-        class="ciclista-card"
+        class="ciclista-card ciclista-route-locations-card"
       >
-        <h2>
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-layers preset-header-icon"
-            fill="none"
-            height="16"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"
-            />
-            <path
-              d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"
-            />
-            <path
-              d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"
-            />
-          </svg>
-          Map Area Presets
-        </h2>
-        <p
-          class="config-panel-desc"
-        >
-          Choose a preset city. The map area will automatically expand and fetch OSM data as you drag or position the pins.
-        </p>
         <div
-          class="ciclista-form-group config-form-group"
+          class="ciclista-route-locations-header"
         >
-          <label
-            class="ciclista-label"
-            for="city-preset-select"
-          >
-            City Preset
-          </label>
-          <select
-            class="ciclista-input config-select"
-            id="city-preset-select"
-          >
-            <option
-              value="munich"
+          <h2>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-map-pin ciclista-route-locations-header-icon"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              Munich (Marienplatz)
-            </option>
-            <option
-              value="amsterdam"
+              <path
+                d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+              />
+              <circle
+                cx="12"
+                cy="10"
+                r="3"
+              />
+            </svg>
+            Route Points
+          </h2>
+        </div>
+        <div
+          class="ciclista-route-locations-body"
+        >
+          <div
+            class="ciclista-route-locations-fields"
+          >
+            <div
+              class="ciclista-form-group ciclista-route-location-form-group"
             >
-              Amsterdam (Center)
-            </option>
-          </select>
+              <label
+                class="ciclista-label"
+                for="route-start-input"
+              >
+                Start
+              </label>
+              <input
+                class="ciclista-input ciclista-route-location-input"
+                id="route-start-input"
+                placeholder="Click map or enter lat, lng"
+                type="text"
+                value=""
+              />
+            </div>
+            <div
+              class="ciclista-form-group ciclista-route-location-form-group"
+            >
+              <label
+                class="ciclista-label"
+                for="route-end-input"
+              >
+                Destination
+              </label>
+              <input
+                class="ciclista-input ciclista-route-location-input"
+                id="route-end-input"
+                placeholder="Click map or enter lat, lng"
+                type="text"
+                value=""
+              />
+            </div>
+          </div>
+          <button
+            aria-label="Swap start and destination"
+            class="ciclista-btn ciclista-btn--secondary ciclista-route-swap-btn"
+            title="Swap start and destination"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-arrow-up-down"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21 16-4 4-4-4"
+              />
+              <path
+                d="M17 20V4"
+              />
+              <path
+                d="m3 8 4-4 4 4"
+              />
+              <path
+                d="M7 4v16"
+              />
+            </svg>
+          </button>
         </div>
       </section>
       <section

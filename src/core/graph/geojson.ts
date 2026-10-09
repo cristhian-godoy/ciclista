@@ -25,7 +25,7 @@ export interface GraphGeoJSON {
 
 /**
  * Calculates Euclidean distance in meters between two coordinates.
- * Using static Munchen / Amsterdam average latitude cosine projection (~0.67).
+ * Using static Munich average latitude cosine projection (~0.67).
  */
 function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const dLat = lat1 - lat2;
