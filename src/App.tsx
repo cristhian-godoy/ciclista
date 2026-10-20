@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
@@ -23,10 +23,14 @@ import { useRoutingState } from './hooks/useRoutingState';
 
 const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage'));
 
+interface DashboardAppProps {
+  onNavigate?: (path: string) => void;
+}
+
 /**
  * Primary dashboard view component executing main map and routing hooks.
  */
-function DashboardApp() {
+function DashboardApp({ onNavigate }: DashboardAppProps) {
   const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
   const [appMode, setAppMode] = useState<ToolbarMode>('routing');
   const [events, setEvents] = useState<MapEvent[]>([]);
@@ -122,18 +126,17 @@ function DashboardApp() {
 
   // 4. Reactive Concurrent Routing Calculation via WebWorker
   const [routeVariants, setRouteVariants] = useState<StrategyRouteVariant[]>([]);
+  const routerWorkerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    if (!graph || !startCoord || !endCoord) {
-      Promise.resolve().then(() => {
-        setRouteVariants((prev) => (prev.length === 0 ? prev : []));
-      });
+    if (typeof Worker === 'undefined') {
       return;
     }
 
     const worker = new Worker(new URL('./core/router/router.worker.ts', import.meta.url), {
       type: 'module',
     });
+    routerWorkerRef.current = worker;
 
     worker.onmessage = (e: MessageEvent<WorkerRoutingResponse>) => {
       const { routeVariants: alts, error } = e.data;
@@ -144,6 +147,25 @@ function DashboardApp() {
       }
     };
 
+    return () => {
+      worker.terminate();
+      routerWorkerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!graph || !startCoord || !endCoord) {
+      Promise.resolve().then(() => {
+        setRouteVariants((prev) => (prev.length === 0 ? prev : []));
+      });
+      return;
+    }
+
+    const worker = routerWorkerRef.current;
+    if (!worker) {
+      return;
+    }
+
     const request: WorkerRoutingRequest = {
       graph,
       startCoord,
@@ -151,10 +173,6 @@ function DashboardApp() {
       overrides: effectiveOverrides,
     };
     worker.postMessage(request);
-
-    return () => {
-      worker.terminate();
-    };
   }, [graph, startCoord, endCoord, effectiveOverrides]);
 
   const routeResult = useMemo(() => {
@@ -224,7 +242,12 @@ function DashboardApp() {
           mode={appMode}
           onModeChange={setAppMode}
           onOpenTestRunner={() => {
-            window.location.pathname = '/test';
+            if (onNavigate) {
+              onNavigate('/test');
+            } else if (typeof window !== 'undefined') {
+              window.history.pushState({}, '', '/test');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }
           }}
         />
         <Sidebar
@@ -279,15 +302,46 @@ function DashboardApp() {
  * Root application component performing route selection between dashboard and visual test runner.
  */
 export default function App() {
-  const isTestRoute = window.location.pathname === '/test';
+  const [currentPath, setCurrentPath] = useState(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/',
+  );
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const handleNavigate = (path: string) => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+    }
+  };
+
+  const isTestRoute = currentPath === '/test';
 
   if (isTestRoute) {
     return (
-      <Suspense fallback={<div className="app-suspense-fallback">Loading Test Dashboard...</div>}>
-        <TestRunnerPage />
-      </Suspense>
+      <div
+        onClick={(e) => {
+          const target = (e.target as HTMLElement).closest('a');
+          if (target && target.getAttribute('href') === '/') {
+            e.preventDefault();
+            handleNavigate('/');
+          }
+        }}
+      >
+        <Suspense fallback={<div className="app-suspense-fallback">Loading Test Dashboard...</div>}>
+          <TestRunnerPage />
+        </Suspense>
+      </div>
     );
   }
 
-  return <DashboardApp />;
+  return <DashboardApp onNavigate={handleNavigate} />;
 }

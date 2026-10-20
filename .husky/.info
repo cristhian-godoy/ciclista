@@ -1,0 +1,2 @@
+pre-commit
+	Pre-commit hook running vitest and lint-staged before commit completion.

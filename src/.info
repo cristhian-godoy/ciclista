@@ -1,5 +1,9 @@
 App.tsx
 	Main React controller managing coordinate states and routing triggers.
+App.test.tsx
+	Unit and snapshot baseline test suite for the root App component.
+__snapshots__
+	Component snapshot baseline fixtures for the root App component.
 assets
 	Static graphics and media files.
 components

@@ -1,0 +1,2 @@
+patch-wasm-pkg.mjs
+	Node script normalizing license, repository, exports, and files fields in wasm-pack generated package.json.

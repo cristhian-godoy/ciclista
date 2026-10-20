@@ -1,3 +1,17 @@
+.github
+	GitHub configuration templates and workflows.
+.gitignore
+	Git repository ignore definitions.
+.husky
+	Husky git hook configurations.
+.npmrc
+	npm configuration file setting frozen-lockfile=true.
+.prettierrc
+	Code formatting configurations for Prettier.
+.stylelintrc.json
+	Stylelint configurations enforcing design system tokens and class namespaces.
+LICENSE
+	MIT License and copyright notice.
 README.md
 	Project documentation, design decisions, and setup instructions.
 Cargo.lock
@@ -18,6 +32,8 @@ pnpm-lock.yaml
 	pnpm package dependency lockfile.
 public
 	Static assets served directly (favicon, svg symbols).
+scripts
+	Build automation and utility maintenance scripts.
 src
 	Application source code.
 tsconfig.app.json
@@ -28,9 +44,3 @@ tsconfig.node.json
 	TypeScript configuration for the Vite/Node environment.
 vite.config.ts
 	Vite environment and build configurations.
-.github
-	GitHub configuration templates and workflows.
-.npmrc
-	npm configuration file setting frozen-lockfile=true.
-LICENSE
-	MIT License and copyright notice.

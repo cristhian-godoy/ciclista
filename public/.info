@@ -2,3 +2,7 @@ favicon.svg
 	Application browser tab icon.
 icons.svg
 	SVG symbol definitions for map and UI icons.
+manifest.webmanifest
+	Web App Manifest specifying PWA display mode, theme colors, and application icon metadata.
+sw.js
+	Service worker script implementing cache-first and stale-while-revalidate offline caching for the application shell.

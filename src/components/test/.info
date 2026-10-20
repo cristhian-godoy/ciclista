@@ -1,0 +1,6 @@
+TestRunnerPage.tsx
+	Interactive visual test runner workbench component rendering routing scenarios and assertion outputs.
+TestRunnerPage.test.tsx
+	Unit and snapshot baseline tests for the TestRunnerPage component.
+__snapshots__
+	Component snapshot baseline fixtures for the visual test runner page.

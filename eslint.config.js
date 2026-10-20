@@ -12,7 +12,7 @@ import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/core/wasm/pkg', 'crates/**/target']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
