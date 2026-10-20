@@ -1,63 +1,13 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  CornerDownLeft,
-  CornerUpRight,
-  RefreshCw,
-} from 'lucide-react';
-import React, { useState } from 'react';
+import { ArrowLeft, ArrowRight, CornerDownLeft, CornerUpRight, RefreshCw } from 'lucide-react';
+import React from 'react';
 
 import type { TurnRuleConfig } from '../core/config';
+import { DelayRuleRow } from './common/DelayRuleRow';
 
-interface TurnRowProps {
-  label: string;
-  icon: React.ReactNode;
-  value: number;
-  max: number;
-  description: string;
-  onChange: (newValue: number) => void;
-}
-
-const TurnRow: React.FC<TurnRowProps> = ({ label, icon, value, max, description, onChange }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="rules-item">
-      <button
-        className="rules-item-header"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className="rules-item-icon">{icon}</span>
-        <span className="rules-item-name">{label}</span>
-        {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-      </button>
-      {expanded && (
-        <div className="rules-item-body">
-          <p className="rules-item-desc">{description}</p>
-          <div className="ciclista-form-group--small">
-            <label>
-              Penalty: <strong>{value}s</strong>
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={max}
-              step={1}
-              value={value}
-              onChange={(e) => onChange(Number(e.target.value))}
-              className="ciclista-slider--small"
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface TurnDelaySectionProps {
+/**
+ * Properties for configuring turn delay penalties.
+ */
+export interface TurnDelaySectionProps {
   config: TurnRuleConfig;
   onChange: (updated: TurnRuleConfig) => void;
 }
@@ -108,18 +58,19 @@ const TURN_FIELDS: {
 ];
 
 /**
- *
+ * Form section component for adjusting cycling turn penalties (left, right, green arrow, indirect, u-turn).
  */
 export const TurnDelaySection: React.FC<TurnDelaySectionProps> = ({ config, onChange }) => (
   <div className="rules-list">
     {TURN_FIELDS.map(({ key, label, icon, max, description }) => (
-      <TurnRow
+      <DelayRuleRow
         key={key}
         label={label}
         icon={icon}
         value={config[key]}
         max={max}
         description={description}
+        valueLabel="Penalty"
         onChange={(newValue) => onChange({ ...config, [key]: newValue })}
       />
     ))}

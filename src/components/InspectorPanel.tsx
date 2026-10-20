@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import type { InspectorBranchEvaluation } from '../core/inspector/types';
 import { getColorForEdge } from '../core/rendering/theme';
 import { useMapContext } from './map/MapContext';
+
+interface ColorDotProps {
+  color: string;
+}
+
+const ColorDot: React.FC<ColorDotProps> = ({ color }) => {
+  const dotRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (dotRef.current) {
+      dotRef.current.style.backgroundColor = color;
+    }
+  }, [color]);
+
+  return <span ref={dotRef} className="inspector-color-dot" />;
+};
 
 interface InspectorPanelProps {
   selectedNodeId: string | null;
@@ -48,8 +64,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         <div className="inspector-edge-header">
           <div>
             <div className="inspector-edge-title">
-              {/* eslint-disable-next-line react/forbid-dom-props -- Dynamic edge rendering color computed dynamically at runtime from road classification and traffic signs */}
-              <span className="inspector-color-dot" style={{ backgroundColor: color }} />
+              <ColorDot color={color} />
               {ev.name}
             </div>
             <div className="inspector-edge-sub">

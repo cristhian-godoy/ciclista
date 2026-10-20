@@ -278,7 +278,6 @@
 .inspector-hover-popup .maplibregl-popup-content {
   background: var(--ciclista-glass-bg-base) !important;
   backdrop-filter: blur(var(--ciclista-blur-radius)) !important;
-  backdrop-filter: blur(var(--ciclista-blur-radius)) !important;
   color: var(--ciclista-color-text-primary) !important;
   border: 1px solid var(--ciclista-glass-border-base) !important;
   border-radius: var(--ciclista-radius-sm) !important;

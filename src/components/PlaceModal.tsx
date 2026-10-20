@@ -1,22 +1,14 @@
-import {
-  Briefcase,
-  Check,
-  ChevronDown,
-  Edit2,
-  GraduationCap,
-  Home,
-  MapPin,
-  Plus,
-  Search,
-  Stethoscope,
-  X,
-} from 'lucide-react';
+import { Check, ChevronDown, Edit2, Plus, X } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import { validateLandmarkInput } from '../core/landmarks/landmarks';
 import type { LandmarkCategory } from '../core/landmarks/types';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useOnClickOutside } from '../hooks/useOnClickOutside';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
+import { getCategoryIcon } from '../utils/formatters';
+import { SearchInput } from './common/SearchInput';
 import { Modal } from './Modal';
 
 /**
@@ -38,11 +30,21 @@ export interface PlaceCategoryOption {
  * Strictly supported categories with corresponding icons and prefill names.
  */
 const PLACE_CATEGORIES: readonly PlaceCategoryOption[] = [
-  { category: 'home', label: 'Home', defaultName: 'Home', icon: <Home size={16} /> },
-  { category: 'work', label: 'Work', defaultName: 'Work', icon: <Briefcase size={16} /> },
-  { category: 'doctor', label: 'Doctor', defaultName: 'Doctor', icon: <Stethoscope size={16} /> },
-  { category: 'school', label: 'School', defaultName: 'School', icon: <GraduationCap size={16} /> },
-  { category: 'other', label: 'Other', defaultName: 'Other', icon: <MapPin size={16} /> },
+  { category: 'home', label: 'Home', defaultName: 'Home', icon: getCategoryIcon('home', 16) },
+  { category: 'work', label: 'Work', defaultName: 'Work', icon: getCategoryIcon('work', 16) },
+  {
+    category: 'doctor',
+    label: 'Doctor',
+    defaultName: 'Doctor',
+    icon: getCategoryIcon('doctor', 16),
+  },
+  {
+    category: 'school',
+    label: 'School',
+    defaultName: 'School',
+    icon: getCategoryIcon('school', 16),
+  },
+  { category: 'other', label: 'Other', defaultName: 'Other', icon: getCategoryIcon('other', 16) },
 ] as const;
 
 const CATEGORY_MAP = new Map<PlaceCategory, PlaceCategoryOption>(
@@ -172,19 +174,13 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
   }, [category]);
 
   // Handle outside click to close category dropdown
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isDropdownOpen]);
+  useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false), isDropdownOpen);
+
+  // Handle Escape key to close category dropdown and refocus trigger
+  useEscapeKey(() => {
+    setIsDropdownOpen(false);
+    triggerRef.current?.focus();
+  }, isDropdownOpen);
 
   // Focus search input when dropdown opens
   useEffect(() => {
@@ -335,19 +331,17 @@ const PlaceFormContent: React.FC<PlaceFormContentProps> = ({
               role="listbox"
               aria-labelledby="ciclista-place-category-label"
             >
-              <div className="ciclista-category-dropdown-search">
-                <Search size={14} className="ciclista-category-search-icon" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className="ciclista-input ciclista-category-search-input"
-                  placeholder="Search category..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  aria-label="Search category"
-                />
-              </div>
+              <SearchInput
+                ref={searchInputRef}
+                placeholder="Search category..."
+                value={searchFilter}
+                onChange={setSearchFilter}
+                onKeyDown={handleSearchKeyDown}
+                aria-label="Search category"
+                containerClassName="ciclista-category-dropdown-search"
+                inputClassName="ciclista-category-search-input"
+                iconSize={14}
+              />
 
               <ul className="ciclista-category-options-list">
                 {filteredCategories.length === 0 ? (

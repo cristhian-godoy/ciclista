@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { formatDistance, formatDuration } from '../utils/formatters';
 import { useMapContext } from './map/MapContext';
 
 /**
@@ -12,18 +13,6 @@ export const NavigationHUD: React.FC = () => {
 
   const { currentSpeedKmh, distanceRemainingM, etaSeconds } = navigationState.progress;
   const showWASD = import.meta.env.DEV;
-
-  const formatDistance = (m: number) => {
-    if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
-    return `${Math.round(m)} m`;
-  };
-
-  const formatDuration = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = Math.round(sec % 60);
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  };
 
   return (
     <div className="navigation-hud ciclista-glass-panel">
@@ -44,7 +33,7 @@ export const NavigationHUD: React.FC = () => {
 
       <div className="hud-item">
         <span className="hud-label">Remaining</span>
-        <span className="hud-value">{formatDistance(distanceRemainingM)}</span>
+        <span className="hud-value">{formatDistance(distanceRemainingM, 1)}</span>
       </div>
 
       <div className="hud-divider" />

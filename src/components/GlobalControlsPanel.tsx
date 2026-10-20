@@ -1,10 +1,20 @@
 import { Box, Moon, Palette, Sun, Wifi, WifiOff } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { isDataSaverActive, setDataSaverActive } from '../core/storage/dataUsage';
+import { useOnClickOutside } from '../hooks/useOnClickOutside';
 
-interface GlobalControlsPanelProps {
+/**
+ * Properties for the GlobalControlsPanel component.
+ */
+export interface GlobalControlsPanelProps {
+  /**
+   * Active map theme.
+   */
   theme: 'bright' | 'liberty' | 'dark';
+  /**
+   * Callback fired when map theme is changed.
+   */
   onThemeChange: (theme: 'bright' | 'liberty' | 'dark') => void;
 }
 
@@ -26,18 +36,7 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
     setDataSaverActive(nextVal);
   };
 
-  useEffect(() => {
-    if (!isThemeExpanded) return;
-    const handleDocumentClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setIsThemeExpanded(false);
-      }
-    };
-    document.addEventListener('click', handleDocumentClick);
-    return () => {
-      document.removeEventListener('click', handleDocumentClick);
-    };
-  }, [isThemeExpanded]);
+  useOnClickOutside(panelRef, () => setIsThemeExpanded(false), isThemeExpanded, 'click');
 
   return (
     <div ref={panelRef} className="maplibregl-ctrl maplibregl-ctrl-group global-controls-panel">

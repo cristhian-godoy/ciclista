@@ -7,15 +7,14 @@ import {
   Home,
   Layers,
   Milestone,
-  Octagon,
   Route,
   TrafficCone,
   Trees,
-  Zap,
 } from 'lucide-react';
 import React from 'react';
 
 import type { StrategyRouteVariant } from '../core/router/types';
+import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
 
 interface RouteComparePanelProps {
   routeVariants: StrategyRouteVariant[];
@@ -32,45 +31,9 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   onSelectAlternative,
 }) => {
   // Helpers
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.round(seconds % 60);
-    return `${m}m ${s}s`;
-  };
-
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) return `${Math.round(meters)} m`;
-    return `${(meters / 1000).toFixed(2)} km`;
-  };
-
   const formatPct = (value: number, total: number) => {
     if (total <= 0) return '0%';
     return `${Math.round((value / total) * 100)}%`;
-  };
-
-  const getStrategyLabel = (label: string): React.ReactNode => {
-    switch (label) {
-      case 'standard':
-        return (
-          <span className="strategy-label-badge">
-            <Zap size={12} aria-label="Speed Icon" /> Speed
-          </span>
-        );
-      case 'avoid-stops':
-        return (
-          <span className="strategy-label-badge">
-            <Octagon size={12} aria-label="Stops Icon" /> Stops
-          </span>
-        );
-      case 'quiet-streets':
-        return (
-          <span className="strategy-label-badge">
-            <Trees size={12} aria-label="Quiet Icon" /> Quiet
-          </span>
-        );
-      default:
-        return label;
-    }
   };
 
   if (routeVariants.length === 0) {
@@ -102,7 +65,7 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
                     }
                     className={`strategy-col ${isActive ? 'active' : ''}`}
                   >
-                    {getStrategyLabel(alt.label)}
+                    {getStrategyLabel(alt.label, { compact: true, iconSize: 12 })}
                   </th>
                 );
               })}

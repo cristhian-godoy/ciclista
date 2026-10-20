@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 import type { RoadRuleConfig, SignRuleConfig } from '../core/config';
 import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from '../core/rules';
+import { SliderField } from './common/SliderField';
 import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
 
 const getIcon = (iconCode: string): React.ReactNode => {
@@ -29,7 +30,94 @@ const getIcon = (iconCode: string): React.ReactNode => {
   }
 };
 
-interface SignRowProps {
+interface RuleRowProps<T extends SignRuleConfig | RoadRuleConfig> {
+  icon: React.ReactNode;
+  config: T;
+  speedType: 'relative' | 'slow' | 'slower' | 'dismount' | 'custom';
+  maxSpeedKmh: number;
+  onChange: (updated: T) => void;
+}
+
+const RuleRow = <T extends SignRuleConfig | RoadRuleConfig>({
+  icon,
+  config,
+  speedType,
+  maxSpeedKmh,
+  onChange,
+}: RuleRowProps<T>) => {
+  const [expanded, setExpanded] = useState(false);
+  const description = 'description' in config ? config.description : undefined;
+
+  return (
+    <div className="rules-item">
+      <button
+        className="rules-item-header"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <span className="rules-item-icon">{icon}</span>
+        <span className="rules-item-name">{config.name}</span>
+        {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+      </button>
+      {expanded && (
+        <div className="rules-item-body">
+          {description && <p className="rules-item-desc">{description}</p>}
+
+          <div className="ciclista-form-group--small">
+            <label>Speed type</label>
+            <SpeedTypeSelector
+              value={speedType}
+              onChange={(val) => onChange({ ...config, speedType: val })}
+            />
+          </div>
+
+          {speedType === 'dismount' ? (
+            <div className="ciclista-form-group--small mt-xs">
+              <span className="rules-speed-info">
+                Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
+              </span>
+            </div>
+          ) : (
+            speedType === 'custom' && (
+              <SliderField
+                label="Base speed"
+                value={config.baseSpeedKmh}
+                min={1}
+                max={maxSpeedKmh}
+                step={1}
+                unit=" km/h"
+                onChange={(val) => onChange({ ...config, baseSpeedKmh: val })}
+              />
+            )
+          )}
+
+          <div className="ciclista-form-group--small mt-sm">
+            <label>Comfort level</label>
+            <ComfortSelector
+              value={config.comfort || 'neutral'}
+              onChange={(val) => onChange({ ...config, comfort: val })}
+            />
+          </div>
+
+          <SliderField
+            label="Avoidance time penalty"
+            value={config.flatPenaltySeconds}
+            min={0}
+            max={120}
+            step={5}
+            unit="s"
+            onChange={(val) => onChange({ ...config, flatPenaltySeconds: val })}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Properties for configuring sign rule options in SignRow.
+ */
+export interface SignRowProps {
   config: SignRuleConfig;
   onChange: (updated: SignRuleConfig) => void;
 }
@@ -39,87 +127,21 @@ interface SignRowProps {
  * Allows toggling active speed profiles, custom speeds, comfort, and flat avoidance penalties.
  */
 export const SignRow: React.FC<SignRowProps> = ({ config, onChange }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const speedType = getEffectiveSignSpeedType(config);
-
   return (
-    <div className="rules-item">
-      <button
-        className="rules-item-header"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className="rules-item-icon">{getIcon(config.iconCode)}</span>
-        <span className="rules-item-name">{config.name}</span>
-        {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-      </button>
-      {expanded && (
-        <div className="rules-item-body">
-          <p className="rules-item-desc">{config.description}</p>
-
-          <div className="ciclista-form-group--small">
-            <label>Speed type</label>
-            <SpeedTypeSelector
-              value={speedType}
-              onChange={(val) => onChange({ ...config, speedType: val })}
-            />
-          </div>
-
-          {speedType === 'dismount' ? (
-            <div className="ciclista-form-group--small mt-xs">
-              <span className="rules-speed-info">
-                Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
-              </span>
-            </div>
-          ) : (
-            speedType === 'custom' && (
-              <div className="ciclista-form-group--small">
-                <label>
-                  Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={30}
-                  step={1}
-                  value={config.baseSpeedKmh}
-                  onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-                  className="ciclista-slider--small"
-                />
-              </div>
-            )
-          )}
-
-          <div className="ciclista-form-group--small mt-sm">
-            <label>Comfort level</label>
-            <ComfortSelector
-              value={config.comfort || 'neutral'}
-              onChange={(val) => onChange({ ...config, comfort: val })}
-            />
-          </div>
-
-          <div className="ciclista-form-group--small">
-            <label>
-              Avoidance time penalty: <strong>{config.flatPenaltySeconds}s</strong>
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={120}
-              step={5}
-              value={config.flatPenaltySeconds}
-              onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
-              className="ciclista-slider--small"
-            />
-          </div>
-        </div>
-      )}
-    </div>
+    <RuleRow
+      icon={getIcon(config.iconCode)}
+      config={config}
+      speedType={getEffectiveSignSpeedType(config)}
+      maxSpeedKmh={30}
+      onChange={onChange}
+    />
   );
 };
 
-interface RoadRowProps {
+/**
+ * Properties for configuring road rule options in RoadRow.
+ */
+export interface RoadRowProps {
   config: RoadRuleConfig;
   onChange: (updated: RoadRuleConfig) => void;
 }
@@ -129,82 +151,13 @@ interface RoadRowProps {
  * Allows configuring speed modifiers, comfort rating, and route avoidance penalty values.
  */
 export const RoadRow: React.FC<RoadRowProps> = ({ config, onChange }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const speedType = getEffectiveRoadSpeedType(config);
-
   return (
-    <div className="rules-item">
-      <button
-        className="rules-item-header"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className="rules-item-icon">
-          <Route size={14} aria-label="Road Icon" />
-        </span>
-        <span className="rules-item-name">{config.name}</span>
-        {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-      </button>
-      {expanded && (
-        <div className="rules-item-body">
-          <div className="ciclista-form-group--small">
-            <label>Speed type</label>
-            <SpeedTypeSelector
-              value={speedType}
-              onChange={(val) => onChange({ ...config, speedType: val })}
-            />
-          </div>
-
-          {speedType === 'dismount' ? (
-            <div className="ciclista-form-group--small mt-xs">
-              <span className="rules-speed-info">
-                Speed locked: <strong>4 km/h</strong> (Dismount / Walking speed)
-              </span>
-            </div>
-          ) : (
-            speedType === 'custom' && (
-              <div className="ciclista-form-group--small">
-                <label>
-                  Base speed: <strong>{config.baseSpeedKmh} km/h</strong>
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={45}
-                  step={1}
-                  value={config.baseSpeedKmh}
-                  onChange={(e) => onChange({ ...config, baseSpeedKmh: Number(e.target.value) })}
-                  className="ciclista-slider--small"
-                />
-              </div>
-            )
-          )}
-
-          <div className="ciclista-form-group--small mt-sm">
-            <label>Comfort level</label>
-            <ComfortSelector
-              value={config.comfort || 'neutral'}
-              onChange={(val) => onChange({ ...config, comfort: val })}
-            />
-          </div>
-
-          <div className="ciclista-form-group--small">
-            <label>
-              Avoidance time penalty: <strong>{config.flatPenaltySeconds}s</strong>
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={120}
-              step={5}
-              value={config.flatPenaltySeconds}
-              onChange={(e) => onChange({ ...config, flatPenaltySeconds: Number(e.target.value) })}
-              className="ciclista-slider--small"
-            />
-          </div>
-        </div>
-      )}
-    </div>
+    <RuleRow
+      icon={<Route size={14} aria-label="Road Icon" />}
+      config={config}
+      speedType={getEffectiveRoadSpeedType(config)}
+      maxSpeedKmh={45}
+      onChange={onChange}
+    />
   );
 };

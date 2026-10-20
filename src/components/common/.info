@@ -1,6 +1,20 @@
 Modal.tsx
-	Reusable accessible glassmorphic modal dialog component.
+	Reusable accessible glassmorphic modal dialog component rendered via React portal.
 Toast.test.tsx
 	Unit tests for reusable Toast component auto-dismissal, positioning, and accessibility.
 Toast.tsx
 	Reusable configurable glassmorphic toast notification component adhering to design tokens.
+CloseButton.tsx
+	Reusable accessible icon button for dialog dismissal conforming to glassmorphic design tokens.
+AccordionSection.tsx
+	Reusable collapsible accordion section with header icon, title, optional actions, and chevron toggle.
+EmptyState.tsx
+	Unified empty state placeholder displaying optional icon, title, description, and action button.
+SearchInput.tsx
+	Reusable searchable text input with leading search icon and optional query clear button.
+SliderField.tsx
+	Standardized range slider form field displaying live numeric value badge and custom unit suffixes.
+SegmentedControl.tsx
+	Generic segmented button group control with active state tracking and dynamic hover description.
+DelayRuleRow.tsx
+	Shared collapsible row component combining AccordionSection and SliderField for traffic delay rules.
