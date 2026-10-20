@@ -143,6 +143,22 @@ export interface SidebarProps {
    * Callback fired when pin placement mode changes.
    */
   onPlacingPlaceChange?: (isPlacing: boolean) => void;
+  /**
+   * Intermediate route waypoints between start and destination.
+   */
+  waypoints?: Coordinate[];
+  /**
+   * Callback fired to append a new intermediate waypoint.
+   */
+  onAddWaypoint?: () => void;
+  /**
+   * Callback fired to remove an intermediate waypoint by index.
+   */
+  onRemoveWaypoint?: (index: number) => void;
+  /**
+   * Callback fired to update coordinates of an intermediate waypoint.
+   */
+  onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
 }
 
 /**
@@ -152,6 +168,10 @@ export interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   startCoord,
   endCoord,
+  waypoints,
+  onAddWaypoint,
+  onRemoveWaypoint,
+  onUpdateWaypoint,
   routeResult,
   routeVariants,
   routingStrategy,
@@ -386,9 +406,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <RoutingConfigPanel
                 startCoord={startCoord}
                 endCoord={endCoord}
+                waypoints={waypoints}
                 onSwapCoords={handleSwapCoords}
                 onSetStartCoord={handleSetStartCoord}
                 onSetEndCoord={handleSetEndCoord}
+                onAddWaypoint={onAddWaypoint}
+                onRemoveWaypoint={onRemoveWaypoint}
+                onUpdateWaypoint={onUpdateWaypoint}
                 isFetchingOSM={isFetchingOSM}
                 bikeConfig={bikeConfig}
                 onBikeConfigChange={onBikeConfigChange}

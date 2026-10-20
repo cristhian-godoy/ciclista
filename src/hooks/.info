@@ -1,9 +1,13 @@
+useNavigation.test.ts
+	Unit tests verifying useNavigation continuous GPS tracking, wake lock, orientation handling, and error states.
 useNavigation.ts
 	React hook orchestrating position providers and navigation calculations.
 useOSMData.ts
 	React hook managing fetch cycles and caching for Overpass API datasets.
 useOverrides.ts
 	React hook managing node delays, notes, custom routing rules, and crossing turn overrides in local storage.
+useRoutingState.test.ts
+	Unit tests verifying useRoutingState coordinate management, intermediate waypoints, and URL search parameter synchronization.
 useRoutingState.ts
 	React hook managing coordinates, routing options, and active route paths.
 useInspectorMode.ts

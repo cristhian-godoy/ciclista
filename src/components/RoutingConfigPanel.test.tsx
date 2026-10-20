@@ -135,4 +135,115 @@ describe('RoutingConfigPanel', () => {
     await user.click(ebikeBtn);
     expect(handleBikeChange).toHaveBeenCalledWith({ id: 'ebike' });
   });
+
+  it('allows selecting Road profile and Custom profile', async () => {
+    const user = userEvent.setup();
+    const handleBikeChange = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        startCoord={null}
+        endCoord={null}
+        onSwapCoords={vi.fn()}
+        onSetStartCoord={vi.fn()}
+        onSetEndCoord={vi.fn()}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={handleBikeChange}
+      />,
+    );
+
+    const roadBtn = screen.getByRole('button', { name: /Road/i });
+    await user.click(roadBtn);
+    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'road' });
+
+    const customBtn = screen.getByRole('button', { name: /Custom/i });
+    await user.click(customBtn);
+    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'custom' });
+  });
+
+  it('exposes custom bike profile settings and turn penalties when custom profile is active', async () => {
+    const user = userEvent.setup();
+    const handleBikeChange = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        startCoord={null}
+        endCoord={null}
+        onSwapCoords={vi.fn()}
+        onSetStartCoord={vi.fn()}
+        onSetEndCoord={vi.fn()}
+        isFetchingOSM={false}
+        bikeConfig={{
+          id: 'custom',
+          customSpeedKmh: 20,
+          weightKg: 80,
+          turnPenalties: { rightTurnPenaltySeconds: 2, leftTurnPenaltySeconds: 5 },
+          surfacePreferences: { gravelSpeedMultiplier: 0.6, cobblestoneSpeedMultiplier: 0.7 },
+        }}
+        onBikeConfigChange={handleBikeChange}
+      />,
+    );
+
+    expect(screen.getByLabelText('Speed (km/h)')).toHaveValue(20);
+    expect(screen.getByLabelText('Weight (kg)')).toHaveValue(80);
+    expect(screen.getByLabelText('Right Turn')).toHaveValue(2);
+    expect(screen.getByLabelText('Left Turn')).toHaveValue(5);
+    expect(screen.getByLabelText('Gravel')).toHaveValue(0.6);
+    expect(screen.getByLabelText('Cobblestone')).toHaveValue(0.7);
+
+    // Update custom speed
+    const speedInput = screen.getByLabelText('Speed (km/h)');
+    await user.clear(speedInput);
+    await user.type(speedInput, '25');
+    expect(handleBikeChange).toHaveBeenCalled();
+
+    // Update right turn penalty
+    const rightTurnInput = screen.getByLabelText('Right Turn');
+    await user.clear(rightTurnInput);
+    await user.type(rightTurnInput, '3');
+    expect(handleBikeChange).toHaveBeenCalled();
+  });
+
+  it('supports multi-stop waypoints UI: add, edit, and remove stops', async () => {
+    const user = userEvent.setup();
+    const handleAddWaypoint = vi.fn();
+    const handleUpdateWaypoint = vi.fn();
+    const handleRemoveWaypoint = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.13, lng: 11.57 }}
+        endCoord={{ lat: 48.15, lng: 11.59 }}
+        waypoints={[{ lat: 48.14, lng: 11.58 }]}
+        onSwapCoords={vi.fn()}
+        onSetStartCoord={vi.fn()}
+        onSetEndCoord={vi.fn()}
+        onAddWaypoint={handleAddWaypoint}
+        onRemoveWaypoint={handleRemoveWaypoint}
+        onUpdateWaypoint={handleUpdateWaypoint}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Stop 1')).toHaveValue('48.14000, 11.58000');
+
+    // Add stop button
+    const addStopBtn = screen.getByRole('button', { name: /\+ Add Stop/i });
+    await user.click(addStopBtn);
+    expect(handleAddWaypoint).toHaveBeenCalledTimes(1);
+
+    // Remove stop button
+    const removeStopBtn = screen.getByRole('button', { name: /Remove stop 1/i });
+    await user.click(removeStopBtn);
+    expect(handleRemoveWaypoint).toHaveBeenCalledWith(0);
+
+    // Edit stop coordinate
+    const stopInput = screen.getByLabelText('Stop 1');
+    await user.clear(stopInput);
+    await user.type(stopInput, '48.142, 11.582{Enter}');
+    expect(handleUpdateWaypoint).toHaveBeenCalledWith(0, { lat: 48.142, lng: 11.582 });
+  });
 });

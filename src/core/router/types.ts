@@ -70,6 +70,7 @@ export interface WorkerRoutingRequest {
   graph: StreetGraph;
   startCoord: Coordinate;
   endCoord: Coordinate;
+  waypoints?: Coordinate[];
   overrides: LocalOverrides;
   algorithm?: 'astar' | 'dijkstra';
 }

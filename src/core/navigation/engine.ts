@@ -5,6 +5,46 @@ import type { RouteResult } from '../router/types';
 import type { NavigationProgress, RideStats, SnappedPosition } from './types';
 
 /**
+ * Normalizes an angle in degrees to the [0, 360) range.
+ */
+export function normalizeHeading(deg: number): number {
+  const mod = deg % 360;
+  return mod < 0 ? mod + 360 : mod;
+}
+
+/**
+ * Calculates the shortest angular distance (signed difference) between two headings in [-180, 180].
+ */
+export function calculateHeadingDelta(from: number, to: number): number {
+  const diff = ((to - from + 180) % 360) - 180;
+  return diff < -180 ? diff + 360 : diff;
+}
+
+/**
+ * Smoothly interpolates between current heading and target heading without discontinuity at 0/360 boundary.
+ */
+export function interpolateHeading(current: number, target: number, alpha: number): number {
+  const delta = calculateHeadingDelta(current, target);
+  return normalizeHeading(current + delta * Math.min(1, Math.max(0, alpha)));
+}
+
+/**
+ * Extracts a normalized 0-360 compass heading from device orientation properties.
+ */
+export function extractDeviceOrientationHeading(
+  alpha: number | null,
+  webkitCompassHeading?: number | null,
+): number | null {
+  if (typeof webkitCompassHeading === 'number' && !isNaN(webkitCompassHeading)) {
+    return normalizeHeading(webkitCompassHeading);
+  }
+  if (typeof alpha === 'number' && !isNaN(alpha)) {
+    return normalizeHeading(360 - alpha);
+  }
+  return null;
+}
+
+/**
  * Calculates the initial bearing from point A to point B on a sphere in degrees [0, 360).
  */
 export function calculateBearing(a: Coordinate, b: Coordinate): number {

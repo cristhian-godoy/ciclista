@@ -5,8 +5,12 @@ import type { RouteResult } from '../router/types';
 import {
   buildRideStats,
   calculateBearing,
+  calculateHeadingDelta,
   computeProgress,
+  extractDeviceOrientationHeading,
+  interpolateHeading,
   interpolatePosition,
+  normalizeHeading,
   snapToRoute,
 } from './engine';
 import type { SnappedPosition } from './types';
@@ -205,6 +209,37 @@ describe('Navigation Engine', () => {
       expect(stats.maxSpeedKmh).toBe(25.5);
       expect(stats.trafficLightsEncountered).toBe(3);
       expect(stats.routeProfile).toBe('cycling');
+    });
+  });
+
+  describe('Heading & Orientation calculations', () => {
+    it('normalizes angles into [0, 360) range', () => {
+      expect(normalizeHeading(0)).toBe(0);
+      expect(normalizeHeading(360)).toBe(0);
+      expect(normalizeHeading(720)).toBe(0);
+      expect(normalizeHeading(-90)).toBe(270);
+      expect(normalizeHeading(450)).toBe(90);
+    });
+
+    it('calculates shortest angular distance correctly', () => {
+      expect(calculateHeadingDelta(10, 20)).toBe(10);
+      expect(calculateHeadingDelta(20, 10)).toBe(-10);
+      expect(calculateHeadingDelta(350, 10)).toBe(20);
+      expect(calculateHeadingDelta(10, 350)).toBe(-20);
+    });
+
+    it('smoothly interpolates headings without spinning at 0/360 boundary', () => {
+      const smoothed = interpolateHeading(350, 10, 0.5);
+      expect(smoothed).toBeCloseTo(0, 1);
+
+      const smoothed2 = interpolateHeading(10, 350, 0.5);
+      expect(smoothed2).toBeCloseTo(0, 1);
+    });
+
+    it('extracts compass heading from device orientation or webkitCompassHeading', () => {
+      expect(extractDeviceOrientationHeading(null, 45)).toBe(45);
+      expect(extractDeviceOrientationHeading(90, null)).toBe(270);
+      expect(extractDeviceOrientationHeading(null, null)).toBeNull();
     });
   });
 });

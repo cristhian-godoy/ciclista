@@ -169,4 +169,105 @@ describe('LocalStorageProvider', () => {
     turns = await provider.getCrossingTurns();
     expect(turns).toHaveLength(0);
   });
+
+  describe('Events persistence', () => {
+    it('saves and retrieves map events', async () => {
+      const mockEvents = [
+        {
+          id: 'event-1',
+          name: 'Construction block',
+          description: 'Road work',
+          active: true,
+          edgeIds: ['edge-1', 'edge-2'],
+          effect: { type: 'road_blockage' as const, penaltySeconds: 60 },
+          createdAt: 123456,
+        },
+      ];
+
+      await provider.saveEvents(mockEvents);
+      const loaded = await provider.getEvents();
+      expect(loaded).toHaveLength(1);
+      expect(loaded[0]?.name).toBe('Construction block');
+      expect(loaded[0]?.edgeIds).toEqual(['edge-1', 'edge-2']);
+      expect(loaded[0]?.effect.penaltySeconds).toBe(60);
+
+      const syncLoaded = provider.loadEventsSync();
+      expect(syncLoaded).toEqual(loaded);
+    });
+
+    it('recovers gracefully from corrupted events data and filters invalid entries', () => {
+      localStorage.setItem('ciclista_events', 'invalid-json');
+      expect(provider.loadEventsSync()).toEqual([]);
+
+      localStorage.setItem(
+        'ciclista_events',
+        JSON.stringify([
+          null,
+          'string-entry',
+          { id: '', name: 'Fallback Test', edgeIds: ['e1', 123] },
+        ]),
+      );
+      const parsed = provider.loadEventsSync();
+      expect(parsed).toHaveLength(1);
+      expect(parsed[0]?.name).toBe('Fallback Test');
+      expect(parsed[0]?.edgeIds).toEqual(['e1']);
+      expect(parsed[0]?.effect.type).toBe('road_blockage');
+      expect(parsed[0]?.active).toBe(true);
+    });
+  });
+
+  describe('BikeConfig persistence', () => {
+    it('saves and loads bike configuration with custom attributes', () => {
+      const config = {
+        id: 'custom' as const,
+        customSpeedKmh: 24,
+        weightKg: 75,
+        surfacePreferences: {
+          gravelSpeedMultiplier: 0.7,
+          gravelFlatPenalty: 10,
+        },
+        turnPenalties: {
+          rightTurnPenaltySeconds: 2,
+          leftTurnPenaltySeconds: 5,
+        },
+      };
+
+      provider.saveBikeConfig(config);
+      const loaded = provider.loadBikeConfig();
+      expect(loaded).toEqual(config);
+    });
+
+    it('falls back to default profile when encountering unknown or corrupted config', () => {
+      expect(provider.loadBikeConfig()).toBeNull();
+
+      localStorage.setItem('ciclista_bike_config', 'not-json');
+      expect(provider.loadBikeConfig()).toBeNull();
+
+      localStorage.setItem('ciclista_bike_config', JSON.stringify({ id: 'unsupported_bike' }));
+      const loaded = provider.loadBikeConfig();
+      expect(loaded?.id).toBe('normal');
+    });
+  });
+
+  describe('Theme persistence', () => {
+    it('saves and loads theme mode', () => {
+      provider.saveTheme('dark');
+      expect(provider.loadTheme()).toBe('dark');
+
+      provider.saveTheme('liberty');
+      expect(provider.loadTheme()).toBe('liberty');
+    });
+
+    it('migrates legacy light theme to bright', () => {
+      localStorage.setItem('ciclista_theme', 'light');
+      expect(provider.loadTheme()).toBe('bright');
+    });
+
+    it('returns null on invalid or missing theme', () => {
+      expect(provider.loadTheme()).toBeNull();
+
+      localStorage.setItem('ciclista_theme', 'non-existent-theme');
+      expect(provider.loadTheme()).toBeNull();
+    });
+  });
 });

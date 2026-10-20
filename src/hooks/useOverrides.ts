@@ -60,7 +60,9 @@ export function useOverrides() {
       turns: mergedTurns,
     };
   });
-  const [bikeConfig, setBikeConfig] = useState<BikeConfig>({ id: 'normal' });
+  const [bikeConfig, setBikeConfig] = useState<BikeConfig>(() => {
+    return storage.loadBikeConfig() ?? { id: 'normal' };
+  });
 
   const loadCustomOverrides = async () => {
     const overrides = await storage.getOverrides();
@@ -79,6 +81,11 @@ export function useOverrides() {
   useEffect(() => {
     storage.saveRulesConfig(rulesConfig);
   }, [rulesConfig]);
+
+  // Persist bike config whenever it changes
+  useEffect(() => {
+    storage.saveBikeConfig(bikeConfig);
+  }, [bikeConfig]);
 
   const handleSaveNodeOverride = async (nodeId: string, delay: number, notes: string) => {
     await storage.saveNodeDelay(nodeId, delay);

@@ -6,12 +6,34 @@ import type { MapEvent } from '../events';
 export type BikeProfileId = 'slow' | 'normal' | 'ebike' | 'road' | 'custom';
 
 /**
+ * Custom surface speed and penalty preferences for a bike configuration.
+ */
+export interface BikeSurfacePreferences {
+  gravelSpeedMultiplier?: number;
+  gravelFlatPenalty?: number;
+  cobblestoneSpeedMultiplier?: number;
+  cobblestoneFlatPenalty?: number;
+}
+
+/**
+ * Custom directional turn delay preferences for a bike configuration.
+ */
+export interface BikeTurnPenalties {
+  rightTurnPenaltySeconds?: number;
+  leftTurnPenaltySeconds?: number;
+  uTurnPenaltySeconds?: number;
+}
+
+/**
  * Bike configuration mapping user-selected bike profile properties (e.g. max speed)
  * to physical parameters used by the router.
  */
 export interface BikeConfig {
   id: BikeProfileId;
   customSpeedKmh?: number;
+  weightKg?: number;
+  surfacePreferences?: BikeSurfacePreferences;
+  turnPenalties?: BikeTurnPenalties;
 }
 
 export const InfrastructureType = {
