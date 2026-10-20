@@ -6,8 +6,7 @@ use ciclista_core::geo::Coordinate;
 use ciclista_core::graph::{NodeEntry, StreetGraph};
 use ciclista_core::parser::{load_mock_graph, parse_osm_json};
 use ciclista_core::router::{
-    find_route_variants, find_route_variants_astar, find_route_variants_dijkstra, LocalOverrides,
-    StrategyRouteVariant,
+    find_route_variants_astar, find_route_variants_dijkstra, LocalOverrides, StrategyRouteVariant,
 };
 
 #[wasm_bindgen]
@@ -114,6 +113,7 @@ impl WasmEngine {
         start_coord: JsValue,
         end_coord: JsValue,
         overrides: JsValue,
+        algorithm: Option<String>,
     ) -> Result<JsValue, JsValue> {
         let start: Coordinate = serde_wasm_bindgen::from_value(start_coord)
             .map_err(|e| JsValue::from_str(&format!("Invalid start_coord: {}", e)))?;
@@ -127,8 +127,12 @@ impl WasmEngine {
                 .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
         };
 
-        let variants: Vec<StrategyRouteVariant> =
-            find_route_variants(&graph.inner, start, end, &local_overrides);
+        let variants: Vec<StrategyRouteVariant> = match algorithm.as_deref() {
+            Some("dijkstra") => {
+                find_route_variants_dijkstra(&graph.inner, start, end, &local_overrides)
+            }
+            _ => find_route_variants_astar(&graph.inner, start, end, &local_overrides),
+        };
 
         let serializer = serde_wasm_bindgen::Serializer::json_compatible();
         variants
@@ -198,6 +202,7 @@ impl WasmEngine {
         start_coord: JsValue,
         end_coord: JsValue,
         overrides: JsValue,
+        algorithm: Option<String>,
     ) -> Result<JsValue, JsValue> {
         let graph: StreetGraph = if let Ok(js_g) =
             serde_wasm_bindgen::from_value::<JsStreetGraph>(graph_val.clone())
@@ -213,6 +218,6 @@ impl WasmEngine {
         };
 
         let wasm_graph = WasmStreetGraph { inner: graph };
-        Self::find_route_variants(&wasm_graph, start_coord, end_coord, overrides)
+        Self::find_route_variants(&wasm_graph, start_coord, end_coord, overrides, algorithm)
     }
 }

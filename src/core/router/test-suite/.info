@@ -1,0 +1,8 @@
+cli-runner.test.ts
+	Unit tests for routing test scenario execution and result validation.
+registry.ts
+	Centralized collection of routing regression test case definitions.
+runner.ts
+	Execution harness for evaluating test cases and asserting route constraints.
+types.ts
+	Type interfaces for routing assertions, test case definitions, and execution results.

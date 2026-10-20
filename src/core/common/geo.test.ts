@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../graph/types';
-import { coordToChunkId, getChunkBBox, getChunksInBBox, mergeChunksToBBox } from './geo';
+import {
+  coordToChunkId,
+  getBearing,
+  getChunkBBox,
+  getChunksInBBox,
+  getCompassDirection,
+  mergeChunksToBBox,
+} from './geo';
 import { createGeoJSONCircle, findEdgesWithinRadius } from './geometry';
 import { logger } from './logger';
 
@@ -167,5 +174,30 @@ describe('createGeoJSONCircle', () => {
       expect(dist).toBeGreaterThan(95);
       expect(dist).toBeLessThan(105);
     }
+  });
+});
+
+describe('getBearing and getCompassDirection', () => {
+  it('calculates cardinal bearings accurately', () => {
+    // Due North
+    expect(getBearing(0, 0, 1, 0)).toBeCloseTo(0, 1);
+    // Due East
+    expect(getBearing(0, 0, 0, 1)).toBeCloseTo(90, 1);
+    // Due South
+    expect(getBearing(1, 0, 0, 0)).toBeCloseTo(180, 1);
+    // Due West
+    expect(getBearing(0, 1, 0, 0)).toBeCloseTo(270, 1);
+  });
+
+  it('maps bearings to 8-point compass directions', () => {
+    expect(getCompassDirection(0)).toBe('N');
+    expect(getCompassDirection(359)).toBe('N');
+    expect(getCompassDirection(45)).toBe('NE');
+    expect(getCompassDirection(90)).toBe('E');
+    expect(getCompassDirection(135)).toBe('SE');
+    expect(getCompassDirection(180)).toBe('S');
+    expect(getCompassDirection(225)).toBe('SW');
+    expect(getCompassDirection(270)).toBe('W');
+    expect(getCompassDirection(315)).toBe('NW');
   });
 });

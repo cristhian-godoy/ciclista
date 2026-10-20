@@ -2,8 +2,16 @@ import { API_CONFIG, MAP_CONFIG } from '../common/constants';
 import { mergeChunksToBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import { parseInWorker } from '../graph/parser.client';
-import type { OSMLoadResult } from './OSMLoader';
+import type { StreetGraph } from '../graph/types';
 import { fetchWithCacheAndFallback } from './overpass';
+
+/**
+ * Represents the result of a successful OSM loading operation.
+ */
+export interface OSMLoadResult {
+  graph: StreetGraph;
+  loadedChunkIds: string[];
+}
 
 /**
  * Callback listener type for status updates.

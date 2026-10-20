@@ -1,4 +1,4 @@
-import { haversineDistance } from '../common/geo';
+import { getBearing, haversineDistance } from '../common/geo';
 import { getProjectionT, projectPointOnSegment } from '../common/geometry';
 import type { Coordinate } from '../common/types';
 import type { RouteResult } from '../router/types';
@@ -8,15 +8,7 @@ import type { NavigationProgress, RideStats, SnappedPosition } from './types';
  * Calculates the initial bearing from point A to point B on a sphere in degrees [0, 360).
  */
 export function calculateBearing(a: Coordinate, b: Coordinate): number {
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-
-  const brng = (Math.atan2(y, x) * 180) / Math.PI;
-  return (brng + 360) % 360;
+  return getBearing(a.lat, a.lng, b.lat, b.lng);
 }
 
 /**

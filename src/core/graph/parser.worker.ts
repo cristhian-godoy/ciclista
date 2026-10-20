@@ -1,3 +1,4 @@
+import { logger } from '../common/logger';
 import { ensureWasmInitialized, WasmEngine } from '../wasm';
 import { OSMGraphParser } from './parser';
 
@@ -14,8 +15,8 @@ self.onmessage = async (e: MessageEvent) => {
         const serializedNodes = wasmGraph.to_entries_json();
         self.postMessage({ requestId, serializedNodes });
         return;
-      } catch {
-        // Fall back cleanly to TypeScript parser
+      } catch (error) {
+        logger.warn('WASM graph parsing failed, falling back to TypeScript parser:', error);
       }
     }
 

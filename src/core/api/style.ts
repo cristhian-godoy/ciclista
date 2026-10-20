@@ -63,7 +63,7 @@ export async function fetchFilteredStyle(
 
     const text = await response.text();
     try {
-      const bytes = new Blob([text]).size;
+      const bytes = new TextEncoder().encode(text).byteLength;
       addDataUsage(bytes, false);
     } catch (e) {
       logger.warn('Failed to calculate downloaded style size:', e);

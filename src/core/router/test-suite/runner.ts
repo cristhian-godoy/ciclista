@@ -17,8 +17,10 @@ const defaultOverrides: LocalOverrides = {
  */
 export function getStrategyCostFunction(strategy?: string): CostFunction {
   switch (strategy) {
+    case 'avoid-stops':
     case 'stop_avoidance':
       return avoidStoppingCost;
+    case 'quiet-streets':
     case 'quiet_streets':
       return avoidBusyRoadsCost;
     case 'standard':

@@ -20,5 +20,9 @@ statistics.ts
 	Utility functions to aggregate distance, duration, and node crossing counts from path.
 strategies.ts
 	Cost function implementations for standard, stop-avoidance, and quiet-streets profiles.
+test-suite
+	Automated regression test scenarios and execution harness for routing assertions.
 types.ts
 	Router interfaces, strategy route variants, and worker payload contracts.
+virtual-endpoints.ts
+	Virtual endpoint projection, temporary graph topology construction, and route finalization.

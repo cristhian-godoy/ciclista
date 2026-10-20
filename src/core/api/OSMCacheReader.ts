@@ -87,7 +87,7 @@ export class OSMCacheReader {
           if (cachedResponse) {
             const text = await cachedResponse.text();
             try {
-              const size = new Blob([text]).size;
+              const size = new TextEncoder().encode(text).byteLength;
               addDataUsage(size, true);
             } catch (e) {
               logger.warn(`Failed to estimate cached data size for URL ${url}:`, e);

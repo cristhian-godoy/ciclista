@@ -10,6 +10,8 @@ osm-mapper.test.ts
 	Unit tests checking matching and classification of OSM ways.
 osm-mapper.ts
 	Translates OSM way and node tags to application infrastructure types and road classes.
+turn-evaluator.test.ts
+	Unit tests evaluating turn direction classification and penalty calculation.
 turn-evaluator.ts
 	Pure functions computing routing turn angles and turn penalties.
 types.ts

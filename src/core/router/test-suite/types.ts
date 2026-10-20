@@ -23,7 +23,7 @@ export interface RoutingTestCase {
   description: string;
   startCoord: Coordinate;
   endCoord: Coordinate;
-  strategy?: 'standard' | 'stop_avoidance' | 'quiet_streets';
+  strategy?: 'standard' | 'avoid-stops' | 'quiet-streets' | 'stop_avoidance' | 'quiet_streets';
   overrides?: Partial<LocalOverrides>;
   assertions: RoutingAssertion;
 }

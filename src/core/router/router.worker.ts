@@ -1,3 +1,4 @@
+import { logger } from '../common/logger';
 import { ensureWasmInitialized, WasmEngine } from '../wasm';
 import { AStarRouter } from './astar';
 import { DijkstraRouter } from './router';
@@ -25,6 +26,7 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
           startCoord,
           endCoord,
           overrides,
+          algorithm,
         ) as StrategyRouteVariant[];
 
         if (Array.isArray(variants) && variants.length > 0) {
@@ -32,8 +34,8 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
           self.postMessage(response);
           return;
         }
-      } catch {
-        // Fall back cleanly to TypeScript router engine
+      } catch (error) {
+        logger.warn('WASM routing calculation failed, falling back to TypeScript engine:', error);
       }
     }
 

@@ -58,7 +58,7 @@ export async function fetchWithCache<T>(
 
       const text = await cachedResponse.text();
       try {
-        const size = new Blob([text]).size;
+        const size = new TextEncoder().encode(text).byteLength;
         addDataUsage(size, true);
       } catch (e) {
         logger.warn('Failed to estimate cached data size:', e);
@@ -134,9 +134,9 @@ export async function getValidCacheEntries(): Promise<ValidCacheEntry[]> {
     const now = Date.now();
     const dataSaver = isDataSaverActive();
 
-    for (const req of keys) {
+    const entryPromises = keys.map(async (req): Promise<ValidCacheEntry | null> => {
       const res = await cacheInstance.match(req);
-      if (!res) continue;
+      if (!res) return null;
 
       const timestampStr = res.headers.get('X-Cache-Timestamp');
       const timestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
@@ -147,12 +147,20 @@ export async function getValidCacheEntries(): Promise<ValidCacheEntry[]> {
         if (bboxStr) {
           const coords = bboxStr.split(',').map(Number);
           if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
-            validEntries.push({
+            return {
               bbox: coords as [number, number, number, number],
               url: req.url,
-            });
+            };
           }
         }
+      }
+      return null;
+    });
+
+    const entries = await Promise.all(entryPromises);
+    for (const entry of entries) {
+      if (entry) {
+        validEntries.push(entry);
       }
     }
   } catch (err) {
