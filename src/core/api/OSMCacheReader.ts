@@ -1,7 +1,6 @@
-import { API_CONFIG } from '../common/constants';
 import { getChunkBBox, getChunksInBBox } from '../common/geo';
 import { logger } from '../common/logger';
-import { parseInWorker } from '../graph/parser.client';
+import { parseFromCacheInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
 import { getValidCacheEntries, type ValidCacheEntry } from '../storage/cache';
@@ -63,7 +62,6 @@ export class OSMCacheReader {
 
     if (cachedChunkIds.length > 0) {
       logger.log(`Loading ${cachedChunkIds.length} chunks directly from local CacheStorage.`);
-      const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
 
       const urlToChunkIds = new Map<string, string[]>();
       const urlToEntry = new Map<string, ValidCacheEntry>();
@@ -83,35 +81,24 @@ export class OSMCacheReader {
 
       for (const [url, chunkIds] of urlToChunkIds.entries()) {
         try {
-          const cachedResponse = await cacheInstance.match(new Request(url));
-          if (cachedResponse) {
-            const text = await cachedResponse.text();
-            try {
-              const size = new TextEncoder().encode(text).byteLength;
-              addDataUsage(size, true);
-            } catch (e) {
-              logger.warn(`Failed to estimate cached data size for URL ${url}:`, e);
-            }
-            const data = JSON.parse(text);
-            const parsed = await parseInWorker(data);
-            mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
-
-            // Mark all chunks covered by this cached request as loaded,
-            // so we don't re-parse this huge file on the next minor pan
-            const entry = urlToEntry.get(url);
-            if (entry) {
-              const allCoveredChunks = getChunksInBBox(entry.bbox);
-              loadedChunkIds.push(...allCoveredChunks);
-            } else {
-              loadedChunkIds.push(...chunkIds);
-            }
-
-            // Yield the main thread to allow MapLibre to render vector tiles and prevent stuttering
-            await new Promise((resolve) => setTimeout(resolve, 0));
-          } else {
-            logger.warn(`No cached response found for URL ${url}`);
-            missingChunkIds.push(...chunkIds);
+          const { graph: parsed, byteLength } = await parseFromCacheInWorker(url);
+          if (byteLength > 0) {
+            addDataUsage(byteLength, true);
           }
+          mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
+
+          // Mark all chunks covered by this cached request as loaded,
+          // so we don't re-parse this huge file on the next minor pan
+          const entry = urlToEntry.get(url);
+          if (entry) {
+            const allCoveredChunks = getChunksInBBox(entry.bbox);
+            loadedChunkIds.push(...allCoveredChunks);
+          } else {
+            loadedChunkIds.push(...chunkIds);
+          }
+
+          // Yield the main thread to allow MapLibre to render vector tiles and prevent stuttering
+          await new Promise((resolve) => setTimeout(resolve, 0));
         } catch (err) {
           logger.warn(`Failed to read cached response for URL ${url}:`, err);
           missingChunkIds.push(...chunkIds);

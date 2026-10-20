@@ -1,8 +1,6 @@
 export const API_CONFIG = {
   OVERPASS_MIRRORS: [
     'https://overpass-api.de/api/interpreter',
-    'https://lz4.overpass-api.de/api/interpreter',
-    'https://z.overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
     // Swiss mirror placed at the end due to aggressive throttling/silent empty elements responses.
     'https://overpass.osm.ch/api/interpreter',

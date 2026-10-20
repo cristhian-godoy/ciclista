@@ -37,4 +37,22 @@ describe('filterStylePOIs', () => {
       'town-label',
     ]);
   });
+
+  it('should filter out layers with layout["icon-image"] and remove sprite property', () => {
+    const mockStyle = {
+      version: 8,
+      sprite: 'https://tiles.openfreemap.org/sprites/osm-liberty',
+      layers: [
+        { id: 'background', type: 'background' },
+        { id: 'icon-layer', type: 'symbol', layout: { 'icon-image': 'marker-15' } },
+        { id: 'label-layer', type: 'symbol', layout: { 'text-field': '{name}' } },
+      ],
+    } as unknown as StyleSpecification;
+
+    const result = filterStylePOIs(mockStyle);
+
+    expect(result.layers).toHaveLength(2);
+    expect(result.layers.map((l) => l.id)).toEqual(['background', 'label-layer']);
+    expect(result.sprite).toBeUndefined();
+  });
 });

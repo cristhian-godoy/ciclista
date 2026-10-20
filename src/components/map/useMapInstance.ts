@@ -99,6 +99,18 @@ export const useMapInstance = ({
     // Add custom navigation controls
     mapInstance.addControl(new CustomNavigationControl(), 'top-right');
 
+    // Handle missing style images with an empty 1x1 transparent image to stop re-requesting missing sprite icons
+    mapInstance.on('styleimagemissing', (e: { id: string }) => {
+      const transparent1x1 = {
+        width: 1,
+        height: 1,
+        data: new Uint8Array([0, 0, 0, 0]),
+      };
+      if (!mapInstance.hasImage(e.id)) {
+        mapInstance.addImage(e.id, transparent1x1);
+      }
+    });
+
     const container = mapContainerRef.current;
     const preventDefaultContextMenu = (e: MouseEvent) => e.preventDefault();
 

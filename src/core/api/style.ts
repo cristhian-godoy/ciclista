@@ -14,6 +14,11 @@ export function filterStylePOIs(style: StyleSpecification): StyleSpecification {
   }
 
   const filteredLayers = style.layers.filter((layer) => {
+    // Strip all layers specifying an icon-image
+    if ('layout' in layer && layer.layout && 'icon-image' in layer.layout) {
+      return false;
+    }
+
     if (layer.type === 'symbol') {
       const id = layer.id.toLowerCase();
 
@@ -38,10 +43,14 @@ export function filterStylePOIs(style: StyleSpecification): StyleSpecification {
     return true;
   });
 
-  return {
+  const cleanedStyle: StyleSpecification = {
     ...style,
     layers: filteredLayers,
   };
+
+  delete cleanedStyle.sprite;
+
+  return cleanedStyle;
 }
 
 /**
@@ -52,7 +61,7 @@ export async function fetchFilteredStyle(
   theme: 'bright' | 'liberty' | 'dark',
 ): Promise<StyleSpecification> {
   const url = `https://tiles.openfreemap.org/styles/${theme}`;
-  const cacheKeyUrl = `https://openfreemap-style-cache/${theme}`;
+  const cacheKeyUrl = `https://openfreemap-style-cache/v2/${theme}`;
 
   return fetchWithCache(cacheKeyUrl, async () => {
     logger.log(`Fetching MapLibre style from network: ${url}`);

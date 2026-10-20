@@ -45,7 +45,14 @@ describe('fetchWithCacheAndFallback', () => {
 
     const result = await fetchWithCacheAndFallback('[out:json]; node(1); out;');
     expect(result).toEqual(mockJson);
-    expect(mockFetch).toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent('[out:json]; node(1); out;'),
+      }),
+    );
     expect(mockCache.put).toHaveBeenCalled();
   });
 
@@ -69,13 +76,12 @@ describe('fetchWithCacheAndFallback', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it('uses stale cached response and triggers background revalidation if cache is stale', async () => {
+  it('serves stale cached response directly without firing background revalidation', async () => {
     const mockOldJson = { elements: [{ id: 1 }] };
-    const mockNewJson = { elements: [{ id: 2 }] };
     const cacheKey =
       'https://overpass-interpreter-cache/?query=%5Bout%3Ajson%5D%3B%20node(1)%3B%20out%3B';
 
-    // Set old cached response with a timestamp 40 days ago (older than new 30-day TTL)
+    // Set old cached response with a timestamp 40 days ago (older than 30-day TTL)
     const staleTime = Date.now() - 40 * 24 * 60 * 60 * 1000;
     const cachedResponse = new Response(JSON.stringify(mockOldJson), {
       headers: {
@@ -85,22 +91,14 @@ describe('fetchWithCacheAndFallback', () => {
     });
     store.set(cacheKey, cachedResponse);
 
-    const mockFetch = vi.fn().mockResolvedValue({
-      status: 200,
-      ok: true,
-      text: async () => JSON.stringify(mockNewJson),
-      json: async () => mockNewJson,
-    });
+    const mockFetch = vi.fn();
     vi.stubGlobal('fetch', mockFetch);
 
     const result = await fetchWithCacheAndFallback('[out:json]; node(1); out;');
-    // SWR returns old data immediately
     expect(result).toEqual(mockOldJson);
 
-    // Wait briefly for background revalidation promise to complete
+    // Wait briefly to confirm no background revalidation was triggered
     await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(mockFetch).toHaveBeenCalled();
-    expect(mockCache.put).toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

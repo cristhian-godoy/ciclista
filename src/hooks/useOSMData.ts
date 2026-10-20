@@ -99,27 +99,30 @@ export function useOSMData({
     merge = false,
     silent = false,
   ) => {
-    // Cellular data saving check
-    if (getConnectionType() === 'cellular' && isDataSaverActive() && !isCellularDownloadAllowed()) {
-      if (silent) {
-        logger.log('Silent auto-fetch skipped to save cellular data (Data Saver active).');
-        return;
-      }
-      const confirmed = window.confirm(
-        'Ciclista is running on cellular data with Data Saver active. Loading the street network will use mobile data. Do you want to download?',
-      );
-      if (!confirmed) {
-        if (graph === null && !merge) {
-          logger.warn('Initial download declined. Loading mock fallback graph.');
-          const mockGraph = parser.parse(null);
-          setGraph(mockGraph);
-          const fallbackBBox: [number, number, number, number] = [48.134, 11.574, 48.144, 11.583];
-          setLoadedBBoxes([fallbackBBox]);
-          setLoadedChunkIds(new Set(getChunksInBBox(fallbackBBox)));
+    // Data saver check: enforce cache-only loading when active
+    const dataSaverActive = isDataSaverActive();
+    if (dataSaverActive && !isCellularDownloadAllowed()) {
+      if (getConnectionType() === 'cellular') {
+        if (silent) {
+          logger.log('Silent auto-fetch skipped to save cellular data (Data Saver active).');
+          return;
         }
-        return;
+        const confirmed = window.confirm(
+          'Ciclista is running on cellular data with Data Saver active. Loading the street network will use mobile data. Do you want to download?',
+        );
+        if (!confirmed) {
+          if (graph === null && !merge) {
+            logger.warn('Initial download declined. Loading mock fallback graph.');
+            const mockGraph = parser.parse(null);
+            setGraph(mockGraph);
+            const fallbackBBox: [number, number, number, number] = [48.134, 11.574, 48.144, 11.583];
+            setLoadedBBoxes([fallbackBBox]);
+            setLoadedChunkIds(new Set(getChunksInBBox(fallbackBBox)));
+          }
+          return;
+        }
+        setCellularDownloadAllowed(true);
       }
-      setCellularDownloadAllowed(true);
     }
 
     if (!merge) {
@@ -165,8 +168,19 @@ export function useOSMData({
         });
       }
 
-      // 2. Queue remaining missing chunks for network fetching after 500ms debounce
+      // 2. Queue remaining missing chunks for network fetching after 500ms debounce (skip if Data Saver active)
       if (cacheResult.missingChunkIds.length > 0) {
+        if (dataSaverActive) {
+          logger.log(
+            'Data Saver is active. Skipping network enqueue for missing chunks:',
+            cacheResult.missingChunkIds,
+          );
+          if (!merge && !cacheResult.graph) {
+            setGraph({ nodes: new Map() });
+          }
+          return;
+        }
+
         if (boundsChangeTimeoutRef.current) {
           clearTimeout(boundsChangeTimeoutRef.current);
         }
@@ -246,6 +260,7 @@ export function useOSMData({
 
   // Handler to load OSM data as one moves through the map
   const handleMapBoundsChange = (viewportBBox: [number, number, number, number], zoom: number) => {
+    OSMNetworkQueue.setViewport(viewportBBox);
     if (zoom < 13) return;
 
     logger.log('Map moved. Checking for immediate cached load or debounced network fetch.');

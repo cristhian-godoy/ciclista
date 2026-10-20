@@ -1,5 +1,7 @@
 useNavigation.ts
 	React hook orchestrating position providers and navigation calculations.
+useOSMData.test.ts
+	Unit tests verifying useOSMData hook caching, bounds handling, and Data Saver network enforcement.
 useOSMData.ts
 	React hook managing fetch cycles and caching for Overpass API datasets.
 useOverrides.ts

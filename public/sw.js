@@ -1,4 +1,5 @@
 const CACHE_NAME = 'ciclista-app-shell-v1';
+const MAP_TILES_CACHE_NAME = 'openfreemap-assets-cache-v1';
 
 const STATIC_EXTENSIONS = /\.(?:js|css|wasm|svg|html|json|webmanifest)(?:\?.*)?$/i;
 
@@ -13,7 +14,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter((key) => key !== CACHE_NAME && key !== MAP_TILES_CACHE_NAME)
             .map((key) => caches.delete(key)),
         ),
       )
@@ -29,6 +30,33 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(request.url);
+
+  // Cache cross-origin static map assets (sprites, glyphs, vector tiles from tiles.openfreemap.org) with CacheFirst strategy
+  if (url.origin === 'https://tiles.openfreemap.org') {
+    event.respondWith(
+      caches.open(MAP_TILES_CACHE_NAME).then(async (cache) => {
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.status === 200) {
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch (error) {
+          return cachedResponse || new Response('Network error occurred fetching map asset', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain' },
+          });
+        }
+      }),
+    );
+    return;
+  }
 
   // Restrict caching to same-origin app shell assets and navigation requests
   if (url.origin !== self.location.origin) {

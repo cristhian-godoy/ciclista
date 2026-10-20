@@ -1,5 +1,5 @@
 import { API_CONFIG, MAP_CONFIG } from '../common/constants';
-import { mergeChunksToBBox } from '../common/geo';
+import { getChunkBBox, mergeChunksToBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import { parseInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
@@ -36,9 +36,17 @@ export type QueueErrorListener = (error: unknown) => void;
 export class OSMNetworkQueue {
   private static pendingChunks = new Set<string>();
   private static isFetching = false;
+  private static currentViewport: [number, number, number, number] | null = null;
   private static statusListeners = new Set<QueueStatusListener>();
   private static dataListeners = new Set<QueueDataListener>();
   private static errorListeners = new Set<QueueErrorListener>();
+
+  /**
+   * Updates the current active viewport for pruning pending chunks outside the active area.
+   */
+  public static setViewport(bbox: [number, number, number, number] | null) {
+    this.currentViewport = bbox;
+  }
 
   /**
    * Registers a listener for fetching status changes.
@@ -137,6 +145,37 @@ export class OSMNetworkQueue {
     }
   }
 
+  /**
+   * Prunes pending chunks that lie completely outside the current viewport.
+   */
+  private static prunePendingChunks() {
+    if (!this.currentViewport || this.pendingChunks.size === 0) {
+      return;
+    }
+
+    const [vMinLat, vMinLng, vMaxLat, vMaxLng] = this.currentViewport;
+    const toRemove: string[] = [];
+
+    for (const chunkId of this.pendingChunks) {
+      const [cMinLat, cMinLng, cMaxLat, cMaxLng] = getChunkBBox(chunkId);
+      // Check intersection
+      const intersects =
+        cMinLat <= vMaxLat && cMaxLat >= vMinLat && cMinLng <= vMaxLng && cMaxLng >= vMinLng;
+
+      if (!intersects) {
+        toRemove.push(chunkId);
+      }
+    }
+
+    for (const id of toRemove) {
+      this.pendingChunks.delete(id);
+    }
+
+    if (toRemove.length > 0) {
+      logger.log(`Pruned ${toRemove.length} chunks outside current viewport.`);
+    }
+  }
+
   private static async processQueue() {
     if (this.pendingChunks.size === 0) {
       this.notifyStatus(false);
@@ -145,29 +184,36 @@ export class OSMNetworkQueue {
 
     this.notifyStatus(true);
 
-    const chunksToFetch = Array.from(this.pendingChunks);
-    this.pendingChunks.clear();
+    const clusters = this.clusterContiguousChunks(Array.from(this.pendingChunks));
+    const currentCluster = clusters[0];
+    if (!currentCluster || currentCluster.length === 0) {
+      this.pendingChunks.clear();
+      this.notifyStatus(false);
+      return;
+    }
+
+    for (const id of currentCluster) {
+      this.pendingChunks.delete(id);
+    }
 
     try {
-      const groups = this.partitionChunks(chunksToFetch);
+      const rectangles = this.coalesceAdjacentRectangles(currentCluster);
       logger.log(
-        `Processing queue: divided ${chunksToFetch.length} chunks into ${groups.length} query groups.`,
+        `Processing queue: coalesced cluster of ${currentCluster.length} chunks into ${rectangles.length} rectangles.`,
       );
 
-      for (const group of groups) {
-        if (group.length === 0) continue;
+      const wayFilters = rectangles
+        .map(
+          ([minLat, minLng, maxLat, maxLng]) =>
+            `way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|proposed|construction|abandoned|steps"]["access"!~"no|private"](${minLat},${minLng},${maxLat},${maxLng});`,
+        )
+        .join('\n');
 
-        const mergedBBox = mergeChunksToBBox(group);
-        logger.log(
-          `Fetching group of ${group.length} chunks from Overpass API via merged bbox query:`,
-          mergedBBox,
-        );
-
-        const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
+      const query = `/* Application: Ciclista Commuter Analyzer - Contact: https://github.com/cristhian-godoy/ciclista */
 [out:json][timeout:${API_CONFIG.QUERY_TIMEOUT_SECONDS}];
-way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|proposed|construction|abandoned|steps"]
-   ["access"!~"no|private"]
-   (${mergedBBox[0]},${mergedBBox[1]},${mergedBBox[2]},${mergedBBox[3]})->.ways;
+(
+${wayFilters}
+)->.ways;
 (.ways;);
 out geom;
 (
@@ -178,42 +224,133 @@ out geom;
 );
 out body;`;
 
-        const data = await fetchWithCacheAndFallback(query);
-        const parsed = await parseInWorker(data);
+      const data = await fetchWithCacheAndFallback(query);
+      const parsed = await parseInWorker(data);
 
-        this.notifyData({
-          graph: parsed,
-          loadedChunkIds: group,
-        });
+      this.notifyData({
+        graph: parsed,
+        loadedChunkIds: currentCluster,
+      });
 
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
     } catch (err) {
       logger.error('Failed to process network queue:', err);
       this.notifyError(err);
     } finally {
+      this.prunePendingChunks();
       this.processQueue();
     }
   }
 
-  private static partitionChunks(chunkIds: string[]): string[][] {
-    const groups: string[][] = [];
-    const remaining = new Set(chunkIds);
+  /**
+   * Clusters contiguous chunks (sharing orthogonal or diagonal edges) and restricts
+   * cluster bounding box span within MAP_CONFIG limits.
+   */
+  public static clusterContiguousChunks(chunkIds: string[]): string[][] {
+    const unvisited = new Set(chunkIds);
+    const clusters: string[][] = [];
 
-    while (remaining.size > 0) {
-      const currentGroup: string[] = [];
-      for (const chunkId of remaining) {
-        const testGroup = [...currentGroup, chunkId];
-        const bbox = mergeChunksToBBox(testGroup);
-        const latSpan = bbox[2] - bbox[0];
-        const lngSpan = bbox[3] - bbox[1];
-        if (latSpan <= MAP_CONFIG.MAX_LAT_SPAN && lngSpan <= MAP_CONFIG.MAX_LNG_SPAN) {
-          currentGroup.push(chunkId);
-          remaining.delete(chunkId);
+    const getCoord = (id: string): [number, number] => {
+      const parts = id.split(',').map(Number);
+      return [parts[0], parts[1]];
+    };
+
+    while (unvisited.size > 0) {
+      const startId = unvisited.values().next().value;
+      unvisited.delete(startId);
+
+      const cluster: string[] = [startId];
+      const queue: string[] = [startId];
+
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        const [currLat, currLng] = getCoord(curr);
+
+        for (let dLat = -1; dLat <= 1; dLat++) {
+          for (let dLng = -1; dLng <= 1; dLng++) {
+            if (dLat === 0 && dLng === 0) continue;
+            const neighborId = `${currLat + dLat},${currLng + dLng}`;
+            if (unvisited.has(neighborId)) {
+              const testCluster = [...cluster, neighborId];
+              const bbox = mergeChunksToBBox(testCluster);
+              const latSpan = bbox[2] - bbox[0];
+              const lngSpan = bbox[3] - bbox[1];
+              if (latSpan <= MAP_CONFIG.MAX_LAT_SPAN && lngSpan <= MAP_CONFIG.MAX_LNG_SPAN) {
+                unvisited.delete(neighborId);
+                cluster.push(neighborId);
+                queue.push(neighborId);
+              }
+            }
+          }
         }
       }
-      groups.push(currentGroup);
+
+      clusters.push(cluster);
     }
-    return groups;
+
+    return clusters;
+  }
+
+  /**
+   * Coalesces a set of contiguous chunk IDs into minimal adjacent rectangles.
+   */
+  public static coalesceAdjacentRectangles(chunkIds: string[]): [number, number, number, number][] {
+    const coords = new Set(chunkIds);
+    const rectangles: [number, number, number, number][] = [];
+
+    const parse = (id: string): [number, number] => {
+      const parts = id.split(',').map(Number);
+      return [parts[0], parts[1]];
+    };
+
+    while (coords.size > 0) {
+      // Find top-left (minLat, minLng)
+      let minLat = Infinity;
+      let minLng = Infinity;
+
+      for (const id of coords) {
+        const [lat, lng] = parse(id);
+        if (lat < minLat || (lat === minLat && lng < minLng)) {
+          minLat = lat;
+          minLng = lng;
+        }
+      }
+
+      // Expand horizontally along lng
+      let maxLng = minLng;
+      while (coords.has(`${minLat},${maxLng + 1}`)) {
+        maxLng++;
+      }
+
+      // Expand vertically along lat while the entire horizontal strip exists
+      let maxLat = minLat;
+      let canExpand = true;
+      while (canExpand) {
+        const nextLat = maxLat + 1;
+        for (let lng = minLng; lng <= maxLng; lng++) {
+          if (!coords.has(`${nextLat},${lng}`)) {
+            canExpand = false;
+            break;
+          }
+        }
+        if (canExpand) {
+          maxLat = nextLat;
+        }
+      }
+
+      // Remove covered cells
+      const coveredChunks: string[] = [];
+      for (let lat = minLat; lat <= maxLat; lat++) {
+        for (let lng = minLng; lng <= maxLng; lng++) {
+          const id = `${lat},${lng}`;
+          coords.delete(id);
+          coveredChunks.push(id);
+        }
+      }
+
+      rectangles.push(mergeChunksToBBox(coveredChunks));
+    }
+
+    return rectangles;
   }
 }

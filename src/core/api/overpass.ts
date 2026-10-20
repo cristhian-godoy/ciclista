@@ -3,6 +3,9 @@ import { logger } from '../common/logger';
 import { fetchWithCache } from '../storage/cache';
 import { addDataUsage } from '../storage/dataUsage';
 
+let lastRequestTime = 0;
+const INTER_REQUEST_COOLDOWN_MS = 1000;
+
 /**
  * Helper to fetch Overpass query data by iterating over configured mirrors.
  */
@@ -10,11 +13,26 @@ async function fetchFromMirrors(query: string): Promise<unknown> {
   let lastError: Error | null = null;
   for (const baseUrl of API_CONFIG.OVERPASS_MIRRORS) {
     try {
-      const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
-      logger.log(`Fetching Overpass query from mirror: ${baseUrl}`);
-      const response = await fetch(url);
+      const timeSinceLast = Date.now() - lastRequestTime;
+      if (timeSinceLast < INTER_REQUEST_COOLDOWN_MS) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, INTER_REQUEST_COOLDOWN_MS - timeSinceLast),
+        );
+      }
+
+      lastRequestTime = Date.now();
+      const response = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'data=' + encodeURIComponent(query),
+      });
 
       if (response.status === 429) {
+        const retryAfter = response.headers?.get('Retry-After');
+        const backoffMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000;
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
         throw new Error(`Mirror ${baseUrl} returned HTTP 429 Too Many Requests (Rate Limited).`);
       }
       if (!response.ok) {

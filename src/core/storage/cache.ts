@@ -76,7 +76,9 @@ export async function fetchWithCache<T>(
           );
           return cachedData;
         }
-        logger.log('Cache entry is stale. Triggering background revalidation (SWR).');
+        logger.log(
+          'Cache entry is stale. Serving cached data to avoid uncoordinated background revalidation.',
+        );
       }
     }
   } catch (e) {
@@ -107,7 +109,6 @@ export async function fetchWithCache<T>(
   };
 
   if (isStale && cachedData) {
-    revalidate().catch(() => {});
     return cachedData;
   }
 

@@ -46,6 +46,7 @@ describe('OSMCacheReader service', () => {
 
     const mockCache = {
       match: vi.fn().mockResolvedValue({
+        headers: new Headers({ 'Content-Length': '1024' }),
         text: async () => JSON.stringify(mockResponse),
       }),
     };

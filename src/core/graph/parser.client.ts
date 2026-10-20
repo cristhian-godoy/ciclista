@@ -1,3 +1,4 @@
+import { API_CONFIG } from '../common/constants';
 import { OSMGraphParser } from './parser';
 import type { StreetGraph } from './types';
 
@@ -5,7 +6,7 @@ let nextRequestId = 0;
 const pendingRequests = new Map<
   number,
   {
-    resolve: (graph: StreetGraph) => void;
+    resolve: (res: { graph: StreetGraph; byteLength: number }) => void;
     reject: (err: Error) => void;
   }
 >();
@@ -23,7 +24,7 @@ function getWorker(): Worker | null {
         type: 'module',
       });
       worker.onmessage = (e) => {
-        const { requestId, serializedNodes, error } = e.data;
+        const { requestId, serializedNodes, byteLength = 0, error } = e.data;
         const pending = pendingRequests.get(requestId);
         if (!pending) return;
         pendingRequests.delete(requestId);
@@ -35,7 +36,7 @@ function getWorker(): Worker | null {
           const graph: StreetGraph = {
             nodes: new Map(nodesEntries),
           };
-          pending.resolve(graph);
+          pending.resolve({ graph, byteLength });
         }
       };
       worker.onerror = (err) => {
@@ -66,9 +67,47 @@ export function parseInWorker(rawData: unknown): Promise<StreetGraph> {
 
   return new Promise<StreetGraph>((resolve, reject) => {
     const requestId = nextRequestId++;
-    pendingRequests.set(requestId, { resolve, reject });
+    pendingRequests.set(requestId, {
+      resolve: (res) => resolve(res.graph),
+      reject,
+    });
     try {
       workerInstance.postMessage({ requestId, rawData });
+    } catch (err) {
+      pendingRequests.delete(requestId);
+      reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  });
+}
+
+/**
+ * Parses OSM data directly from CacheStorage by cache URL in a Web Worker,
+ * avoiding main-thread JSON parsing and text reading.
+ */
+export async function parseFromCacheInWorker(
+  cacheUrl: string,
+): Promise<{ graph: StreetGraph; byteLength: number }> {
+  const workerInstance = getWorker();
+  if (!workerInstance) {
+    const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
+    const cachedResponse = await cacheInstance.match(new Request(cacheUrl));
+    if (!cachedResponse) {
+      throw new Error(`No cached response found for cacheUrl: ${cacheUrl}`);
+    }
+
+    const contentLength = cachedResponse.headers?.get('Content-Length');
+    const text = await cachedResponse.text();
+    const byteLength = contentLength ? parseInt(contentLength, 10) : text.length;
+    const rawData = JSON.parse(text);
+    const graph = parser.parse(rawData);
+    return { graph, byteLength };
+  }
+
+  return new Promise<{ graph: StreetGraph; byteLength: number }>((resolve, reject) => {
+    const requestId = nextRequestId++;
+    pendingRequests.set(requestId, { resolve, reject });
+    try {
+      workerInstance.postMessage({ requestId, cacheUrl });
     } catch (err) {
       pendingRequests.delete(requestId);
       reject(err instanceof Error ? err : new Error(String(err)));
