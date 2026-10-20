@@ -35,6 +35,7 @@ export interface UsePlacesResult {
   places: Place[];
   /**
    * Alias for backward compatibility with landmarks interface.
+   * @deprecated Use `places` instead.
    */
   landmarks: Place[];
   /**
@@ -43,14 +44,16 @@ export interface UsePlacesResult {
   addPlace: (input: CreatePlaceInput) => Place;
   /**
    * Alias for addPlace.
+   * @deprecated Use `addPlace` instead.
    */
-  addLandmark: (input: CreateLandmarkInput) => Place;
+  addLandmark: (input: CreatePlaceInput) => Place;
   /**
    * Modifies an existing place and persists changes to storage.
    */
   updatePlace: (id: string, updates: UpdatePlaceInput) => Place | null;
   /**
    * Alias for updatePlace.
+   * @deprecated Use `updatePlace` instead.
    */
   updateLandmark: (id: string, updates: UpdateLandmarkInput) => Place | null;
   /**
@@ -59,6 +62,7 @@ export interface UsePlacesResult {
   deletePlace: (id: string) => void;
   /**
    * Alias for deletePlace.
+   * @deprecated Use `deletePlace` instead.
    */
   deleteLandmark: (id: string) => void;
   /**
@@ -67,6 +71,7 @@ export interface UsePlacesResult {
   clearPlaces: () => void;
   /**
    * Alias for clearPlaces.
+   * @deprecated Use `clearPlaces` instead.
    */
   clearLandmarks: () => void;
   /**
@@ -75,6 +80,7 @@ export interface UsePlacesResult {
   setPlaces: React.Dispatch<React.SetStateAction<Place[]>>;
   /**
    * Direct state dispatcher alias for places collection.
+   * @deprecated Use `setPlaces` instead.
    */
   setLandmarks: React.Dispatch<React.SetStateAction<Place[]>>;
 }

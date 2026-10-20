@@ -4,14 +4,14 @@ import React from 'react';
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
  */
-export type ToolbarMode = 'routing' | 'places' | 'studio' | 'landmarks' | 'edit';
+export type ToolbarMode = 'routing' | 'places' | 'events' | 'edit' | 'studio' | 'landmarks';
 
 /**
  * Properties for the SideToolbar component.
  */
 export interface SideToolbarProps {
   /**
-   * The currently active mode ('routing', 'places', 'studio', or 'edit').
+   * The currently active mode ('routing', 'places', 'events', or 'edit').
    */
   mode: ToolbarMode;
   /**
@@ -26,7 +26,7 @@ export interface SideToolbarProps {
 
 /**
  * Non-floating left side toolbar docked against the left edge of the viewport.
- * Provides rapid switching between routing mode, studio mode, and the test suite.
+ * Provides rapid switching between routing mode, places mode, events mode, edit mode, and the test suite.
  */
 export const SideToolbar: React.FC<SideToolbarProps> = ({
   mode,
@@ -41,6 +41,7 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
   };
 
   const isPlacesActive = mode === 'places' || (mode as string) === 'landmarks';
+  const isEventsActive = mode === 'events' || (mode as string) === 'studio';
 
   return (
     <aside className="ciclista-toolbar" aria-label="Main application toolbar">
@@ -75,11 +76,11 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
 
         <button
           type="button"
-          className={`ciclista-toolbar-btn ${mode === 'studio' ? 'active ciclista-toolbar-btn--active' : ''}`}
-          onClick={() => onModeChange('studio')}
+          className={`ciclista-toolbar-btn ${isEventsActive ? 'active ciclista-toolbar-btn--active' : ''}`}
+          onClick={() => onModeChange('events')}
           aria-label="Events"
           title="Events"
-          aria-pressed={mode === 'studio'}
+          aria-pressed={isEventsActive}
         >
           <ShieldAlert size={20} className="ciclista-toolbar-icon" />
         </button>

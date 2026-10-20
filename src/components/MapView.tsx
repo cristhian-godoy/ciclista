@@ -250,9 +250,10 @@ const MapViewContent: React.FC<{
     };
   }, [map, managedClusterId, managedNodeIds, graph]);
 
-  // Studio mode drag gestures: left-click drag for Radius Brush, right-click drag for Deselection
+  // Events mode drag gestures: left-click drag for Radius Brush, right-click drag for Deselection
   useEffect(() => {
-    if (!map || appMode !== 'studio') return;
+    const isEventsMode = appMode === 'events' || (appMode as string) === 'studio';
+    if (!map || !isEventsMode) return;
 
     let isLeftDown = false;
     let isRightDown = false;
@@ -337,11 +338,11 @@ const MapViewContent: React.FC<{
     };
   }, [map, appMode, setSelectedEdgeIds]);
 
-  // Handle right click on map (context menu trigger or studio deselection)
+  // Handle right click on map (context menu trigger or events deselection)
   const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
     if (!map) return;
 
-    if (appModeRef.current === 'studio') {
+    if (appModeRef.current === 'events' || (appModeRef.current as string) === 'studio') {
       const currentGraph = graphRef.current;
       const coord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
 
@@ -583,7 +584,7 @@ const MapViewContent: React.FC<{
       }
     }
 
-    if (appModeRef.current === 'studio') {
+    if (appModeRef.current === 'events' || (appModeRef.current as string) === 'studio') {
       const currentGraph = graphRef.current;
       if (!currentGraph) return;
 

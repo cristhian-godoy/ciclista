@@ -220,7 +220,7 @@ describe('Sidebar Integration', () => {
       },
     ];
 
-    render(<Sidebar {...defaultProps} appMode="places" landmarks={mockPlaces} />);
+    render(<Sidebar {...defaultProps} appMode="places" places={mockPlaces} />);
 
     expect(screen.getByRole('heading', { name: 'Places' })).toBeInTheDocument();
     expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
