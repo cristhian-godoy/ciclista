@@ -25,7 +25,7 @@ export const RouteVariantsLayer: React.FC = () => {
     isInspectorModeActive,
   } = useMapContext();
 
-  // Fit map bounds to show full route path smoothly (using active selection coordinates)
+  // Fit map bounds to show full route path (using active selection coordinates)
   useEffect(() => {
     if (!map) return;
 

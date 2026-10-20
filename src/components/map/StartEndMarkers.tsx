@@ -25,7 +25,7 @@ export const StartEndMarkers: React.FC = () => {
     onEndDragRef.current = onEndDrag;
   }, [onEndDrag]);
 
-  // Clean up all markers on unmount
+  // Clean up all markers on unmount or map instance change
   useEffect(() => {
     return () => {
       if (startMarkerRef.current) {
@@ -37,7 +37,7 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current = null;
       }
     };
-  }, []);
+  }, [map]);
   // Synchronize draggable option when navigation starts/stops
   useEffect(() => {
     startMarkerRef.current?.setDraggable(!isNavigating);

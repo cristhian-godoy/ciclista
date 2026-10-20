@@ -53,14 +53,20 @@ export const InspectorLayer: React.FC = () => {
     activeAlternativeLabel,
   ]);
 
-  // Initialize popup
-  if (popupRef.current == null) {
-    popupRef.current = new maplibregl.Popup({
+  // Initialize and clean up hover popup
+  useEffect(() => {
+    const popup = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
       className: 'inspector-hover-popup',
     });
-  }
+    popupRef.current = popup;
+
+    return () => {
+      popup.remove();
+      popupRef.current = null;
+    };
+  }, []);
 
   // 1. Setup non-path layers and sources
   useEffect(() => {
@@ -201,7 +207,7 @@ export const InspectorLayer: React.FC = () => {
       });
     }
 
-    let hoveredNodeId: number | null = null;
+    let hoveredNodeId: string | number | null = null;
 
     const onMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
       if (e.features && e.features.length > 0) {
@@ -210,8 +216,12 @@ export const InspectorLayer: React.FC = () => {
         if (hoveredNodeId !== null) {
           map.setFeatureState({ source: 'inspector-nodes', id: hoveredNodeId }, { hover: false });
         }
-        hoveredNodeId = feature.id as number;
-        map.setFeatureState({ source: 'inspector-nodes', id: hoveredNodeId }, { hover: true });
+        if (typeof feature.id === 'string' || typeof feature.id === 'number') {
+          hoveredNodeId = feature.id;
+          map.setFeatureState({ source: 'inspector-nodes', id: hoveredNodeId }, { hover: true });
+        } else {
+          hoveredNodeId = null;
+        }
       }
     };
 
@@ -563,7 +573,7 @@ export const InspectorLayer: React.FC = () => {
 
       setHoveredAlternativeTargetId(isChosenPath ? null : targetId);
 
-      popupRef.current.setLngLat(lngLat).setHTML(contentHtml).addTo(map);
+      popupRef.current?.setLngLat(lngLat).setHTML(contentHtml).addTo(map);
     }
   };
 

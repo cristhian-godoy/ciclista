@@ -1,12 +1,8 @@
 import type * as maplibregl from 'maplibre-gl';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import {
-  buildCrossingSubgraph,
-  createCrossingBoundingCircleGeoJSON,
-  extractCrossingClusters,
-  findCrossingTurnPath,
-} from '../../../core/graph/crossing';
+import { createCrossingBoundingCircleGeoJSON } from '../../../core/graph/crossing';
+import { useCrossingEditorData } from '../../../hooks/useCrossingEditorData';
 import { useMapContext } from '../MapContext';
 
 const CIRCLE_SOURCE_ID = 'crossing-editor-circle-source';
@@ -47,32 +43,14 @@ export const CrossingEditorLayer: React.FC = () => {
 
   const isEditMode = appMode === 'edit';
 
-  const clusters = useMemo(() => {
-    if (!graph || !isEditMode) return [];
-    return extractCrossingClusters(graph, customNodeDelays, showMinorControls);
-  }, [graph, isEditMode, customNodeDelays, showMinorControls]);
-
-  const activeCluster = useMemo(() => {
-    if (!activeCrossingId || !isEditMode) return null;
-    return clusters.find((c) => c.id === activeCrossingId) ?? null;
-  }, [clusters, activeCrossingId, isEditMode]);
-
-  const crossingSubgraph = useMemo(() => {
-    if (!graph || !activeCluster) return null;
-    return buildCrossingSubgraph(graph, activeCluster);
-  }, [graph, activeCluster]);
-
-  const computedTurnPath = useMemo(() => {
-    if (!crossingSubgraph || !activeTurnSelection.fromNodeId || !activeTurnSelection.toNodeId) {
-      return null;
-    }
-    return findCrossingTurnPath(
-      crossingSubgraph,
-      activeTurnSelection.fromNodeId,
-      activeTurnSelection.toNodeId,
-      activeTurnSelection.waypointNodeIds,
-    );
-  }, [crossingSubgraph, activeTurnSelection]);
+  const { clusters, activeCluster, crossingSubgraph, computedTurnPath } = useCrossingEditorData({
+    graph,
+    customNodeDelays,
+    showMinorControls,
+    activeCrossingId,
+    activeTurnSelection,
+    enabled: isEditMode,
+  });
 
   // Keep ref synchronized for event callbacks
   const activeTurnSelectionRef = useRef(activeTurnSelection);

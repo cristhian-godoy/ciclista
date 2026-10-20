@@ -1,5 +1,5 @@
 import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { SemanticTurnType } from '../../core/config';
 import { getTurnDetails, mapOSMNodeToControl } from '../../core/rules';
@@ -279,20 +279,21 @@ export const NodePopup: React.FC = () => {
     return list;
   }, [graph, selectedNode]);
 
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (popupRef.current && popupPos) {
+      popupRef.current.style.left = `${popupPos.x}px`;
+      popupRef.current.style.top = `${popupPos.y}px`;
+    }
+  }, [popupPos]);
+
   if (!selectedNode || !popupPos) return null;
 
   const controlType = getControlType(selectedNode.tags);
 
   return (
-    <div
-      className="map-popup"
-      /* eslint-disable-next-line react/forbid-dom-props -- Dynamic spatial screen coordinates of popup position projected from MapLibre map coordinates */
-      style={{
-        left: `${popupPos.x}px`,
-        top: `${popupPos.y}px`,
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <div ref={popupRef} className="map-popup" onClick={(e) => e.stopPropagation()}>
       <div className="popup-header-box">
         <h3 className="popup-title">Configure Control Point</h3>
         <button className="popup-close-btn" onClick={() => onNodeSelect(null)}>

@@ -48,8 +48,12 @@ useMapInstance.ts
 	React hook managing map container lifetime and basic handlers.
 CustomNavigationControl.ts
 	Custom navigation control replacing MapLibre's built-in NavigationControl.
-MapContext.tsx
-	MapProvider component hosting state and operations for map subcomponents.
+MapContext.ts
+	Re-export module for MapProvider, MapContext, and useMapContext hook.
+MapProvider.tsx
+	Context provider component hosting memoized map state and operations.
+mapContextInstance.ts
+	Definition of MapContext and useMapContext hook.
 useCustomMapControls.ts
 	React hook for injecting custom zoom and compass map controls.
 layers
