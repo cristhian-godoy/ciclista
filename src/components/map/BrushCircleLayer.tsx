@@ -90,7 +90,8 @@ export const BrushCircleLayer: React.FC = () => {
       }
     };
 
-    const isBrushActive = appMode === 'studio' && selectionTool === 'brush';
+    const isBrushActive =
+      (appMode === 'events' || (appMode as string) === 'studio') && selectionTool === 'brush';
 
     if (!isBrushActive) {
       clearPreview();

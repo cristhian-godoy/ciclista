@@ -22,6 +22,7 @@ export interface PlacesPanelProps {
   places?: Place[];
   /**
    * Alias for places (for backward compatibility).
+   * @deprecated Use `places` instead.
    */
   landmarks?: Place[];
   /**
@@ -30,6 +31,7 @@ export interface PlacesPanelProps {
   onCreatePlace?: (input: CreatePlaceInput) => void;
   /**
    * Alias for onCreatePlace.
+   * @deprecated Use `onCreatePlace` instead.
    */
   onCreateLandmark?: (input: CreatePlaceInput) => void;
   /**
@@ -38,6 +40,7 @@ export interface PlacesPanelProps {
   onUpdatePlace?: (id: string, updates: UpdatePlaceInput) => void;
   /**
    * Alias for onUpdatePlace.
+   * @deprecated Use `onUpdatePlace` instead.
    */
   onUpdateLandmark?: (id: string, updates: UpdatePlaceInput) => void;
   /**
@@ -46,6 +49,7 @@ export interface PlacesPanelProps {
   onDeletePlace?: (id: string) => void;
   /**
    * Alias for onDeletePlace.
+   * @deprecated Use `onDeletePlace` instead.
    */
   onDeleteLandmark?: (id: string) => void;
   /**
@@ -151,14 +155,14 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
   }, [places, selectedCategoryFilter, searchQuery, sortBy]);
 
   return (
-    <div className="ciclista-places-panel ciclista-landmark-panel" aria-label="Places Management">
-      <div className="ciclista-places-header ciclista-landmark-header">
-        <p className="ciclista-places-subtitle ciclista-landmark-subtitle">
+    <div className="ciclista-places-panel" aria-label="Places Management">
+      <div className="ciclista-places-header">
+        <p className="ciclista-places-subtitle">
           Define places and anchor points for precomputed routing.
         </p>
         <button
           type="button"
-          className="ciclista-btn ciclista-btn--primary ciclista-places-add-btn ciclista-landmark-add-btn"
+          className="ciclista-btn ciclista-btn--primary ciclista-places-add-btn"
           onClick={handleStartAddPlace}
         >
           <Plus size={16} /> Add Place
@@ -166,19 +170,19 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
       </div>
 
       {/* Filter and Search Controls */}
-      <div className="ciclista-card ciclista-places-controls-card ciclista-landmark-controls-card">
+      <div className="ciclista-card ciclista-places-controls-card">
         <SearchInput
           placeholder="Search places..."
           value={searchQuery}
           onChange={setSearchQuery}
           aria-label="Search places"
-          containerClassName="ciclista-places-search-bar ciclista-landmark-search-bar"
-          inputClassName="ciclista-places-search-input ciclista-landmark-search-input"
+          containerClassName="ciclista-places-search-bar"
+          inputClassName="ciclista-places-search-input"
           iconSize={16}
         />
 
-        <div className="ciclista-places-filters-row ciclista-landmark-filters-row">
-          <div className="ciclista-form-group ciclista-places-filter-group ciclista-landmark-filter-group">
+        <div className="ciclista-places-filters-row">
+          <div className="ciclista-form-group ciclista-places-filter-group">
             <label htmlFor="ciclista-places-filter-category" className="ciclista-label">
               Filter by Category
             </label>
@@ -199,7 +203,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
             </select>
           </div>
 
-          <div className="ciclista-form-group ciclista-places-filter-group ciclista-landmark-filter-group">
+          <div className="ciclista-form-group ciclista-places-filter-group">
             <label htmlFor="ciclista-places-sort-select" className="ciclista-label">
               Sort By
             </label>
@@ -218,42 +222,40 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
       </div>
 
       {/* Places List */}
-      <div className="ciclista-card ciclista-places-list-card ciclista-landmark-list-card">
-        <div className="ciclista-places-list-header ciclista-landmark-list-header">
+      <div className="ciclista-card ciclista-places-list-card">
+        <div className="ciclista-places-list-header">
           <h3 className="ciclista-card-title">Saved Places</h3>
           <span className="ciclista-badge">{displayedPlaces.length}</span>
         </div>
 
         {displayedPlaces.length === 0 ? (
-          <p className="ciclista-places-empty ciclista-landmark-empty">
+          <p className="ciclista-places-empty">
             {places.length === 0
               ? 'No places configured yet. Add your home, office, doctor, or regular destinations above.'
               : 'No places match the current search or filter.'}
           </p>
         ) : (
-          <ul className="ciclista-places-list ciclista-landmark-list">
+          <ul className="ciclista-places-list">
             {displayedPlaces.map((place) => {
               const coord: Coordinate = { lat: place.lat, lng: place.lng };
               return (
-                <li key={place.id} className="ciclista-places-item ciclista-landmark-item">
-                  <div className="ciclista-places-item-header ciclista-landmark-item-header">
-                    <div className="ciclista-places-item-title-group ciclista-landmark-item-title-group">
+                <li key={place.id} className="ciclista-places-item">
+                  <div className="ciclista-places-item-header">
+                    <div className="ciclista-places-item-title-group">
                       <span
-                        className={`ciclista-places-category-badge ciclista-landmark-category-badge ciclista-landmark-badge--${place.category}`}
+                        className={`ciclista-places-category-badge ciclista-places-category-badge--${place.category}`}
                         title={place.category}
                       >
                         {getCategoryIcon(place.category, 14)}
                         <span>{place.category}</span>
                       </span>
-                      <strong className="ciclista-places-item-name ciclista-landmark-item-name">
-                        {place.name}
-                      </strong>
+                      <strong className="ciclista-places-item-name">{place.name}</strong>
                     </div>
 
-                    <div className="ciclista-places-item-actions ciclista-landmark-item-actions">
+                    <div className="ciclista-places-item-actions">
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--secondary ciclista-places-action-btn ciclista-landmark-action-btn"
+                        className="ciclista-btn ciclista-btn--secondary ciclista-places-action-btn"
                         onClick={() => handleStartEdit(place)}
                         aria-label={`Edit ${place.name}`}
                         title="Edit place"
@@ -262,7 +264,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
                       </button>
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--danger ciclista-places-action-btn ciclista-landmark-action-btn"
+                        className="ciclista-btn ciclista-btn--danger ciclista-places-action-btn"
                         onClick={() => handleDelete(place.id)}
                         aria-label={`Delete ${place.name}`}
                         title="Delete place"
@@ -273,23 +275,21 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
                   </div>
 
                   {place.description && (
-                    <p className="ciclista-places-item-desc ciclista-landmark-item-desc">
-                      {place.description}
-                    </p>
+                    <p className="ciclista-places-item-desc">{place.description}</p>
                   )}
 
-                  <div className="ciclista-places-item-meta ciclista-landmark-item-meta">
-                    <span className="ciclista-places-item-coords ciclista-landmark-item-coords">
+                  <div className="ciclista-places-item-meta">
+                    <span className="ciclista-places-item-coords">
                       {place.lat.toFixed(4)}, {place.lng.toFixed(4)}
                     </span>
                   </div>
 
                   {/* Routing Quick Action Buttons */}
-                  <div className="ciclista-places-routing-actions ciclista-landmark-routing-actions">
+                  <div className="ciclista-places-routing-actions">
                     {onSetStartCoord && (
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn ciclista-landmark-route-btn"
+                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn"
                         onClick={() => onSetStartCoord(coord)}
                         title="Set as route origin"
                       >
@@ -299,7 +299,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
                     {onSetEndCoord && (
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn ciclista-landmark-route-btn"
+                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn"
                         onClick={() => onSetEndCoord(coord)}
                         title="Set as route destination"
                       >
@@ -309,7 +309,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
                     {onCenterMap && (
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn ciclista-landmark-route-btn"
+                        className="ciclista-btn ciclista-btn--secondary ciclista-places-route-btn"
                         onClick={() => onCenterMap(coord)}
                         title="Center map on this place"
                       >

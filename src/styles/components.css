@@ -2474,8 +2474,7 @@ h2 {
   gap: var(--ciclista-spacing-md);
 }
 
-.ciclista-place-form-actions,
-.ciclista-landmark-form-actions {
+.ciclista-place-form-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2483,13 +2482,11 @@ h2 {
   margin-top: var(--ciclista-spacing-xs);
 }
 
-.ciclista-place-form-actions .ciclista-btn,
-.ciclista-landmark-form-actions .ciclista-btn {
+.ciclista-place-form-actions .ciclista-btn {
   width: auto;
 }
 
-.ciclista-place-add-btn,
-.ciclista-landmark-add-btn {
+.ciclista-place-add-btn {
   width: 100%;
   margin-top: var(--ciclista-spacing-xs);
 }

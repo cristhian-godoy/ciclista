@@ -1,0 +1,6 @@
+CategorySelectDropdown.tsx
+	Searchable and keyboard-navigable category selection dropdown component.
+PlaceForm.tsx
+	Modular form component handling place inputs, validation, and submission.
+index.ts
+	Barrel exports for modular place subcomponents.

@@ -22,7 +22,8 @@ export const SelectionToolsDock: React.FC = () => {
     onClearSelection,
   } = useMapContext();
 
-  if (appMode !== 'studio') {
+  const isEventsMode = appMode === 'events' || (appMode as string) === 'studio';
+  if (!isEventsMode) {
     return null;
   }
 

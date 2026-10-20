@@ -86,7 +86,7 @@ describe('SideToolbar Component', () => {
     const user = userEvent.setup();
     const handleModeChange = vi.fn();
 
-    render(<SideToolbar mode="studio" onModeChange={handleModeChange} />);
+    render(<SideToolbar mode="events" onModeChange={handleModeChange} />);
 
     const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
     await user.click(routingBtn);
@@ -108,7 +108,7 @@ describe('SideToolbar Component', () => {
     expect(handleModeChange).toHaveBeenCalledWith('places');
   });
 
-  it('invokes onModeChange with studio when Events button is clicked', async () => {
+  it('invokes onModeChange with events when Events button is clicked', async () => {
     const user = userEvent.setup();
     const handleModeChange = vi.fn();
 
@@ -118,7 +118,7 @@ describe('SideToolbar Component', () => {
     await user.click(studioBtn);
 
     expect(handleModeChange).toHaveBeenCalledTimes(1);
-    expect(handleModeChange).toHaveBeenCalledWith('studio');
+    expect(handleModeChange).toHaveBeenCalledWith('events');
   });
 
   it('invokes onModeChange with edit when Edit button is clicked', async () => {

@@ -1,5 +1,25 @@
-import { Trash2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
+
+import {
+  type CyclingCalendarEvent,
+  serializeCalendarFeed,
+} from '../core/events/calendar';
+
+/**
+ * Triggers a client-side file download for calendar JSON feeds.
+ */
+function downloadJsonFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
 
 /**
  * Studio event entity configuring localized road blockages or delays.
@@ -84,6 +104,28 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
   const [description, setDescription] = useState('');
 
   const isFormValid = selectedEdgeCount > 0 && name.trim().length > 0;
+
+  const handleExportCalendar = () => {
+    const calendarEvents: CyclingCalendarEvent[] = events.map((e) => {
+      const now = new Date();
+      const end = new Date(now.getTime() + 3 * 3600 * 1000);
+      return {
+        id: e.id,
+        summary: e.name,
+        description: e.description,
+        startDate: now.toISOString(),
+        endDate: end.toISOString(),
+        edgeIds: e.edgeIds,
+        tags: [e.effect.type],
+      };
+    });
+
+    const feedJson = serializeCalendarFeed(calendarEvents, {
+      title: 'Ciclista Events Export',
+      description: 'Exported active and scheduled cycling network events',
+    });
+    downloadJsonFile(feedJson, 'ciclista-calendar-events.json');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,7 +218,20 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
 
       {/* Event List */}
       <div className="ciclista-card ciclista-event-list-card">
-        <h3 className="ciclista-card-title">Configured Events</h3>
+        <div className="ciclista-event-list-header">
+          <h3 className="ciclista-card-title">Configured Events</h3>
+          {events.length > 0 && (
+            <button
+              type="button"
+              className="ciclista-btn ciclista-btn--secondary ciclista-btn--sm"
+              onClick={handleExportCalendar}
+              aria-label="Export Calendar Feed"
+              title="Export events as JSON calendar feed"
+            >
+              <Download size={14} /> Export Calendar
+            </button>
+          )}
+        </div>
         {events.length === 0 ? (
           <p className="ciclista-event-empty">No events created yet.</p>
         ) : (

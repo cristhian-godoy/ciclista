@@ -1,3 +1,7 @@
+calendar.test.ts
+	Unit tests for JSON cycling calendar export, schema validation, and parsing.
+calendar.ts
+	Zero-dependency JSON cycling calendar feed generator, serializer, and parser.
 events.test.ts
 	Unit tests for road blockage event handling and router cost penalties.
 index.ts

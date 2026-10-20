@@ -68,11 +68,11 @@ export interface SidebarProps {
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
   /**
-   * Active application workflow mode ('routing', 'landmarks', or 'studio').
+   * Active application workflow mode ('routing', 'places', 'events', 'studio', or 'edit').
    */
   appMode?: ToolbarMode;
   /**
-   * Current list of studio map events.
+   * Current list of events.
    */
   events?: MapEvent[];
   /**
@@ -80,15 +80,16 @@ export interface SidebarProps {
    */
   selectedEdgeIds?: string[];
   /**
-   * Current list of favorite places and landmarks.
-   */
-  landmarks?: Landmark[];
-  /**
-   * Alias for landmarks collection.
+   * Current list of favorite places.
    */
   places?: Landmark[];
   /**
-   * Callback fired when creating a new event in Studio mode.
+   * Alias for places collection.
+   * @deprecated Use `places` instead.
+   */
+  landmarks?: Landmark[];
+  /**
+   * Callback fired when creating a new event in Events mode.
    */
   onCreateEvent?: (name: string, description?: string) => void;
   /**
@@ -105,6 +106,7 @@ export interface SidebarProps {
   onClearSelection?: () => void;
   /**
    * Callback fired when creating a new landmark or place.
+   * @deprecated Use `onCreatePlace` instead.
    */
   onCreateLandmark?: (input: CreateLandmarkInput) => void;
   /**
@@ -113,6 +115,7 @@ export interface SidebarProps {
   onCreatePlace?: (input: CreateLandmarkInput) => void;
   /**
    * Callback fired when modifying a landmark or place.
+   * @deprecated Use `onUpdatePlace` instead.
    */
   onUpdateLandmark?: (id: string, updates: UpdateLandmarkInput) => void;
   /**
@@ -121,6 +124,7 @@ export interface SidebarProps {
   onUpdatePlace?: (id: string, updates: UpdateLandmarkInput) => void;
   /**
    * Callback fired when deleting a landmark or place.
+   * @deprecated Use `onDeletePlace` instead.
    */
   onDeleteLandmark?: (id: string) => void;
   /**
@@ -128,11 +132,11 @@ export interface SidebarProps {
    */
   onDeletePlace?: (id: string) => void;
   /**
-   * Callback fired when setting start route pin from a landmark.
+   * Callback fired when setting start route pin from a place.
    */
   onSetStartCoord?: (coord: Coordinate) => void;
   /**
-   * Callback fired when setting end route pin from a landmark.
+   * Callback fired when setting end route pin from a place.
    */
   onSetEndCoord?: (coord: Coordinate) => void;
   /**
@@ -330,7 +334,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       <aside className={`sidebar ciclista-glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          {currentAppMode === 'studio' ? (
+          {currentAppMode === 'events' || (currentAppMode as string) === 'studio' ? (
             <>
               <ShieldAlert size={20} className="sidebar-header-icon" />
               <h2>Events</h2>
@@ -354,7 +358,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="sidebar-content">
-          {currentAppMode === 'studio' ? (
+          {currentAppMode === 'events' || (currentAppMode as string) === 'studio' ? (
             <EventsPanel
               events={currentEvents}
               selectedEdgeCount={currentSelectedEdgeIds.length}
@@ -498,7 +502,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="sidebar-footer">
-          {currentAppMode === 'studio' ? (
+          {currentAppMode === 'events' || (currentAppMode as string) === 'studio' ? (
             <p>Click or drag brush on roads to select and configure blockages.</p>
           ) : (
             <>

@@ -176,4 +176,30 @@ describe('EventsPanel Component', () => {
       expect(onDeleteEvent).toHaveBeenCalledWith('event-2');
     });
   });
+
+  describe('Calendar Feed Export', () => {
+    it('renders export calendar button when events are present', async () => {
+      const user = userEvent.setup();
+      const createObjectURLMock = vi.fn().mockReturnValue('blob:mock-url');
+      const revokeObjectURLMock = vi.fn();
+      globalThis.URL.createObjectURL = createObjectURLMock;
+      globalThis.URL.revokeObjectURL = revokeObjectURLMock;
+
+      render(<EventsPanel {...defaultProps} />);
+
+      const exportBtn = screen.getByRole('button', { name: 'Export Calendar Feed' });
+      expect(exportBtn).toBeInTheDocument();
+
+      await user.click(exportBtn);
+      expect(createObjectURLMock).toHaveBeenCalled();
+    });
+
+    it('does not render export calendar button when events list is empty', () => {
+      render(<EventsPanel {...defaultProps} events={[]} />);
+
+      expect(
+        screen.queryByRole('button', { name: 'Export Calendar Feed' }),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
