@@ -1,8 +1,11 @@
-import { AlertTriangle, Check, Footprints, Octagon, TrafficCone, X } from 'lucide-react';
+import { AlertTriangle, Check, Footprints, Octagon, TrafficCone } from 'lucide-react';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { SemanticTurnType } from '../../core/config';
 import { getTurnDetails, mapOSMNodeToControl } from '../../core/rules';
+import { Badge } from '../common/Badge';
+import { CloseButton } from '../common/CloseButton';
+import { SliderField } from '../common/SliderField';
 import { useMapContext } from './MapContext';
 
 function getBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
@@ -110,31 +113,43 @@ export const NodePopup: React.FC = () => {
     switch (type) {
       case 'signal':
         return (
-          <span className="control-type-label strategy-label-badge">
-            <TrafficCone size={12} aria-label="Traffic Light Icon" />
+          <Badge
+            variant="strategy"
+            className="control-type-label"
+            icon={<TrafficCone size={12} aria-label="Traffic Light Icon" />}
+          >
             Traffic Signal
-          </span>
+          </Badge>
         );
       case 'yield':
         return (
-          <span className="control-type-label strategy-label-badge">
-            <AlertTriangle size={12} aria-label="Yield Sign Icon" />
+          <Badge
+            variant="strategy"
+            className="control-type-label"
+            icon={<AlertTriangle size={12} aria-label="Yield Sign Icon" />}
+          >
             Yield Sign (Give Way)
-          </span>
+          </Badge>
         );
       case 'stop':
         return (
-          <span className="control-type-label strategy-label-badge">
-            <Octagon size={12} aria-label="Stop Sign Icon" />
+          <Badge
+            variant="strategy"
+            className="control-type-label"
+            icon={<Octagon size={12} aria-label="Stop Sign Icon" />}
+          >
             Stop Sign
-          </span>
+          </Badge>
         );
       case 'crossing':
         return (
-          <span className="control-type-label strategy-label-badge">
-            <Footprints size={12} aria-label="Pedestrian Crossing Icon" />
+          <Badge
+            variant="strategy"
+            className="control-type-label"
+            icon={<Footprints size={12} aria-label="Pedestrian Crossing Icon" />}
+          >
             Pedestrian Crossing
-          </span>
+          </Badge>
         );
     }
   };
@@ -296,9 +311,11 @@ export const NodePopup: React.FC = () => {
     <div ref={popupRef} className="map-popup" onClick={(e) => e.stopPropagation()}>
       <div className="popup-header-box">
         <h3 className="popup-title">Configure Control Point</h3>
-        <button className="popup-close-btn" onClick={() => onNodeSelect(null)}>
-          <X size={14} />
-        </button>
+        <CloseButton
+          variant="popup"
+          onClick={() => onNodeSelect(null)}
+          label="Close Control Point Popup"
+        />
       </div>
 
       <div className="popup-info-box">
@@ -310,20 +327,19 @@ export const NodePopup: React.FC = () => {
       </div>
 
       <div className="ciclista-form-group popup-form-group">
-        <label className="ciclista-label popup-label-small">
-          Wait Penalty: {nodeDelay} seconds
-        </label>
-        <div className="ciclista-slider-container">
-          <input
-            type="range"
-            min="0"
-            max="180"
-            step="5"
-            className="ciclista-slider"
-            value={nodeDelay}
-            onChange={(e) => setNodeDelay(parseInt(e.target.value))}
-          />
-        </div>
+        <SliderField
+          label="Wait Penalty"
+          value={nodeDelay}
+          min={0}
+          max={180}
+          step={5}
+          unit=" seconds"
+          onChange={setNodeDelay}
+          className="popup-form-group"
+          sliderClassName="ciclista-slider"
+          ariaLabel="Wait Penalty Slider"
+          formatValueText={(lbl, val, u) => `${lbl}: ${val}${u}`}
+        />
         {/* Presets buttons */}
         <div className="popup-preset-list">
           {getPresets(controlType).map((preset) => (

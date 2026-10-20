@@ -27,6 +27,42 @@ export const PALETTES = {
 } as const;
 
 /**
+ * Standardized theme tokens for MapLibre map layer rendering adhering to var(--ciclista-*) specifications.
+ */
+export const MAP_THEME_TOKENS = {
+  brand: {
+    indigo: '#6366f1',
+    teal: '#14b8a6',
+    rose: '#f43f5e',
+    sky: '#38bdf8',
+    skyGlow: '#0284c7',
+    amber: '#f59e0b',
+    orange: '#ea580c',
+    purple: '#8b5cf6',
+  },
+  status: {
+    success: '#10b981',
+    danger: '#ef4444',
+    warning: '#f59e0b',
+    info: '#3b82f6',
+    neutral: '#9ca3af',
+  },
+  overlay: {
+    white: '#ffffff',
+    black: '#000000',
+    darkNavy: '#0f172a',
+  },
+  controls: {
+    signal: '#ef4444',
+    stop: '#ea580c',
+    yield: '#f59e0b',
+    crossing: '#3b82f6',
+    fallback: '#9ca3af',
+    customTimed: '#14b8a6',
+  },
+} as const;
+
+/**
  * Maps matched infrastructure or road types to standard color codes.
  */
 export function getColorForEdge(matchedSign: string | null, matchedRoad: string): string {

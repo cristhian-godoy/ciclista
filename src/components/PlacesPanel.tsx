@@ -7,6 +7,7 @@ import type { LandmarkCategory } from '../core/landmarks/types';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
 import { getCategoryIcon } from '../utils/formatters';
+import { Badge } from './common/Badge';
 import { SearchInput } from './common/SearchInput';
 import { Toast } from './common/Toast';
 import { MapContext } from './map/MapContext';
@@ -221,7 +222,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
       <div className="ciclista-card ciclista-places-list-card ciclista-landmark-list-card">
         <div className="ciclista-places-list-header ciclista-landmark-list-header">
           <h3 className="ciclista-card-title">Saved Places</h3>
-          <span className="ciclista-badge">{displayedPlaces.length}</span>
+          <Badge>{displayedPlaces.length}</Badge>
         </div>
 
         {displayedPlaces.length === 0 ? (

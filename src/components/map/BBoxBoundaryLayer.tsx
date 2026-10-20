@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect } from 'react';
 
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 /**
@@ -11,6 +12,7 @@ import { useMapContext } from './MapContext';
  */
 export const BBoxBoundaryLayer: React.FC = () => {
   const { map, loadedBBoxes, theme } = useMapContext();
+  const lineColor = theme === 'dark' ? MAP_THEME_TOKENS.brand.sky : MAP_THEME_TOKENS.brand.skyGlow;
 
   // Add source and line layer on mount/map change
   useEffect(() => {
@@ -28,7 +30,7 @@ export const BBoxBoundaryLayer: React.FC = () => {
         type: 'line',
         source: 'loaded-bbox',
         paint: {
-          'line-color': theme === 'dark' ? '#38bdf8' : '#0284c7',
+          'line-color': lineColor,
           'line-width': 1.5,
           'line-dasharray': [2, 2],
           'line-opacity': 0.6,
@@ -46,17 +48,13 @@ export const BBoxBoundaryLayer: React.FC = () => {
         }
       }
     };
-  }, [map, theme]);
+  }, [map, lineColor]);
 
   // Sync theme updates to layer paint property
   useEffect(() => {
     if (!map || !map.getLayer('loaded-bbox-layer')) return;
-    map.setPaintProperty(
-      'loaded-bbox-layer',
-      'line-color',
-      theme === 'dark' ? '#38bdf8' : '#0284c7',
-    );
-  }, [map, theme]);
+    map.setPaintProperty('loaded-bbox-layer', 'line-color', lineColor);
+  }, [map, lineColor]);
 
   // Sync loadedBBoxes into the source
   useEffect(() => {

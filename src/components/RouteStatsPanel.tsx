@@ -1,8 +1,10 @@
-import { Bug, Check, ChevronDown, ChevronUp, Clock, Copy, Ruler, TrafficCone } from 'lucide-react';
+import { Bug, Check, Clock, Copy, Ruler, TrafficCone } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
+import { AccordionSection } from './common/AccordionSection';
+import { Badge } from './common/Badge';
 
 interface RouteStatsPanelProps {
   routeVariants: StrategyRouteVariant[];
@@ -78,21 +80,34 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
               >
                 <div className="stats-alt-header">
                   <span className="stats-alt-title">{getStrategyLabel(alt.label)}</span>
-                  {isActive && <span className="stats-alt-active-badge">Active</span>}
+                  {isActive && (
+                    <Badge variant="active" className="stats-alt-active-badge">
+                      Active
+                    </Badge>
+                  )}
                 </div>
                 <div className="stats-alt-metrics">
-                  <span className="strategy-label-badge">
-                    <Clock size={12} aria-label="Duration Icon" />
+                  <Badge
+                    variant="strategy"
+                    className="strategy-label-badge"
+                    icon={<Clock size={12} aria-label="Duration Icon" />}
+                  >
                     {formatTime(duration)}
-                  </span>
-                  <span className="strategy-label-badge">
-                    <Ruler size={12} aria-label="Distance Icon" />
+                  </Badge>
+                  <Badge
+                    variant="strategy"
+                    className="strategy-label-badge"
+                    icon={<Ruler size={12} aria-label="Distance Icon" />}
+                  >
                     {formatDistance(distance)}
-                  </span>
-                  <span className="strategy-label-badge">
-                    <TrafficCone size={12} aria-label="Traffic Signals Icon" />
+                  </Badge>
+                  <Badge
+                    variant="strategy"
+                    className="strategy-label-badge"
+                    icon={<TrafficCone size={12} aria-label="Traffic Signals Icon" />}
+                  >
                     {signals} signals
-                  </span>
+                  </Badge>
                 </div>
               </div>
             );
@@ -103,12 +118,13 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
       {/* Debug Route Details */}
       {routeResult && routeResult.edges && (
         <section className="ciclista-card">
-          <h2 onClick={() => setShowDebug(!showDebug)} className="stats-debug-header">
-            <span className="stats-debug-title">
-              <Bug size={16} className="stats-debug-icon" />
-              Debug Route Edges
-            </span>
-            <div className="stats-debug-actions">
+          <AccordionSection
+            title="Debug Route Edges"
+            icon={<Bug size={16} className="stats-debug-icon" />}
+            isOpen={showDebug}
+            onToggle={setShowDebug}
+            headerClassName="stats-debug-header"
+            headerActions={
               <button
                 onClick={handleCopyDebug}
                 title="Copy path debug info to clipboard"
@@ -126,10 +142,8 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
                   </>
                 )}
               </button>
-              {showDebug ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </div>
-          </h2>
-          {showDebug && (
+            }
+          >
             <div className="stats-debug-container">
               {routeResult.edges.map((edge, index) => (
                 <div key={index} className="stats-edge-item">
@@ -138,17 +152,22 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
                       {index + 1}. {edge.name}
                     </span>
                     {edge.matchedSign && (
-                      <code className="stats-tag-badge">{edge.matchedSign}</code>
+                      <Badge variant="tag" className="stats-tag-badge">
+                        {edge.matchedSign}
+                      </Badge>
                     )}
                     {!edge.matchedSign && edge.matchedRoad && (
-                      <code className="stats-tag-badge stats-tag-badge--road">
+                      <Badge variant="road" className="stats-tag-badge stats-tag-badge--road">
                         {edge.matchedRoad}
-                      </code>
+                      </Badge>
                     )}
                   </div>
                   <div className="stats-edge-row">
                     <span>
-                      Type: <code className="badge-bike">{edge.highway}</code>
+                      Type:{' '}
+                      <Badge variant="bike" className="badge-bike">
+                        {edge.highway}
+                      </Badge>
                     </span>
                     <span>{Math.round(edge.distance)}m</span>
                     <span>Cost: {Math.round(edge.cost)}s</span>
@@ -165,7 +184,7 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
                 </div>
               ))}
             </div>
-          )}
+          </AccordionSection>
         </section>
       )}
     </>

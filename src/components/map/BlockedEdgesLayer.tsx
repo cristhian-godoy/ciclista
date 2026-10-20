@@ -1,12 +1,13 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { type EdgeFeatureEntry, useEdgeGeoJSON } from '../../hooks/useEdgeGeoJSON';
 import { useMapContext } from './MapContext';
 
 const SOURCE_ID = 'blocked-edges';
 const LAYER_ID = 'blocked-edges-layer';
-const BARRICADE_COLOR = '#f43f5e';
+const BARRICADE_COLOR = MAP_THEME_TOKENS.brand.rose;
 
 /**
  * Map overlay layer that draws GeoJSON LineStrings for all edges belonging

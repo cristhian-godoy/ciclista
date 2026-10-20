@@ -15,6 +15,7 @@ import React from 'react';
 
 import type { StrategyRouteVariant } from '../core/router/types';
 import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
+import { EmptyState } from './common/EmptyState';
 
 interface RouteComparePanelProps {
   routeVariants: StrategyRouteVariant[];
@@ -39,10 +40,11 @@ export const RouteComparePanel: React.FC<RouteComparePanelProps> = ({
   if (routeVariants.length === 0) {
     return (
       <section className="ciclista-card compare-panel-placeholder">
-        <h2 className="compare-panel-title">Route Comparison</h2>
-        <p className="placeholder-text">
-          No routes calculated yet. Move pins to generate route comparisons.
-        </p>
+        <EmptyState
+          title="Route Comparison"
+          description="No routes calculated yet. Move pins to generate route comparisons."
+          className="placeholder-text"
+        />
       </section>
     );
   }

@@ -2,6 +2,7 @@ import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { createCrossingBoundingCircleGeoJSON } from '../../../core/graph/crossing';
+import { MAP_THEME_TOKENS } from '../../../core/rendering/theme';
 import { useCrossingEditorData } from '../../../hooks/useCrossingEditorData';
 import { useMapContext } from '../MapContext';
 
@@ -79,7 +80,7 @@ export const CrossingEditorLayer: React.FC = () => {
         type: 'fill',
         source: CIRCLE_SOURCE_ID,
         paint: {
-          'fill-color': '#6366f1',
+          'fill-color': MAP_THEME_TOKENS.brand.indigo,
           'fill-opacity': 0.08,
         },
       });
@@ -90,7 +91,7 @@ export const CrossingEditorLayer: React.FC = () => {
         type: 'line',
         source: CIRCLE_SOURCE_ID,
         paint: {
-          'line-color': '#6366f1',
+          'line-color': MAP_THEME_TOKENS.brand.indigo,
           'line-width': 2,
           'line-dasharray': [2, 2],
         },
@@ -155,7 +156,7 @@ export const CrossingEditorLayer: React.FC = () => {
         type: 'line',
         source: TURN_PATH_SOURCE_ID,
         paint: {
-          'line-color': '#000000',
+          'line-color': MAP_THEME_TOKENS.overlay.black,
           'line-width': 7,
           'line-opacity': 1.0,
         },
@@ -171,7 +172,7 @@ export const CrossingEditorLayer: React.FC = () => {
         type: 'line',
         source: TURN_PATH_SOURCE_ID,
         paint: {
-          'line-color': '#f59e0b',
+          'line-color': MAP_THEME_TOKENS.brand.amber,
           'line-width': 4,
           'line-opacity': 1.0,
         },
@@ -195,14 +196,14 @@ export const CrossingEditorLayer: React.FC = () => {
             'match',
             ['get', 'status'],
             'start',
-            '#10b981',
+            MAP_THEME_TOKENS.status.success,
             'end',
-            '#ef4444',
+            MAP_THEME_TOKENS.status.danger,
             'waypoint',
-            '#8b5cf6',
-            '#ffffff',
+            MAP_THEME_TOKENS.brand.purple,
+            MAP_THEME_TOKENS.overlay.white,
           ],
-          'circle-stroke-color': '#0f172a',
+          'circle-stroke-color': MAP_THEME_TOKENS.overlay.darkNavy,
           'circle-stroke-width': 2,
         },
       });

@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper';
 import { buildPathSymbolsGeoJSON } from '../../core/rendering/symbols-mapper';
-import { PALETTES } from '../../core/rendering/theme';
+import { MAP_THEME_TOKENS, PALETTES } from '../../core/rendering/theme';
 import type { PathSegmentFeature } from '../../core/rendering/types';
 import { UnifiedPathLayer } from './layers/UnifiedPathLayer';
 import { useMapContext } from './MapContext';
@@ -88,9 +88,9 @@ export const InspectorLayer: React.FC = () => {
         source: 'inspector-nodes',
         paint: {
           'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 9, 6],
-          'circle-color': '#3b82f6',
+          'circle-color': MAP_THEME_TOKENS.status.info,
           'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
+          'circle-stroke-color': MAP_THEME_TOKENS.overlay.white,
           'circle-opacity': 0.9,
           'circle-stroke-opacity': 0.9,
         },
@@ -134,16 +134,16 @@ export const InspectorLayer: React.FC = () => {
             'match',
             ['get', 'type'],
             'signal',
-            '#eab308',
+            MAP_THEME_TOKENS.brand.amber,
             'stop',
-            '#ef4444',
+            MAP_THEME_TOKENS.status.danger,
             'yield',
-            '#f97316',
+            PALETTES.alternative,
             'crossing',
-            '#3b82f6',
-            '#ffffff',
+            MAP_THEME_TOKENS.status.info,
+            MAP_THEME_TOKENS.overlay.white,
           ],
-          'text-halo-color': '#000000',
+          'text-halo-color': MAP_THEME_TOKENS.overlay.black,
           'text-halo-width': 1.5,
         },
       });
@@ -172,8 +172,8 @@ export const InspectorLayer: React.FC = () => {
           'text-ignore-placement': false,
         },
         paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
+          'text-color': MAP_THEME_TOKENS.overlay.white,
+          'text-halo-color': MAP_THEME_TOKENS.overlay.black,
           'text-halo-width': 1.5,
         },
       });
@@ -200,8 +200,8 @@ export const InspectorLayer: React.FC = () => {
           'text-anchor': 'top',
         },
         paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
+          'text-color': MAP_THEME_TOKENS.overlay.white,
+          'text-halo-color': MAP_THEME_TOKENS.overlay.black,
           'text-halo-width': 1.5,
         },
       });
@@ -503,12 +503,12 @@ export const InspectorLayer: React.FC = () => {
       if (hoveredEval.rulePenalties && hoveredEval.rulePenalties.length > 0) {
         const listItems = hoveredEval.rulePenalties
           .map((p) => {
-            let badgeColor = '#ea580c';
-            if (p.type === 'restriction') badgeColor = '#ef4444';
-            else if (p.type === 'node_delay') badgeColor = '#3b82f6';
-            else if (p.type === 'surface') badgeColor = '#ec4899';
-            else if (p.type === 'road_class') badgeColor = '#6366f1';
-            else if (p.type === 'service') badgeColor = '#a855f7';
+            let badgeColor: string = MAP_THEME_TOKENS.controls.stop;
+            if (p.type === 'restriction') badgeColor = MAP_THEME_TOKENS.status.danger;
+            else if (p.type === 'node_delay') badgeColor = MAP_THEME_TOKENS.status.info;
+            else if (p.type === 'surface') badgeColor = MAP_THEME_TOKENS.brand.rose;
+            else if (p.type === 'road_class') badgeColor = MAP_THEME_TOKENS.brand.indigo;
+            else if (p.type === 'service') badgeColor = MAP_THEME_TOKENS.brand.purple;
 
             return `<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: 10px;">
               <span style="color: rgba(255,255,255,0.7); display: inline-flex; align-items: center; gap: 4px;">
@@ -531,7 +531,7 @@ export const InspectorLayer: React.FC = () => {
       if (isChosenPath) {
         contentHtml = `
           <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
-            <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #10b981;">
+            <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: ${MAP_THEME_TOKENS.status.success};">
               ${hoveredEval.name} (Chosen Path)
             </div>
             <div><strong>Remaining Time:</strong> ${Math.round(chosenRemainingDuration)}s</div>
@@ -558,7 +558,7 @@ export const InspectorLayer: React.FC = () => {
 
         contentHtml = `
           <div style="font-family: inherit; font-size: 11px; line-height: 1.4; color: var(--ciclista-color-text-primary);">
-            <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: #f97316;">
+            <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; color: ${PALETTES.alternative};">
               ${hoveredEval.name} (Alternative)
             </div>
             <div><strong>Total Time:</strong> ${timeSign}s</div>

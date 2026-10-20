@@ -1,8 +1,12 @@
-import { Ban, Check, ChevronRight, Clock, GitFork, Trash2, X } from 'lucide-react';
+import { Ban, Check, ChevronRight, Clock, GitFork, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import type { CrossingTurnOverride, CrossingTurnType } from '../core/config/types';
 import { useCrossingEditorData } from '../hooks/useCrossingEditorData';
+import { Badge } from './common/Badge';
+import { CloseButton } from './common/CloseButton';
+import { EmptyState } from './common/EmptyState';
+import { SliderField } from './common/SliderField';
 import { MapContext } from './map/MapContext';
 
 const TURN_TYPE_OPTIONS: Array<{ type: CrossingTurnType; label: string }> = [
@@ -53,9 +57,7 @@ const CrossingOverrideItem: React.FC<CrossingOverrideItemProps> = ({
     </div>
     <div className="ciclista-crossing-override-actions">
       {override.banned ? (
-        <span className="ciclista-crossing-summary-badge ciclista-crossing-badge--banned">
-          BANNED
-        </span>
+        <Badge variant="banned">BANNED</Badge>
       ) : (
         <span>
           {override.timeDeltaSeconds > 0
@@ -63,17 +65,16 @@ const CrossingOverrideItem: React.FC<CrossingOverrideItemProps> = ({
             : `${override.timeDeltaSeconds}s`}
         </span>
       )}
-      <button
-        type="button"
-        className="ciclista-modal-close-btn"
-        title="Delete override"
+      <CloseButton
+        size="sm"
+        variant="modal"
+        label="Delete override"
+        icon={<Trash2 size={14} />}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
-      >
-        <Trash2 size={14} />
-      </button>
+      />
     </div>
   </div>
 );
@@ -224,24 +225,21 @@ export const CrossingEditPanel: React.FC = () => {
               <span className="ciclista-crossing-summary-title">
                 Crossing {activeCluster.id.replace(/^(crossing|cluster)-/, '#')}
               </span>
-              <button
-                type="button"
-                className="ciclista-modal-close-btn"
-                title="Deselect crossing"
+              <CloseButton
+                variant="modal"
+                label="Deselect crossing"
                 onClick={() => {
                   setActiveCrossingId(null);
                   setManagedClusterId?.(null);
                   setManagedNodeIds?.([]);
                   handleClearSelection();
                 }}
-              >
-                <X size={16} />
-              </button>
+              />
             </div>
             <div className="ciclista-crossing-summary-details">
               <span>{activeCluster.nodeIds.length} nodes</span>
               <span>Radius: ~{Math.round(activeCluster.radiusMeters)}m</span>
-              <span className="ciclista-crossing-summary-badge">{activeCluster.controlType}</span>
+              <Badge variant="subtle">{activeCluster.controlType}</Badge>
             </div>
           </div>
 
@@ -321,33 +319,22 @@ export const CrossingEditPanel: React.FC = () => {
 
             {/* Time Delta Penalty Slider */}
             <div className="ciclista-crossing-slider-group">
-              <div className="ciclista-crossing-slider-header">
-                <span className="ciclista-crossing-slider-label">
-                  <Clock size={14} /> Time Delta Penalty
-                </span>
-                <span>{timeDelta > 0 ? `+${timeDelta}` : timeDelta}s</span>
-              </div>
-              <div className="ciclista-crossing-slider-input-row">
-                <input
-                  type="range"
-                  className="ciclista-crossing-slider"
-                  min={-30}
-                  max={60}
-                  step={1}
-                  value={timeDelta}
-                  disabled={isBanned}
-                  onChange={(e) => setTimeDelta(Number(e.target.value))}
-                />
-                <input
-                  type="number"
-                  className="ciclista-crossing-number-input"
-                  min={-30}
-                  max={60}
-                  value={timeDelta}
-                  disabled={isBanned}
-                  onChange={(e) => setTimeDelta(Number(e.target.value))}
-                />
-              </div>
+              <SliderField
+                label={
+                  <span className="ciclista-crossing-slider-label">
+                    <Clock size={14} /> Time Delta Penalty
+                  </span>
+                }
+                value={timeDelta}
+                min={-30}
+                max={60}
+                step={1}
+                unit="s"
+                valuePrefix={timeDelta > 0 ? '+' : ''}
+                disabled={isBanned}
+                onChange={setTimeDelta}
+                ariaLabel="Time Delta Penalty"
+              />
             </div>
 
             {/* Hard Ban Toggle */}
@@ -416,14 +403,12 @@ export const CrossingEditPanel: React.FC = () => {
       ) : (
         /* Empty State: Prompt User to Select a Crossing */
         <div className="ciclista-crossing-empty-state-wrapper">
-          <div className="ciclista-crossing-summary-card ciclista-crossing-empty-state-card">
-            <GitFork size={32} className="ciclista-crossing-empty-state-icon" />
-            <div className="ciclista-crossing-summary-title">Select a Crossing</div>
-            <p className="ciclista-crossing-empty-state-desc">
-              Click an intersection or crossing cluster on the map to inspect internal edges and
-              configure turn penalties.
-            </p>
-          </div>
+          <EmptyState
+            className="ciclista-crossing-summary-card ciclista-crossing-empty-state-card"
+            icon={<GitFork size={32} className="ciclista-crossing-empty-state-icon" />}
+            title="Select a Crossing"
+            description="Click an intersection or crossing cluster on the map to inspect internal edges and configure turn penalties."
+          />
 
           {/* All Configured Crossing Overrides Across Graph */}
           {crossingTurns.length > 0 && (

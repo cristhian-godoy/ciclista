@@ -2,6 +2,7 @@ import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 const SOURCE_ID = 'landmarks-source';
@@ -9,8 +10,8 @@ const GLOW_LAYER_ID = 'landmarks-glow-layer';
 const CIRCLE_LAYER_ID = 'landmarks-circle-layer';
 const LABEL_LAYER_ID = 'landmarks-label-layer';
 
-const BRAND_COLOR = '#38bdf8'; // Sky blue brand token
-const GLOW_COLOR = '#0284c7';
+const BRAND_COLOR = MAP_THEME_TOKENS.brand.sky; // Sky blue brand token
+const GLOW_COLOR = MAP_THEME_TOKENS.brand.skyGlow;
 
 /**
  * Map overlay layer rendering registered places as distinct interactive
@@ -71,7 +72,7 @@ export const PlacesLayer: React.FC = () => {
           'circle-radius': 6,
           'circle-color': BRAND_COLOR,
           'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
+          'circle-stroke-color': MAP_THEME_TOKENS.overlay.white,
           'circle-opacity': 0.95,
         },
       });
@@ -90,8 +91,8 @@ export const PlacesLayer: React.FC = () => {
           'text-anchor': 'top',
         },
         paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#0f172a',
+          'text-color': MAP_THEME_TOKENS.overlay.white,
+          'text-halo-color': MAP_THEME_TOKENS.overlay.darkNavy,
           'text-halo-width': 1.5,
         },
       });

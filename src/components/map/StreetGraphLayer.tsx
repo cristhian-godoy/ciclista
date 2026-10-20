@@ -2,6 +2,7 @@ import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { convertGraphToGeoJSON } from '../../core/graph/geojson';
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 type GeoJSONFeature =
@@ -114,14 +115,14 @@ export const StreetGraphLayer: React.FC = () => {
             'match',
             ['get', 'controlType'],
             'signal',
-            '#ef4444', // Red for signals
+            MAP_THEME_TOKENS.controls.signal, // Red for signals
             'stop',
-            '#ea580c', // Orange-Red for stop signs
+            MAP_THEME_TOKENS.controls.stop, // Orange-Red for stop signs
             'yield',
-            '#f59e0b', // Amber/Yellow for yield signs
+            MAP_THEME_TOKENS.controls.yield, // Amber/Yellow for yield signs
             'crossing',
-            '#3b82f6', // Blue for pedestrian crossings
-            '#9ca3af', // Grey fallback
+            MAP_THEME_TOKENS.controls.crossing, // Blue for pedestrian crossings
+            MAP_THEME_TOKENS.controls.fallback, // Grey fallback
           ],
           'circle-radius': [
             'interpolate',
@@ -161,8 +162,8 @@ export const StreetGraphLayer: React.FC = () => {
           'circle-stroke-color': [
             'case',
             ['==', ['get', 'hasCustomDelay'], 'true'],
-            '#14b8a6', // Teal halo for custom delays
-            '#ffffff', // White otherwise
+            MAP_THEME_TOKENS.controls.customTimed, // Teal halo for custom delays
+            MAP_THEME_TOKENS.overlay.white, // White otherwise
           ],
           'circle-stroke-width': [
             'interpolate',
@@ -196,23 +197,23 @@ export const StreetGraphLayer: React.FC = () => {
           'circle-color': [
             'case',
             ['has', 'customDelay'],
-            '#14b8a6', // Custom delay timed nodes (Teal)
+            MAP_THEME_TOKENS.controls.customTimed, // Custom delay timed nodes (Teal)
             [
               'match',
               ['get', 'controlType'],
               'signal',
-              '#ef4444',
+              MAP_THEME_TOKENS.controls.signal,
               'stop',
-              '#ea580c',
+              MAP_THEME_TOKENS.controls.stop,
               'yield',
-              '#f59e0b',
+              MAP_THEME_TOKENS.controls.yield,
               'crossing',
-              '#3b82f6',
-              '#9ca3af',
+              MAP_THEME_TOKENS.controls.crossing,
+              MAP_THEME_TOKENS.controls.fallback,
             ],
           ],
           'circle-stroke-width': ['case', ['has', 'customDelay'], 2.5, 1.5],
-          'circle-stroke-color': '#ffffff',
+          'circle-stroke-color': MAP_THEME_TOKENS.overlay.white,
           'circle-opacity': 0.85,
         },
       });

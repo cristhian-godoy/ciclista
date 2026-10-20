@@ -20,6 +20,7 @@ import {
   type SignRuleConfig,
   type TurnRuleConfig,
 } from '../core/config';
+import { AccordionSection } from './common/AccordionSection';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
 import { TurnDelaySection } from './TurnDelaySection';
@@ -97,90 +98,58 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
 
         <div className="rules-body-container">
           {/* German Traffic Signs sub-section */}
-          <div className="rules-section">
-            <button
-              className="rules-section-toggle"
-              onClick={() => setSignsOpen((v) => !v)}
-              aria-expanded={signsOpen}
-            >
-              <span className="rules-section-btn-label">
-                <TrafficCone size={13} aria-label="Traffic Signs Icon" />
-                Traffic Signs
-              </span>
-              {signsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
-            {signsOpen && (
-              <div className="rules-list">
-                {Object.values(config.signs).map((sign) => (
-                  <SignRow
-                    key={sign.signId}
-                    config={sign}
-                    onChange={(updated) => updateSign(sign.signId, updated)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <AccordionSection
+            title="Traffic Signs"
+            icon={<TrafficCone size={13} aria-label="Traffic Signs Icon" />}
+            isOpen={signsOpen}
+            onToggle={setSignsOpen}
+            bodyClassName="rules-list"
+          >
+            {Object.values(config.signs).map((sign) => (
+              <SignRow
+                key={sign.signId}
+                config={sign}
+                onChange={(updated) => updateSign(sign.signId, updated)}
+              />
+            ))}
+          </AccordionSection>
 
           {/* Road Classifications sub-section */}
-          <div className="rules-section">
-            <button
-              className="rules-section-toggle"
-              onClick={() => setRoadsOpen((v) => !v)}
-              aria-expanded={roadsOpen}
-            >
-              <span className="rules-section-btn-label">
-                <Route size={13} aria-label="Road Classes Icon" />
-                Road Classes
-              </span>
-              {roadsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
-            {roadsOpen && (
-              <div className="rules-list">
-                {Object.values(config.roads).map((road) => (
-                  <RoadRow
-                    key={road.roadId}
-                    config={road}
-                    onChange={(updated) => updateRoad(road.roadId, updated)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <AccordionSection
+            title="Road Classes"
+            icon={<Route size={13} aria-label="Road Classes Icon" />}
+            isOpen={roadsOpen}
+            onToggle={setRoadsOpen}
+            bodyClassName="rules-list"
+          >
+            {Object.values(config.roads).map((road) => (
+              <RoadRow
+                key={road.roadId}
+                config={road}
+                onChange={(updated) => updateRoad(road.roadId, updated)}
+              />
+            ))}
+          </AccordionSection>
 
           {/* Intersection delays sub-section */}
-          <div className="rules-section">
-            <button
-              className="rules-section-toggle"
-              onClick={() => setIntersectionsOpen((v) => !v)}
-              aria-expanded={intersectionsOpen}
-            >
-              <span className="rules-section-btn-label">
-                <Clock size={13} aria-label="Intersections Icon" />
-                Intersections
-              </span>
-              {intersectionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
-            {intersectionsOpen && (
-              <IntersectionDelaySection config={config.nodeDelays} onChange={updateNodeDelays} />
-            )}
-          </div>
+          <AccordionSection
+            title="Intersections"
+            icon={<Clock size={13} aria-label="Intersections Icon" />}
+            isOpen={intersectionsOpen}
+            onToggle={setIntersectionsOpen}
+          >
+            <IntersectionDelaySection config={config.nodeDelays} onChange={updateNodeDelays} />
+          </AccordionSection>
 
           {/* Turn Penalties sub-section */}
-          <div className="rules-section">
-            <button
-              className="rules-section-toggle"
-              onClick={() => setTurnsOpen((v) => !v)}
-              aria-expanded={turnsOpen}
-            >
-              <span className="rules-section-btn-label">
-                <CornerUpRight size={13} aria-label="Turns Icon" />
-                Turn Penalties
-              </span>
-              {turnsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
-            {turnsOpen && <TurnDelaySection config={config.turns} onChange={updateTurns} />}
-          </div>
+          <AccordionSection
+            title="Turn Penalties"
+            icon={<CornerUpRight size={13} aria-label="Turns Icon" />}
+            isOpen={turnsOpen}
+            onToggle={setTurnsOpen}
+          >
+            <TurnDelaySection config={config.turns} onChange={updateTurns} />
+          </AccordionSection>
         </div>
       </details>
     </section>

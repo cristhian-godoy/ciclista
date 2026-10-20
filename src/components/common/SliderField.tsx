@@ -52,6 +52,10 @@ export interface SliderFieldProps {
    * Optional accessible label.
    */
   ariaLabel?: string;
+  /**
+   * Custom format function for the label or string template. If provided, overrides default `{label}: <strong>...</strong>`.
+   */
+  formatValueText?: (label: React.ReactNode, value: number, unit: string) => React.ReactNode;
 }
 
 /**
@@ -73,16 +77,23 @@ export const SliderField: React.FC<SliderFieldProps> = ({
   className = '',
   sliderClassName = '',
   ariaLabel,
+  formatValueText,
 }) => {
   return (
     <div className={`ciclista-form-group--small ${className}`.trim()}>
       <label>
-        {label}:{' '}
-        <strong>
-          {valuePrefix}
-          {value}
-          {unit}
-        </strong>
+        {formatValueText ? (
+          formatValueText(label, value, unit)
+        ) : (
+          <>
+            {label}:{' '}
+            <strong>
+              {valuePrefix}
+              {value}
+              {unit}
+            </strong>
+          </>
+        )}
       </label>
       <input
         type="range"
