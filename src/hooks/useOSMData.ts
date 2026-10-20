@@ -207,6 +207,11 @@ export function useOSMData({
     }
   };
 
+  const handleFetchOSMRef = useRef(handleFetchOSM);
+  useEffect(() => {
+    handleFetchOSMRef.current = handleFetchOSM;
+  });
+
   // Monitor coordinate changes to dynamically expand loaded area
   useEffect(() => {
     if (!startCoord || !endCoord) return;
@@ -231,13 +236,12 @@ export function useOSMData({
         newBBox,
       );
       const timer = setTimeout(() => {
-        handleFetchOSM(newBBox, true, false);
+        handleFetchOSMRef.current(newBBox, true, false);
       }, 0);
       return () => {
         clearTimeout(timer);
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCoord, endCoord, loadedBBoxes]);
 
   // Handler to load OSM data as one moves through the map

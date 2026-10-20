@@ -14,5 +14,9 @@ usePlaces.test.ts
 	Unit tests verifying usePlaces hook persistence, creation, and state management.
 usePlaces.ts
 	React hook managing persistent places state and CRUD actions.
+useCrossingEditorData.ts
+	React hook extracting crossing clusters, active cluster subgraph, and computing turn paths.
+useEdgeGeoJSON.ts
+	React hook transforming graph edge identifiers into memoized GeoJSON FeatureCollection LineStrings.
 useLandmarks.ts
 	Backward-compatible re-export module for usePlaces hook.

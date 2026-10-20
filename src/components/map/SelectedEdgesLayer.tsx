@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect } from 'react';
 
+import { useEdgeGeoJSON } from '../../hooks/useEdgeGeoJSON';
 import { useMapContext } from './MapContext';
 
 const SOURCE_ID = 'selected-edges';
@@ -15,6 +16,7 @@ const HIGHLIGHT_COLOR = '#14b8a6';
  */
 export const SelectedEdgesLayer: React.FC = () => {
   const { map, graph, selectedEdgeIds } = useMapContext();
+  const geojson = useEdgeGeoJSON(graph, selectedEdgeIds);
 
   // Register MapLibre source and line layer
   useEffect(() => {
@@ -61,44 +63,8 @@ export const SelectedEdgesLayer: React.FC = () => {
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (!source || typeof source.setData !== 'function') return;
 
-    const features: GeoJSON.Feature<GeoJSON.LineString>[] = [];
-    const processedEdges = new Set<string>();
-
-    if (graph && selectedEdgeIds.length > 0) {
-      for (const edgeId of selectedEdgeIds) {
-        if (processedEdges.has(edgeId)) continue;
-        processedEdges.add(edgeId);
-
-        const [sourceId, targetId] = edgeId.split('->');
-        if (!sourceId || !targetId) continue;
-
-        const sourceEntry = graph.nodes.get(sourceId);
-        const targetEntry = graph.nodes.get(targetId);
-        if (!sourceEntry || !targetEntry) continue;
-
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [sourceEntry.node.lng, sourceEntry.node.lat],
-              [targetEntry.node.lng, targetEntry.node.lat],
-            ],
-          },
-          properties: {
-            edgeId,
-            sourceId,
-            targetId,
-          },
-        });
-      }
-    }
-
-    source.setData({
-      type: 'FeatureCollection',
-      features,
-    });
-  }, [map, graph, selectedEdgeIds]);
+    source.setData(geojson);
+  }, [map, geojson]);
 
   return null;
 };

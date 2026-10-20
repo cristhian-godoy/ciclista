@@ -91,6 +91,11 @@ export function usePlaces(): UsePlacesResult {
   });
 
   const isInitialMount = useRef(true);
+  const placesRef = useRef(places);
+
+  useEffect(() => {
+    placesRef.current = places;
+  }, [places]);
 
   // Synchronize with storage on change (skipping initial mount)
   useEffect(() => {
@@ -108,16 +113,10 @@ export function usePlaces(): UsePlacesResult {
   }, []);
 
   const updatePlace = useCallback((id: string, updates: UpdatePlaceInput): Place | null => {
-    let updatedEntity: Place | null = null;
-    setPlaces((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          updatedEntity = updateLandmarkDomain(item, updates);
-          return updatedEntity;
-        }
-        return item;
-      }),
-    );
+    const currentItem = placesRef.current.find((item) => item.id === id);
+    if (!currentItem) return null;
+    const updatedEntity = updateLandmarkDomain(currentItem, updates);
+    setPlaces((prev) => prev.map((item) => (item.id === id ? updatedEntity : item)));
     return updatedEntity;
   }, []);
 

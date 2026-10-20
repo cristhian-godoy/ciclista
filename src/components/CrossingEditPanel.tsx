@@ -2,11 +2,7 @@ import { Ban, Check, ChevronRight, Clock, GitFork, Trash2, X } from 'lucide-reac
 import React, { useMemo, useState } from 'react';
 
 import type { CrossingTurnOverride, CrossingTurnType } from '../core/config/types';
-import {
-  buildCrossingSubgraph,
-  extractCrossingClusters,
-  findCrossingTurnPath,
-} from '../core/graph/crossing';
+import { useCrossingEditorData } from '../hooks/useCrossingEditorData';
 import { MapContext } from './map/MapContext';
 
 const TURN_TYPE_OPTIONS: Array<{ type: CrossingTurnType; label: string }> = [
@@ -27,6 +23,60 @@ const DEFAULT_TURN_SELECTION: {
 };
 
 const DEFAULT_CROSSING_TURNS: CrossingTurnOverride[] = [];
+const HASH_PREFIX = '#';
+
+interface CrossingOverrideItemProps {
+  override: CrossingTurnOverride;
+  subtext: string;
+  onSelect: () => void;
+  onDelete: () => void;
+}
+
+/**
+ * Item row displaying a configured crossing turn penalty override.
+ */
+const CrossingOverrideItem: React.FC<CrossingOverrideItemProps> = ({
+  override,
+  subtext,
+  onSelect,
+  onDelete,
+}) => (
+  <div
+    className="ciclista-crossing-override-item ciclista-crossing-override-item--interactive"
+    onClick={onSelect}
+  >
+    <div>
+      <div>
+        #{override.fromNodeId} → #{override.toNodeId}
+      </div>
+      <div className="ciclista-crossing-override-subtext">{subtext}</div>
+    </div>
+    <div className="ciclista-crossing-override-actions">
+      {override.banned ? (
+        <span className="ciclista-crossing-summary-badge ciclista-crossing-badge--banned">
+          BANNED
+        </span>
+      ) : (
+        <span>
+          {override.timeDeltaSeconds > 0
+            ? `+${override.timeDeltaSeconds}s`
+            : `${override.timeDeltaSeconds}s`}
+        </span>
+      )}
+      <button
+        type="button"
+        className="ciclista-modal-close-btn"
+        title="Delete override"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+  </div>
+);
 
 /**
  * Sidebar panel for TM:PE-style crossing turn penalty configuration and edge inspection.
@@ -51,35 +101,13 @@ export const CrossingEditPanel: React.FC = () => {
   const [turnType, setTurnType] = useState<CrossingTurnType>('direct');
   const [description, setDescription] = useState<string>('');
 
-  // Extract all crossing clusters from the active street graph
-  const clusters = useMemo(() => {
-    if (!graph) return [];
-    return extractCrossingClusters(graph, customNodeDelays, showMinorControls);
-  }, [graph, customNodeDelays, showMinorControls]);
-
-  const activeCluster = useMemo(() => {
-    if (!activeCrossingId) return null;
-    return clusters.find((c) => c.id === activeCrossingId) ?? null;
-  }, [clusters, activeCrossingId]);
-
-  // Subgraph for the active crossing cluster
-  const crossingSubgraph = useMemo(() => {
-    if (!graph || !activeCluster) return null;
-    return buildCrossingSubgraph(graph, activeCluster);
-  }, [graph, activeCluster]);
-
-  // Compute turn path using Mini A* on the crossing subgraph
-  const computedTurnPath = useMemo(() => {
-    if (!crossingSubgraph || !activeTurnSelection.fromNodeId || !activeTurnSelection.toNodeId) {
-      return null;
-    }
-    return findCrossingTurnPath(
-      crossingSubgraph,
-      activeTurnSelection.fromNodeId,
-      activeTurnSelection.toNodeId,
-      activeTurnSelection.waypointNodeIds,
-    );
-  }, [crossingSubgraph, activeTurnSelection]);
+  const { activeCluster, computedTurnPath } = useCrossingEditorData({
+    graph,
+    customNodeDelays,
+    showMinorControls,
+    activeCrossingId,
+    activeTurnSelection,
+  });
 
   // Existing override matching the current from -> to selection
   const existingOverrideForCurrentSelection = useMemo(() => {
@@ -198,7 +226,7 @@ export const CrossingEditPanel: React.FC = () => {
               </span>
               <button
                 type="button"
-                className="ciclista-toast-close-btn"
+                className="ciclista-modal-close-btn"
                 title="Deselect crossing"
                 onClick={() => {
                   setActiveCrossingId(null);
@@ -373,44 +401,13 @@ export const CrossingEditPanel: React.FC = () => {
               </span>
               <div className="ciclista-crossing-overrides-list">
                 {clusterOverrides.map((override) => (
-                  <div
+                  <CrossingOverrideItem
                     key={override.id}
-                    className="ciclista-crossing-override-item ciclista-crossing-override-item--interactive"
-                    onClick={() => handleSelectExistingOverride(override)}
-                  >
-                    <div>
-                      <div>
-                        #{override.fromNodeId} → #{override.toNodeId}
-                      </div>
-                      <div className="ciclista-crossing-override-subtext">
-                        {override.turnType ?? 'direct'}
-                      </div>
-                    </div>
-                    <div className="ciclista-crossing-override-actions">
-                      {override.banned ? (
-                        <span className="ciclista-crossing-summary-badge ciclista-crossing-badge--banned">
-                          BANNED
-                        </span>
-                      ) : (
-                        <span>
-                          {override.timeDeltaSeconds > 0
-                            ? `+${override.timeDeltaSeconds}s`
-                            : `${override.timeDeltaSeconds}s`}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        className="ciclista-toast-close-btn"
-                        title="Delete override"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteCrossingTurn(override.id);
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
+                    override={override}
+                    subtext={override.turnType ?? 'direct'}
+                    onSelect={() => handleSelectExistingOverride(override)}
+                    onDelete={() => onDeleteCrossingTurn(override.id)}
+                  />
                 ))}
               </div>
             </div>
@@ -436,47 +433,16 @@ export const CrossingEditPanel: React.FC = () => {
               </span>
               <div className="ciclista-crossing-overrides-list">
                 {crossingTurns.map((override) => (
-                  <div
+                  <CrossingOverrideItem
                     key={override.id}
-                    className="ciclista-crossing-override-item ciclista-crossing-override-item--interactive"
-                    onClick={() => {
+                    override={override}
+                    subtext={`Crossing ${override.crossingId.replace(/^(crossing|cluster)-/, HASH_PREFIX)}`}
+                    onSelect={() => {
                       setActiveCrossingId(override.crossingId);
                       handleSelectExistingOverride(override);
                     }}
-                  >
-                    <div>
-                      <div>
-                        #{override.fromNodeId} → #{override.toNodeId}
-                      </div>
-                      <div className="ciclista-crossing-override-subtext">
-                        Crossing {override.crossingId.replace(/^(crossing|cluster)-/, '#')}
-                      </div>
-                    </div>
-                    <div className="ciclista-crossing-override-actions">
-                      {override.banned ? (
-                        <span className="ciclista-crossing-summary-badge ciclista-crossing-badge--banned">
-                          BANNED
-                        </span>
-                      ) : (
-                        <span>
-                          {override.timeDeltaSeconds > 0
-                            ? `+${override.timeDeltaSeconds}s`
-                            : `${override.timeDeltaSeconds}s`}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        className="ciclista-toast-close-btn"
-                        title="Delete override"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteCrossingTurn(override.id);
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
+                    onDelete={() => onDeleteCrossingTurn(override.id)}
+                  />
                 ))}
               </div>
             </div>

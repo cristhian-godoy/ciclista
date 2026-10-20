@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { type EdgeFeatureEntry, useEdgeGeoJSON } from '../../hooks/useEdgeGeoJSON';
 import { useMapContext } from './MapContext';
 
 const SOURCE_ID = 'blocked-edges';
@@ -15,6 +16,24 @@ const BARRICADE_COLOR = '#f43f5e';
  */
 export const BlockedEdgesLayer: React.FC = () => {
   const { map, graph, events } = useMapContext();
+
+  const blockedEdgeItems = useMemo<EdgeFeatureEntry[]>(() => {
+    if (!events || events.length === 0) return [];
+    const items: EdgeFeatureEntry[] = [];
+    for (const event of events) {
+      if (event.active && event.effect.type === 'road_blockage') {
+        for (const edgeId of event.edgeIds) {
+          items.push({
+            edgeId,
+            extraProperties: { eventId: event.id },
+          });
+        }
+      }
+    }
+    return items;
+  }, [events]);
+
+  const geojson = useEdgeGeoJSON(graph, blockedEdgeItems);
 
   // Register MapLibre source and dashed barricade layer
   useEffect(() => {
@@ -62,49 +81,8 @@ export const BlockedEdgesLayer: React.FC = () => {
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (!source || typeof source.setData !== 'function') return;
 
-    const features: GeoJSON.Feature<GeoJSON.LineString>[] = [];
-    const processedEdges = new Set<string>();
-
-    if (graph && events && events.length > 0) {
-      for (const event of events) {
-        if (event.active && event.effect.type === 'road_blockage') {
-          for (const edgeId of event.edgeIds) {
-            if (processedEdges.has(edgeId)) continue;
-            processedEdges.add(edgeId);
-
-            const [sourceId, targetId] = edgeId.split('->');
-            if (!sourceId || !targetId) continue;
-
-            const sourceEntry = graph.nodes.get(sourceId);
-            const targetEntry = graph.nodes.get(targetId);
-            if (!sourceEntry || !targetEntry) continue;
-
-            features.push({
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: [
-                  [sourceEntry.node.lng, sourceEntry.node.lat],
-                  [targetEntry.node.lng, targetEntry.node.lat],
-                ],
-              },
-              properties: {
-                edgeId,
-                sourceId,
-                targetId,
-                eventId: event.id,
-              },
-            });
-          }
-        }
-      }
-    }
-
-    source.setData({
-      type: 'FeatureCollection',
-      features,
-    });
-  }, [map, graph, events]);
+    source.setData(geojson);
+  }, [map, geojson]);
 
   return null;
 };

@@ -1,7 +1,26 @@
 import { Edit2, MapPin, Star, Trash2, ZoomIn } from 'lucide-react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { useMapContext } from './MapContext';
+
+/**
+ * Safely parses raw JSON serialized node identifiers into a string array.
+ *
+ * @param raw - JSON string containing serialized node IDs.
+ * @returns Array of parsed node ID strings.
+ */
+function parseNodeIds(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item) => String(item));
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Interactive floating context menu triggered by right-clicking on the map canvas.
@@ -27,6 +46,15 @@ export const MapContextMenu: React.FC = () => {
     places,
     landmarks,
   } = useMapContext();
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (menuRef.current) {
+      menuRef.current.style.left = `${contextMenu.x}px`;
+      menuRef.current.style.top = `${contextMenu.y}px`;
+    }
+  }, [contextMenu.x, contextMenu.y]);
 
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
@@ -57,15 +85,7 @@ export const MapContextMenu: React.FC = () => {
     : null;
 
   return (
-    <div
-      className="map-context-menu"
-      /* eslint-disable-next-line react/forbid-dom-props -- Dynamic spatial screen coordinates of context menu position calculated at mouse click location */
-      style={{
-        left: `${contextMenu.x}px`,
-        top: `${contextMenu.y}px`,
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <div ref={menuRef} className="map-context-menu" onClick={(e) => e.stopPropagation()}>
       {targetPlace ? (
         <>
           <button
@@ -131,7 +151,7 @@ export const MapContextMenu: React.FC = () => {
               className="map-context-menu-item"
               onClick={() => {
                 if (contextMenu.crossingId !== null) {
-                  const nodeIds = JSON.parse(contextMenu.nodeIds || '[]');
+                  const nodeIds = parseNodeIds(contextMenu.nodeIds);
                   if (setManagedClusterIdRef.current) {
                     setManagedClusterIdRef.current(contextMenu.crossingId);
                   }

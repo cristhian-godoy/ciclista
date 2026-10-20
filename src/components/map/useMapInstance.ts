@@ -42,10 +42,20 @@ export const useMapInstance = ({
   const onClickRef = useRef(onClick);
   const onDragStartRef = useRef(onDragStart);
   const onZoomStartRef = useRef(onZoomStart);
+  const themeRef = useRef(theme);
+  const tilelessRef = useRef(tileless);
   const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInteractingRef = useRef(false);
   const interactionEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    tilelessRef.current = tileless;
+  }, [tileless]);
 
   useEffect(() => {
     onMapBoundsChangeRef.current = onMapBoundsChange;
@@ -213,7 +223,7 @@ export const useMapInstance = ({
 
     const loadInitialStyle = async () => {
       try {
-        if (tileless) {
+        if (tilelessRef.current) {
           mapInstance.once('style.load', () => {
             if (isCancelled) return;
             setMapReady(true);
@@ -239,7 +249,7 @@ export const useMapInstance = ({
                 id: 'background',
                 type: 'background',
                 paint: {
-                  'background-color': theme === 'bright' ? '#f8fafc' : '#0b0f19',
+                  'background-color': themeRef.current === 'bright' ? '#f8fafc' : '#0b0f19',
                 },
               },
             ],
@@ -247,7 +257,7 @@ export const useMapInstance = ({
           return;
         }
 
-        const cleanStyle = await fetchFilteredStyle(theme);
+        const cleanStyle = await fetchFilteredStyle(themeRef.current);
         if (isCancelled) return;
 
         mapInstance.once('style.load', () => {
@@ -291,7 +301,6 @@ export const useMapInstance = ({
       setMap(null);
       setMapReady(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle theme changes

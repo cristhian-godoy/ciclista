@@ -280,12 +280,10 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
 
     return () => {
       layers.forEach((layerId) => {
-        if (map.getLayer(layerId)) {
-          map.off('mouseenter', layerId, handleMouseEnter);
-          map.off('mousemove', layerId, handleMouseMove);
-          map.off('mouseleave', layerId, handleMouseLeave);
-          map.off('click', layerId, handleClick);
-        }
+        map.off('mouseenter', layerId, handleMouseEnter);
+        map.off('mousemove', layerId, handleMouseMove);
+        map.off('mouseleave', layerId, handleMouseLeave);
+        map.off('click', layerId, handleClick);
       });
     };
   }, [map, coreId, semanticId, onPathClick, onPathHover, onPathLeave]);

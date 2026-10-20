@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render } from '@testing-library/react';
+import type * as maplibregl from 'maplibre-gl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NavigationState } from '../../core/navigation/types';
@@ -33,12 +33,30 @@ const mockNavigationState: NavigationState = {
   startTimestamp: 1000,
 };
 
+interface MockGeoJSONSource {
+  setData: ReturnType<typeof vi.fn>;
+}
+
+interface MockMap {
+  hasImage: ReturnType<typeof vi.fn>;
+  addImage: ReturnType<typeof vi.fn>;
+  removeImage: ReturnType<typeof vi.fn>;
+  getSource: ReturnType<typeof vi.fn>;
+  addSource: ReturnType<typeof vi.fn>;
+  removeSource: ReturnType<typeof vi.fn>;
+  getLayer: ReturnType<typeof vi.fn>;
+  addLayer: ReturnType<typeof vi.fn>;
+  removeLayer: ReturnType<typeof vi.fn>;
+  setLayoutProperty: ReturnType<typeof vi.fn>;
+  easeTo: ReturnType<typeof vi.fn>;
+}
+
 describe('NavigationLayer', () => {
-  let mockMap: any;
-  let mockSource: any;
-  let mockRawSource: any;
+  let mockMap: MockMap;
+  let mockSource: MockGeoJSONSource;
+  let mockRawSource: MockGeoJSONSource;
   let defaultContextValue: MapContextType;
-  let canvasContextSpy: any;
+  let canvasContextSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Mock HTMLCanvasElement getContext to prevent throwing in test environment
@@ -57,7 +75,7 @@ describe('NavigationLayer', () => {
         width: 48,
         height: 48,
       }),
-    } as any);
+    } as unknown as CanvasRenderingContext2D);
 
     mockSource = {
       setData: vi.fn(),
@@ -68,8 +86,8 @@ describe('NavigationLayer', () => {
     };
 
     let imageAdded = false;
-    const sources = new Map<string, any>();
-    const layers = new Map<string, any>();
+    const sources = new Map<string, unknown>();
+    const layers = new Map<string, unknown>();
 
     mockMap = {
       hasImage: vi.fn().mockImplementation((id: string) => {
@@ -86,7 +104,7 @@ describe('NavigationLayer', () => {
         if (id === 'nav-raw-position' && sources.has(id)) return mockRawSource;
         return sources.get(id) || null;
       }),
-      addSource: vi.fn().mockImplementation((id: string, source: any) => {
+      addSource: vi.fn().mockImplementation((id: string, source: unknown) => {
         sources.set(id, source);
       }),
       removeSource: vi.fn().mockImplementation((id: string) => {
@@ -95,7 +113,7 @@ describe('NavigationLayer', () => {
       getLayer: vi.fn().mockImplementation((id: string) => {
         return layers.get(id) || null;
       }),
-      addLayer: vi.fn().mockImplementation((layer: any) => {
+      addLayer: vi.fn().mockImplementation((layer: { id: string }) => {
         layers.set(layer.id, layer);
       }),
       removeLayer: vi.fn().mockImplementation((id: string) => {
@@ -106,7 +124,7 @@ describe('NavigationLayer', () => {
     };
 
     defaultContextValue = {
-      map: mockMap,
+      map: mockMap as unknown as maplibregl.Map,
       setMap: vi.fn(),
       mapReady: true,
       setMapReady: vi.fn(),

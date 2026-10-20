@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import {
@@ -152,7 +152,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
     provider.start();
   };
 
-  const stopNavigation = () => {
+  const stopNavigation = useCallback(() => {
     providerRef.current?.stop();
     providerRef.current = null;
     lastSnappedRef.current = null;
@@ -168,7 +168,7 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
       routeCoordinates: [],
       startTimestamp: null,
     }));
-  };
+  }, []);
 
   const pauseNavigation = () => {
     if (state.status !== 'active') return;
@@ -203,6 +203,11 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
     }));
   };
 
+  const statusRef = useRef(state.status);
+  useEffect(() => {
+    statusRef.current = state.status;
+  }, [state.status]);
+
   // Stop navigation only when the route meaningfully changes.
   // Comparing by reference would stop navigation on every background graph refresh
   // (e.g. cache eviction re-fetch producing a new array with identical content).
@@ -216,13 +221,12 @@ export function useNavigation({ routeResult, routeCoordinates }: UseNavigationPr
     if (signature === routeSignatureRef.current) return;
     routeSignatureRef.current = signature;
 
-    if (state.status !== 'idle') {
+    if (statusRef.current !== 'idle') {
       setTimeout(() => {
         stopNavigation();
       }, 0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeCoordinates]);
+  }, [routeCoordinates, stopNavigation]);
 
   // Cleanup on unmount
   useEffect(() => {
