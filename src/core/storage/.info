@@ -1,7 +1,9 @@
-cache.ts
-	Client-side CacheStorage utility with TTL eviction and SWR support.
 cache.test.ts
 	Unit tests for Client-side CacheStorage utility.
+cache.ts
+	Client-side CacheStorage utility with TTL eviction and SWR support.
+dataUsage.test.ts
+	Unit tests for network and cache bandwidth tracking, connectivity detection, and data saver toggles.
 dataUsage.ts
 	Data usage tracking utility and cellular connectivity / data saver mode state manager.
 storage.test.ts
@@ -10,4 +12,3 @@ storage.ts
 	Web-storage adapter implementing browser localStorage persistence.
 types.ts
 	Local overrides and storage configurations type definitions.
-

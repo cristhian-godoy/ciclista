@@ -8,11 +8,8 @@ describe('parser.client', () => {
   });
 
   it('falls back to main-thread parsing when Worker is undefined', async () => {
-    // Save global Worker
     const originalWorker = globalThis.Worker;
-    // Force Worker to be undefined
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (globalThis as any).Worker;
+    Reflect.deleteProperty(globalThis, 'Worker');
 
     const mockResponse = {
       elements: [
@@ -34,8 +31,9 @@ describe('parser.client', () => {
       expect(graph).toBeDefined();
       expect(graph.nodes.size).toBeGreaterThan(0);
     } finally {
-      // Restore global Worker
-      globalThis.Worker = originalWorker;
+      if (originalWorker) {
+        globalThis.Worker = originalWorker;
+      }
     }
   });
 });

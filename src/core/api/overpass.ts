@@ -23,7 +23,7 @@ async function fetchFromMirrors(query: string): Promise<unknown> {
 
       const text = await response.text();
       try {
-        const bytes = new Blob([text]).size;
+        const bytes = new TextEncoder().encode(text).byteLength;
         addDataUsage(bytes, false);
       } catch (e) {
         logger.warn('Failed to calculate downloaded response size:', e);
@@ -45,7 +45,7 @@ async function fetchFromMirrors(query: string): Promise<unknown> {
  *
  * Note: We explicitly use the browser's native CacheStorage API (which writes to disk)
  * instead of in-memory caching libraries like React Query or SWR. Overpass API JSON
- * responses for entire cities can easily reach 50MB-150MB. Storing this in the JavaScript
+ * responses for entire cities can reach up to 50MB-150MB. Storing this in the JavaScript
  * heap would cause severe memory bloat or crash the browser tab.
  */
 export async function fetchWithCacheAndFallback(query: string): Promise<unknown> {

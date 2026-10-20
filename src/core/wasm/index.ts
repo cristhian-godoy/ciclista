@@ -1,3 +1,4 @@
+import { logger } from '../common/logger';
 import initWasm, { type InitInput, WasmEngine, WasmStreetGraph } from './pkg/ciclista_wasm.js';
 
 let initPromise: Promise<boolean> | null = null;
@@ -22,7 +23,8 @@ export async function ensureWasmInitialized(wasmSource?: InitInput): Promise<boo
         WasmEngine.init_panic_hook();
         initialized = true;
         return true;
-      } catch {
+      } catch (error) {
+        logger.warn('Failed to initialize WebAssembly engine:', error);
         initPromise = null;
         initialized = false;
         return false;

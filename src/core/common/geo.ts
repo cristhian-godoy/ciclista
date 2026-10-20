@@ -192,7 +192,7 @@ export function mergeChunksToBBox(chunkIds: string[]): [number, number, number, 
 
 /**
  * Calculates the distance between two nearby points on the Earth's surface
- * using a fast flat-earth Pythagorean (equirectangular) approximation.
+ * using an equirectangular Pythagorean approximation.
  * Returns distance in meters.
  */
 export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -204,4 +204,42 @@ export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2
   const x = dLon * Math.cos(meanLat);
   const y = dLat;
   return R * Math.sqrt(x * x + y * y);
+}
+
+/**
+ * Calculates the initial bearing (forward azimuth) from an origin coordinate to a
+ * destination coordinate in degrees within the range [0, 360).
+ *
+ * @param lat1 - Origin latitude in decimal degrees.
+ * @param lon1 - Origin longitude in decimal degrees.
+ * @param lat2 - Destination latitude in decimal degrees.
+ * @param lon2 - Destination longitude in decimal degrees.
+ * @returns Initial bearing in degrees clockwise from true north [0, 360).
+ */
+export function getBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const lat1Rad = (lat1 * Math.PI) / 180;
+  const lat2Rad = (lat2 * Math.PI) / 180;
+  const dLonRad = ((lon2 - lon1) * Math.PI) / 180;
+
+  const y = Math.sin(dLonRad) * Math.cos(lat2Rad);
+  const x =
+    Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+    Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLonRad);
+
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+}
+
+/**
+ * Converts a compass bearing angle in degrees into an 8-point cardinal or intercardinal
+ * direction abbreviation ('N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW').
+ *
+ * @param bearing - Bearing angle in degrees clockwise from true north.
+ * @returns 8-point compass direction abbreviation.
+ */
+export function getCompassDirection(bearing: number): string {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const normalized = ((bearing % 360) + 360) % 360;
+  const index = Math.round(normalized / 45) % 8;
+  return directions[index];
 }

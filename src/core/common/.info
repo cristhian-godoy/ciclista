@@ -1,15 +1,18 @@
-types.ts
-	Shared common coordinates and base types.
-MinHeap.ts
-	Min-Heap queue implementation for pathfinding algorithms.
 constants.ts
 	Global application and routing configuration constants.
-geo.ts
-	Geographic coordinate mathematical utilities.
 geo.test.ts
-	Unit tests for geographic coordinate chunking, radius edge discovery, and circle generation mathematical utilities.
+	Unit tests for geodesic distance, chunking, bearing, and compass direction calculations.
+geo.ts
+	Geographic coordinate mathematical utilities including Haversine distance, bearing, and grid chunking.
+geometry.test.ts
+	Unit tests for nearest node, edge projection, radial search, and GeoJSON polygon generation.
 geometry.ts
-	Geometry calculations, spatial helper functions, radius edge discovery, and GeoJSON circle generation.
+	Geometry calculations, point-to-segment projection, radial edge discovery, and GeoJSON circle generation.
 logger.ts
-	Application logger for debugging and telemetry.
-
+	Application logger for console output conditional on environment mode.
+MinHeap.test.ts
+	Unit tests for min-heap priority queue operations and ordering invariants.
+MinHeap.ts
+	Min-Heap priority queue implementation for pathfinding algorithms.
+types.ts
+	Shared coordinate and bounding box interfaces.

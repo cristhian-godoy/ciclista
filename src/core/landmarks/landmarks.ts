@@ -1,3 +1,4 @@
+import { haversineDistance } from '../common/geo';
 import type {
   CategoryDescriptor,
   CreateLandmarkInput,
@@ -206,7 +207,8 @@ export function sortLandmarks(
 }
 
 /**
- * Computes great-circle distance between two geographic coordinates in meters using the Haversine formula.
+ * Computes great-circle distance between two geographic coordinates in meters.
+ * Delegates to common equirectangular haversine distance calculation.
  *
  * @param coord1 - First coordinate { lat, lng }.
  * @param coord2 - Second coordinate { lat, lng }.
@@ -216,21 +218,7 @@ export function calculateHaversineDistance(
   coord1: { lat: number; lng: number },
   coord2: { lat: number; lng: number },
 ): number {
-  const earthRadiusMeters = 6371000;
-  const toRadians = (deg: number) => (deg * Math.PI) / 180;
-
-  const dLat = toRadians(coord2.lat - coord1.lat);
-  const dLng = toRadians(coord2.lng - coord1.lng);
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(coord1.lat)) *
-      Math.cos(toRadians(coord2.lat)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return earthRadiusMeters * c;
+  return haversineDistance(coord1.lat, coord1.lng, coord2.lat, coord2.lng);
 }
 
 /**
