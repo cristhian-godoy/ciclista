@@ -1,51 +1,16 @@
-import {
-  Briefcase,
-  Edit2,
-  GraduationCap,
-  Home,
-  MapPin,
-  Plus,
-  Search,
-  ShoppingBag,
-  Stethoscope,
-  Train,
-  Trash2,
-  Trees,
-} from 'lucide-react';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { Edit2, MapPin, Plus, Trash2 } from 'lucide-react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import { filterLandmarks, LANDMARK_CATEGORIES, sortLandmarks } from '../core/landmarks/landmarks';
 import type { LandmarkCategory } from '../core/landmarks/types';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
+import { getCategoryIcon } from '../utils/formatters';
+import { SearchInput } from './common/SearchInput';
 import { Toast } from './common/Toast';
 import { MapContext } from './map/MapContext';
 import { PlaceModal } from './PlaceModal';
-
-/**
- * Returns a corresponding icon component for each place category.
- */
-function getCategoryIcon(category: LandmarkCategory, size = 16) {
-  switch (category) {
-    case 'home':
-      return <Home size={size} />;
-    case 'work':
-      return <Briefcase size={size} />;
-    case 'doctor':
-      return <Stethoscope size={size} />;
-    case 'school':
-      return <GraduationCap size={size} />;
-    case 'shop':
-      return <ShoppingBag size={size} />;
-    case 'transit':
-      return <Train size={size} />;
-    case 'leisure':
-      return <Trees size={size} />;
-    case 'other':
-    default:
-      return <MapPin size={size} />;
-  }
-}
 
 /**
  * Properties for the PlacesPanel component.
@@ -164,18 +129,7 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
     setIsPlacingPlace(true);
   };
 
-  useEffect(() => {
-    if (!isPlacingPlace) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsPlacingPlace(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isPlacingPlace, setIsPlacingPlace]);
+  useEscapeKey(() => setIsPlacingPlace(false), Boolean(isPlacingPlace));
 
   const handleStartEdit = (place: Place) => {
     if (mapCtx?.openEditPlaceModal) {
@@ -213,17 +167,15 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
 
       {/* Filter and Search Controls */}
       <div className="ciclista-card ciclista-places-controls-card ciclista-landmark-controls-card">
-        <div className="ciclista-places-search-bar ciclista-landmark-search-bar">
-          <Search size={16} className="ciclista-places-search-icon ciclista-landmark-search-icon" />
-          <input
-            type="text"
-            className="ciclista-input ciclista-places-search-input ciclista-landmark-search-input"
-            placeholder="Search places..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search places"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search places..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          aria-label="Search places"
+          containerClassName="ciclista-places-search-bar ciclista-landmark-search-bar"
+          inputClassName="ciclista-places-search-input ciclista-landmark-search-input"
+          iconSize={16}
+        />
 
         <div className="ciclista-places-filters-row ciclista-landmark-filters-row">
           <div className="ciclista-form-group ciclista-places-filter-group ciclista-landmark-filter-group">

@@ -1,0 +1,4 @@
+formatters.ts
+	Shared utility functions for formatting distance, duration, timestamps, routing strategies, and place categories.
+formatters.test.tsx
+	Unit tests verifying distance, duration, time formatters, and strategy badge rendering.

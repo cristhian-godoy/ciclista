@@ -1,6 +1,8 @@
 import { Award } from 'lucide-react';
 import React from 'react';
 
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { formatDistance, formatDuration } from '../utils/formatters';
 import { useMapContext } from './map/MapContext';
 
 /**
@@ -8,32 +10,28 @@ import { useMapContext } from './map/MapContext';
  */
 export const ArrivalPanel: React.FC = () => {
   const { navigationState, rideStats, onStopNavigation } = useMapContext();
+  const isVisible = navigationState.status === 'arrived' && Boolean(rideStats);
 
-  if (navigationState.status !== 'arrived' || !rideStats) return null;
+  useEscapeKey(onStopNavigation, isVisible);
 
-  const formatDistance = (m: number) => {
-    if (m >= 1000) return `${(m / 1000).toFixed(2)} km`;
-    return `${Math.round(m)} m`;
-  };
-
-  const formatDuration = (sec: number) => {
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = Math.round(sec % 60);
-    if (h > 0) return `${h}h ${m}m ${s}s`;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  };
+  if (!isVisible || !rideStats) return null;
 
   return (
     <div className="arrival-overlay">
-      <div className="ciclista-glass-panel arrival-content">
+      <div
+        className="ciclista-glass-panel arrival-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="arrival-summary-title"
+      >
         <div className="arrival-icon-wrapper">
           <Award size={28} />
         </div>
 
         <div className="arrival-header">
-          <h2 className="arrival-title">Destination Reached!</h2>
+          <h2 id="arrival-summary-title" className="arrival-title">
+            Destination Reached!
+          </h2>
           <p className="arrival-subtitle">Here is your ride summary</p>
         </div>
 

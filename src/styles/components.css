@@ -942,6 +942,16 @@ h2 {
   margin-top: var(--ciclista-spacing-md);
 }
 
+.attribution-accordion {
+  border: none;
+  background: transparent;
+}
+
+.attribution-accordion .rules-section-toggle {
+  background: transparent;
+  padding: 0;
+}
+
 .attribution-panel-header {
   display: flex;
   justify-content: space-between;
@@ -2438,6 +2448,7 @@ h2 {
   margin-bottom: 0;
 }
 
+.ciclista-close-btn,
 .ciclista-modal-close-btn {
   background: transparent;
   border: none;
@@ -2451,6 +2462,7 @@ h2 {
   transition: var(--ciclista-transition-fast);
 }
 
+.ciclista-close-btn:hover,
 .ciclista-modal-close-btn:hover {
   color: var(--ciclista-color-text-primary);
   background: rgb(255 255 255 / 10%);
@@ -2611,6 +2623,79 @@ h2 {
 
 .ciclista-placeholder-text {
   color: var(--ciclista-color-text-muted);
+}
+
+/* Reusable Search Bar Primitive */
+.ciclista-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.ciclista-search-icon {
+  position: absolute;
+  left: var(--ciclista-spacing-sm);
+  color: var(--ciclista-color-text-muted);
+  pointer-events: none;
+}
+
+.ciclista-search-input {
+  padding-left: var(--ciclista-spacing-xl);
+  width: 100%;
+}
+
+.ciclista-search-clear-btn {
+  position: absolute;
+  right: var(--ciclista-spacing-xs);
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-text-muted);
+  cursor: pointer;
+  padding: var(--ciclista-spacing-2xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ciclista-radius-xs);
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-search-clear-btn:hover {
+  color: var(--ciclista-color-text-primary);
+}
+
+/* Reusable Empty State Primitive */
+.ciclista-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--ciclista-spacing-lg) var(--ciclista-spacing-md);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-empty-state-icon {
+  color: var(--ciclista-color-text-muted);
+  margin-bottom: var(--ciclista-spacing-sm);
+}
+
+.ciclista-empty-state-title {
+  font-size: var(--ciclista-font-md);
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+  margin-bottom: var(--ciclista-spacing-xs);
+}
+
+.ciclista-empty-state-desc {
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-secondary);
+  line-height: 1.4;
+  margin-bottom: var(--ciclista-spacing-sm);
+}
+
+.ciclista-empty-state-action {
+  margin-top: var(--ciclista-spacing-xs);
 }
 
 /* Reusable Toast Notification */

@@ -16,3 +16,9 @@ usePlaces.ts
 	React hook managing persistent places state and CRUD actions.
 useLandmarks.ts
 	Backward-compatible re-export module for usePlaces hook.
+useEscapeKey.ts
+	React lifecycle hook attaching window keydown listener for Escape key dismissal.
+useOnClickOutside.ts
+	React lifecycle hook attaching document listener for outside click detection on referenced elements.
+useLatestRef.ts
+	React hook storing latest prop or callback reference to avoid stale closures.

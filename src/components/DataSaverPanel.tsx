@@ -13,7 +13,7 @@ import {
 } from '../core/storage/dataUsage';
 
 /**
- *
+ * Panel displaying network data transfer statistics, cache usage, and data saver controls.
  */
 export const DataSaverPanel: React.FC = () => {
   const [stats, setStats] = useState(getDataUsage());

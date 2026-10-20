@@ -1,5 +1,7 @@
-import { ChevronDown, ChevronUp, Info } from 'lucide-react';
-import React, { useState } from 'react';
+import { Info } from 'lucide-react';
+import React from 'react';
+
+import { AccordionSection } from './common/AccordionSection';
 
 interface AttributionItem {
   name: string;
@@ -8,7 +10,7 @@ interface AttributionItem {
   link: string;
 }
 
-const ATTRIBUTIONS: AttributionItem[] = [
+const ATTRIBUTIONS: readonly AttributionItem[] = [
   {
     name: 'OpenStreetMap',
     license: 'ODbL',
@@ -57,48 +59,39 @@ const ATTRIBUTIONS: AttributionItem[] = [
     description: 'Development tooling and compiler.',
     link: 'https://vitejs.dev',
   },
-];
+] as const;
 
 /**
  * Accordion-style panel displaying attribution data for third-party dependencies.
  */
 export const AttributionPanel: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <section className="ciclista-card attribution-panel">
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="attribution-panel-header"
-        aria-expanded={isOpen}
+      <AccordionSection
+        title="Attributions"
+        icon={<Info size={14} className="attribution-icon" />}
+        className="attribution-accordion"
+        headerClassName="attribution-panel-header"
+        bodyClassName="attribution-list"
+        chevronSize={14}
       >
-        <span className="attribution-panel-title">
-          <Info size={14} className="attribution-icon" />
-          <span>Attributions</span>
-        </span>
-        {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-      </button>
-
-      {isOpen && (
-        <div className="attribution-list">
-          {ATTRIBUTIONS.map((item) => (
-            <div key={item.name} className="attribution-item">
-              <div className="attribution-item-header">
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="attribution-link"
-                >
-                  {item.name}
-                </a>
-                <span className="attribution-license">{item.license}</span>
-              </div>
-              <p className="attribution-desc">{item.description}</p>
+        {ATTRIBUTIONS.map((item) => (
+          <div key={item.name} className="attribution-item">
+            <div className="attribution-item-header">
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="attribution-link"
+              >
+                {item.name}
+              </a>
+              <span className="attribution-license">{item.license}</span>
             </div>
-          ))}
-        </div>
-      )}
+            <p className="attribution-desc">{item.description}</p>
+          </div>
+        ))}
+      </AccordionSection>
     </section>
   );
 };

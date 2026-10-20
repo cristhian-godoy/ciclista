@@ -1,19 +1,8 @@
-import {
-  Bug,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Copy,
-  Octagon,
-  Ruler,
-  TrafficCone,
-  Trees,
-  Zap,
-} from 'lucide-react';
+import { Bug, Check, ChevronDown, ChevronUp, Clock, Copy, Ruler, TrafficCone } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
+import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
 
 interface RouteStatsPanelProps {
   routeVariants: StrategyRouteVariant[];
@@ -64,17 +53,6 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
     });
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.round(seconds % 60);
-    return `${m}m ${s}s`;
-  };
-
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) return `${Math.round(meters)} m`;
-    return `${(meters / 1000).toFixed(2)} km`;
-  };
-
   return (
     <>
       {/* Route Alternatives Selector */}
@@ -86,34 +64,6 @@ export const RouteStatsPanel: React.FC<RouteStatsPanelProps> = ({
             const duration = alt.result.totalDurationSeconds;
             const distance = alt.result.totalDistanceMeters;
             const signals = alt.result.signalCount;
-
-            const getStrategyLabel = (label: string): React.ReactNode => {
-              switch (label) {
-                case 'standard':
-                  return (
-                    <span className="strategy-label-badge">
-                      <Zap size={14} aria-label="Speed Icon" />
-                      Speed
-                    </span>
-                  );
-                case 'avoid-stops':
-                  return (
-                    <span className="strategy-label-badge">
-                      <Octagon size={14} aria-label="Avoid Stops Icon" />
-                      Avoid Stops
-                    </span>
-                  );
-                case 'quiet-streets':
-                  return (
-                    <span className="strategy-label-badge">
-                      <Trees size={14} aria-label="Quiet Paths Icon" />
-                      Quiet Paths
-                    </span>
-                  );
-                default:
-                  return label;
-              }
-            };
 
             return (
               <div
