@@ -144,6 +144,8 @@ describe('CrossingEditorLayer', () => {
       onStopNavigation: vi.fn(),
       appMode: 'edit',
       setAppMode: vi.fn(),
+      places: [],
+      setPlaces: vi.fn(),
       landmarks: [],
       setLandmarks: vi.fn(),
       selectedEdgeIds: [],
@@ -292,7 +294,10 @@ describe('CrossingEditorLayer', () => {
     });
 
     expect(setActiveTurnSelectionMock).toHaveBeenCalled();
-    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const firstCall1 = setActiveTurnSelectionMock.mock.calls[0];
+    expect(firstCall1).toBeDefined();
+    if (!firstCall1) return;
+    const updateFn = firstCall1[0];
     const updated = updateFn({ fromNodeId: null, toNodeId: null, waypointNodeIds: [] });
     expect(updated.fromNodeId).toBe('node-1');
     expect(updated.toNodeId).toBeNull();
@@ -316,7 +321,10 @@ describe('CrossingEditorLayer', () => {
     });
 
     expect(setActiveTurnSelectionMock).toHaveBeenCalled();
-    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const firstCall2 = setActiveTurnSelectionMock.mock.calls[0];
+    expect(firstCall2).toBeDefined();
+    if (!firstCall2) return;
+    const updateFn = firstCall2[0];
     const updated = updateFn({ fromNodeId: null, toNodeId: null, waypointNodeIds: [] });
     expect(updated.fromNodeId).toBe('node-1');
     expect(updated.toNodeId).toBeNull();
@@ -340,7 +348,10 @@ describe('CrossingEditorLayer', () => {
     });
 
     expect(setActiveTurnSelectionMock).toHaveBeenCalled();
-    const updateFn = setActiveTurnSelectionMock.mock.calls[0][0];
+    const firstCall3 = setActiveTurnSelectionMock.mock.calls[0];
+    expect(firstCall3).toBeDefined();
+    if (!firstCall3) return;
+    const updateFn = firstCall3[0];
     const updated = updateFn({ fromNodeId: 'node-1', toNodeId: null, waypointNodeIds: [] });
     expect(updated.toNodeId).toBe('node-2');
   });

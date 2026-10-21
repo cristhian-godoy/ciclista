@@ -116,9 +116,9 @@ export function coordToChunkId(lat: number, lng: number): string {
  * Calculates the bounding box for a specific chunk ID.
  */
 export function getChunkBBox(chunkId: string): [number, number, number, number] {
-  const [latIdxStr, lngIdxStr] = chunkId.split(',');
-  const latIdx = parseInt(latIdxStr, 10);
-  const lngIdx = parseInt(lngIdxStr, 10);
+  const parts = chunkId.split(',');
+  const latIdx = parseInt(parts[0] ?? '0', 10);
+  const lngIdx = parseInt(parts[1] ?? '0', 10);
   const minLat = latIdx * CHUNK_CONFIG.SIZE_LAT;
   const minLng = lngIdx * CHUNK_CONFIG.SIZE_LNG;
   const maxLat = (latIdx + 1) * CHUNK_CONFIG.SIZE_LAT;
@@ -241,5 +241,5 @@ export function getCompassDirection(bearing: number): string {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const normalized = ((bearing % 360) + 360) % 360;
   const index = Math.round(normalized / 45) % 8;
-  return directions[index];
+  return directions[index] ?? 'N';
 }

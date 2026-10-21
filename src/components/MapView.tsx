@@ -419,11 +419,11 @@ const MapViewContent: React.FC<{
     const features = map.queryRenderedFeatures(e.point, {
       layers: ['traffic-lights-cluster'],
     });
-    const isCrossing = features.length > 0;
-    const crossingId =
-      isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
-    const nodeIds =
-      isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
+    const firstFeature = features[0];
+    const crossingId = firstFeature?.properties
+      ? (firstFeature.properties.crossingId as string)
+      : null;
+    const nodeIds = firstFeature?.properties ? (firstFeature.properties.nodeIds as string) : null;
 
     setContextMenu({
       visible: true,
@@ -499,8 +499,8 @@ const MapViewContent: React.FC<{
       if (clusterFeature) {
         const props = clusterFeature.properties ?? {};
         const coords = (clusterFeature.geometry as { coordinates?: number[] })?.coordinates;
-        const lat = coords ? coords[1] : e.lngLat.lat;
-        const lng = coords ? coords[0] : e.lngLat.lng;
+        const lat = coords?.[1] ?? e.lngLat.lat;
+        const lng = coords?.[0] ?? e.lngLat.lng;
 
         let nodeIds: string[] = [];
         if (props.nodeIds) {
@@ -543,8 +543,8 @@ const MapViewContent: React.FC<{
         const props = signalFeature.properties ?? {};
         const currentGraph = graphRef.current;
         const coords = (signalFeature.geometry as { coordinates?: number[] })?.coordinates;
-        const lat = coords ? coords[1] : e.lngLat.lat;
-        const lng = coords ? coords[0] : e.lngLat.lng;
+        const lat = coords?.[1] ?? e.lngLat.lat;
+        const lng = coords?.[0] ?? e.lngLat.lng;
         const nodeId = String(props.id ?? signalFeature.id ?? '');
 
         if (nodeId) {

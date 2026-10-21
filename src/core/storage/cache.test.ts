@@ -69,6 +69,6 @@ describe('cache storage utility', () => {
 
     const validEntries = await getValidCacheEntries();
     expect(validEntries).toHaveLength(1);
-    expect(validEntries[0].bbox).toEqual([48.13, 11.57, 48.14, 11.58]);
+    expect(validEntries[0]?.bbox).toEqual([48.13, 11.57, 48.14, 11.58]);
   });
 });

@@ -30,7 +30,7 @@ function getCompassDirection(bearing: number): string {
     'Northwestbound',
   ];
   const index = Math.round(bearing / 45) % 8;
-  return directions[index];
+  return directions[index] ?? 'Northbound';
 }
 
 /**

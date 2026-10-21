@@ -111,7 +111,10 @@ describe('Sidebar Integration', () => {
     expect(handleSwapCoords).toHaveBeenCalledTimes(1);
 
     // Test stats strategy card click
-    const activeRouteCard = screen.getAllByText('Speed')[0];
+    const activeRouteCards = screen.getAllByText('Speed');
+    const activeRouteCard = activeRouteCards[0];
+    expect(activeRouteCard).toBeDefined();
+    if (!activeRouteCard) return;
     await user.click(activeRouteCard);
     expect(handleStrategyChange).toHaveBeenCalledWith('standard');
   });

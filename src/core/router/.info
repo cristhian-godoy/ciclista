@@ -18,6 +18,8 @@ router.test.ts
 	Unit tests for finding the shortest/most comfortable path under various profiles.
 router.ts
 	Dijkstra pathfinding search algorithm using a Min-Heap queue.
+router.worker.test.ts
+	Unit tests for routing worker message processing, WASM delegation, fallback, and waypoint routing.
 router.worker.ts
 	Web worker wrapping Bidirectional A* and Dijkstra pathfinding to offload main thread.
 statistics.ts

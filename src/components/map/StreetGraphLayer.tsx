@@ -248,11 +248,15 @@ export const StreetGraphLayer: React.FC = () => {
       if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
+      if (!feature) return;
       const properties = feature.properties;
       const geometry = feature.geometry;
 
       if (geometry && 'coordinates' in geometry && properties && properties.id) {
         const coords = (geometry as { coordinates: number[] }).coordinates;
+        const lng = coords[0];
+        const lat = coords[1];
+        if (lng === undefined || lat === undefined) return;
         const nodeId = String(properties.id);
         const nodeEntry = graphRef.current?.nodes.get(nodeId);
 
@@ -272,8 +276,8 @@ export const StreetGraphLayer: React.FC = () => {
         if (onNodeSelectRef.current) {
           const target = nodeEntry?.node ?? {
             id: nodeId,
-            lat: coords[1],
-            lng: coords[0],
+            lat,
+            lng,
             tags:
               nodeEntry?.node.tags ??
               (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
@@ -282,7 +286,7 @@ export const StreetGraphLayer: React.FC = () => {
         }
 
         map.easeTo({
-          center: [coords[0], coords[1]],
+          center: [lng, lat],
           duration: 400,
         });
       }
@@ -303,11 +307,15 @@ export const StreetGraphLayer: React.FC = () => {
       if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
       if (!e.features || e.features.length === 0) return;
       const feature = e.features[0];
+      if (!feature) return;
       const geometry = feature.geometry;
       const properties = feature.properties;
 
       if (geometry && 'coordinates' in geometry && properties) {
         const coords = (geometry as { coordinates: number[] }).coordinates;
+        const lng = coords[0];
+        const lat = coords[1];
+        if (lng === undefined || lat === undefined) return;
         const crossingId = properties.crossingId as string;
         let nodeIds: string[] = [];
         if (properties.nodeIds) {
@@ -333,7 +341,7 @@ export const StreetGraphLayer: React.FC = () => {
         }
 
         map.easeTo({
-          center: [coords[0], coords[1]],
+          center: [lng, lat],
           zoom: 17.5,
           duration: 400,
         });

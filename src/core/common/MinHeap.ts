@@ -16,9 +16,11 @@ export class MinHeap<T> {
    * Removes and returns the element with the lowest priority from the heap.
    */
   pop(): T | null {
-    if (this.heap.length === 0) return null;
-    const top = this.heap[0].element;
-    const bottom = this.heap.pop()!;
+    const first = this.heap[0];
+    if (!first) return null;
+    const top = first.element;
+    const bottom = this.heap.pop();
+    if (!bottom) return top;
     if (this.heap.length > 0) {
       this.heap[0] = bottom;
       this.sinkDown(0);
@@ -30,8 +32,8 @@ export class MinHeap<T> {
    * Returns the entry with the lowest priority without removing it from the heap.
    */
   peek(): { element: T; priority: number } | null {
-    if (this.heap.length === 0) return null;
-    return this.heap[0];
+    const first = this.heap[0];
+    return first ?? null;
   }
 
   /**
@@ -43,10 +45,11 @@ export class MinHeap<T> {
 
   private bubbleUp(index: number) {
     const node = this.heap[index];
+    if (!node) return;
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2);
       const parent = this.heap[parentIndex];
-      if (node.priority >= parent.priority) break;
+      if (!parent || node.priority >= parent.priority) break;
       this.heap[index] = parent;
       index = parentIndex;
     }
@@ -56,30 +59,34 @@ export class MinHeap<T> {
   private sinkDown(index: number) {
     const length = this.heap.length;
     const node = this.heap[index];
+    if (!node) return;
     while (true) {
       const leftChildIndex = 2 * index + 1;
       const rightChildIndex = 2 * index + 2;
       let swapIndex = -1;
+      const leftChild = this.heap[leftChildIndex];
 
-      if (leftChildIndex < length) {
-        if (this.heap[leftChildIndex].priority < node.priority) {
+      if (leftChildIndex < length && leftChild) {
+        if (leftChild.priority < node.priority) {
           swapIndex = leftChildIndex;
         }
       }
 
       if (rightChildIndex < length) {
         const rightChild = this.heap[rightChildIndex];
-        const leftChild = this.heap[leftChildIndex];
         if (
-          (swapIndex === -1 && rightChild.priority < node.priority) ||
-          (swapIndex !== -1 && rightChild.priority < leftChild.priority)
+          rightChild &&
+          ((swapIndex === -1 && rightChild.priority < node.priority) ||
+            (swapIndex !== -1 && leftChild && rightChild.priority < leftChild.priority))
         ) {
           swapIndex = rightChildIndex;
         }
       }
 
       if (swapIndex === -1) break;
-      this.heap[index] = this.heap[swapIndex];
+      const swapItem = this.heap[swapIndex];
+      if (!swapItem) break;
+      this.heap[index] = swapItem;
       index = swapIndex;
     }
     this.heap[index] = node;

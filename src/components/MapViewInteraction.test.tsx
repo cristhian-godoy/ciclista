@@ -178,6 +178,8 @@ describe('MapView Contextual Map Interactions', () => {
       onStopNavigation: vi.fn(),
       appMode: 'routing',
       setAppMode: vi.fn(),
+      places: [sampleLandmark],
+      setPlaces: vi.fn(),
       landmarks: [sampleLandmark],
       setLandmarks: vi.fn(),
       selectedEdgeIds: [],
@@ -755,7 +757,10 @@ describe('MapView Contextual Map Interactions', () => {
 
     expect(preventDefaultMock).toHaveBeenCalled();
     expect(setSelectedEdgeIdsMock).toHaveBeenCalledTimes(1);
-    const updater = setSelectedEdgeIdsMock.mock.calls[0][0];
+    const firstCall = setSelectedEdgeIdsMock.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) return;
+    const updater = firstCall[0];
     if (typeof updater === 'function') {
       const remaining = updater(['edge-1->edge-2', 'edge-3->edge-4']);
       expect(remaining).toEqual(['edge-3->edge-4']);

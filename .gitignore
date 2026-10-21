@@ -30,3 +30,6 @@ dist-ssr
 target/
 crates/**/target/
 src/core/wasm/pkg/
+
+# Local task tracking
+.tasks

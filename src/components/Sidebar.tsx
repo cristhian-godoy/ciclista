@@ -235,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return;
     }
     const created = createLandmarkDomain(input);
-    mapCtx?.setLandmarks((prev) => [created, ...prev]);
+    mapCtx?.setLandmarks?.((prev) => [created, ...prev]);
   };
 
   const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
@@ -244,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       fn(id, updates);
       return;
     }
-    mapCtx?.setLandmarks((prev) =>
+    mapCtx?.setLandmarks?.((prev) =>
       prev.map((item) => (item.id === id ? updateLandmarkDomain(item, updates) : item)),
     );
   };
@@ -255,7 +255,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       fn(id);
       return;
     }
-    mapCtx?.setLandmarks((prev) => deleteLandmarkDomain(prev, id));
+    mapCtx?.setLandmarks?.((prev) => deleteLandmarkDomain(prev, id));
   };
 
   const handleSetStartCoord = (coord: Coordinate) => {

@@ -88,42 +88,48 @@ describe('Geometry Mapper', () => {
     // 3. node1 -> virtualEndNode (real edge 2)
     // 4. virtualEndNode -> endPin (virtual end connection)
     expect(res.features).toHaveLength(4);
+    const [f0, f1, f2, f3] = res.features;
+    expect(f0).toBeDefined();
+    expect(f1).toBeDefined();
+    expect(f2).toBeDefined();
+    expect(f3).toBeDefined();
+    if (!f0 || !f1 || !f2 || !f3) return;
 
     // Segment 1 (Virtual Start)
-    expect(res.features[0].geometry.coordinates).toEqual([
+    expect(f0.geometry.coordinates).toEqual([
       [0, 0],
       [1, 1],
     ]);
-    expect(res.features[0].properties.sourceId).toBe('virtual-start');
-    expect(res.features[0].properties.infrastructureType).toBeNull();
-    expect(res.features[0].properties.color).toBe(PALETTES.semantic.acceptable);
+    expect(f0.properties.sourceId).toBe('virtual-start');
+    expect(f0.properties.infrastructureType).toBeNull();
+    expect(f0.properties.color).toBe(PALETTES.semantic.acceptable);
 
     // Segment 2 (Real Edge 1)
-    expect(res.features[1].geometry.coordinates).toEqual([
+    expect(f1.geometry.coordinates).toEqual([
       [1, 1],
       [2, 2],
     ]);
-    expect(res.features[1].properties.sourceId).toBe('virtual-start');
-    expect(res.features[1].properties.targetId).toBe('node-1');
-    expect(res.features[1].properties.infrastructureType).toBe('segregated_path');
-    expect(res.features[1].properties.color).toBe(PALETTES.semantic.safe); // Green/Safe
+    expect(f1.properties.sourceId).toBe('virtual-start');
+    expect(f1.properties.targetId).toBe('node-1');
+    expect(f1.properties.infrastructureType).toBe('segregated_path');
+    expect(f1.properties.color).toBe(PALETTES.semantic.safe); // Green/Safe
 
     // Segment 3 (Real Edge 2)
-    expect(res.features[2].geometry.coordinates).toEqual([
+    expect(f2.geometry.coordinates).toEqual([
       [2, 2],
       [3, 3],
     ]);
-    expect(res.features[2].properties.sourceId).toBe('node-1');
-    expect(res.features[2].properties.targetId).toBe('virtual-end');
-    expect(res.features[2].properties.roadType).toBe('primary');
-    expect(res.features[2].properties.color).toBe(PALETTES.semantic.danger); // Red/Danger
+    expect(f2.properties.sourceId).toBe('node-1');
+    expect(f2.properties.targetId).toBe('virtual-end');
+    expect(f2.properties.roadType).toBe('primary');
+    expect(f2.properties.color).toBe(PALETTES.semantic.danger); // Red/Danger
 
     // Segment 4 (Virtual End)
-    expect(res.features[3].geometry.coordinates).toEqual([
+    expect(f3.geometry.coordinates).toEqual([
       [3, 3],
       [4, 4],
     ]);
-    expect(res.features[3].properties.targetId).toBe('virtual-end');
-    expect(res.features[3].properties.infrastructureType).toBeNull();
+    expect(f3.properties.targetId).toBe('virtual-end');
+    expect(f3.properties.infrastructureType).toBeNull();
   });
 });

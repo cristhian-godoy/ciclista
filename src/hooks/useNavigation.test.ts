@@ -162,6 +162,137 @@ describe('useNavigation hook with continuous GPS tracking & wake lock', () => {
     expect(result.current.state.permissionStatus).toBe('denied');
   });
 
+  it('handles POSITION_UNAVAILABLE and TIMEOUT errors', async () => {
+    const { result } = renderHook(() =>
+      useNavigation({
+        routeResult: mockRouteResult,
+        routeCoordinates: mockRoute,
+        defaultMode: 'gps',
+      }),
+    );
+
+    await act(async () => {
+      result.current.startNavigation('gps');
+    });
+
+    await act(async () => {
+      if (watchPositionErrorCb) {
+        watchPositionErrorCb({
+          code: 2, // POSITION_UNAVAILABLE
+          message: 'Signal lost',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        } as GeolocationPositionError);
+      }
+    });
+    expect(result.current.state.error).toContain('currently unavailable');
+
+    await act(async () => {
+      if (watchPositionErrorCb) {
+        watchPositionErrorCb({
+          code: 3, // TIMEOUT
+          message: 'Timeout',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        } as GeolocationPositionError);
+      }
+    });
+    expect(result.current.state.error).toContain('timed out');
+  });
+
+  it('supports pausing and resuming active navigation', async () => {
+    const { result } = renderHook(() =>
+      useNavigation({
+        routeResult: mockRouteResult,
+        routeCoordinates: mockRoute,
+        defaultMode: 'gps',
+      }),
+    );
+
+    await act(async () => {
+      result.current.startNavigation('gps');
+    });
+    expect(result.current.state.status).toBe('active');
+
+    await act(async () => {
+      result.current.pauseNavigation();
+    });
+    expect(result.current.state.status).toBe('paused');
+    expect(wakeLockReleaseSpy).toHaveBeenCalled();
+
+    await act(async () => {
+      result.current.resumeNavigation();
+    });
+    expect(result.current.state.status).toBe('active');
+  });
+
+  it('toggles camera mode between heading-up and north-up', async () => {
+    const { result } = renderHook(() =>
+      useNavigation({
+        routeResult: mockRouteResult,
+        routeCoordinates: mockRoute,
+      }),
+    );
+
+    expect(result.current.state.cameraMode).toBe('heading-up');
+
+    await act(async () => {
+      result.current.toggleCameraMode();
+    });
+    expect(result.current.state.cameraMode).toBe('north-up');
+
+    await act(async () => {
+      result.current.toggleCameraMode();
+    });
+    expect(result.current.state.cameraMode).toBe('heading-up');
+  });
+
+  it('detects route arrival at the destination coordinate and builds ride stats', async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() =>
+      useNavigation({
+        routeResult: mockRouteResult,
+        routeCoordinates: mockRoute,
+        defaultMode: 'gps',
+      }),
+    );
+
+    await act(async () => {
+      result.current.startNavigation('gps');
+    });
+
+    // Emit final coordinate
+    await act(async () => {
+      if (watchPositionSuccessCb) {
+        watchPositionSuccessCb({
+          coords: {
+            latitude: 48.139,
+            longitude: 11.577,
+            accuracy: 2,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: 45,
+            speed: 4.0,
+          },
+          timestamp: Date.now(),
+        } as GeolocationPosition);
+      }
+    });
+
+    await act(async () => {
+      vi.runAllTimers();
+    });
+
+    expect(result.current.state.status).toBe('arrived');
+    expect(result.current.rideStats).not.toBeNull();
+    expect(result.current.rideStats?.totalDistanceM).toBeGreaterThan(0);
+
+    vi.useRealTimers();
+  });
+
   it('stops navigation, clears watchPosition, and releases WakeLock', async () => {
     const { result } = renderHook(() =>
       useNavigation({

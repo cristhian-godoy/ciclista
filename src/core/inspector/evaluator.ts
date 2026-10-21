@@ -159,8 +159,10 @@ export function evaluateIntersectionBranches(
   if (routeResult.edges) {
     for (let k = idx; k < routeResult.edges.length; k++) {
       const edge = routeResult.edges[k];
-      chosenRemainingDuration += edge.cost;
-      chosenRemainingDistance += edge.distance;
+      if (edge) {
+        chosenRemainingDuration += edge.cost;
+        chosenRemainingDistance += edge.distance;
+      }
     }
   }
 
@@ -168,6 +170,7 @@ export function evaluateIntersectionBranches(
 
   for (let k = idx; k < pathNodeIds.length; k++) {
     const nId = pathNodeIds[k];
+    if (!nId) continue;
     const nNode = graph.nodes.get(nId)?.node;
     if (nNode) {
       if (mapOSMNodeToControl(nNode.tags) === 'signal') {
@@ -179,13 +182,14 @@ export function evaluateIntersectionBranches(
   // 3. Find outgoing edges
   const currentEdges = currentNodeEntry.edges;
   const endId = pathNodeIds[pathNodeIds.length - 1];
+  if (!endId) return [];
 
   // Set up virtualEndNode and endVirtualEdges if endId is virtual-end
   const endVirtualEdges = new Map<string, GraphEdge>();
   let virtualEndNode: GraphNode | undefined;
   const endCoord = routeResult.coordinates[routeResult.coordinates.length - 1];
 
-  if (endId === 'virtual-end') {
+  if (endId === 'virtual-end' && endCoord) {
     const endEdgeRef = findNearestEdge(graph, endCoord);
     if (endEdgeRef) {
       const endProj = endEdgeRef.projected;
@@ -294,6 +298,7 @@ export function evaluateIntersectionBranches(
 
       for (let j = 0; j < path.length; j++) {
         const nId = path[j];
+        if (!nId) continue;
         let nNode: GraphNode | undefined;
         if (nId === 'virtual-end') {
           nNode = virtualEndNode;
@@ -311,26 +316,36 @@ export function evaluateIntersectionBranches(
 
           if (j < path.length - 1) {
             const nextNId = path[j + 1];
-            const baseEdges = graph.nodes.get(nId)?.edges || [];
-            const extraEdge = endVirtualEdges.get(nId);
-            const nextNodeEdges = extraEdge ? [...baseEdges, extraEdge] : baseEdges;
+            if (nextNId) {
+              const baseEdges = graph.nodes.get(nId)?.edges || [];
+              const extraEdge = endVirtualEdges.get(nId);
+              const nextNodeEdges = extraEdge ? [...baseEdges, extraEdge] : baseEdges;
 
-            const nextEdge = nextNodeEdges.find((e) => e.target === nextNId);
-            if (nextEdge) {
-              altDistanceMeters += nextEdge.distance;
-              altDurationSeconds += calculateDisplayCost(nId, nextEdge, nextNId, overrides, graph);
+              const nextEdge = nextNodeEdges.find((e) => e.target === nextNId);
+              if (nextEdge) {
+                altDistanceMeters += nextEdge.distance;
+                altDurationSeconds += calculateDisplayCost(
+                  nId,
+                  nextEdge,
+                  nextNId,
+                  overrides,
+                  graph,
+                );
 
-              if (j > 0) {
-                const pId = path[j - 1];
-                let pNode: GraphNode | undefined;
-                if (pId === 'virtual-end') {
-                  pNode = virtualEndNode;
-                } else {
-                  pNode = graph.nodes.get(pId)?.node;
-                }
-                const nextNNode = graph.nodes.get(nextNId)?.node;
-                if (pNode && nextNNode) {
-                  altDurationSeconds += calculateTurnPenalty(pNode, nNode, nextNNode);
+                if (j > 0) {
+                  const pId = path[j - 1];
+                  if (pId) {
+                    let pNode: GraphNode | undefined;
+                    if (pId === 'virtual-end') {
+                      pNode = virtualEndNode;
+                    } else {
+                      pNode = graph.nodes.get(pId)?.node;
+                    }
+                    const nextNNode = graph.nodes.get(nextNId)?.node;
+                    if (pNode && nextNNode) {
+                      altDurationSeconds += calculateTurnPenalty(pNode, nNode, nextNNode);
+                    }
+                  }
                 }
               }
             }

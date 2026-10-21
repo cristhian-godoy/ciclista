@@ -150,7 +150,9 @@ export function createWASDProvider(
 
   let running = false;
   let rafId: number | null = null;
-  let posCb: ((coord: Coordinate, timestamp: number, speed?: number) => void) | null = null;
+  let posCb:
+    | ((coord: Coordinate, timestamp: number, speed?: number, heading?: number | null) => void)
+    | null = null;
 
   const activeKeys = new Set<string>();
 

@@ -29,12 +29,14 @@ export function buildPathSymbolsGeoJSON(
     if (controlType) {
       let bearing = 0;
       if (idx < pathNodeIds.length - 1) {
-        const nextNode = graph.nodes.get(pathNodeIds[idx + 1])?.node;
+        const nextId = pathNodeIds[idx + 1];
+        const nextNode = nextId ? graph.nodes.get(nextId)?.node : undefined;
         if (nextNode) {
           bearing = calculateBearing(u, nextNode);
         }
       } else if (idx > 0) {
-        const prevNode = graph.nodes.get(pathNodeIds[idx - 1])?.node;
+        const prevId = pathNodeIds[idx - 1];
+        const prevNode = prevId ? graph.nodes.get(prevId)?.node : undefined;
         if (prevNode) {
           bearing = calculateBearing(prevNode, u);
         }
@@ -54,8 +56,10 @@ export function buildPathSymbolsGeoJSON(
     }
 
     if (idx > 0 && idx < pathNodeIds.length - 1) {
-      const prevNode = graph.nodes.get(pathNodeIds[idx - 1])?.node;
-      const nextNode = graph.nodes.get(pathNodeIds[idx + 1])?.node;
+      const prevId = pathNodeIds[idx - 1];
+      const nextId = pathNodeIds[idx + 1];
+      const prevNode = prevId ? graph.nodes.get(prevId)?.node : undefined;
+      const nextNode = nextId ? graph.nodes.get(nextId)?.node : undefined;
       if (prevNode && nextNode) {
         const turn = getTurnDetails(prevNode, u, nextNode);
         if (

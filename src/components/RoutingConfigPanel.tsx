@@ -27,9 +27,11 @@ export interface RoutingConfigPanelProps {
  */
 function parseCoordinateInput(value: string): Coordinate | null {
   const parts = value.split(/[,;\s]+/).filter(Boolean);
-  if (parts.length >= 2) {
-    const lat = parseFloat(parts[0]);
-    const lng = parseFloat(parts[1]);
+  const p0 = parts[0];
+  const p1 = parts[1];
+  if (p0 && p1) {
+    const lat = parseFloat(p0);
+    const lng = parseFloat(p1);
     if (
       !Number.isNaN(lat) &&
       !Number.isNaN(lng) &&

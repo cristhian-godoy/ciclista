@@ -132,6 +132,7 @@ describe('PlacesLayer', () => {
       appMode: 'places',
       setAppMode: vi.fn(),
       places: samplePlaces,
+      setPlaces: vi.fn(),
       landmarks: samplePlaces,
       setLandmarks: vi.fn(),
       selectedEdgeIds: [],

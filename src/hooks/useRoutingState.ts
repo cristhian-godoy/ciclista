@@ -17,11 +17,20 @@ export type RoutingStrategy = 'standard' | 'avoid-stops' | 'quiet-streets';
 export function parseCoordString(val: string | null): Coordinate | null {
   if (!val) return null;
   const parts = val.split(',').map((p) => parseFloat(p.trim()));
-  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-    const [lat, lng] = parts;
-    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      return { lat, lng };
-    }
+  const lat = parts[0];
+  const lng = parts[1];
+  if (
+    parts.length === 2 &&
+    lat !== undefined &&
+    lng !== undefined &&
+    !isNaN(lat) &&
+    !isNaN(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  ) {
+    return { lat, lng };
   }
   return null;
 }

@@ -38,11 +38,14 @@ describe('convertGraphToGeoJSON', () => {
 
     // Verify street line strings
     expect(result.streets.length).toBeGreaterThanOrEqual(2);
-    expect(result.streets[0].properties.name).toBe('Test Blvd');
-    expect(result.streets[0].properties.edgeId).toBe('1->2');
-    expect(result.streets[0].properties.sourceId).toBe('1');
-    expect(result.streets[0].properties.targetId).toBe('2');
-    expect(result.streets[0].geometry.type).toBe('LineString');
+    const firstStreet = result.streets[0];
+    expect(firstStreet).toBeDefined();
+    if (!firstStreet) return;
+    expect(firstStreet.properties.name).toBe('Test Blvd');
+    expect(firstStreet.properties.edgeId).toBe('1->2');
+    expect(firstStreet.properties.sourceId).toBe('1');
+    expect(firstStreet.properties.targetId).toBe('2');
+    expect(firstStreet.geometry.type).toBe('LineString');
 
     // Verify controls (nodes)
     // We expect:

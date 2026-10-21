@@ -133,6 +133,8 @@ describe('BrushCircleLayer Component', () => {
       onStopNavigation: vi.fn(),
       appMode: 'studio',
       setAppMode: vi.fn(),
+      places: [],
+      setPlaces: vi.fn(),
       landmarks: [],
       setLandmarks: vi.fn(),
       selectedEdgeIds: [],
@@ -198,6 +200,7 @@ describe('BrushCircleLayer Component', () => {
 
     const mouseMoveHandler = mapListeners['mousemove']?.[0];
     expect(mouseMoveHandler).toBeDefined();
+    if (!mouseMoveHandler) return;
 
     mouseMoveHandler({
       lngLat: { lat: 48.137, lng: 11.575 },
@@ -226,6 +229,7 @@ describe('BrushCircleLayer Component', () => {
 
     const mouseLeaveHandler = mapListeners['mouseout']?.[0];
     expect(mouseLeaveHandler).toBeDefined();
+    if (!mouseLeaveHandler) return;
 
     mouseLeaveHandler();
 

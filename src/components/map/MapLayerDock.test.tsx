@@ -70,6 +70,8 @@ const defaultContextValue: MapContextType = {
   inspectorBranches: [],
   appMode: 'routing',
   setAppMode: vi.fn(),
+  places: [],
+  setPlaces: vi.fn(),
   landmarks: [],
   setLandmarks: vi.fn(),
   selectedEdgeIds: [],
@@ -114,6 +116,8 @@ describe('MapLayerDock', () => {
     // Click collapse button
     const buttons = screen.getAllByRole('button');
     const collapseBtn = buttons[1]; // ChevronDown button
+    expect(collapseBtn).toBeDefined();
+    if (!collapseBtn) return;
     await user.click(collapseBtn);
     expect(handleSetDockExpanded).toHaveBeenCalledWith(false);
   });

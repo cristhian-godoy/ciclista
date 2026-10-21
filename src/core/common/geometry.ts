@@ -201,8 +201,9 @@ export function createGeoJSONCircle(
     coords.push([(lngRad * 180) / Math.PI, (latRad * 180) / Math.PI]);
   }
 
-  if (coords.length > 0) {
-    coords.push(coords[0]);
+  const firstCoord = coords[0];
+  if (firstCoord) {
+    coords.push(firstCoord);
   }
 
   return {

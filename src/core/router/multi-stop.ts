@@ -10,11 +10,12 @@ import type { CostFunction, IRouter, RouteResult } from './types';
  * @returns Combined end-to-end route result.
  */
 export function combineRouteResults(segments: RouteResult[]): RouteResult {
-  if (segments.length === 0) {
+  const firstSeg = segments[0];
+  if (!firstSeg) {
     throw new Error('Cannot combine empty segments');
   }
   if (segments.length === 1) {
-    return segments[0];
+    return firstSeg;
   }
 
   const pathNodeIds: string[] = [];
@@ -36,6 +37,7 @@ export function combineRouteResults(segments: RouteResult[]): RouteResult {
 
   for (let s = 0; s < segments.length; s++) {
     const seg = segments[s];
+    if (!seg) continue;
     totalDurationSeconds += seg.totalDurationSeconds;
     totalDistanceMeters += seg.totalDistanceMeters;
     trafficSignalsCount += seg.trafficSignalsCount;
@@ -60,16 +62,12 @@ export function combineRouteResults(segments: RouteResult[]): RouteResult {
     }
 
     // Coordinates: avoid duplicating connecting waypoint
-    const startIdx = s === 0 ? 0 : 1;
-    for (let c = startIdx; c < seg.coordinates.length; c++) {
-      coordinates.push(seg.coordinates[c]);
-    }
+    const coordsToAdd = s === 0 ? seg.coordinates : seg.coordinates.slice(1);
+    coordinates.push(...coordsToAdd);
 
     // PathNodeIds: avoid duplicating connecting node
-    const nodeStartIdx = s === 0 ? 0 : 1;
-    for (let n = nodeStartIdx; n < seg.pathNodeIds.length; n++) {
-      pathNodeIds.push(seg.pathNodeIds[n]);
-    }
+    const nodesToAdd = s === 0 ? seg.pathNodeIds : seg.pathNodeIds.slice(1);
+    pathNodeIds.push(...nodesToAdd);
   }
 
   return {
@@ -109,14 +107,19 @@ export function findMultiStopRoute(
   if (points.length < 2) {
     return null;
   }
-  if (points.length === 2) {
-    return router.findRoute(graph, points[0], points[1], costFn, overrides);
+  const firstPoint = points[0];
+  const secondPoint = points[1];
+  if (points.length === 2 && firstPoint && secondPoint) {
+    return router.findRoute(graph, firstPoint, secondPoint, costFn, overrides);
   }
 
   const segments: RouteResult[] = [];
   for (let i = 0; i < points.length - 1; i++) {
     const from = points[i];
     const to = points[i + 1];
+    if (!from || !to) {
+      return null;
+    }
     const segmentResult = router.findRoute(graph, from, to, costFn, overrides);
     if (!segmentResult) {
       return null;

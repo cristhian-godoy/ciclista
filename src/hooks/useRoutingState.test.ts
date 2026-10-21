@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   formatCoordQuery,
   formatWaypointsQuery,
+  getInitialRoutingState,
   parseCoordString,
   parseWaypointsString,
   useRoutingState,
@@ -24,7 +25,13 @@ describe('useRoutingState & URL parameter synchronization', () => {
       expect(parseCoordString(null)).toBeNull();
       expect(parseCoordString('')).toBeNull();
       expect(parseCoordString('abc,def')).toBeNull();
-      expect(parseCoordString('100,200')).toBeNull(); // out of bounds
+      expect(parseCoordString('100,200')).toBeNull(); // out of bounds lat & lng
+      expect(parseCoordString('-95,20')).toBeNull(); // lat < -90
+      expect(parseCoordString('95,20')).toBeNull(); // lat > 90
+      expect(parseCoordString('20,-185')).toBeNull(); // lng < -180
+      expect(parseCoordString('20,185')).toBeNull(); // lng > 180
+      expect(parseCoordString('48.137')).toBeNull(); // missing comma
+      expect(parseCoordString('48.137,11.575,30')).toBeNull(); // extra dimension
     });
 
     it('parses and formats multiple waypoints string', () => {
@@ -39,11 +46,38 @@ describe('useRoutingState & URL parameter synchronization', () => {
         { lat: 48.1, lng: 11.1 },
         { lat: 48.2, lng: 11.2 },
       ]);
+      expect(parseWaypointsString(null)).toEqual([]);
+      expect(parseWaypointsString('')).toEqual([]);
+      expect(formatWaypointsQuery([])).toBe('');
+      expect(parseWaypointsString('48.1,11.1;invalid;48.2,11.2')).toEqual([
+        { lat: 48.1, lng: 11.1 },
+        { lat: 48.2, lng: 11.2 },
+      ]);
     });
 
     it('formats single coordinate query', () => {
       expect(formatCoordQuery(null)).toBe('');
       expect(formatCoordQuery({ lat: 48.137, lng: 11.575 })).toBe('48.13700,11.57500');
+    });
+  });
+
+  describe('getInitialRoutingState', () => {
+    it('falls back to standard strategy when unknown strategy param is provided', () => {
+      window.history.replaceState(null, '', '/?strategy=turbo-hyper-speed');
+      const state = getInitialRoutingState();
+      expect(state.strategy).toBe('standard');
+    });
+
+    it('parses valid avoid-stops strategy', () => {
+      window.history.replaceState(null, '', '/?strategy=avoid-stops');
+      const state = getInitialRoutingState();
+      expect(state.strategy).toBe('avoid-stops');
+    });
+
+    it('parses valid quiet-streets strategy', () => {
+      window.history.replaceState(null, '', '/?strategy=quiet-streets');
+      const state = getInitialRoutingState();
+      expect(state.strategy).toBe('quiet-streets');
     });
   });
 
@@ -102,6 +136,65 @@ describe('useRoutingState & URL parameter synchronization', () => {
         result.current.removeWaypoint(0);
       });
       expect(result.current.waypoints).toEqual([]);
+
+      act(() => {
+        result.current.addWaypoint();
+      });
+      expect(result.current.waypoints).toEqual([{ lat: 0, lng: 0 }]);
+
+      act(() => {
+        result.current.setWaypoints([
+          { lat: 48.1, lng: 11.1 },
+          { lat: 48.2, lng: 11.2 },
+        ]);
+      });
+      expect(result.current.waypoints).toHaveLength(2);
+    });
+
+    it('manages selectedNode state', () => {
+      const { result } = renderHook(() => useRoutingState());
+      expect(result.current.selectedNode).toBeNull();
+
+      const mockNode = {
+        id: 'node-1',
+        lat: 48.137,
+        lng: 11.575,
+        elevation: 500,
+        tags: { highway: 'traffic_signals' },
+      };
+
+      act(() => {
+        result.current.setSelectedNode(mockNode);
+      });
+      expect(result.current.selectedNode).toEqual(mockNode);
+
+      act(() => {
+        result.current.setSelectedNode(null);
+      });
+      expect(result.current.selectedNode).toBeNull();
+    });
+
+    it('removes query parameters from URL when coordinates, waypoints, or strategy are reset', () => {
+      window.history.replaceState(
+        null,
+        '',
+        '/?start=48.13700,11.57500&end=48.14000,11.58000&strategy=quiet-streets&waypoints=48.13800,11.57700',
+      );
+
+      const { result } = renderHook(() => useRoutingState());
+
+      act(() => {
+        result.current.setStartCoord(null);
+        result.current.setEndCoord(null);
+        result.current.setRoutingStrategy('standard');
+        result.current.setWaypoints([]);
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      expect(params.has('start')).toBe(false);
+      expect(params.has('end')).toBe(false);
+      expect(params.has('strategy')).toBe(false);
+      expect(params.has('waypoints')).toBe(false);
     });
 
     it('reacts to window popstate events', () => {

@@ -19,7 +19,11 @@ export async function ensureWasmInitialized(wasmSource?: InitInput): Promise<boo
   if (!initPromise) {
     initPromise = (async () => {
       try {
-        await initWasm(wasmSource);
+        const input =
+          wasmSource && typeof wasmSource === 'object' && !(wasmSource instanceof URL)
+            ? { module_or_path: wasmSource }
+            : wasmSource;
+        await initWasm(input);
         WasmEngine.init_panic_hook();
         initialized = true;
         return true;
