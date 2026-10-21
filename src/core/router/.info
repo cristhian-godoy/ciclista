@@ -10,6 +10,10 @@ edge-metrics.test.ts
 	Unit tests for display cost calculations, turn penalties, and default delays.
 edge-metrics.ts
 	Generic cost resolver and evaluator for physical edges and node delays.
+multi-stop.test.ts
+	Unit tests for multi-stop waypoint chaining, metric aggregation, and segment combination.
+multi-stop.ts
+	Multi-stop route calculation engine chaining intermediate waypoints and aggregating segment metrics.
 router.test.ts
 	Unit tests for finding the shortest/most comfortable path under various profiles.
 router.ts

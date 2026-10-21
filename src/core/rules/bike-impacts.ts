@@ -35,40 +35,66 @@ function getBaseSpeed(id: string): number {
 export function mapBikeConfigToImpacts(config: BikeConfig): RouterBikeImpacts {
   const speed = config.customSpeedKmh ?? getBaseSpeed(config.id);
 
+  let impacts: RouterBikeImpacts;
+
   switch (config.id) {
     case 'road':
-      return {
+      impacts = {
         cruisingSpeedKmh: speed,
         surfaceModifiers: {
           gravel: { speedMultiplier: 0.4, flatPenalty: 15 },
           cobblestone: { speedMultiplier: 0.6, flatPenalty: 10 },
         },
       };
+      break;
     case 'slow':
-      return {
+      impacts = {
         cruisingSpeedKmh: speed,
         surfaceModifiers: {
           gravel: { speedMultiplier: 0.9, flatPenalty: 0 },
           cobblestone: { speedMultiplier: 0.85, flatPenalty: 0 },
         },
       };
+      break;
     case 'ebike':
-      return {
+      impacts = {
         cruisingSpeedKmh: speed,
         surfaceModifiers: {
           gravel: { speedMultiplier: 0.9, flatPenalty: 0 },
           cobblestone: { speedMultiplier: 0.8, flatPenalty: 0 },
         },
       };
+      break;
     case 'normal':
     case 'custom':
     default:
-      return {
+      impacts = {
         cruisingSpeedKmh: speed,
         surfaceModifiers: {
           gravel: { speedMultiplier: 0.8, flatPenalty: 0 },
           cobblestone: { speedMultiplier: 0.75, flatPenalty: 0 },
         },
       };
+      break;
   }
+
+  if (config.surfacePreferences) {
+    if (config.surfacePreferences.gravelSpeedMultiplier !== undefined) {
+      impacts.surfaceModifiers.gravel.speedMultiplier =
+        config.surfacePreferences.gravelSpeedMultiplier;
+    }
+    if (config.surfacePreferences.gravelFlatPenalty !== undefined) {
+      impacts.surfaceModifiers.gravel.flatPenalty = config.surfacePreferences.gravelFlatPenalty;
+    }
+    if (config.surfacePreferences.cobblestoneSpeedMultiplier !== undefined) {
+      impacts.surfaceModifiers.cobblestone.speedMultiplier =
+        config.surfacePreferences.cobblestoneSpeedMultiplier;
+    }
+    if (config.surfacePreferences.cobblestoneFlatPenalty !== undefined) {
+      impacts.surfaceModifiers.cobblestone.flatPenalty =
+        config.surfacePreferences.cobblestoneFlatPenalty;
+    }
+  }
+
+  return impacts;
 }

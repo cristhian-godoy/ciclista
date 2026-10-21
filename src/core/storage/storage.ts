@@ -1,13 +1,16 @@
 import { logger } from '../common/logger';
 import type {
+  BikeConfig,
+  BikeProfileId,
   CrossingTurnOverride,
   LocalOverrides,
   RulesConfiguration,
   SemanticTurnType,
 } from '../config';
+import type { MapEvent } from '../events';
 import { deserializeLandmarks, serializeLandmarks } from '../landmarks/landmarks';
 import type { Landmark } from '../landmarks/types';
-import type { IStorageProvider } from './types';
+import type { IStorageProvider, StoredTheme } from './types';
 
 /**
  * An implementation of IStorageProvider that persists data in the browser's localStorage.
@@ -19,6 +22,9 @@ export class LocalStorageProvider implements IStorageProvider {
   private RULES_KEY = 'ciclista_rules_config';
   private LANDMARKS_KEY = 'ciclista_landmarks';
   private CROSSING_TURNS_KEY = 'ciclista_crossing_turns';
+  private EVENTS_KEY = 'ciclista_events';
+  private BIKE_CONFIG_KEY = 'ciclista_bike_config';
+  private THEME_KEY = 'ciclista_theme';
   private inMemoryStorage = new Map<string, string>();
 
   // In-memory cache for overrides data to avoid parse/stringify on every operation
@@ -368,6 +374,196 @@ export class LocalStorageProvider implements IStorageProvider {
       this.setItem(this.CROSSING_TURNS_KEY, JSON.stringify(filtered));
     } catch (e) {
       logger.error('Failed to clear crossing turns for cluster from localStorage:', e);
+    }
+  }
+
+  /**
+   * Retrieves all persisted map events from localStorage.
+   */
+  async getEvents(): Promise<MapEvent[]> {
+    return this.loadEventsSync();
+  }
+
+  /**
+   * Synchronously loads and migrates map events from localStorage with schema fallbacks.
+   */
+  loadEventsSync(): MapEvent[] {
+    const raw = this.getItem(this.EVENTS_KEY);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+
+      const validEvents: MapEvent[] = [];
+      parsed.forEach((item, idx) => {
+        if (!item || typeof item !== 'object') return;
+        const record = item as Partial<MapEvent>;
+        const id =
+          typeof record.id === 'string' && record.id.trim() !== ''
+            ? record.id
+            : `event-${Date.now()}-${idx}`;
+        const name = typeof record.name === 'string' ? record.name : 'Custom Event';
+        const description = typeof record.description === 'string' ? record.description : undefined;
+        const active = typeof record.active === 'boolean' ? record.active : true;
+        const edgeIds = Array.isArray(record.edgeIds)
+          ? record.edgeIds.filter((idItem): idItem is string => typeof idItem === 'string')
+          : [];
+        const effect =
+          record.effect &&
+          typeof record.effect === 'object' &&
+          record.effect.type === 'road_blockage'
+            ? {
+                type: 'road_blockage' as const,
+                penaltySeconds:
+                  typeof record.effect.penaltySeconds === 'number' &&
+                  !isNaN(record.effect.penaltySeconds)
+                    ? record.effect.penaltySeconds
+                    : 30,
+              }
+            : { type: 'road_blockage' as const, penaltySeconds: 30 };
+        const createdAt =
+          typeof record.createdAt === 'number' && !isNaN(record.createdAt)
+            ? record.createdAt
+            : Date.now();
+
+        validEvents.push({
+          id,
+          name,
+          description,
+          active,
+          edgeIds,
+          effect,
+          createdAt,
+        });
+      });
+
+      return validEvents;
+    } catch (e) {
+      logger.error('Failed to parse events from localStorage:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Asynchronously persists the list of map events to localStorage.
+   */
+  async saveEvents(events: MapEvent[]): Promise<void> {
+    this.saveEventsSync(events);
+  }
+
+  /**
+   * Synchronously persists the list of map events to localStorage.
+   */
+  saveEventsSync(events: MapEvent[]): void {
+    try {
+      this.setItem(this.EVENTS_KEY, JSON.stringify(events));
+    } catch (e) {
+      logger.error('Failed to save events to localStorage:', e);
+    }
+  }
+
+  /**
+   * Loads and migrates user bike profile and configuration with default fallbacks.
+   */
+  loadBikeConfig(): BikeConfig | null {
+    const raw = this.getItem(this.BIKE_CONFIG_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+
+      const validProfiles: BikeProfileId[] = ['slow', 'normal', 'ebike', 'road', 'custom'];
+      const id: BikeProfileId = validProfiles.includes(parsed.id) ? parsed.id : 'normal';
+
+      const config: BikeConfig = { id };
+
+      if (typeof parsed.customSpeedKmh === 'number' && parsed.customSpeedKmh > 0) {
+        config.customSpeedKmh = parsed.customSpeedKmh;
+      }
+
+      const weightVal = parsed.weightKg ?? parsed.weight;
+      if (typeof weightVal === 'number' && weightVal > 0) {
+        config.weightKg = weightVal;
+      }
+
+      if (parsed.surfacePreferences && typeof parsed.surfacePreferences === 'object') {
+        const sp = parsed.surfacePreferences;
+        config.surfacePreferences = {
+          gravelSpeedMultiplier:
+            typeof sp.gravelSpeedMultiplier === 'number' ? sp.gravelSpeedMultiplier : undefined,
+          gravelFlatPenalty:
+            typeof sp.gravelFlatPenalty === 'number' ? sp.gravelFlatPenalty : undefined,
+          cobblestoneSpeedMultiplier:
+            typeof sp.cobblestoneSpeedMultiplier === 'number'
+              ? sp.cobblestoneSpeedMultiplier
+              : undefined,
+          cobblestoneFlatPenalty:
+            typeof sp.cobblestoneFlatPenalty === 'number' ? sp.cobblestoneFlatPenalty : undefined,
+        };
+      }
+
+      if (parsed.turnPenalties && typeof parsed.turnPenalties === 'object') {
+        const tp = parsed.turnPenalties;
+        config.turnPenalties = {
+          rightTurnPenaltySeconds:
+            typeof tp.rightTurnPenaltySeconds === 'number' ? tp.rightTurnPenaltySeconds : undefined,
+          leftTurnPenaltySeconds:
+            typeof tp.leftTurnPenaltySeconds === 'number' ? tp.leftTurnPenaltySeconds : undefined,
+          uTurnPenaltySeconds:
+            typeof tp.uTurnPenaltySeconds === 'number' ? tp.uTurnPenaltySeconds : undefined,
+        };
+      }
+
+      return config;
+    } catch (e) {
+      logger.error('Failed to parse bike config from localStorage:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Persists user bike profile and preference settings to localStorage.
+   */
+  saveBikeConfig(config: BikeConfig): void {
+    try {
+      this.setItem(this.BIKE_CONFIG_KEY, JSON.stringify(config));
+    } catch (e) {
+      logger.error('Failed to save bike config to localStorage:', e);
+    }
+  }
+
+  /**
+   * Loads the persisted theme, migrating legacy theme strings if needed.
+   */
+  loadTheme(): StoredTheme | null {
+    let raw = this.getItem(this.THEME_KEY);
+    if (!raw) return null;
+
+    if (raw.startsWith('"') && raw.endsWith('"')) {
+      try {
+        raw = JSON.parse(raw);
+      } catch {
+        // use raw as-is
+      }
+    }
+
+    if (raw === 'light') {
+      return 'bright';
+    }
+    if (raw === 'bright' || raw === 'liberty' || raw === 'dark') {
+      return raw;
+    }
+    return null;
+  }
+
+  /**
+   * Persists application color theme setting to localStorage.
+   */
+  saveTheme(theme: string): void {
+    try {
+      this.setItem(this.THEME_KEY, theme);
+    } catch (e) {
+      logger.error('Failed to save theme to localStorage:', e);
     }
   }
 }

@@ -431,6 +431,53 @@ h2 {
   box-shadow: var(--ciclista-shadow-sm);
 }
 
+.ciclista-add-stop-btn {
+  margin-top: var(--ciclista-spacing-xs);
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ciclista-spacing-xs);
+  font-size: var(--ciclista-font-xs);
+}
+
+.ciclista-waypoint-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-xs);
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-waypoint-field {
+  flex: 1;
+}
+
+.ciclista-waypoint-remove-btn {
+  flex-shrink: 0;
+  padding: var(--ciclista-spacing-xs);
+}
+
+.ciclista-bike-custom-settings {
+  margin-top: var(--ciclista-spacing-sm);
+  padding: var(--ciclista-spacing-sm);
+  background: var(--ciclista-color-surface-elevated);
+  border-radius: var(--ciclista-radius-sm);
+  border: 1px solid var(--ciclista-glass-border-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-label--sm {
+  font-size: var(--ciclista-font-xs);
+}
+
 /* Badge Chips */
 .badge-chip {
   display: inline-flex;

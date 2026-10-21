@@ -44,6 +44,9 @@ export interface NavigationState {
   progress: NavigationProgress | null;
   routeCoordinates: Coordinate[];
   startTimestamp: number | null;
+  heading?: number | null;
+  error?: string | null;
+  permissionStatus?: 'prompt' | 'granted' | 'denied' | null;
 }
 
 /**

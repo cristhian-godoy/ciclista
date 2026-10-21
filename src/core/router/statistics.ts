@@ -35,20 +35,24 @@ export function getEffectiveTurnPenalty(
   overrides: LocalOverrides,
   rulesConfig: RulesConfiguration,
 ): number {
+  const turnsConfig = overrides.bikeConfig?.turnPenalties
+    ? { ...rulesConfig.turns, ...overrides.bikeConfig.turnPenalties }
+    : rulesConfig.turns;
+
   const nodeOverride = overrides.nodeTurns.get(currentNode.id);
   if (nodeOverride) {
     const compositeKey = `${parentNode.id}->${nextNode.id}`;
     const overrideType = nodeOverride[compositeKey];
     if (overrideType) {
-      if (overrideType === 'right_turn') return rulesConfig.turns.rightTurnPenaltySeconds;
-      if (overrideType === 'left_turn') return rulesConfig.turns.leftTurnPenaltySeconds;
-      if (overrideType === 'green_arrow_right') return rulesConfig.turns.greenArrowRightTurnSeconds;
-      if (overrideType === 'indirect_left') return rulesConfig.turns.indirectLeftTurnSeconds;
-      if (overrideType === 'u_turn') return rulesConfig.turns.uTurnPenaltySeconds;
+      if (overrideType === 'right_turn') return turnsConfig.rightTurnPenaltySeconds;
+      if (overrideType === 'left_turn') return turnsConfig.leftTurnPenaltySeconds;
+      if (overrideType === 'green_arrow_right') return turnsConfig.greenArrowRightTurnSeconds;
+      if (overrideType === 'indirect_left') return turnsConfig.indirectLeftTurnSeconds;
+      if (overrideType === 'u_turn') return turnsConfig.uTurnPenaltySeconds;
     }
   }
 
-  return calculateTurnPenalty(parentNode, currentNode, nextNode, rulesConfig.turns);
+  return calculateTurnPenalty(parentNode, currentNode, nextNode, turnsConfig);
 }
 
 /**

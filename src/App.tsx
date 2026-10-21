@@ -14,12 +14,15 @@ import type {
   WorkerRoutingRequest,
   WorkerRoutingResponse,
 } from './core/router/types';
+import { LocalStorageProvider } from './core/storage/storage';
 import { useInspectorMode } from './hooks/useInspectorMode';
 import { useNavigation } from './hooks/useNavigation';
 import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
 import { usePlaces } from './hooks/usePlaces';
 import { useRoutingState } from './hooks/useRoutingState';
+
+const storage = new LocalStorageProvider();
 
 const TestRunnerPage = React.lazy(() => import('./components/test/TestRunnerPage'));
 
@@ -31,10 +34,22 @@ interface DashboardAppProps {
  * Primary dashboard view component executing main map and routing hooks.
  */
 function DashboardApp({ onNavigate }: DashboardAppProps) {
-  const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>('bright');
+  const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>(() => {
+    return storage.loadTheme() ?? 'bright';
+  });
   const [appMode, setAppMode] = useState<ToolbarMode>('routing');
-  const [events, setEvents] = useState<MapEvent[]>([]);
+  const [events, setEvents] = useState<MapEvent[]>(() => {
+    return storage.loadEventsSync();
+  });
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    storage.saveTheme(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    storage.saveEventsSync(events);
+  }, [events]);
 
   const { places, addPlace, updatePlace, deletePlace, setPlaces } = usePlaces();
 
@@ -84,6 +99,10 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     setStartCoord,
     endCoord,
     setEndCoord,
+    waypoints,
+    addWaypoint,
+    removeWaypoint,
+    updateWaypoint,
     selectedNode,
     setSelectedNode,
     routingStrategy,
@@ -170,10 +189,11 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       graph,
       startCoord,
       endCoord,
+      waypoints,
       overrides: effectiveOverrides,
     };
     worker.postMessage(request);
-  }, [graph, startCoord, endCoord, effectiveOverrides]);
+  }, [graph, startCoord, endCoord, waypoints, effectiveOverrides]);
 
   const routeResult = useMemo(() => {
     const active = routeVariants.find((alt) => alt.label === routingStrategy);
@@ -253,6 +273,10 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
         <Sidebar
           startCoord={startCoord}
           endCoord={endCoord}
+          waypoints={waypoints}
+          onAddWaypoint={addWaypoint}
+          onRemoveWaypoint={removeWaypoint}
+          onUpdateWaypoint={updateWaypoint}
           routeResult={routeResult}
           routeVariants={routeVariants}
           routingStrategy={routingStrategy}

@@ -6,7 +6,9 @@ import type { Coordinate } from '../common/types';
 export interface PositionProvider {
   start(): void;
   stop(): void;
-  onPosition(cb: (coord: Coordinate, timestamp: number, speed?: number) => void): void;
+  onPosition(
+    cb: (coord: Coordinate, timestamp: number, speed?: number, heading?: number | null) => void,
+  ): void;
   onError(cb: (err: GeolocationPositionError | Error) => void): void;
 }
 
@@ -43,7 +45,9 @@ export function createGeoProvider(
   options: PositionOptions = { enableHighAccuracy: true },
 ): PositionProvider {
   let watchId: number | null = null;
-  let posCb: ((coord: Coordinate, timestamp: number, speed?: number) => void) | null = null;
+  let posCb:
+    | ((coord: Coordinate, timestamp: number, speed?: number, heading?: number | null) => void)
+    | null = null;
   let errCb: ((err: GeolocationPositionError) => void) | null = null;
 
   return {
@@ -56,14 +60,32 @@ export function createGeoProvider(
               return;
             }
             if (posCb) {
-              posCb(
-                {
-                  lat: position.coords.latitude,
-                  lng: position.coords.longitude,
-                },
-                position.timestamp,
-                position.coords.speed ?? undefined,
-              );
+              const heading =
+                position.coords.heading !== null &&
+                position.coords.heading !== undefined &&
+                !isNaN(position.coords.heading)
+                  ? position.coords.heading
+                  : undefined;
+              if (heading !== undefined) {
+                posCb(
+                  {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                  },
+                  position.timestamp,
+                  position.coords.speed ?? undefined,
+                  heading,
+                );
+              } else {
+                posCb(
+                  {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                  },
+                  position.timestamp,
+                  position.coords.speed ?? undefined,
+                );
+              }
             }
           },
           (error) => {
@@ -177,7 +199,7 @@ export function createWASDProvider(
           lng = next.lng;
         }
         if (posCb) {
-          posCb({ lat, lng }, Date.now(), speed);
+          posCb({ lat, lng }, Date.now(), speed, bearing);
         }
       }
     }

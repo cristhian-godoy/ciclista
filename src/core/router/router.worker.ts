@@ -1,6 +1,7 @@
 import { logger } from '../common/logger';
 import { ensureWasmInitialized, WasmEngine } from '../wasm';
 import { AStarRouter } from './astar';
+import { findMultiStopRoute } from './multi-stop';
 import { DijkstraRouter } from './router';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from './strategies';
 import type { StrategyRouteVariant, WorkerRoutingRequest, WorkerRoutingResponse } from './types';
@@ -15,27 +16,40 @@ const STRATEGIES = [
 ] as const;
 
 self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
-  const { requestId, graph, startCoord, endCoord, overrides, algorithm = 'astar' } = e.data;
+  const {
+    requestId,
+    graph,
+    startCoord,
+    endCoord,
+    waypoints,
+    overrides,
+    algorithm = 'astar',
+  } = e.data;
 
   try {
-    const wasmReady = await ensureWasmInitialized();
-    if (wasmReady) {
-      try {
-        const variants = WasmEngine.find_route_variants_from_js_graph(
-          graph,
-          startCoord,
-          endCoord,
-          overrides,
-          algorithm,
-        ) as StrategyRouteVariant[];
+    const hasWaypoints = Array.isArray(waypoints) && waypoints.length > 0;
+    const points = hasWaypoints ? [startCoord, ...waypoints, endCoord] : null;
 
-        if (Array.isArray(variants) && variants.length > 0) {
-          const response: WorkerRoutingResponse = { requestId, routeVariants: variants };
-          self.postMessage(response);
-          return;
+    if (!hasWaypoints) {
+      const wasmReady = await ensureWasmInitialized();
+      if (wasmReady) {
+        try {
+          const variants = WasmEngine.find_route_variants_from_js_graph(
+            graph,
+            startCoord,
+            endCoord,
+            overrides,
+            algorithm,
+          ) as StrategyRouteVariant[];
+
+          if (Array.isArray(variants) && variants.length > 0) {
+            const response: WorkerRoutingResponse = { requestId, routeVariants: variants };
+            self.postMessage(response);
+            return;
+          }
+        } catch (error) {
+          logger.warn('WASM routing calculation failed, falling back to TypeScript engine:', error);
         }
-      } catch (error) {
-        logger.warn('WASM routing calculation failed, falling back to TypeScript engine:', error);
       }
     }
 
@@ -43,13 +57,9 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
     const alts: StrategyRouteVariant[] = [];
 
     for (const strategy of STRATEGIES) {
-      const result = activeRouter.findRoute(
-        graph,
-        startCoord,
-        endCoord,
-        strategy.costFn,
-        overrides,
-      );
+      const result = points
+        ? findMultiStopRoute(activeRouter, graph, points, strategy.costFn, overrides)
+        : activeRouter.findRoute(graph, startCoord, endCoord, strategy.costFn, overrides);
       if (result) {
         alts.push({ label: strategy.label, result });
       }

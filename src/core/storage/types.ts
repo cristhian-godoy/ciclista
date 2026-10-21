@@ -1,8 +1,14 @@
-import type { CrossingTurnOverride, LocalOverrides, SemanticTurnType } from '../config';
+import type { BikeConfig, CrossingTurnOverride, LocalOverrides, SemanticTurnType } from '../config';
+import type { MapEvent } from '../events';
 import type { Landmark } from '../landmarks/types';
 
 /**
- * Interface definition for storage providers managing the persistence of local routing overrides and landmarks.
+ * Supported persistent application color theme modes.
+ */
+export type StoredTheme = 'bright' | 'liberty' | 'dark';
+
+/**
+ * Interface definition for storage providers managing the persistence of local routing overrides, landmarks, events, and app settings.
  */
 export interface IStorageProvider {
   getOverrides(): Promise<LocalOverrides>;
@@ -16,4 +22,10 @@ export interface IStorageProvider {
   clearCrossingTurns(crossingId?: string): Promise<void>;
   getLandmarks(): Promise<Landmark[]>;
   saveLandmarks(landmarks: Landmark[]): Promise<void>;
+  getEvents(): Promise<MapEvent[]>;
+  saveEvents(events: MapEvent[]): Promise<void>;
+  loadBikeConfig(): BikeConfig | null;
+  saveBikeConfig(config: BikeConfig): void;
+  loadTheme(): StoredTheme | null;
+  saveTheme(theme: string): void;
 }
