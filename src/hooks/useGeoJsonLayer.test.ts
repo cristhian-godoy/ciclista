@@ -133,4 +133,26 @@ describe('useGeoJsonLayer', () => {
     result.current.setData(sampleGeoJSON);
     expect(mockSource.setData).toHaveBeenCalledWith(sampleGeoJSON);
   });
+
+  it('does not tear down source when layers change reference', () => {
+    const { rerender } = renderHook(
+      (props: { width: number }) =>
+        useGeoJsonLayer({
+          map: mockMap as maplibregl.Map,
+          sourceId: 'test-source',
+          layer: {
+            ...mockLayerSpec,
+            paint: { 'line-color': '#ff0000', 'line-width': props.width },
+          },
+        }),
+      { initialProps: { width: 2 } },
+    );
+
+    expect(removeSourceMock).not.toHaveBeenCalled();
+
+    rerender({ width: 4 });
+
+    expect(removeSourceMock).not.toHaveBeenCalled();
+    expect(setPaintPropertyMock).toHaveBeenCalledWith('test-layer', 'line-width', 4);
+  });
 });

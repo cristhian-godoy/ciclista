@@ -61,6 +61,12 @@ export function useGeoJsonLayer({
 }: UseGeoJsonLayerOptions): UseGeoJsonLayerReturn {
   const lastPaintPropsRef = useRef<Map<string, Map<string, unknown>>>(new Map());
   const lastLayoutPropsRef = useRef<Map<string, Map<string, unknown>>>(new Map());
+  const managedLayerIdsRef = useRef<Set<string>>(new Set());
+  const sourceOptionsRef = useRef(sourceOptions);
+
+  useEffect(() => {
+    sourceOptionsRef.current = sourceOptions;
+  }, [sourceOptions]);
 
   const getSource = useCallback(() => {
     if (!map) return null;
@@ -77,56 +83,60 @@ export function useGeoJsonLayer({
     [getSource],
   );
 
-  // 1. Source and Layer registration & teardown
+  // 1. Source lifecycle (mount / unmount tied only to map and sourceId)
   useEffect(() => {
     if (!map) return;
+    const lastPaintProps = lastPaintPropsRef.current;
+    const lastLayoutProps = lastLayoutPropsRef.current;
 
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
         type: 'geojson',
         data: EMPTY_FEATURE_COLLECTION,
-        ...sourceOptions,
+        ...sourceOptionsRef.current,
       });
     }
 
+    return () => {
+      // Remove all layers managed by this hook instance before removing the source
+      for (const id of Array.from(managedLayerIdsRef.current)) {
+        if (map.getLayer(id)) {
+          map.removeLayer(id);
+        }
+        lastPaintProps.delete(id);
+        lastLayoutProps.delete(id);
+      }
+      managedLayerIdsRef.current.clear();
+
+      if (map.getSource(sourceId)) {
+        map.removeSource(sourceId);
+      }
+    };
+  }, [map, sourceId]);
+
+  // 2. Layer registration, differential property updating, and cleanup
+  useEffect(() => {
+    if (!map) return;
     const layerList = layers ?? (layer ? (Array.isArray(layer) ? layer : [layer]) : []);
+    const nextLayerIds = new Set<string>();
+
     for (const l of layerList) {
+      nextLayerIds.add(l.id);
+
       if (!map.getLayer(l.id)) {
         const targetBeforeId = l.beforeId ?? beforeId;
-        if (targetBeforeId !== undefined) {
-          map.addLayer(l, targetBeforeId);
+        const validBeforeId =
+          targetBeforeId !== undefined && map.getLayer(targetBeforeId) ? targetBeforeId : undefined;
+
+        if (validBeforeId !== undefined) {
+          map.addLayer(l, validBeforeId);
         } else {
           map.addLayer(l);
         }
       }
-    }
 
-    const lastPaintProps = lastPaintPropsRef.current;
-    const lastLayoutProps = lastLayoutPropsRef.current;
-
-    return () => {
-      for (const l of layerList) {
-        if (map.getLayer(l.id)) {
-          map.removeLayer(l.id);
-        }
-      }
-      if (map.getSource(sourceId)) {
-        map.removeSource(sourceId);
-      }
-      lastPaintProps.delete(sourceId);
-      lastLayoutProps.delete(sourceId);
-    };
-  }, [map, sourceId, beforeId, layer, layers, sourceOptions]);
-
-  // 2. Dynamic paint and layout property synchronization
-  useEffect(() => {
-    if (!map) return;
-    const layerList = layers ?? (layer ? (Array.isArray(layer) ? layer : [layer]) : []);
-
-    for (const l of layerList) {
-      if (!map.getLayer(l.id)) continue;
-
-      if (l.paint && typeof map.setPaintProperty === 'function') {
+      // Update paint properties if changed
+      if (l.paint && map.getLayer(l.id) && typeof map.setPaintProperty === 'function') {
         let prevPaint = lastPaintPropsRef.current.get(l.id);
         if (!prevPaint) {
           prevPaint = new Map();
@@ -141,7 +151,8 @@ export function useGeoJsonLayer({
         }
       }
 
-      if (l.layout && typeof map.setLayoutProperty === 'function') {
+      // Update layout properties if changed
+      if (l.layout && map.getLayer(l.id) && typeof map.setLayoutProperty === 'function') {
         let prevLayout = lastLayoutPropsRef.current.get(l.id);
         if (!prevLayout) {
           prevLayout = new Map();
@@ -156,7 +167,21 @@ export function useGeoJsonLayer({
         }
       }
     }
-  }, [map, layers, layer]);
+
+    // Remove obsolete layers that are no longer present in layerList
+    for (const oldId of managedLayerIdsRef.current) {
+      if (!nextLayerIds.has(oldId) && map.getLayer(oldId)) {
+        map.removeLayer(oldId);
+        lastPaintPropsRef.current.delete(oldId);
+        lastLayoutPropsRef.current.delete(oldId);
+      }
+    }
+
+    managedLayerIdsRef.current.clear();
+    for (const id of nextLayerIds) {
+      managedLayerIdsRef.current.add(id);
+    }
+  }, [map, sourceId, beforeId, layer, layers]);
 
   // 3. Reactive data synchronization
   useEffect(() => {

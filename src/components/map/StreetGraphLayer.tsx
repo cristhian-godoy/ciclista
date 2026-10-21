@@ -25,6 +25,8 @@ type GeoJSONFeature =
       properties: Record<string, unknown>;
     };
 
+const TRAFFIC_LIGHTS_SOURCE_OPTIONS = { cluster: false } as const;
+
 /**
  * Map layer rendering the raw street network edges (LineStrings) and
  * customizable intersection control nodes (Point clusters) directly on the map.
@@ -184,7 +186,7 @@ export const StreetGraphLayer: React.FC = () => {
   useGeoJsonLayer({
     map,
     sourceId: 'traffic-lights',
-    sourceOptions: { cluster: false },
+    sourceOptions: TRAFFIC_LIGHTS_SOURCE_OPTIONS,
     layers: trafficLayers,
   });
 

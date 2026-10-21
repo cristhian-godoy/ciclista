@@ -4,10 +4,27 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper';
 import { buildPathSymbolsGeoJSON } from '../../core/rendering/symbols-mapper';
 import { MAP_THEME_TOKENS, PALETTES } from '../../core/rendering/theme';
-import type { PathSegmentFeature } from '../../core/rendering/types';
+import type { PathSegmentFeature, PathStyleConfig } from '../../core/rendering/types';
 import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
 import { UnifiedPathLayer } from './layers/UnifiedPathLayer';
 import { useMapContext } from './MapContext';
+
+const CHOSEN_PATH_STYLE: PathStyleConfig = {
+  width: 6,
+  opacity: 1.0,
+};
+
+const ALTERNATIVE_BRANCHES_STYLE: PathStyleConfig = {
+  width: 4,
+  opacity: 0.6,
+  dashArray: [3, 2],
+};
+
+const HIGHLIGHTED_PATH_STYLE: PathStyleConfig = {
+  width: 5,
+  opacity: 1.0,
+  dashArray: [2, 2],
+};
 
 /**
  * Renders interactive node circles along the active path and divergent alternative path line segments
@@ -548,10 +565,7 @@ export const InspectorLayer: React.FC = () => {
         id="inspector-chosen-path"
         features={chosenPathFeatures}
         color={PALETTES.semantic.acceptable}
-        styleConfig={{
-          width: 6,
-          opacity: 1.0,
-        }}
+        styleConfig={CHOSEN_PATH_STYLE}
         useSemanticColors={true}
         visible={isInspectorModeActive}
         onPathHover={handlePathHover}
@@ -564,11 +578,7 @@ export const InspectorLayer: React.FC = () => {
         id="inspector-alternative-branches"
         features={alternativeBranchesFeatures}
         color={PALETTES.alternative}
-        styleConfig={{
-          width: 4,
-          opacity: 0.6,
-          dashArray: [3, 2],
-        }}
+        styleConfig={ALTERNATIVE_BRANCHES_STYLE}
         useSemanticColors={false}
         visible={isInspectorModeActive}
         onPathHover={handlePathHover}
@@ -581,11 +591,7 @@ export const InspectorLayer: React.FC = () => {
         id="inspector-highlighted-path"
         features={highlightedFeatures}
         color={PALETTES.alternative}
-        styleConfig={{
-          width: 5,
-          opacity: 1.0,
-          dashArray: [2, 2],
-        }}
+        styleConfig={HIGHLIGHTED_PATH_STYLE}
         useSemanticColors={false}
         visible={isInspectorModeActive}
       />

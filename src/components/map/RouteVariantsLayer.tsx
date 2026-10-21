@@ -83,9 +83,10 @@ export const RouteVariantsLayer: React.FC = () => {
       const coreId = `route-path-core-${strategy}`;
       const semanticId = `route-path-semantic-${strategy}`;
 
-      if (map.getLayer(glowId)) map.moveLayer(glowId, referenceLayer);
-      if (map.getLayer(coreId)) map.moveLayer(coreId, referenceLayer);
-      if (map.getLayer(semanticId)) map.moveLayer(semanticId, referenceLayer);
+      const safeRef = referenceLayer && map.getLayer(referenceLayer) ? referenceLayer : undefined;
+      if (map.getLayer(glowId)) map.moveLayer(glowId, safeRef);
+      if (map.getLayer(coreId)) map.moveLayer(coreId, safeRef);
+      if (map.getLayer(semanticId)) map.moveLayer(semanticId, safeRef);
     });
   }, [map, sortedStrategies, referenceLayer]);
 

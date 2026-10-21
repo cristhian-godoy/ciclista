@@ -183,9 +183,10 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
   // 4. Manage Layer Positions
   useEffect(() => {
     if (!map) return;
-    if (map.getLayer(glowId)) map.moveLayer(glowId, beforeId);
-    if (map.getLayer(coreId)) map.moveLayer(coreId, beforeId);
-    if (map.getLayer(semanticId)) map.moveLayer(semanticId, beforeId);
+    const safeBeforeId = beforeId && map.getLayer(beforeId) ? beforeId : undefined;
+    if (map.getLayer(glowId)) map.moveLayer(glowId, safeBeforeId);
+    if (map.getLayer(coreId)) map.moveLayer(coreId, safeBeforeId);
+    if (map.getLayer(semanticId)) map.moveLayer(semanticId, safeBeforeId);
   }, [map, glowId, coreId, semanticId, beforeId]);
 
   // 5. Setup Hover and Click Event Listeners
