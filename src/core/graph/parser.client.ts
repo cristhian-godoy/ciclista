@@ -1,12 +1,19 @@
 import { API_CONFIG } from '../common/constants';
+import { convertGraphToGeoJSON, type GraphGeoJSON } from './geojson';
 import { OSMGraphParser } from './parser';
 import type { StreetGraph } from './types';
+
+interface WorkerCallbackPayload {
+  graph?: StreetGraph;
+  geoJson?: GraphGeoJSON;
+  byteLength?: number;
+}
 
 let nextRequestId = 0;
 const pendingRequests = new Map<
   number,
   {
-    resolve: (res: { graph: StreetGraph; byteLength: number }) => void;
+    resolve: (res: WorkerCallbackPayload) => void;
     reject: (err: Error) => void;
   }
 >();
@@ -24,19 +31,21 @@ function getWorker(): Worker | null {
         type: 'module',
       });
       worker.onmessage = (e) => {
-        const { requestId, serializedNodes, byteLength = 0, error } = e.data;
+        const { requestId, serializedNodes, geoJson, byteLength = 0, error } = e.data;
         const pending = pendingRequests.get(requestId);
         if (!pending) return;
         pendingRequests.delete(requestId);
 
         if (error) {
           pending.reject(new Error(error));
-        } else {
+        } else if (serializedNodes) {
           const nodesEntries = JSON.parse(serializedNodes);
           const graph: StreetGraph = {
             nodes: new Map(nodesEntries),
           };
-          pending.resolve({ graph, byteLength });
+          pending.resolve({ graph, geoJson, byteLength });
+        } else {
+          pending.resolve({ geoJson, byteLength });
         }
       };
       worker.onerror = (err) => {
@@ -48,6 +57,59 @@ function getWorker(): Worker | null {
     }
   }
   return worker;
+}
+
+/**
+ * Offloads convertGraphToGeoJSON computation to the Web Worker so panning and large graphs
+ * do not rebuild 100k+ LineString features synchronously on the main UI thread.
+ *
+ * @param graph - StreetGraph to convert.
+ * @param customNodeDelays - Optional mapping of node IDs to custom signal delays.
+ * @param showMinorControls - Whether to generate features for minor controls (yield, stop, pedestrian).
+ * @returns GeoJSON features partitioned into streets and controls.
+ */
+export function convertGraphToGeoJSONInWorker(
+  graph: StreetGraph,
+  customNodeDelays?: Map<string, number>,
+  showMinorControls?: boolean,
+): Promise<GraphGeoJSON> {
+  const workerInstance = getWorker();
+  if (!workerInstance) {
+    try {
+      const geoJson = convertGraphToGeoJSON(
+        graph,
+        customNodeDelays || new Map(),
+        showMinorControls ?? false,
+      );
+      return Promise.resolve(geoJson);
+    } catch (err) {
+      return Promise.reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  }
+
+  return new Promise<GraphGeoJSON>((resolve, reject) => {
+    const requestId = nextRequestId++;
+    pendingRequests.set(requestId, {
+      resolve: (res) => resolve(res.geoJson!),
+      reject,
+    });
+    try {
+      const graphEntries = Array.from(graph.nodes.entries());
+      const customNodeDelaysEntries = customNodeDelays
+        ? Array.from(customNodeDelays.entries())
+        : [];
+      workerInstance.postMessage({
+        requestId,
+        action: 'convertToGeoJSON',
+        graphEntries,
+        customNodeDelaysEntries,
+        showMinorControls: showMinorControls ?? false,
+      });
+    } catch (err) {
+      pendingRequests.delete(requestId);
+      reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  });
 }
 
 /**
@@ -68,7 +130,7 @@ export function parseInWorker(rawData: unknown): Promise<StreetGraph> {
   return new Promise<StreetGraph>((resolve, reject) => {
     const requestId = nextRequestId++;
     pendingRequests.set(requestId, {
-      resolve: (res) => resolve(res.graph),
+      resolve: (res) => resolve(res.graph!),
       reject,
     });
     try {
@@ -105,7 +167,10 @@ export async function parseFromCacheInWorker(
 
   return new Promise<{ graph: StreetGraph; byteLength: number }>((resolve, reject) => {
     const requestId = nextRequestId++;
-    pendingRequests.set(requestId, { resolve, reject });
+    pendingRequests.set(requestId, {
+      resolve: (res) => resolve({ graph: res.graph!, byteLength: res.byteLength || 0 }),
+      reject,
+    });
     try {
       workerInstance.postMessage({ requestId, cacheUrl });
     } catch (err) {

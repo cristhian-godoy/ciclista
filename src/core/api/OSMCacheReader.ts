@@ -4,6 +4,7 @@ import { parseFromCacheInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
 import { mergeGraphs } from '../graph/utils';
 import { getValidCacheEntries, type ValidCacheEntry } from '../storage/cache';
+import { loadParsedChunk, saveParsedGraphByChunks } from '../storage/chunkCache';
 import { addDataUsage } from '../storage/dataUsage';
 
 /**
@@ -43,11 +44,35 @@ export class OSMCacheReader {
       return { graph: null, loadedChunkIds: [], missingChunkIds: [] };
     }
 
+    let mergedGraph: StreetGraph | null = null;
+    const loadedChunkIds: string[] = [];
+    const remainingChunkIds: string[] = [];
+
+    // 1. Resolve already-parsed chunks directly from memory/chunk cache without re-parsing raw JSON
+    for (const chunkId of chunkIds) {
+      const parsed = await loadParsedChunk(chunkId);
+      if (parsed) {
+        mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
+        loadedChunkIds.push(chunkId);
+      } else {
+        remainingChunkIds.push(chunkId);
+      }
+    }
+
+    if (remainingChunkIds.length === 0) {
+      return {
+        graph: mergedGraph,
+        loadedChunkIds,
+        missingChunkIds: [],
+      };
+    }
+
+    // 2. For remaining chunks, check raw Overpass cache using the in-memory spatial index
     const validCache = await getValidCacheEntries();
     const cachedChunkIds: string[] = [];
     const missingChunkIds: string[] = [];
 
-    for (const chunkId of chunkIds) {
+    for (const chunkId of remainingChunkIds) {
       const chunkBBox = getChunkBBox(chunkId);
       const isCached = validCache.some((entry) => this.isBBoxContained(chunkBBox, entry.bbox));
       if (isCached) {
@@ -56,9 +81,6 @@ export class OSMCacheReader {
         missingChunkIds.push(chunkId);
       }
     }
-
-    let mergedGraph: StreetGraph | null = null;
-    const loadedChunkIds: string[] = [];
 
     if (cachedChunkIds.length > 0) {
       logger.log(`Loading ${cachedChunkIds.length} chunks directly from local CacheStorage.`);
@@ -79,7 +101,7 @@ export class OSMCacheReader {
         }
       }
 
-      for (const [url, chunkIds] of urlToChunkIds.entries()) {
+      for (const [url, chunkIdsList] of urlToChunkIds.entries()) {
         try {
           const { graph: parsed, byteLength } = await parseFromCacheInWorker(url);
           if (byteLength > 0) {
@@ -88,20 +110,18 @@ export class OSMCacheReader {
           mergedGraph = mergedGraph ? mergeGraphs(mergedGraph, parsed) : parsed;
 
           // Mark all chunks covered by this cached request as loaded,
-          // so we don't re-parse this huge file on the next minor pan
+          // and persist them into per-chunk parsed cache to prevent re-parsing
           const entry = urlToEntry.get(url);
-          if (entry) {
-            const allCoveredChunks = getChunksInBBox(entry.bbox);
-            loadedChunkIds.push(...allCoveredChunks);
-          } else {
-            loadedChunkIds.push(...chunkIds);
-          }
+          const allCoveredChunks = entry ? getChunksInBBox(entry.bbox) : chunkIdsList;
+          loadedChunkIds.push(...allCoveredChunks);
+
+          await saveParsedGraphByChunks(parsed, allCoveredChunks);
 
           // Yield the main thread to allow MapLibre to render vector tiles and prevent stuttering
           await new Promise((resolve) => setTimeout(resolve, 0));
         } catch (err) {
           logger.warn(`Failed to read cached response for URL ${url}:`, err);
-          missingChunkIds.push(...chunkIds);
+          missingChunkIds.push(...chunkIdsList);
         }
       }
     }

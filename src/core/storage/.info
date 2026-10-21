@@ -1,7 +1,11 @@
 cache.test.ts
 	Unit tests for Client-side CacheStorage utility.
 cache.ts
-	Client-side CacheStorage utility with TTL eviction and SWR support.
+	Client-side CacheStorage utility with TTL eviction, SWR support, and in-memory spatial index.
+chunkCache.test.ts
+	Unit tests for parsed StreetGraph chunk caching in memory and CacheStorage.
+chunkCache.ts
+	Per-chunk parsed StreetGraph caching utility for zero-latency pan merges.
 dataUsage.test.ts
 	Unit tests for network and cache bandwidth tracking, connectivity detection, and data saver toggles.
 dataUsage.ts

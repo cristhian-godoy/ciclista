@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getValidCacheEntries } from './cache';
+import {
+  fetchWithCache,
+  getValidCacheEntries,
+  initSpatialCacheIndex,
+  resetSpatialCacheIndex,
+} from './cache';
 
 describe('cache storage utility', () => {
   let mockCache: Partial<Cache>;
@@ -9,6 +14,7 @@ describe('cache storage utility', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    resetSpatialCacheIndex();
     store = new Map<string, Response>();
 
     mockCache = {
@@ -70,5 +76,27 @@ describe('cache storage utility', () => {
     const validEntries = await getValidCacheEntries();
     expect(validEntries).toHaveLength(1);
     expect(validEntries[0].bbox).toEqual([48.13, 11.57, 48.14, 11.58]);
+
+    // Subsequent calls return from memory without rescanning keys
+    const keysMock = mockCache.keys as ReturnType<typeof vi.fn>;
+    keysMock.mockClear();
+
+    const cachedEntries = await getValidCacheEntries();
+    expect(cachedEntries).toHaveLength(1);
+    expect(keysMock).not.toHaveBeenCalled();
+  });
+
+  it('fetchWithCache dynamically updates the in-memory spatial cache index on put', async () => {
+    await initSpatialCacheIndex();
+
+    const initialEntries = await getValidCacheEntries();
+    expect(initialEntries).toHaveLength(0);
+
+    const testUrl = 'https://overpass-interpreter-cache/?query=test&bbox=48.20,11.60,48.21,11.61';
+    await fetchWithCache(testUrl, async () => ({ elements: [] }));
+
+    const updatedEntries = await getValidCacheEntries();
+    expect(updatedEntries).toHaveLength(1);
+    expect(updatedEntries[0].bbox).toEqual([48.2, 11.6, 48.21, 11.61]);
   });
 });

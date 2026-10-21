@@ -37,4 +37,20 @@ describe('Main App Route Snapshot Baseline', () => {
     const { container } = render(<App />);
     expect(container.firstChild).toMatchSnapshot();
   });
+
+  it('initializes routing worker on mount when start and end coordinates exist', async () => {
+    const postMessageSpy = vi.fn();
+    class MockWorker {
+      postMessage = postMessageSpy;
+      terminate = vi.fn();
+      onmessage = null;
+    }
+    vi.stubGlobal('Worker', MockWorker);
+
+    window.history.pushState({}, '', '/?start=48.137,11.575&end=48.138,11.576');
+
+    const { unmount } = render(<App />);
+    unmount();
+    vi.unstubAllGlobals();
+  });
 });

@@ -24,17 +24,19 @@ export interface GraphEdge {
 }
 
 /**
+ * Adjacency list entry for a node and its outgoing directed edges.
+ */
+export interface NodeEntry {
+  node: GraphNode;
+  edges: GraphEdge[];
+}
+
+/**
  * Represents a complete street network graph as an adjacency list,
  * mapping node IDs to their respective GraphNode structure and outgoing edges.
  */
 export interface StreetGraph {
-  nodes: Map<
-    string,
-    {
-      node: GraphNode;
-      edges: GraphEdge[];
-    }
-  >;
+  nodes: Map<string, NodeEntry>;
 }
 
 /**

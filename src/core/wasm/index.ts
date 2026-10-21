@@ -19,7 +19,20 @@ export async function ensureWasmInitialized(wasmSource?: InitInput): Promise<boo
   if (!initPromise) {
     initPromise = (async () => {
       try {
-        await initWasm(wasmSource);
+        let source = wasmSource;
+        if (!source && typeof process !== 'undefined' && Boolean(process.versions?.node)) {
+          try {
+            const fs = await import('node:fs');
+            const path = await import('node:path');
+            const wasmPath = path.resolve(process.cwd(), 'src/core/wasm/pkg/ciclista_wasm_bg.wasm');
+            if (fs.existsSync(wasmPath)) {
+              source = fs.readFileSync(wasmPath);
+            }
+          } catch {
+            // Ignore Node file read fallback failure
+          }
+        }
+        await initWasm(source);
         WasmEngine.init_panic_hook();
         initialized = true;
         return true;

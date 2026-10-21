@@ -3,6 +3,7 @@ import { getChunkBBox, mergeChunksToBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import { parseInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
+import { saveParsedGraphByChunks } from '../storage/chunkCache';
 import { fetchWithCacheAndFallback } from './overpass';
 
 /**
@@ -226,6 +227,7 @@ out body;`;
 
       const data = await fetchWithCacheAndFallback(query);
       const parsed = await parseInWorker(data);
+      await saveParsedGraphByChunks(parsed, currentCluster);
 
       this.notifyData({
         graph: parsed,
@@ -257,6 +259,7 @@ out body;`;
 
     while (unvisited.size > 0) {
       const startId = unvisited.values().next().value;
+      if (!startId) break;
       unvisited.delete(startId);
 
       const cluster: string[] = [startId];
