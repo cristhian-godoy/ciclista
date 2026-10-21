@@ -1,13 +1,3 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  CornerUpRight,
-  RotateCcw,
-  Route,
-  Settings,
-  TrafficCone,
-} from 'lucide-react';
 import React, { useState } from 'react';
 
 import {
@@ -21,6 +11,16 @@ import {
   type TurnRuleConfig,
 } from '../core/config';
 import { AccordionSection } from './common/AccordionSection';
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  CornerUpRight,
+  RotateCcw,
+  Route,
+  Settings,
+  TrafficCone,
+} from './common/Icon';
 import { IntersectionDelaySection } from './IntersectionDelaySection';
 import { RoadRow, SignRow } from './RulesRows';
 import { TurnDelaySection } from './TurnDelaySection';

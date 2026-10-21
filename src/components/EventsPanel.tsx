@@ -1,7 +1,7 @@
-import { Download, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { type CyclingCalendarEvent, serializeCalendarFeed } from '../core/events/calendar';
+import { Download, Trash2 } from './common/Icon';
 
 /**
  * Triggers a client-side file download for calendar JSON feeds.

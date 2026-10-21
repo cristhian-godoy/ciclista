@@ -1,17 +1,3 @@
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Compass,
-  GitFork,
-  Navigation2,
-  Play,
-  Route,
-  ShieldAlert,
-  Square,
-  Star,
-} from 'lucide-react';
 import React, { useContext, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
@@ -26,6 +12,20 @@ import type { CreateLandmarkInput, Landmark, UpdateLandmarkInput } from '../core
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Compass,
+  GitFork,
+  Navigation2,
+  Play,
+  Route,
+  ShieldAlert,
+  Square,
+  Star,
+} from './common/Icon';
 import { CrossingEditPanel } from './CrossingEditPanel';
 import { EventsPanel } from './EventsPanel';
 import { InspectorPanel } from './InspectorPanel';

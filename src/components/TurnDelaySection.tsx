@@ -1,8 +1,8 @@
-import { ArrowLeft, ArrowRight, CornerDownLeft, CornerUpRight, RefreshCw } from 'lucide-react';
 import React from 'react';
 
 import type { TurnRuleConfig } from '../core/config';
 import { DelayRuleRow } from './common/DelayRuleRow';
+import { ArrowLeft, ArrowRight, CornerDownLeft, CornerUpRight, RefreshCw } from './common/Icon';
 
 /**
  * Properties for configuring turn delay penalties.

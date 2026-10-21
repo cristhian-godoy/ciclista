@@ -1,5 +1,6 @@
-import { X } from 'lucide-react';
 import React from 'react';
+
+import { X } from './Icon';
 
 /**
  * Visual variant options for the unified CloseButton primitive.

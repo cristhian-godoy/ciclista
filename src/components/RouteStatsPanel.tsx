@@ -1,10 +1,10 @@
-import { Bug, Check, Clock, Copy, Ruler, TrafficCone } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
 import { AccordionSection } from './common/AccordionSection';
 import { Badge } from './common/Badge';
+import { Bug, Check, Clock, Copy, Ruler, TrafficCone } from './common/Icon';
 
 interface RouteStatsPanelProps {
   routeVariants: StrategyRouteVariant[];

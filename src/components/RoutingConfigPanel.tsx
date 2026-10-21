@@ -1,8 +1,8 @@
-import { ArrowUpDown, Bike, MapPin, Plus, RefreshCw, Settings, Trash2, Zap } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, BikeProfileId } from '../core/config';
+import { ArrowUpDown, Bike, MapPin, Plus, RefreshCw, Settings, Trash2, Zap } from './common/Icon';
 import { SegmentedControl } from './common/SegmentedControl';
 
 /**

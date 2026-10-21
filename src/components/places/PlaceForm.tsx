@@ -1,10 +1,10 @@
-import { Edit2, Plus, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import { validateLandmarkInput } from '../../core/landmarks/landmarks';
 import type { LandmarkCategory } from '../../core/landmarks/types';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../../hooks/usePlaces';
+import { Edit2, Plus, X } from '../common/Icon';
 import { CategorySelectDropdown } from './CategorySelectDropdown';
 import { CATEGORY_MAP, type PlaceCategory } from './types';
 

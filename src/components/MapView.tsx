@@ -1,4 +1,3 @@
-import { MapPin } from 'lucide-react';
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo, useRef } from 'react';
 
@@ -6,6 +5,7 @@ import { haversineDistance } from '../core/common/geo';
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { GraphNode } from '../core/graph/types';
 import { ArrivalPanel } from './ArrivalPanel';
+import { MapPin } from './common/Icon';
 import { Toast } from './common/Toast';
 import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';

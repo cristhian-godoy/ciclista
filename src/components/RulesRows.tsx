@@ -1,8 +1,8 @@
-import { Bike, ChevronDown, ChevronUp, Footprints, Home, Route } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RoadRuleConfig, SignRuleConfig } from '../core/config';
 import { getEffectiveRoadSpeedType, getEffectiveSignSpeedType } from '../core/rules';
+import { Bike, ChevronDown, ChevronUp, Footprints, Home, Route } from './common/Icon';
 import { SliderField } from './common/SliderField';
 import { ComfortSelector, SpeedTypeSelector } from './RulesSelectorFields';
 

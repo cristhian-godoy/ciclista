@@ -262,4 +262,83 @@ describe('CrossingEditPanel Component', () => {
 
     expect(handleDeleteCrossingTurn).toHaveBeenCalledWith('turn-1');
   });
+
+  it('synchronizes form state when active turn selection matches an existing override', () => {
+    const savedTurn: CrossingTurnOverride = {
+      id: 'turn-custom',
+      crossingId: 'crossing-node-1',
+      fromNodeId: 'node-1',
+      toNodeId: 'node-2',
+      timeDeltaSeconds: 22,
+      banned: true,
+      turnType: 'copenhagen_two_stage',
+      description: 'Avoid during peak traffic',
+      pathNodeIds: ['node-1', 'node-2'],
+    };
+
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: 'node-2', waypointNodeIds: [] },
+      crossingTurns: [savedTurn],
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    const banCheckbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(banCheckbox.checked).toBe(true);
+
+    const copenhagenBtn = screen.getByRole('button', { name: 'Copenhagen Two-Stage' });
+    expect(copenhagenBtn.className).toContain('active');
+
+    expect(screen.getByText('+22s')).toBeInTheDocument();
+  });
+
+  it('resets form state when selecting a turn without an existing override', () => {
+    const savedTurn: CrossingTurnOverride = {
+      id: 'turn-existing',
+      crossingId: 'crossing-node-1',
+      fromNodeId: 'node-1',
+      toNodeId: 'node-2',
+      timeDeltaSeconds: 25,
+      banned: true,
+      turnType: 'green_arrow',
+    };
+
+    // Render with existing override
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: 'node-2', waypointNodeIds: [] },
+      crossingTurns: [savedTurn],
+    });
+
+    const { rerender } = render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+
+    // Switch selection to a new pair without override
+    const updatedCtx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-2', toNodeId: 'node-1', waypointNodeIds: [] },
+      crossingTurns: [savedTurn],
+    });
+
+    rerender(
+      <MapContext.Provider value={updatedCtx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
+    expect(screen.getByText('0s')).toBeInTheDocument();
+    const directBtn = screen.getByRole('button', { name: 'Direct' });
+    expect(directBtn.className).toContain('active');
+  });
 });

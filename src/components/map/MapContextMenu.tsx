@@ -1,6 +1,6 @@
-import { Edit2, MapPin, Star, Trash2, ZoomIn } from 'lucide-react';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
+import { Edit2, MapPin, Star, Trash2, ZoomIn } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
 /**

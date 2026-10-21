@@ -1,7 +1,7 @@
-import { ChevronDown, Search, Sliders, TrafficCone } from 'lucide-react';
 import React from 'react';
 
 import { CloseButton } from '../common/CloseButton';
+import { ChevronDown, Search, Sliders, TrafficCone } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
 /**

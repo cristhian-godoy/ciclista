@@ -1,4 +1,3 @@
-import { Ban, Check, ChevronRight, Clock, GitFork, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import type { CrossingTurnOverride, CrossingTurnType } from '../core/config/types';
@@ -6,7 +5,7 @@ import { useCrossingEditorData } from '../hooks/useCrossingEditorData';
 import { Badge } from './common/Badge';
 import { CloseButton } from './common/CloseButton';
 import { EmptyState } from './common/EmptyState';
-import { SliderField } from './common/SliderField';
+import { Ban, Check, ChevronRight, Clock, GitFork, Trash2 } from './common/Icon';
 import { MapContext } from './map/MapContext';
 
 const TURN_TYPE_OPTIONS: Array<{ type: CrossingTurnType; label: string }> = [
@@ -79,6 +78,223 @@ const CrossingOverrideItem: React.FC<CrossingOverrideItemProps> = ({
   </div>
 );
 
+interface TurnConfigFormProps {
+  activeCrossingId: string;
+  activeTurnSelection: {
+    fromNodeId: string | null;
+    toNodeId: string | null;
+    waypointNodeIds: string[];
+  };
+  computedTurnPath: string[] | null;
+  existingOverride: CrossingTurnOverride | null;
+  onSaveTurn: (override: CrossingTurnOverride) => void;
+  onDeleteTurn: (id: string) => void;
+  onRemoveWaypoint: (nodeId: string) => void;
+  onClearSelection: () => void;
+}
+
+/**
+ * Form subcomponent managing interactive crossing turn penalty overrides and restrictions.
+ */
+const TurnConfigForm: React.FC<TurnConfigFormProps> = ({
+  activeCrossingId,
+  activeTurnSelection,
+  computedTurnPath,
+  existingOverride,
+  onSaveTurn,
+  onDeleteTurn,
+  onRemoveWaypoint,
+  onClearSelection,
+}) => {
+  const [timeDelta, setTimeDelta] = useState<number>(() => existingOverride?.timeDeltaSeconds ?? 0);
+  const [isBanned, setIsBanned] = useState<boolean>(() => Boolean(existingOverride?.banned));
+  const [turnType, setTurnType] = useState<CrossingTurnType>(
+    () => existingOverride?.turnType ?? 'direct',
+  );
+  const [description, setDescription] = useState<string>(() => existingOverride?.description ?? '');
+
+  const handleSave = () => {
+    if (!activeCrossingId || !activeTurnSelection.fromNodeId || !activeTurnSelection.toNodeId) {
+      return;
+    }
+
+    const id =
+      existingOverride?.id ??
+      `turn-${activeCrossingId}-${activeTurnSelection.fromNodeId}-${activeTurnSelection.toNodeId}`;
+
+    const override: CrossingTurnOverride = {
+      id,
+      crossingId: activeCrossingId,
+      fromNodeId: activeTurnSelection.fromNodeId,
+      toNodeId: activeTurnSelection.toNodeId,
+      pathNodeIds: computedTurnPath ?? existingOverride?.pathNodeIds ?? undefined,
+      timeDeltaSeconds: Number(timeDelta),
+      banned: isBanned,
+      turnType,
+      description: description.trim() || undefined,
+    };
+
+    onSaveTurn(override);
+  };
+
+  return (
+    <div className="ciclista-crossing-turn-config">
+      <div className="ciclista-crossing-turn-nodes-row">
+        <div>
+          <strong>From:</strong>{' '}
+          <span>
+            {activeTurnSelection.fromNodeId
+              ? `Node #${activeTurnSelection.fromNodeId}`
+              : 'Click entry node'}
+          </span>
+        </div>
+        <ChevronRight size={16} />
+        <div>
+          <strong>To:</strong>{' '}
+          <span>
+            {activeTurnSelection.toNodeId
+              ? `Node #${activeTurnSelection.toNodeId}`
+              : 'Click exit node'}
+          </span>
+        </div>
+      </div>
+
+      {/* Pinned Waypoints */}
+      {activeTurnSelection.waypointNodeIds.length > 0 && (
+        <div className="ciclista-crossing-slider-header">
+          <span>Waypoints:</span>
+          <div className="ciclista-crossing-waypoints-list">
+            {activeTurnSelection.waypointNodeIds.map((wpId) => (
+              <button
+                key={wpId}
+                type="button"
+                className="ciclista-crossing-tag-btn"
+                onClick={() => onRemoveWaypoint(wpId)}
+                title="Click to remove waypoint"
+              >
+                #{wpId} ×
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Computed Mini A* Route Status */}
+      {activeTurnSelection.fromNodeId && activeTurnSelection.toNodeId && (
+        <div
+          className={`ciclista-crossing-turn-path-status ${
+            computedTurnPath
+              ? 'ciclista-crossing-turn-path-status--success'
+              : 'ciclista-crossing-turn-path-status--error'
+          }`}
+        >
+          {computedTurnPath
+            ? `Computed Path: ${computedTurnPath.length} nodes`
+            : 'No valid path found between selected nodes'}
+        </div>
+      )}
+
+      {/* Semantic Turn Type Tags */}
+      <div className="ciclista-crossing-slider-group">
+        <span className="ciclista-crossing-legend-title">Turn Type</span>
+        <div className="ciclista-crossing-turn-type-tags">
+          {TURN_TYPE_OPTIONS.map(({ type, label }) => (
+            <button
+              key={type}
+              type="button"
+              className={`ciclista-crossing-tag-btn ${turnType === type ? 'active' : ''}`}
+              onClick={() => setTurnType(type)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Time Delta Penalty Slider */}
+      <div className="ciclista-crossing-slider-group">
+        <div className="ciclista-crossing-slider-header">
+          <span className="ciclista-crossing-slider-label">
+            <Clock size={14} /> Time Delta Penalty
+          </span>
+          <span>{timeDelta > 0 ? `+${timeDelta}` : timeDelta}s</span>
+        </div>
+        <div className="ciclista-crossing-slider-input-row">
+          <input
+            type="range"
+            className="ciclista-crossing-slider"
+            min={-30}
+            max={60}
+            step={1}
+            value={timeDelta}
+            disabled={isBanned}
+            onChange={(e) => setTimeDelta(Number(e.target.value))}
+          />
+          <input
+            type="number"
+            className="ciclista-crossing-number-input"
+            min={-30}
+            max={60}
+            value={timeDelta}
+            disabled={isBanned}
+            onChange={(e) => setTimeDelta(Number(e.target.value))}
+          />
+        </div>
+      </div>
+
+      {/* Hard Ban Toggle */}
+      <div className="ciclista-crossing-ban-toggle-row">
+        <span className="ciclista-crossing-ban-label">
+          <Ban size={16} /> Hard Ban Turn
+        </span>
+        <input type="checkbox" checked={isBanned} onChange={(e) => setIsBanned(e.target.checked)} />
+      </div>
+
+      {/* Description / Notes */}
+      <div className="ciclista-crossing-slider-group">
+        <div className="ciclista-crossing-slider-header">
+          <span className="ciclista-crossing-slider-label">Description / Notes</span>
+        </div>
+        <input
+          type="text"
+          className="ciclista-input"
+          placeholder="e.g. Traffic light cycle or protected phase"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="ciclista-crossing-actions-row">
+        <button
+          type="button"
+          className="ciclista-crossing-btn-save"
+          disabled={
+            !activeTurnSelection.fromNodeId || !activeTurnSelection.toNodeId || !computedTurnPath
+          }
+          onClick={handleSave}
+        >
+          <Check size={14} className="ciclista-crossing-btn-icon-prefix" />
+          Save Turn Override
+        </button>
+        {existingOverride && (
+          <button
+            type="button"
+            className="ciclista-crossing-btn-delete"
+            title="Delete this override"
+            onClick={() => {
+              onDeleteTurn(existingOverride.id);
+              onClearSelection();
+            }}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /**
  * Sidebar panel for TM:PE-style crossing turn penalty configuration and edge inspection.
  */
@@ -96,11 +312,6 @@ export const CrossingEditPanel: React.FC = () => {
   const setManagedNodeIds = mapCtx?.setManagedNodeIds;
   const customNodeDelays = mapCtx?.customNodeDelays;
   const showMinorControls = mapCtx?.showMinorControls ?? true;
-
-  const [timeDelta, setTimeDelta] = useState<number>(0);
-  const [isBanned, setIsBanned] = useState<boolean>(false);
-  const [turnType, setTurnType] = useState<CrossingTurnType>('direct');
-  const [description, setDescription] = useState<string>('');
 
   const { activeCluster, computedTurnPath } = useCrossingEditorData({
     graph,
@@ -133,36 +344,8 @@ export const CrossingEditPanel: React.FC = () => {
     setActiveTurnSelection({
       fromNodeId: override.fromNodeId,
       toNodeId: override.toNodeId,
-      waypointNodeIds: [],
+      waypointNodeIds: override.pathNodeIds ? [...override.pathNodeIds] : [],
     });
-    setTimeDelta(override.timeDeltaSeconds);
-    setIsBanned(Boolean(override.banned));
-    setTurnType(override.turnType ?? 'direct');
-    setDescription(override.description ?? '');
-  };
-
-  const handleSaveTurn = () => {
-    if (!activeCrossingId || !activeTurnSelection.fromNodeId || !activeTurnSelection.toNodeId) {
-      return;
-    }
-
-    const id =
-      existingOverrideForCurrentSelection?.id ??
-      `turn-${activeCrossingId}-${activeTurnSelection.fromNodeId}-${activeTurnSelection.toNodeId}`;
-
-    const override: CrossingTurnOverride = {
-      id,
-      crossingId: activeCrossingId,
-      fromNodeId: activeTurnSelection.fromNodeId,
-      toNodeId: activeTurnSelection.toNodeId,
-      pathNodeIds: computedTurnPath ?? undefined,
-      timeDeltaSeconds: Number(timeDelta),
-      banned: isBanned,
-      turnType,
-      description: description.trim() || undefined,
-    };
-
-    onSaveCrossingTurn(override);
   };
 
   const handleClearSelection = () => {
@@ -171,10 +354,6 @@ export const CrossingEditPanel: React.FC = () => {
       toNodeId: null,
       waypointNodeIds: [],
     });
-    setTimeDelta(0);
-    setIsBanned(false);
-    setTurnType('direct');
-    setDescription('');
   };
 
   const handleRemoveWaypoint = (nodeId: string) => {
@@ -183,6 +362,8 @@ export const CrossingEditPanel: React.FC = () => {
       waypointNodeIds: prev.waypointNodeIds.filter((id) => id !== nodeId),
     }));
   };
+
+  const turnConfigKey = `${activeCrossingId}-${activeTurnSelection.fromNodeId}-${activeTurnSelection.toNodeId}-${existingOverrideForCurrentSelection?.id ?? 'none'}-${existingOverrideForCurrentSelection?.timeDeltaSeconds ?? 0}-${existingOverrideForCurrentSelection?.banned ?? false}-${existingOverrideForCurrentSelection?.turnType ?? 'direct'}`;
 
   return (
     <div className="ciclista-crossing-edit-panel">
@@ -243,142 +424,18 @@ export const CrossingEditPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Turn Configuration Form */}
-          <div className="ciclista-crossing-turn-config">
-            <div className="ciclista-crossing-turn-nodes-row">
-              <div>
-                <strong>From:</strong>{' '}
-                <span>
-                  {activeTurnSelection.fromNodeId
-                    ? `Node #${activeTurnSelection.fromNodeId}`
-                    : 'Click entry node'}
-                </span>
-              </div>
-              <ChevronRight size={16} />
-              <div>
-                <strong>To:</strong>{' '}
-                <span>
-                  {activeTurnSelection.toNodeId
-                    ? `Node #${activeTurnSelection.toNodeId}`
-                    : 'Click exit node'}
-                </span>
-              </div>
-            </div>
-
-            {/* Pinned Waypoints */}
-            {activeTurnSelection.waypointNodeIds.length > 0 && (
-              <div className="ciclista-crossing-slider-header">
-                <span>Waypoints:</span>
-                <div className="ciclista-crossing-waypoints-list">
-                  {activeTurnSelection.waypointNodeIds.map((wpId) => (
-                    <button
-                      key={wpId}
-                      type="button"
-                      className="ciclista-crossing-tag-btn"
-                      onClick={() => handleRemoveWaypoint(wpId)}
-                      title="Click to remove waypoint"
-                    >
-                      #{wpId} ×
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Computed Mini A* Route Status */}
-            {activeTurnSelection.fromNodeId && activeTurnSelection.toNodeId && (
-              <div
-                className={`ciclista-crossing-turn-path-status ${
-                  computedTurnPath
-                    ? 'ciclista-crossing-turn-path-status--success'
-                    : 'ciclista-crossing-turn-path-status--error'
-                }`}
-              >
-                {computedTurnPath
-                  ? `Computed Path: ${computedTurnPath.length} nodes`
-                  : 'No valid path found between selected nodes'}
-              </div>
-            )}
-
-            {/* Semantic Turn Type Tags */}
-            <div className="ciclista-crossing-slider-group">
-              <span className="ciclista-crossing-legend-title">Turn Type</span>
-              <div className="ciclista-crossing-turn-type-tags">
-                {TURN_TYPE_OPTIONS.map(({ type, label }) => (
-                  <button
-                    key={type}
-                    type="button"
-                    className={`ciclista-crossing-tag-btn ${turnType === type ? 'active' : ''}`}
-                    onClick={() => setTurnType(type)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Time Delta Penalty Slider */}
-            <div className="ciclista-crossing-slider-group">
-              <SliderField
-                label={
-                  <span className="ciclista-crossing-slider-label">
-                    <Clock size={14} /> Time Delta Penalty
-                  </span>
-                }
-                value={timeDelta}
-                min={-30}
-                max={60}
-                step={1}
-                unit="s"
-                valuePrefix={timeDelta > 0 ? '+' : ''}
-                disabled={isBanned}
-                onChange={setTimeDelta}
-                ariaLabel="Time Delta Penalty"
-              />
-            </div>
-
-            {/* Hard Ban Toggle */}
-            <div className="ciclista-crossing-ban-toggle-row">
-              <span className="ciclista-crossing-ban-label">
-                <Ban size={16} /> Hard Ban Turn
-              </span>
-              <input
-                type="checkbox"
-                checked={isBanned}
-                onChange={(e) => setIsBanned(e.target.checked)}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="ciclista-crossing-actions-row">
-              <button
-                type="button"
-                className="ciclista-crossing-btn-save"
-                disabled={
-                  !activeTurnSelection.fromNodeId ||
-                  !activeTurnSelection.toNodeId ||
-                  !computedTurnPath
-                }
-                onClick={handleSaveTurn}
-              >
-                <Check size={14} className="ciclista-crossing-btn-icon-prefix" />
-                Save Turn Override
-              </button>
-              {existingOverrideForCurrentSelection && (
-                <button
-                  type="button"
-                  className="ciclista-crossing-btn-delete"
-                  title="Delete this override"
-                  onClick={() => {
-                    onDeleteCrossingTurn(existingOverrideForCurrentSelection.id);
-                    handleClearSelection();
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-          </div>
+          {/* Turn Configuration Form Keyed for Clean Sync */}
+          <TurnConfigForm
+            key={turnConfigKey}
+            activeCrossingId={activeCrossingId}
+            activeTurnSelection={activeTurnSelection}
+            computedTurnPath={computedTurnPath}
+            existingOverride={existingOverrideForCurrentSelection}
+            onSaveTurn={onSaveCrossingTurn}
+            onDeleteTurn={onDeleteCrossingTurn}
+            onRemoveWaypoint={handleRemoveWaypoint}
+            onClearSelection={handleClearSelection}
+          />
 
           {/* Configured Overrides for this Crossing */}
           {clusterOverrides.length > 0 && (

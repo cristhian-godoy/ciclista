@@ -1,3 +1,8 @@
+import React from 'react';
+
+import type { StrategyRouteVariant } from '../core/router/types';
+import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
+import { EmptyState } from './common/EmptyState';
 import {
   Accessibility,
   AlertTriangle,
@@ -10,12 +15,7 @@ import {
   Route,
   TrafficCone,
   Trees,
-} from 'lucide-react';
-import React from 'react';
-
-import type { StrategyRouteVariant } from '../core/router/types';
-import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
-import { EmptyState } from './common/EmptyState';
+} from './common/Icon';
 
 interface RouteComparePanelProps {
   routeVariants: StrategyRouteVariant[];

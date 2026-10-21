@@ -1,8 +1,8 @@
-import { MousePointer, Paintbrush } from 'lucide-react';
 import React from 'react';
 
 import { Badge } from '../common/Badge';
 import { CloseButton } from '../common/CloseButton';
+import { MousePointer, Paintbrush } from '../common/Icon';
 import { SliderField } from '../common/SliderField';
 import { useMapContext } from './MapContext';
 

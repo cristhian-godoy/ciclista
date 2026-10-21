@@ -1,5 +1,6 @@
-import { Search, X } from 'lucide-react';
 import React, { forwardRef } from 'react';
+
+import { Search, X } from './Icon';
 
 /**
  * Properties for the unified SearchInput field component.

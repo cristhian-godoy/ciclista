@@ -1,5 +1,6 @@
-import { FlaskConical, GitFork, Navigation, Route, ShieldAlert, Star } from 'lucide-react';
 import React from 'react';
+
+import { FlaskConical, GitFork, Navigation, Route, ShieldAlert, Star } from './common/Icon';
 
 /**
  * Supported view and workflow modes within the Ciclista toolbar.

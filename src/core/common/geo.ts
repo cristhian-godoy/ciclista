@@ -210,16 +210,38 @@ export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2
  * Calculates the initial bearing (forward azimuth) from an origin coordinate to a
  * destination coordinate in degrees within the range [0, 360).
  *
- * @param lat1 - Origin latitude in decimal degrees.
- * @param lon1 - Origin longitude in decimal degrees.
- * @param lat2 - Destination latitude in decimal degrees.
- * @param lon2 - Destination longitude in decimal degrees.
+ * @param lat1OrCoord1 - Origin latitude in decimal degrees, or origin Coordinate object.
+ * @param lon1OrCoord2 - Origin longitude in decimal degrees, or destination Coordinate object.
+ * @param lat2 - Destination latitude in decimal degrees (if using numeric arguments).
+ * @param lon2 - Destination longitude in decimal degrees (if using numeric arguments).
  * @returns Initial bearing in degrees clockwise from true north [0, 360).
  */
-export function getBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+export function getBearing(
+  lat1OrCoord1: number | { lat: number; lng: number },
+  lon1OrCoord2: number | { lat: number; lng: number },
+  lat2?: number,
+  lon2?: number,
+): number {
+  let lat1: number;
+  let lon1: number;
+  let lat2Val: number;
+  let lon2Val: number;
+
+  if (typeof lat1OrCoord1 === 'object' && typeof lon1OrCoord2 === 'object') {
+    lat1 = lat1OrCoord1.lat;
+    lon1 = lat1OrCoord1.lng;
+    lat2Val = lon1OrCoord2.lat;
+    lon2Val = lon1OrCoord2.lng;
+  } else {
+    lat1 = Number(lat1OrCoord1);
+    lon1 = Number(lon1OrCoord2);
+    lat2Val = Number(lat2);
+    lon2Val = Number(lon2);
+  }
+
   const lat1Rad = (lat1 * Math.PI) / 180;
-  const lat2Rad = (lat2 * Math.PI) / 180;
-  const dLonRad = ((lon2 - lon1) * Math.PI) / 180;
+  const lat2Rad = (lat2Val * Math.PI) / 180;
+  const dLonRad = ((lon2Val - lon1) * Math.PI) / 180;
 
   const y = Math.sin(dLonRad) * Math.cos(lat2Rad);
   const x =
@@ -232,14 +254,25 @@ export function getBearing(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 /**
  * Converts a compass bearing angle in degrees into an 8-point cardinal or intercardinal
- * direction abbreviation ('N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW').
+ * direction string in either abbreviated or verbal heading format.
  *
  * @param bearing - Bearing angle in degrees clockwise from true north.
- * @returns 8-point compass direction abbreviation.
+ * @param format - Output representation: 'short' ('N', 'NE', ...) or 'long' ('Northbound', 'Northeastbound', ...). Defaults to 'short'.
+ * @returns Formatted compass direction string.
  */
-export function getCompassDirection(bearing: number): string {
-  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+export function getCompassDirection(bearing: number, format: 'short' | 'long' = 'short'): string {
+  const shortDirections = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const longDirections = [
+    'Northbound',
+    'Northeastbound',
+    'Eastbound',
+    'Southeastbound',
+    'Southbound',
+    'Southwestbound',
+    'Westbound',
+    'Northwestbound',
+  ];
   const normalized = ((bearing % 360) + 360) % 360;
   const index = Math.round(normalized / 45) % 8;
-  return directions[index];
+  return format === 'long' ? longDirections[index] : shortDirections[index];
 }

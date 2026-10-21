@@ -1,40 +1,17 @@
-import { AlertTriangle, Check, Footprints, Octagon, TrafficCone } from 'lucide-react';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { getBearing, getCompassDirection } from '../../core/common/geo';
 import type { SemanticTurnType } from '../../core/config';
+import { DEFAULT_RULES_CONFIG } from '../../core/config/defaults';
+import { getIncomingEdges } from '../../core/graph/utils';
 import { getTurnDetails, mapOSMNodeToControl } from '../../core/rules';
 import { Badge } from '../common/Badge';
 import { CloseButton } from '../common/CloseButton';
+import { AlertTriangle, Check, Footprints, Octagon, TrafficCone } from '../common/Icon';
 import { SliderField } from '../common/SliderField';
 import { useMapContext } from './MapContext';
-
-function getBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
-  const lat1 = (from.lat * Math.PI) / 180;
-  const lat2 = (to.lat * Math.PI) / 180;
-  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
-
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-
-  let brng = (Math.atan2(y, x) * 180) / Math.PI;
-  brng = (brng + 360) % 360;
-  return brng;
-}
-
-function getCompassDirection(bearing: number): string {
-  const directions = [
-    'Northbound',
-    'Northeastbound',
-    'Eastbound',
-    'Southeastbound',
-    'Southbound',
-    'Southwestbound',
-    'Westbound',
-    'Northwestbound',
-  ];
-  const index = Math.round(bearing / 45) % 8;
-  return directions[index];
-}
+import { OsmTagTable } from './OsmTagTable';
+import { type NodeManeuver, TurnOverridesForm } from './TurnOverridesForm';
 
 /**
  * Glassmorphic popup modal that displays details for a selected street intersection node,
@@ -57,10 +34,10 @@ export const NodePopup: React.FC = () => {
 
   const getDefaultBaseDelay = (tags: Record<string, string>): number => {
     const controlType = mapOSMNodeToControl(tags);
-    if (controlType === 'signal') return 15;
-    if (controlType === 'yield') return 3;
-    if (controlType === 'stop') return 8;
-    if (controlType === 'crossing') return 3;
+    if (controlType === 'signal') return DEFAULT_RULES_CONFIG.nodeDelays.signalSeconds;
+    if (controlType === 'yield') return DEFAULT_RULES_CONFIG.nodeDelays.yieldSeconds;
+    if (controlType === 'stop') return DEFAULT_RULES_CONFIG.nodeDelays.stopSeconds;
+    if (controlType === 'crossing') return DEFAULT_RULES_CONFIG.nodeDelays.crossingSeconds;
     return 0;
   };
 
@@ -235,42 +212,25 @@ export const NodePopup: React.FC = () => {
     }
   };
 
-  // Precompute maneuvers
+  // Precompute maneuvers using O(1) indexed incoming edges and shared geo math
   const maneuvers = React.useMemo(() => {
-    const list: {
-      fromNodeId: string;
-      fromStreetName: string;
-      toNodeId: string;
-      toStreetName: string;
-      direction: 'left' | 'right' | 'u-turn' | 'straight';
-      incomingDir: string;
-      outgoingDir: string;
-    }[] = [];
+    const list: NodeManeuver[] = [];
 
     if (graph && selectedNode) {
       const currentNodeId = selectedNode.id;
       const currentNodeEntry = graph.nodes.get(currentNodeId);
       if (currentNodeEntry) {
         const outgoingEdges = currentNodeEntry.edges;
+        const incoming = getIncomingEdges(graph, currentNodeId);
 
-        const incomingEdges: { sourceId: string; streetName: string }[] = [];
-        for (const [sourceId, entry] of graph.nodes.entries()) {
-          if (sourceId === currentNodeId) continue;
-          for (const edge of entry.edges) {
-            if (edge.target === currentNodeId) {
-              incomingEdges.push({
-                sourceId,
-                streetName: edge.name || edge.tags.name || 'Unnamed Street',
-              });
-            }
-          }
-        }
+        for (const inc of incoming) {
+          const sourceId = inc.sourceId;
+          const streetName = inc.edge.name || inc.edge.tags.name || 'Unnamed Street';
 
-        for (const incoming of incomingEdges) {
           for (const outgoing of outgoingEdges) {
-            if (incoming.sourceId === outgoing.target) continue;
+            if (sourceId === outgoing.target) continue;
 
-            const pNode = graph.nodes.get(incoming.sourceId)?.node;
+            const pNode = graph.nodes.get(sourceId)?.node;
             const nNode = graph.nodes.get(outgoing.target)?.node;
 
             if (pNode && nNode) {
@@ -278,13 +238,13 @@ export const NodePopup: React.FC = () => {
               const incomingBearing = getBearing(pNode, selectedNode);
               const outgoingBearing = getBearing(selectedNode, nNode);
               list.push({
-                fromNodeId: incoming.sourceId,
-                fromStreetName: incoming.streetName,
+                fromNodeId: sourceId,
+                fromStreetName: streetName,
                 toNodeId: outgoing.target,
                 toStreetName: outgoing.name || outgoing.tags.name || 'Unnamed Street',
                 direction: details.direction,
-                incomingDir: getCompassDirection(incomingBearing),
-                outgoingDir: getCompassDirection(outgoingBearing),
+                incomingDir: getCompassDirection(incomingBearing, 'long'),
+                outgoingDir: getCompassDirection(outgoingBearing, 'long'),
               });
             }
           }
@@ -368,85 +328,23 @@ export const NodePopup: React.FC = () => {
         />
       </div>
 
-      {maneuvers.length > 0 && (
-        <div className="popup-form-group">
-          <div className="osm-tags-title popup-tags-title">Turn Overrides</div>
-          <div className="popup-turn-container">
-            {maneuvers.map((m) => {
-              const compositeKey = `${m.fromNodeId}->${m.toNodeId}`;
-              const activeVal = nodeTurns[compositeKey] || 'default';
+      <TurnOverridesForm
+        maneuvers={maneuvers}
+        nodeTurns={nodeTurns}
+        onTurnChange={(compositeKey, val) => {
+          setNodeTurns((prev) => {
+            const updated = { ...prev };
+            if (val === 'default') {
+              delete updated[compositeKey];
+            } else {
+              updated[compositeKey] = val as SemanticTurnType;
+            }
+            return updated;
+          });
+        }}
+      />
 
-              return (
-                <div key={compositeKey} className="popup-turn-item">
-                  <div className="text-secondary">
-                    From <strong>{m.fromStreetName}</strong> ({m.incomingDir})
-                    <br />
-                    To <strong>{m.toStreetName}</strong> ({m.outgoingDir} -{' '}
-                    {m.direction === 'left'
-                      ? 'Left Turn'
-                      : m.direction === 'right'
-                        ? 'Right Turn'
-                        : m.direction === 'u-turn'
-                          ? 'U-Turn'
-                          : 'Straight'}
-                    )
-                  </div>
-                  <select
-                    value={activeVal}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setNodeTurns((prev) => {
-                        const updated = { ...prev };
-                        if (val === 'default') {
-                          delete updated[compositeKey];
-                        } else {
-                          updated[compositeKey] = val as SemanticTurnType;
-                        }
-                        return updated;
-                      });
-                    }}
-                    className="popup-turn-select"
-                  >
-                    <option value="default" className="popup-select-option">
-                      Default
-                    </option>
-                    <option value="left_turn" className="popup-select-option">
-                      Direct Left Turn
-                    </option>
-                    <option value="right_turn" className="popup-select-option">
-                      Direct Right Turn
-                    </option>
-                    <option value="green_arrow_right" className="popup-select-option">
-                      Green Arrow Right Turn
-                    </option>
-                    <option value="indirect_left" className="popup-select-option">
-                      Indirect Left Turn
-                    </option>
-                    <option value="u_turn" className="popup-select-option">
-                      U-Turn
-                    </option>
-                  </select>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Collapsible/Scrollable OSM Info Section */}
-      <div className="osm-tags-title popup-tags-title">OSM Tags</div>
-      <div className="osm-tags-container">
-        {Object.entries(selectedNode.tags).length > 0 ? (
-          Object.entries(selectedNode.tags).map(([key, val]) => (
-            <div key={key} className="osm-tag-row">
-              <span className="osm-tag-key">{key}</span>
-              <span className="osm-tag-val">{String(val)}</span>
-            </div>
-          ))
-        ) : (
-          <div className="popup-empty-tags">No tags available</div>
-        )}
-      </div>
+      <OsmTagTable tags={selectedNode.tags} />
 
       <div className="popup-actions-row">
         <button
