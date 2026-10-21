@@ -4,8 +4,14 @@ Toast.test.tsx
 	Unit tests for reusable Toast component auto-dismissal, positioning, and accessibility.
 Toast.tsx
 	Reusable configurable glassmorphic toast notification component adhering to design tokens.
+CloseButton.test.tsx
+	Unit tests for accessible CloseButton primitive variant rendering, sizing, and event dispatch.
 CloseButton.tsx
 	Reusable accessible icon button for dialog dismissal conforming to glassmorphic design tokens.
+Badge.test.tsx
+	Unit tests for Badge component variant styling, sizing scales, and leading icon display.
+Badge.tsx
+	Unified design token-backed Badge primitive component with multiple semantic variants.
 AccordionSection.tsx
 	Reusable collapsible accordion section with header icon, title, optional actions, and chevron toggle.
 EmptyState.tsx

@@ -52,6 +52,14 @@ export const MAP_THEME_TOKENS = {
     black: '#000000',
     darkNavy: '#0f172a',
   },
+  background: {
+    light: '#f8fafc',
+    dark: '#0b0f19',
+  },
+  compass: {
+    needleNorth: '#ff4d4d',
+    needleSouth: '#f1f1f4',
+  },
   controls: {
     signal: '#ef4444',
     stop: '#ea580c',

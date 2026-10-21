@@ -1,5 +1,7 @@
 import type { IControl, Map } from 'maplibre-gl';
 
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
+
 /**
  * Custom navigation control that replaces MapLibre's built-in NavigationControl.
  * Provides zoom in/out buttons and a compass needle that tracks map bearing.
@@ -38,8 +40,8 @@ export class CustomNavigationControl implements IControl {
       '.maplibregl-ctrl-icon',
     ) as HTMLSpanElement;
     this._compassIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 15 70 70" width="23" height="23" style="display: block; margin: auto;">
-        <path d="M50,20 L62.5,50 L50,45 L37.5,50 Z" fill="#ff4d4d"/>
-        <path d="M50,80 L62.5,50 L50,55 L37.5,50 Z" fill="#f1f1f4"/>
+        <path d="M50,20 L62.5,50 L50,45 L37.5,50 Z" fill="${MAP_THEME_TOKENS.compass.needleNorth}"/>
+        <path d="M50,80 L62.5,50 L50,55 L37.5,50 Z" fill="${MAP_THEME_TOKENS.compass.needleSouth}"/>
       </svg>`;
   }
 
