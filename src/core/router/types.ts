@@ -66,12 +66,14 @@ export interface IRouter {
  * Data format for routing requests sent to the routing Web Worker.
  */
 export interface WorkerRoutingRequest {
+  action?: 'route' | 'merge_chunk' | 'clear';
   requestId?: string;
-  graph: StreetGraph;
-  startCoord: Coordinate;
-  endCoord: Coordinate;
+  graph?: StreetGraph;
+  chunkGraph?: StreetGraph;
+  startCoord?: Coordinate;
+  endCoord?: Coordinate;
   waypoints?: Coordinate[];
-  overrides: LocalOverrides;
+  overrides?: LocalOverrides;
   algorithm?: 'astar' | 'dijkstra';
 }
 

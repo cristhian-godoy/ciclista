@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as cacheModule from '../storage/cache';
+import { clearChunkCache, saveParsedChunk } from '../storage/chunkCache';
 import { OSMCacheReader } from './OSMCacheReader';
 
 vi.mock('../storage/cache', () => ({
@@ -8,8 +9,10 @@ vi.mock('../storage/cache', () => ({
 }));
 
 describe('OSMCacheReader service', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    await clearChunkCache();
   });
 
   it('readChunks returns empty result for empty chunk list', async () => {
@@ -59,5 +62,30 @@ describe('OSMCacheReader service', () => {
     expect(result.missingChunkIds).toContain('4814,1157');
     expect(result.graph).not.toBeNull();
     expect(result.graph?.nodes.size).toBeGreaterThan(0);
+  });
+
+  it('merges pre-parsed chunks directly without scanning Overpass caches', async () => {
+    const chunkId = '4813,1157';
+    await saveParsedChunk(chunkId, {
+      nodes: new Map([
+        [
+          'node-100',
+          {
+            node: { id: 'node-100', lat: 48.134, lng: 11.574, tags: {} },
+            edges: [],
+          },
+        ],
+      ]),
+    });
+
+    const getValidCacheSpy = vi.spyOn(cacheModule, 'getValidCacheEntries');
+    getValidCacheSpy.mockClear();
+
+    const result = await OSMCacheReader.readChunks([chunkId]);
+    expect(result.loadedChunkIds).toEqual([chunkId]);
+    expect(result.missingChunkIds).toEqual([]);
+    expect(result.graph?.nodes.has('node-100')).toBe(true);
+    // When all chunks are resolved from pre-parsed chunkCache, getValidCacheEntries is not even queried
+    expect(getValidCacheSpy).not.toHaveBeenCalled();
   });
 });

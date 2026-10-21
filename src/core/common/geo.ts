@@ -33,6 +33,48 @@ export function calculateBoundingBox(
   return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
 }
 
+/**
+ * Calculates a bounding box encompassing multiple coordinates with safety padding.
+ */
+export function calculateMultiPointBoundingBox(
+  coordinates: Coordinate[],
+  paddingRatio = 0.3,
+  minMarginLat = 0.007,
+  minMarginLng = 0.01,
+): [number, number, number, number] {
+  if (coordinates.length === 0) {
+    return [48.13, 11.56, 48.14, 11.58];
+  }
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+
+  for (const c of coordinates) {
+    if (c.lat < minLat) minLat = c.lat;
+    if (c.lat > maxLat) maxLat = c.lat;
+    if (c.lng < minLng) minLng = c.lng;
+    if (c.lng > maxLng) maxLng = c.lng;
+  }
+
+  const latSpan = maxLat - minLat;
+  const lngSpan = maxLng - minLng;
+  const latMargin = Math.max(latSpan * paddingRatio, minMarginLat);
+  const lngMargin = Math.max(lngSpan * paddingRatio, minMarginLng);
+
+  return [minLat - latMargin, minLng - lngMargin, maxLat + latMargin, maxLng + lngMargin];
+}
+
+/**
+ * Determines whether two bounding boxes intersect geographically.
+ */
+export function doBBoxesIntersect(
+  b1: [number, number, number, number],
+  b2: [number, number, number, number],
+): boolean {
+  return !(b1[0] > b2[2] || b1[2] < b2[0] || b1[1] > b2[3] || b1[3] < b2[1]);
+}
+
 // Helper to check if coordinate is inside any loaded bounding boxes
 /**
  * Checks if a coordinate is within any of the loaded bounding boxes.

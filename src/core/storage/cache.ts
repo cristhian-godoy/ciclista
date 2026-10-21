@@ -3,6 +3,119 @@ import { logger } from '../common/logger';
 import { addDataUsage, isDataSaverActive } from './dataUsage';
 
 /**
+ * Internal record for the in-memory spatial cache index.
+ */
+interface SpatialIndexEntry {
+  bbox: [number, number, number, number];
+  url: string;
+  timestamp: number;
+}
+
+/**
+ * In-memory spatial index maintaining cached bounding boxes and query URLs.
+ * Initialized once on startup to avoid expensive O(N) CacheStorage scans on map pan.
+ */
+class SpatialCacheIndex {
+  private entries = new Map<string, SpatialIndexEntry>();
+  private initialized = false;
+  private initPromise: Promise<void> | null = null;
+
+  public isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  public async init(): Promise<void> {
+    if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      try {
+        if (typeof caches === 'undefined') {
+          this.initialized = true;
+          return;
+        }
+        const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
+        const keys = await cacheInstance.keys();
+        const promises = keys.map(async (req) => {
+          const res = await cacheInstance.match(req);
+          if (!res) return null;
+          const timestampStr = res.headers.get('X-Cache-Timestamp');
+          const timestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
+          const urlObj = new URL(req.url);
+          const bboxStr = urlObj.searchParams.get('bbox');
+          if (bboxStr) {
+            const coords = bboxStr.split(',').map(Number);
+            if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
+              return {
+                url: req.url,
+                bbox: coords as [number, number, number, number],
+                timestamp,
+              };
+            }
+          }
+          return null;
+        });
+
+        const results = await Promise.all(promises);
+        for (const item of results) {
+          if (item) {
+            this.entries.set(item.url, item);
+          }
+        }
+      } catch (err) {
+        logger.warn('Failed to initialize spatial cache index:', err);
+      } finally {
+        this.initialized = true;
+        this.initPromise = null;
+      }
+    })();
+
+    return this.initPromise;
+  }
+
+  public addOrUpdate(url: string, bbox: [number, number, number, number], timestamp: number): void {
+    this.entries.set(url, { url, bbox, timestamp });
+  }
+
+  public remove(url: string): void {
+    this.entries.delete(url);
+  }
+
+  public getValid(ttl: number, dataSaver: boolean): ValidCacheEntry[] {
+    const now = Date.now();
+    const result: ValidCacheEntry[] = [];
+    for (const entry of this.entries.values()) {
+      if (now - entry.timestamp < ttl || dataSaver) {
+        result.push({ bbox: entry.bbox, url: entry.url });
+      }
+    }
+    return result;
+  }
+
+  public clear(): void {
+    this.entries.clear();
+    this.initialized = false;
+    this.initPromise = null;
+  }
+}
+
+export const spatialCacheIndex = new SpatialCacheIndex();
+
+/**
+ * Resets the in-memory spatial cache index (for tests and cache clearing).
+ */
+export function resetSpatialCacheIndex(): void {
+  spatialCacheIndex.clear();
+}
+
+/**
+ * Initializes the in-memory spatial cache index on startup.
+ */
+export async function initSpatialCacheIndex(): Promise<void> {
+  await spatialCacheIndex.init();
+}
+
+/**
  * Evicts oldest entries in the cache if the count exceeds the configured maximum.
  */
 async function evictOldCacheEntries(cache: Cache, maxItems: number): Promise<void> {
@@ -26,6 +139,7 @@ async function evictOldCacheEntries(cache: Cache, maxItems: number): Promise<voi
       const entry = entries[i];
       if (entry) {
         await cache.delete(entry.req);
+        spatialCacheIndex.remove(entry.req.url);
         logger.log(`Evicted stale cache entry: ${entry.req.url}`);
       }
     }
@@ -89,15 +203,28 @@ export async function fetchWithCache<T>(
     try {
       const freshData = await fetcher();
       if (cacheInstance) {
+        const now = Date.now();
         await cacheInstance.put(
           cacheKey,
           new Response(JSON.stringify(freshData), {
             headers: {
               'Content-Type': 'application/json',
-              'X-Cache-Timestamp': Date.now().toString(),
+              'X-Cache-Timestamp': now.toString(),
             },
           }),
         );
+        const urlObj = new URL(cacheKeyUrl);
+        const bboxStr = urlObj.searchParams.get('bbox');
+        if (bboxStr) {
+          const coords = bboxStr.split(',').map(Number);
+          if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
+            spatialCacheIndex.addOrUpdate(
+              cacheKeyUrl,
+              coords as [number, number, number, number],
+              now,
+            );
+          }
+        }
         const maxItems = API_CONFIG.CACHE_MAX_ITEMS;
         await evictOldCacheEntries(cacheInstance, maxItems);
       }
@@ -124,48 +251,12 @@ export interface ValidCacheEntry {
 }
 
 /**
- * Returns currently valid cached bounding boxes by scanning CacheStorage.
+ * Returns currently valid cached bounding boxes using the in-memory spatial index.
+ * Initialized once on startup to replace per-moveend full CacheStorage scans.
  */
 export async function getValidCacheEntries(): Promise<ValidCacheEntry[]> {
-  const validEntries: ValidCacheEntry[] = [];
-  try {
-    const cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
-    const keys = await cacheInstance.keys();
-    const ttl = API_CONFIG.CACHE_TTL_MS;
-    const now = Date.now();
-    const dataSaver = isDataSaverActive();
-
-    const entryPromises = keys.map(async (req): Promise<ValidCacheEntry | null> => {
-      const res = await cacheInstance.match(req);
-      if (!res) return null;
-
-      const timestampStr = res.headers.get('X-Cache-Timestamp');
-      const timestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
-
-      if (now - timestamp < ttl || dataSaver) {
-        const urlObj = new URL(req.url);
-        const bboxStr = urlObj.searchParams.get('bbox');
-        if (bboxStr) {
-          const coords = bboxStr.split(',').map(Number);
-          if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
-            return {
-              bbox: coords as [number, number, number, number],
-              url: req.url,
-            };
-          }
-        }
-      }
-      return null;
-    });
-
-    const entries = await Promise.all(entryPromises);
-    for (const entry of entries) {
-      if (entry) {
-        validEntries.push(entry);
-      }
-    }
-  } catch (err) {
-    logger.warn('Failed to scan CacheStorage for valid entries:', err);
+  if (!spatialCacheIndex.isInitialized()) {
+    await spatialCacheIndex.init();
   }
-  return validEntries;
+  return spatialCacheIndex.getValid(API_CONFIG.CACHE_TTL_MS, isDataSaverActive());
 }

@@ -1,7 +1,8 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
-import { convertGraphToGeoJSON } from '../../core/graph/geojson';
+import { convertGraphToGeoJSONInWorker } from '../../core/graph/parser.client';
+import type { NodeEntry } from '../../core/graph/types';
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
@@ -371,33 +372,97 @@ export const StreetGraphLayer: React.FC = () => {
     };
   }, [map]);
 
-  // Synchronize sources with data changes
+  const accumulatedStreetsRef = useRef<Map<string, GeoJSONFeature>>(new Map());
+  const processedNodeIdsRef = useRef<Set<string>>(new Set());
+  const updateSeqRef = useRef<number>(0);
+
+  // Synchronize sources with data changes incrementally via Web Worker
   useEffect(() => {
     if (!map) return;
-    let lineFeatures: GeoJSONFeature[] = [];
-    let lightFeatures: GeoJSONFeature[] = [];
+    const seq = ++updateSeqRef.current;
 
-    if (graph) {
-      const geojson = convertGraphToGeoJSON(graph, customNodeDelays, showMinorControls);
-      lineFeatures = geojson.streets as GeoJSONFeature[];
-      lightFeatures = geojson.controls as GeoJSONFeature[];
+    if (!graph || graph.nodes.size === 0) {
+      accumulatedStreetsRef.current.clear();
+      processedNodeIdsRef.current.clear();
+      const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
+      if (streetSource) {
+        streetSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+      const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
+      if (lightSource) {
+        lightSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+      return;
     }
 
-    const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
-    if (streetSource) {
-      streetSource.setData({
-        type: 'FeatureCollection',
-        features: lineFeatures,
-      });
+    // If graph was replaced with a different or smaller graph, reset cached features
+    if (graph.nodes.size < processedNodeIdsRef.current.size) {
+      accumulatedStreetsRef.current.clear();
+      processedNodeIdsRef.current.clear();
     }
 
-    const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-    if (lightSource) {
-      lightSource.setData({
-        type: 'FeatureCollection',
-        features: lightFeatures,
-      });
+    // Extract newly added nodes that haven't had their line features computed yet
+    const newNodes = new Map<string, NodeEntry>();
+    for (const [id, entry] of graph.nodes.entries()) {
+      if (!processedNodeIdsRef.current.has(id)) {
+        newNodes.set(id, entry);
+      }
     }
+
+    const computeAndApply = async () => {
+      // 1. If there are new nodes, compute their LineStrings in the worker and merge incrementally
+      if (newNodes.size > 0) {
+        const deltaGraph: { nodes: Map<string, NodeEntry> } = { nodes: new Map(newNodes) };
+        for (const entry of newNodes.values()) {
+          for (const edge of entry.edges) {
+            if (!deltaGraph.nodes.has(edge.target)) {
+              const targetEntry = graph.nodes.get(edge.target);
+              if (targetEntry) {
+                deltaGraph.nodes.set(edge.target, targetEntry);
+              }
+            }
+          }
+        }
+
+        const deltaGeoJson = await convertGraphToGeoJSONInWorker(deltaGraph);
+        if (updateSeqRef.current !== seq) return;
+
+        for (const feature of deltaGeoJson.streets) {
+          const edgeId = String(feature.properties.edgeId);
+          accumulatedStreetsRef.current.set(edgeId, feature as GeoJSONFeature);
+        }
+
+        for (const id of newNodes.keys()) {
+          processedNodeIdsRef.current.add(id);
+        }
+
+        const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
+        if (streetSource) {
+          streetSource.setData({
+            type: 'FeatureCollection',
+            features: Array.from(accumulatedStreetsRef.current.values()),
+          });
+        }
+      }
+
+      // 2. Offload control points conversion to worker (handles custom delays & minor controls)
+      const controlGeoJson = await convertGraphToGeoJSONInWorker(
+        graph,
+        customNodeDelays,
+        showMinorControls,
+      );
+      if (updateSeqRef.current !== seq) return;
+
+      const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
+      if (lightSource) {
+        lightSource.setData({
+          type: 'FeatureCollection',
+          features: controlGeoJson.controls as GeoJSONFeature[],
+        });
+      }
+    };
+
+    void computeAndApply();
   }, [map, graph, customNodeDelays, showMinorControls]);
 
   // Synchronize layer filters when managed states update

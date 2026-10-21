@@ -5,10 +5,15 @@ import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
 import { Sidebar } from './components/Sidebar';
 import { SideToolbar, type ToolbarMode } from './components/SideToolbar';
-import { snapCoordinateToEdge } from './core/common/geo';
+import {
+  calculateMultiPointBoundingBox,
+  doBBoxesIntersect,
+  snapCoordinateToEdge,
+} from './core/common/geo';
 import type { Coordinate } from './core/common/types';
 import type { LocalOverrides } from './core/config/types';
 import type { MapEvent } from './core/events';
+import type { StreetGraph } from './core/graph/types';
 import type {
   StrategyRouteVariant,
   WorkerRoutingRequest,
@@ -172,8 +177,21 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     };
   }, []);
 
+  const prevStartCoordRef = useRef<Coordinate | null>(null);
+  const prevEndCoordRef = useRef<Coordinate | null>(null);
+  const prevWaypointsRef = useRef<Coordinate[] | undefined>(undefined);
+  const prevOverridesRef = useRef<LocalOverrides | null>(null);
+  const prevGraphRef = useRef<StreetGraph | null>(null);
+  const prevLoadedBBoxesRef = useRef<[number, number, number, number][]>([]);
+
   useEffect(() => {
     if (!graph || !startCoord || !endCoord) {
+      prevGraphRef.current = graph;
+      prevStartCoordRef.current = startCoord;
+      prevEndCoordRef.current = endCoord;
+      prevWaypointsRef.current = waypoints;
+      prevOverridesRef.current = effectiveOverrides;
+      prevLoadedBBoxesRef.current = loadedBBoxes;
       Promise.resolve().then(() => {
         setRouteVariants((prev) => (prev.length === 0 ? prev : []));
       });
@@ -185,6 +203,38 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       return;
     }
 
+    const coordsChanged =
+      prevStartCoordRef.current !== startCoord ||
+      prevEndCoordRef.current !== endCoord ||
+      prevWaypointsRef.current !== waypoints;
+
+    const overridesChanged = prevOverridesRef.current !== effectiveOverrides;
+    const isInitialGraph = prevGraphRef.current === null;
+
+    // Check if any newly merged bounding boxes intersect the active route bounding box
+    const previousBBoxes = prevLoadedBBoxesRef.current;
+    const newBBoxes = loadedBBoxes.slice(previousBBoxes.length);
+
+    let routeIntersectsNewChunks = false;
+    if (newBBoxes.length > 0) {
+      const allRoutePoints = [startCoord, ...(waypoints || []), endCoord];
+      const routeBBox = calculateMultiPointBoundingBox(allRoutePoints);
+      routeIntersectsNewChunks = newBBoxes.some((b) => doBBoxesIntersect(b, routeBBox));
+    }
+
+    // Always update tracking refs
+    prevGraphRef.current = graph;
+    prevStartCoordRef.current = startCoord;
+    prevEndCoordRef.current = endCoord;
+    prevWaypointsRef.current = waypoints;
+    prevOverridesRef.current = effectiveOverrides;
+    prevLoadedBBoxesRef.current = loadedBBoxes;
+
+    // If only background chunks merged that do not intersect the route area, skip recalculation
+    if (!isInitialGraph && !coordsChanged && !overridesChanged && !routeIntersectsNewChunks) {
+      return;
+    }
+
     const request: WorkerRoutingRequest = {
       graph,
       startCoord,
@@ -193,7 +243,7 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       overrides: effectiveOverrides,
     };
     worker.postMessage(request);
-  }, [graph, startCoord, endCoord, waypoints, effectiveOverrides]);
+  }, [graph, loadedBBoxes, startCoord, endCoord, waypoints, effectiveOverrides]);
 
   const routeResult = useMemo(() => {
     const active = routeVariants.find((alt) => alt.label === routingStrategy);

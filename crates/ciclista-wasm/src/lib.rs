@@ -52,6 +52,47 @@ impl WasmStreetGraph {
         serde_json::to_string(&entries)
             .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
     }
+
+    #[wasm_bindgen]
+    pub fn merge_from_js_graph(&mut self, graph_val: JsValue) -> Result<(), JsValue> {
+        let other: StreetGraph = if let Ok(js_g) =
+            serde_wasm_bindgen::from_value::<JsStreetGraph>(graph_val.clone())
+        {
+            let nodes = match js_g.nodes {
+                NodeCollection::Map(m) => m,
+                NodeCollection::List(l) => l.into_iter().collect(),
+            };
+            StreetGraph { nodes }
+        } else {
+            serde_wasm_bindgen::from_value(graph_val)
+                .map_err(|e| JsValue::from_str(&format!("Invalid graph data: {}", e)))?
+        };
+
+        self.inner.merge_with(other);
+        Ok(())
+    }
+
+    #[wasm_bindgen]
+    pub fn merge_osm_json(&mut self, raw_json: &str) {
+        let other = parse_osm_json(raw_json);
+        self.inner.merge_with(other);
+    }
+
+    #[wasm_bindgen]
+    pub fn clear(&mut self) {
+        self.inner.nodes.clear();
+    }
+
+    #[wasm_bindgen]
+    pub fn find_route_variants(
+        &self,
+        start_coord: JsValue,
+        end_coord: JsValue,
+        overrides: JsValue,
+        algorithm: Option<String>,
+    ) -> Result<JsValue, JsValue> {
+        WasmEngine::find_route_variants(self, start_coord, end_coord, overrides, algorithm)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -219,5 +260,43 @@ impl WasmEngine {
 
         let wasm_graph = WasmStreetGraph { inner: graph };
         Self::find_route_variants(&wasm_graph, start_coord, end_coord, overrides, algorithm)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_wasm_street_graph_lifecycle() {
+        let mut graph = WasmStreetGraph::new();
+        assert_eq!(graph.node_count(), 0);
+
+        let mock = WasmEngine::load_mock_graph();
+        assert!(mock.node_count() > 0);
+
+        graph.merge_with(&mock);
+        assert_eq!(graph.node_count(), mock.node_count());
+
+        let json = graph.to_json().expect("Serialization should succeed");
+        let restored = WasmStreetGraph::from_json(&json).expect("Deserialization should succeed");
+        assert_eq!(restored.node_count(), graph.node_count());
+
+        graph.clear();
+        assert_eq!(graph.node_count(), 0);
+    }
+
+    #[test]
+    fn test_wasm_street_graph_merge_osm_json() {
+        let mut graph = WasmStreetGraph::new();
+        let raw_json = r#"{
+            "elements": [
+                { "type": "node", "id": 1, "lat": 48.13, "lon": 11.57, "tags": {} },
+                { "type": "node", "id": 2, "lat": 48.14, "lon": 11.58, "tags": {} },
+                { "type": "way", "id": 10, "nodes": [1, 2], "tags": { "highway": "residential" } }
+            ]
+        }"#;
+        graph.merge_osm_json(raw_json);
+        assert_eq!(graph.node_count(), 2);
     }
 }

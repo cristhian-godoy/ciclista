@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../graph/types';
 import {
+  calculateMultiPointBoundingBox,
   coordToChunkId,
+  doBBoxesIntersect,
   getBearing,
   getChunkBBox,
   getChunksInBBox,
@@ -210,5 +212,31 @@ describe('getBearing and getCompassDirection', () => {
     // Object overload for getBearing
     expect(getBearing({ lat: 0, lng: 0 }, { lat: 1, lng: 0 })).toBeCloseTo(0, 1);
     expect(getBearing({ lat: 0, lng: 0 }, { lat: 0, lng: 1 })).toBeCloseTo(90, 1);
+  });
+});
+
+describe('route bounding box and intersection check', () => {
+  it('calculateMultiPointBoundingBox encapsulates all coordinates with padding', () => {
+    const coords = [
+      { lat: 48.13, lng: 11.57 },
+      { lat: 48.14, lng: 11.58 },
+      { lat: 48.15, lng: 11.59 },
+    ];
+    const bbox = calculateMultiPointBoundingBox(coords);
+    expect(bbox[0]).toBeLessThan(48.13);
+    expect(bbox[1]).toBeLessThan(11.57);
+    expect(bbox[2]).toBeGreaterThan(48.15);
+    expect(bbox[3]).toBeGreaterThan(11.59);
+  });
+
+  it('doBBoxesIntersect correctly detects overlap or disjointness', () => {
+    const b1: [number, number, number, number] = [48.13, 11.57, 48.15, 11.59];
+    // Overlapping bbox
+    const bOverlap: [number, number, number, number] = [48.14, 11.58, 48.16, 11.6];
+    expect(doBBoxesIntersect(b1, bOverlap)).toBe(true);
+
+    // Disjoint bbox (far away)
+    const bFar: [number, number, number, number] = [48.25, 11.75, 48.26, 11.76];
+    expect(doBBoxesIntersect(b1, bFar)).toBe(false);
   });
 });

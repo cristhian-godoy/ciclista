@@ -81,6 +81,7 @@ export function convertGraphToGeoJSON(
 
   // Cluster them (BFS grouping within 35 meters using Spatial Hashing for O(N) performance)
   const visited = new Set<string>();
+  const nodeToCrossingMap = new Map<string, string>();
   const crossings: {
     id: string;
     lat: number;
@@ -137,6 +138,9 @@ export function convertGraphToGeoJSON(
     const avgLat = clusterNodes.reduce((sum, n) => sum + n.lat, 0) / clusterNodes.length;
     const avgLng = clusterNodes.reduce((sum, n) => sum + n.lng, 0) / clusterNodes.length;
     const crossingId = `crossing-${node.id}`;
+    for (const cn of clusterNodes) {
+      nodeToCrossingMap.set(cn.id, crossingId);
+    }
 
     // Determine dominant controlType for this cluster: signal > stop > yield > crossing
     let clusterControlType: 'signal' | 'yield' | 'stop' | 'crossing' = 'crossing';
@@ -192,7 +196,7 @@ export function convertGraphToGeoJSON(
 
   // Add individual signal features
   controlNodes.forEach((node) => {
-    const parentCrossing = crossings.find((c) => c.nodeIds.includes(node.id));
+    const parentCrossingId = nodeToCrossingMap.get(node.id) ?? '';
     lightFeatures.push({
       type: 'Feature',
       geometry: {
@@ -203,7 +207,7 @@ export function convertGraphToGeoJSON(
         type: 'signal',
         controlType: node.controlType,
         id: node.id,
-        parentCrossingId: parentCrossing ? parentCrossing.id : '',
+        parentCrossingId,
         tags: JSON.stringify(node.tags),
         name:
           node.tags.name ||
