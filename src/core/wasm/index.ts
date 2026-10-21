@@ -32,7 +32,11 @@ export async function ensureWasmInitialized(wasmSource?: InitInput): Promise<boo
             // Ignore Node file read fallback failure
           }
         }
-        await initWasm(source);
+        const input =
+          source && typeof source === 'object' && !(source instanceof URL)
+            ? ({ module_or_path: source } as unknown as InitInput)
+            : (source as InitInput | undefined);
+        await initWasm(input);
         WasmEngine.init_panic_hook();
         initialized = true;
         return true;

@@ -178,9 +178,16 @@ describe('geometry utilities', () => {
       const circle = createGeoJSONCircle({ lat: 48.137, lng: 11.575 }, 500, points);
       expect(circle.type).toBe('Polygon');
       const ring = circle.coordinates[0];
+      expect(ring).toBeDefined();
+      if (!ring) return;
       expect(ring.length).toBe(points + 1);
-      expect(ring[0][0]).toBeCloseTo(ring[ring.length - 1][0], 8);
-      expect(ring[0][1]).toBeCloseTo(ring[ring.length - 1][1], 8);
+      const first = ring[0];
+      const last = ring[ring.length - 1];
+      expect(first).toBeDefined();
+      expect(last).toBeDefined();
+      if (!first || !last) return;
+      expect(first[0]).toBeCloseTo(last[0], 8);
+      expect(first[1]).toBeCloseTo(last[1], 8);
     });
   });
 });

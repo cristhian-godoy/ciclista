@@ -254,12 +254,13 @@ out body;`;
 
     const getCoord = (id: string): [number, number] => {
       const parts = id.split(',').map(Number);
-      return [parts[0], parts[1]];
+      return [parts[0] ?? 0, parts[1] ?? 0];
     };
 
     while (unvisited.size > 0) {
-      const startId = unvisited.values().next().value;
-      if (!startId) break;
+      const nextIter = unvisited.values().next();
+      if (nextIter.done) break;
+      const startId = nextIter.value;
       unvisited.delete(startId);
 
       const cluster: string[] = [startId];
@@ -303,7 +304,7 @@ out body;`;
 
     const parse = (id: string): [number, number] => {
       const parts = id.split(',').map(Number);
-      return [parts[0], parts[1]];
+      return [parts[0] ?? 0, parts[1] ?? 0];
     };
 
     while (coords.size > 0) {

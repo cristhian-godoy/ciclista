@@ -42,6 +42,8 @@ useOSMData.test.ts
 	Unit tests verifying useOSMData hook caching, bounds handling, and Data Saver network enforcement.
 useOSMData.ts
 	React hook managing fetch cycles and caching for Overpass API datasets.
+useOverrides.test.ts
+	Unit tests verifying useOverrides local storage restoration, rule merges, override mutations, and persistence.
 useOverrides.ts
 	React hook managing node delays, notes, custom routing rules, and crossing turn overrides in local storage.
 usePlaces.test.ts

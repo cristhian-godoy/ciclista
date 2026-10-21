@@ -16,9 +16,8 @@ export const mergeGraphs = (g1: StreetGraph, g2: StreetGraph): StreetGraph => {
     const existing = mergedNodes.get(key);
     if (existing) {
       const targets = new Set<string>();
-      const existingEdges = existing.edges;
-      for (let i = 0; i < existingEdges.length; i++) {
-        targets.add(existingEdges[i].target);
+      for (const edge of existing.edges) {
+        targets.add(edge.target);
       }
 
       const newEdges = val.edges.filter((e) => !targets.has(e.target));

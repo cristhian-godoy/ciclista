@@ -146,11 +146,12 @@ export class AStarRouter implements IRouter {
     const incomingEdges: IncomingEdge[][] = Array.from({ length: totalNodes }, () => []);
     for (let u = 0; u < totalNodes; u++) {
       const uId = intToNodeId[u];
+      if (!uId) continue;
       const outgoing = this.getForwardEdges(uId, graph, virtualConfig);
       for (const edge of outgoing) {
         const v = nodeIdToInt.get(edge.target);
         if (v !== undefined) {
-          incomingEdges[v].push({ sourceInt: u, edge });
+          incomingEdges[v]?.push({ sourceInt: u, edge });
         }
       }
     }
@@ -158,14 +159,23 @@ export class AStarRouter implements IRouter {
     const vMax = computeMaxTravelSpeedMs(overrides);
     const startCoord = coords[startInt];
     const endCoord = coords[endInt];
+    if (!startCoord || !endCoord) {
+      return { destReached: false, previous: new Map() };
+    }
     const hST =
       haversineDistance(startCoord.lat, startCoord.lng, endCoord.lat, endCoord.lng) / vMax;
 
-    const hF = (i: number): number =>
-      haversineDistance(coords[i].lat, coords[i].lng, endCoord.lat, endCoord.lng) / vMax;
+    const hF = (i: number): number => {
+      const c = coords[i];
+      if (!c) return 0;
+      return haversineDistance(c.lat, c.lng, endCoord.lat, endCoord.lng) / vMax;
+    };
 
-    const hB = (i: number): number =>
-      haversineDistance(coords[i].lat, coords[i].lng, startCoord.lat, startCoord.lng) / vMax;
+    const hB = (i: number): number => {
+      const c = coords[i];
+      if (!c) return 0;
+      return haversineDistance(c.lat, c.lng, startCoord.lat, startCoord.lng) / vMax;
+    };
 
     // Symmetric consistent potentials (Ikeda et al. / Goldberg & Harrelson)
     const keyF = (i: number, dist: number): number => dist + (hF(i) - hB(i) - hST) / 2;
@@ -173,6 +183,7 @@ export class AStarRouter implements IRouter {
 
     const getNodeRef = (i: number): GraphNode | undefined => {
       const id = intToNodeId[i];
+      if (!id) return undefined;
       if (virtualConfig) {
         if (id === 'virtual-start') return virtualConfig.startNode;
         if (id === 'virtual-end') return virtualConfig.endNode;
@@ -227,15 +238,21 @@ export class AStarRouter implements IRouter {
         const u = heapF.pop();
         if (u === null) continue;
         if (closedF[u] === 1) continue;
-        if (topF > keyF(u, distF[u]) + 1e-9) continue;
+        const uDistF = distF[u];
+        if (uDistF === undefined) continue;
+        if (topF > keyF(u, uDistF) + 1e-9) continue;
         closedF[u] = 1;
 
         const uId = intToNodeId[u];
+        if (!uId) continue;
 
         // Check meeting at node u
-        if (distB[u] < Infinity) {
-          const parentIdStr = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
-          const succIdStr = succB[u] !== -1 ? intToNodeId[succB[u]] : null;
+        const uDistB = distB[u] ?? Infinity;
+        if (uDistB < Infinity) {
+          const pF = parentF[u];
+          const parentIdStr = pF !== undefined && pF !== -1 ? (intToNodeId[pF] ?? null) : null;
+          const sB = succB[u];
+          const succIdStr = sB !== undefined && sB !== -1 ? (intToNodeId[sB] ?? null) : null;
           let nodeCrossingDelta = 0;
           let nodeBanned = false;
           if (parentIdStr && succIdStr) {
@@ -244,9 +261,9 @@ export class AStarRouter implements IRouter {
             nodeCrossingDelta = effect.timeDelta;
           }
           if (!nodeBanned) {
-            let candCost = distF[u] + distB[u] + nodeCrossingDelta;
-            if (parentF[u] !== -1 && succB[u] !== -1) {
-              candCost += computeTurnPenalty(parentF[u], u, succB[u]);
+            let candCost = uDistF + uDistB + nodeCrossingDelta;
+            if (pF !== undefined && pF !== -1 && sB !== undefined && sB !== -1) {
+              candCost += computeTurnPenalty(pF, u, sB);
             }
             if (candCost < mu) {
               mu = candCost;
@@ -260,20 +277,24 @@ export class AStarRouter implements IRouter {
           const v = nodeIdToInt.get(edge.target);
           if (v === undefined || closedF[v] === 1) continue;
           const vId = intToNodeId[v];
+          if (!vId) continue;
 
           let stepCost = costFn(uId, edge, vId, overrides, graph);
-          if (parentF[u] !== -1) {
-            stepCost += computeTurnPenalty(parentF[u], u, v);
+          const pF = parentF[u];
+          if (pF !== undefined && pF !== -1) {
+            stepCost += computeTurnPenalty(pF, u, v);
           }
 
-          const parentId = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
+          const parentId = pF !== undefined && pF !== -1 ? (intToNodeId[pF] ?? null) : null;
           const crossingEffect = getCrossingTurnEffect(parentId, uId, vId, overrides);
           if (crossingEffect.isBanned) continue;
           stepCost += crossingEffect.timeDelta;
 
           // Check meeting across edge u -> v
-          if (distB[v] < Infinity) {
-            const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
+          const vDistB = distB[v] ?? Infinity;
+          if (vDistB < Infinity) {
+            const sBv = succB[v];
+            const succIdStr = sBv !== undefined && sBv !== -1 ? (intToNodeId[sBv] ?? null) : null;
             let edgeTurnBanned = false;
             let edgeTurnDelta = 0;
             if (succIdStr) {
@@ -282,9 +303,9 @@ export class AStarRouter implements IRouter {
               edgeTurnDelta = effect.timeDelta;
             }
             if (!edgeTurnBanned) {
-              let edgeMeetingCost = distF[u] + stepCost + distB[v] + edgeTurnDelta;
-              if (succB[v] !== -1) {
-                edgeMeetingCost += computeTurnPenalty(u, v, succB[v]);
+              let edgeMeetingCost = uDistF + stepCost + vDistB + edgeTurnDelta;
+              if (sBv !== undefined && sBv !== -1) {
+                edgeMeetingCost += computeTurnPenalty(u, v, sBv);
               }
               if (edgeMeetingCost < mu) {
                 mu = edgeMeetingCost;
@@ -293,8 +314,9 @@ export class AStarRouter implements IRouter {
             }
           }
 
-          const newDist = distF[u] + stepCost;
-          if (newDist < distF[v]) {
+          const newDist = uDistF + stepCost;
+          const vDistF = distF[v] ?? Infinity;
+          if (newDist < vDistF) {
             distF[v] = newDist;
             parentF[v] = u;
             heapF.push(v, keyF(v, newDist));
@@ -304,15 +326,21 @@ export class AStarRouter implements IRouter {
         const v = heapB.pop();
         if (v === null) continue;
         if (closedB[v] === 1) continue;
-        if (topB > keyB(v, distB[v]) + 1e-9) continue;
+        const vDistB = distB[v];
+        if (vDistB === undefined) continue;
+        if (topB > keyB(v, vDistB) + 1e-9) continue;
         closedB[v] = 1;
 
         const vId = intToNodeId[v];
+        if (!vId) continue;
 
         // Check meeting at node v
-        if (distF[v] < Infinity) {
-          const parentIdStr = parentF[v] !== -1 ? intToNodeId[parentF[v]] : null;
-          const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
+        const vDistF = distF[v] ?? Infinity;
+        if (vDistF < Infinity) {
+          const pFv = parentF[v];
+          const parentIdStr = pFv !== undefined && pFv !== -1 ? (intToNodeId[pFv] ?? null) : null;
+          const sBv = succB[v];
+          const succIdStr = sBv !== undefined && sBv !== -1 ? (intToNodeId[sBv] ?? null) : null;
           let nodeCrossingDelta = 0;
           let nodeBanned = false;
           if (parentIdStr && succIdStr) {
@@ -321,9 +349,9 @@ export class AStarRouter implements IRouter {
             nodeCrossingDelta = effect.timeDelta;
           }
           if (!nodeBanned) {
-            let candCost = distF[v] + distB[v] + nodeCrossingDelta;
-            if (parentF[v] !== -1 && succB[v] !== -1) {
-              candCost += computeTurnPenalty(parentF[v], v, succB[v]);
+            let candCost = vDistF + vDistB + nodeCrossingDelta;
+            if (pFv !== undefined && pFv !== -1 && sBv !== undefined && sBv !== -1) {
+              candCost += computeTurnPenalty(pFv, v, sBv);
             }
             if (candCost < mu) {
               mu = candCost;
@@ -333,54 +361,63 @@ export class AStarRouter implements IRouter {
         }
 
         // Expand incoming edges into v (stepping backward from v to u)
-        for (const inEdge of incomingEdges[v]) {
-          const u = inEdge.sourceInt;
-          if (closedB[u] === 1) continue;
-          const uId = intToNodeId[u];
+        const inEdges = incomingEdges[v];
+        if (inEdges) {
+          for (const inEdge of inEdges) {
+            const u = inEdge.sourceInt;
+            if (closedB[u] === 1) continue;
+            const uId = intToNodeId[u];
+            if (!uId) continue;
 
-          let stepCost = costFn(uId, inEdge.edge, vId, overrides, graph);
-          if (succB[v] !== -1) {
-            stepCost += computeTurnPenalty(u, v, succB[v]);
-          }
-
-          const crossingEffect = getCrossingTurnEffect(null, uId, vId, overrides);
-          if (crossingEffect.isBanned) continue;
-          stepCost += crossingEffect.timeDelta;
-
-          const succIdStr = succB[v] !== -1 ? intToNodeId[succB[v]] : null;
-          if (succIdStr) {
-            const turnEffect = getCrossingTurnEffect(uId, vId, succIdStr, overrides);
-            if (turnEffect.isBanned) continue;
-            stepCost += turnEffect.timeDelta;
-          }
-
-          // Check meeting across edge u -> v
-          if (distF[u] < Infinity) {
-            const parentIdStr = parentF[u] !== -1 ? intToNodeId[parentF[u]] : null;
-            let edgeTurnBanned = false;
-            let edgeTurnDelta = 0;
-            if (parentIdStr) {
-              const effect = getCrossingTurnEffect(parentIdStr, uId, vId, overrides);
-              if (effect.isBanned) edgeTurnBanned = true;
-              edgeTurnDelta = effect.timeDelta;
+            let stepCost = costFn(uId, inEdge.edge, vId, overrides, graph);
+            const sBv = succB[v];
+            if (sBv !== undefined && sBv !== -1) {
+              stepCost += computeTurnPenalty(u, v, sBv);
             }
-            if (!edgeTurnBanned) {
-              let edgeMeetingCost = distF[u] + stepCost + distB[v] + edgeTurnDelta;
-              if (parentF[u] !== -1) {
-                edgeMeetingCost += computeTurnPenalty(parentF[u], u, v);
+
+            const crossingEffect = getCrossingTurnEffect(null, uId, vId, overrides);
+            if (crossingEffect.isBanned) continue;
+            stepCost += crossingEffect.timeDelta;
+
+            const succIdStr = sBv !== undefined && sBv !== -1 ? (intToNodeId[sBv] ?? null) : null;
+            if (succIdStr) {
+              const turnEffect = getCrossingTurnEffect(uId, vId, succIdStr, overrides);
+              if (turnEffect.isBanned) continue;
+              stepCost += turnEffect.timeDelta;
+            }
+
+            // Check meeting across edge u -> v
+            const uDistF = distF[u] ?? Infinity;
+            if (uDistF < Infinity) {
+              const pFu = parentF[u];
+              const parentIdStr =
+                pFu !== undefined && pFu !== -1 ? (intToNodeId[pFu] ?? null) : null;
+              let edgeTurnBanned = false;
+              let edgeTurnDelta = 0;
+              if (parentIdStr) {
+                const effect = getCrossingTurnEffect(parentIdStr, uId, vId, overrides);
+                if (effect.isBanned) edgeTurnBanned = true;
+                edgeTurnDelta = effect.timeDelta;
               }
-              if (edgeMeetingCost < mu) {
-                mu = edgeMeetingCost;
-                bestMeeting = { type: 'edge', u, v };
+              if (!edgeTurnBanned) {
+                let edgeMeetingCost = uDistF + stepCost + vDistB + edgeTurnDelta;
+                if (pFu !== undefined && pFu !== -1) {
+                  edgeMeetingCost += computeTurnPenalty(pFu, u, v);
+                }
+                if (edgeMeetingCost < mu) {
+                  mu = edgeMeetingCost;
+                  bestMeeting = { type: 'edge', u, v };
+                }
               }
             }
-          }
 
-          const newDist = distB[v] + stepCost;
-          if (newDist < distB[u]) {
-            distB[u] = newDist;
-            succB[u] = v;
-            heapB.push(u, keyB(u, newDist));
+            const newDist = vDistB + stepCost;
+            const uDistB = distB[u] ?? Infinity;
+            if (newDist < uDistB) {
+              distB[u] = newDist;
+              succB[u] = v;
+              heapB.push(u, keyB(u, newDist));
+            }
           }
         }
       }
@@ -395,8 +432,8 @@ export class AStarRouter implements IRouter {
     if (bestMeeting.type === 'node') {
       const m = bestMeeting.node;
       const forwardPath: number[] = [];
-      let curr = m;
-      while (curr !== -1) {
+      let curr: number | undefined = m;
+      while (curr !== undefined && curr !== -1) {
         forwardPath.push(curr);
         if (curr === startInt) break;
         curr = parentF[curr];
@@ -404,8 +441,8 @@ export class AStarRouter implements IRouter {
       forwardPath.reverse();
       pathInts.push(...forwardPath);
 
-      let bCurr = succB[m];
-      while (bCurr !== -1) {
+      let bCurr: number | undefined = succB[m];
+      while (bCurr !== undefined && bCurr !== -1) {
         pathInts.push(bCurr);
         if (bCurr === endInt) break;
         bCurr = succB[bCurr];
@@ -413,8 +450,8 @@ export class AStarRouter implements IRouter {
     } else {
       const { u, v } = bestMeeting;
       const forwardPath: number[] = [];
-      let curr = u;
-      while (curr !== -1) {
+      let curr: number | undefined = u;
+      while (curr !== undefined && curr !== -1) {
         forwardPath.push(curr);
         if (curr === startInt) break;
         curr = parentF[curr];
@@ -422,8 +459,8 @@ export class AStarRouter implements IRouter {
       forwardPath.reverse();
       pathInts.push(...forwardPath);
 
-      let bCurr = v;
-      while (bCurr !== -1) {
+      let bCurr: number | undefined = v;
+      while (bCurr !== undefined && bCurr !== -1) {
         pathInts.push(bCurr);
         if (bCurr === endInt) break;
         bCurr = succB[bCurr];
@@ -432,9 +469,15 @@ export class AStarRouter implements IRouter {
 
     const previous = new Map<string, string>();
     for (let i = 1; i < pathInts.length; i++) {
-      const fromId = intToNodeId[pathInts[i - 1]];
-      const toId = intToNodeId[pathInts[i]];
-      previous.set(toId, fromId);
+      const prevInt = pathInts[i - 1];
+      const curInt = pathInts[i];
+      if (prevInt !== undefined && curInt !== undefined) {
+        const fromId = intToNodeId[prevInt];
+        const toId = intToNodeId[curInt];
+        if (fromId && toId) {
+          previous.set(toId, fromId);
+        }
+      }
     }
 
     return { destReached: true, previous };

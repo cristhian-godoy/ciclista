@@ -69,19 +69,29 @@ export function snapToRoute(
       distanceFromRawM: 0,
     };
   }
-  if (routeCoords.length === 1) {
+  const firstCoord = routeCoords[0];
+  if (!firstCoord) {
     return {
-      coordinate: routeCoords[0],
+      coordinate: raw,
       bearing: 0,
       segmentIndex: 0,
       fractionAlongSegment: 0,
-      distanceFromRawM: haversineDistance(raw.lat, raw.lng, routeCoords[0].lat, routeCoords[0].lng),
+      distanceFromRawM: 0,
+    };
+  }
+  if (routeCoords.length === 1) {
+    return {
+      coordinate: firstCoord,
+      bearing: 0,
+      segmentIndex: 0,
+      fractionAlongSegment: 0,
+      distanceFromRawM: haversineDistance(raw.lat, raw.lng, firstCoord.lat, firstCoord.lng),
     };
   }
 
   let bestSegmentIndex = 0;
   let minDist = Infinity;
-  let bestProjected: Coordinate = routeCoords[0];
+  let bestProjected: Coordinate = firstCoord;
   let bestT = 0;
 
   const numSegments = routeCoords.length - 1;
@@ -93,6 +103,7 @@ export function snapToRoute(
     for (let i = startIndex; i <= endIndex; i++) {
       const a = routeCoords[i];
       const b = routeCoords[i + 1];
+      if (!a || !b) continue;
       const proj = projectPointOnSegment(raw, a, b);
       const dist = haversineDistance(raw.lat, raw.lng, proj.lat, proj.lng);
       if (dist < minDist) {
@@ -110,6 +121,7 @@ export function snapToRoute(
     for (let i = 0; i < numSegments; i++) {
       const a = routeCoords[i];
       const b = routeCoords[i + 1];
+      if (!a || !b) continue;
       const proj = projectPointOnSegment(raw, a, b);
       const dist = haversineDistance(raw.lat, raw.lng, proj.lat, proj.lng);
       if (dist < minDist) {
@@ -121,10 +133,9 @@ export function snapToRoute(
     }
   }
 
-  const bearing = calculateBearing(
-    routeCoords[bestSegmentIndex],
-    routeCoords[bestSegmentIndex + 1],
-  );
+  const startSegmentCoord = routeCoords[bestSegmentIndex] ?? bestProjected;
+  const endSegmentCoord = routeCoords[bestSegmentIndex + 1] ?? bestProjected;
+  const bearing = calculateBearing(startSegmentCoord, endSegmentCoord);
 
   return {
     coordinate: bestProjected,
@@ -171,8 +182,8 @@ export function interpolatePosition(
     newFraction = 0.0;
   }
 
-  const a = routeCoords[newSegmentIndex];
-  const b = routeCoords[newSegmentIndex + 1];
+  const a = routeCoords[newSegmentIndex] ?? current.coordinate;
+  const b = routeCoords[newSegmentIndex + 1] ?? current.coordinate;
   const interpolatedCoord = {
     lat: a.lat + newFraction * (b.lat - a.lat),
     lng: a.lng + newFraction * (b.lng - a.lng),
@@ -218,12 +229,10 @@ export function computeProgress(
 
   const numSegments = routeCoords.length - 1;
   for (let i = 0; i < numSegments; i++) {
-    const segDist = haversineDistance(
-      routeCoords[i].lat,
-      routeCoords[i].lng,
-      routeCoords[i + 1].lat,
-      routeCoords[i + 1].lng,
-    );
+    const a = routeCoords[i];
+    const b = routeCoords[i + 1];
+    if (!a || !b) continue;
+    const segDist = haversineDistance(a.lat, a.lng, b.lat, b.lng);
     totalDistanceM += segDist;
 
     if (i < snapped.segmentIndex) {

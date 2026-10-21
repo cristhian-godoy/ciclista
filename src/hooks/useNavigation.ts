@@ -142,6 +142,7 @@ export function useNavigation({ routeResult, routeCoordinates, defaultMode }: Us
 
     const mode = overrideMode ?? defaultMode ?? (import.meta.env.DEV ? 'dev' : 'gps');
     const initialCoord = routeCoordinates[0];
+    if (!initialCoord) return;
     const provider = createPositionProvider(mode, initialCoord);
     providerRef.current = provider;
 
@@ -152,8 +153,9 @@ export function useNavigation({ routeResult, routeCoordinates, defaultMode }: Us
 
     const startTimestamp = Date.now();
 
+    const secondCoord = routeCoordinates[1];
     const initialBearing =
-      routeCoordinates.length > 1 ? calculateBearing(routeCoordinates[0], routeCoordinates[1]) : 0;
+      routeCoordinates.length > 1 && secondCoord ? calculateBearing(initialCoord, secondCoord) : 0;
 
     const initialSnapped = {
       coordinate: initialCoord,
@@ -343,8 +345,10 @@ export function useNavigation({ routeResult, routeCoordinates, defaultMode }: Us
   const routeSignatureRef = useRef<string>('');
   useEffect(() => {
     const len = routeCoordinates.length;
-    const first = len > 0 ? `${routeCoordinates[0].lat},${routeCoordinates[0].lng}` : '';
-    const last = len > 1 ? `${routeCoordinates[len - 1].lat},${routeCoordinates[len - 1].lng}` : '';
+    const firstCoord = routeCoordinates[0];
+    const lastCoord = routeCoordinates[len - 1];
+    const first = firstCoord ? `${firstCoord.lat},${firstCoord.lng}` : '';
+    const last = len > 1 && lastCoord ? `${lastCoord.lat},${lastCoord.lng}` : '';
     const signature = `${len}:${first}:${last}`;
 
     if (signature === routeSignatureRef.current) return;

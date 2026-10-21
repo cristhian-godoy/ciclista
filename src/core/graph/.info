@@ -14,6 +14,8 @@ parser.test.ts
 	Unit tests for OSM XML/JSON parsing and network connectivity builders.
 parser.ts
 	OSM Overpass JSON graph parser and builder.
+parser.worker.test.ts
+	Unit tests for OSM graph parser worker message handling, WASM delegation, TS fallback, and cache retrieval.
 parser.worker.ts
 	Web Worker for asynchronous OSM raw graph data parsing.
 types.ts

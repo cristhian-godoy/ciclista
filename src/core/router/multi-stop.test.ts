@@ -89,8 +89,6 @@ describe('multi-stop routing engine', () => {
   describe('findMultiStopRoute', () => {
     const mockGraph: StreetGraph = {
       nodes: new Map(),
-      adjacency: new Map(),
-      edges: new Map(),
     };
 
     it('returns null when less than 2 coordinates are provided', () => {

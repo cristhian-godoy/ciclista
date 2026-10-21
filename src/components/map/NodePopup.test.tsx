@@ -72,6 +72,8 @@ const defaultContextValue: MapContextType = {
   inspectorBranches: [],
   appMode: 'routing',
   setAppMode: vi.fn(),
+  places: [],
+  setPlaces: vi.fn(),
   landmarks: [],
   setLandmarks: vi.fn(),
   selectedEdgeIds: [],

@@ -154,7 +154,7 @@ describe('createGeoJSONCircle', () => {
     expect(circle.type).toBe('Polygon');
     expect(circle.coordinates).toHaveLength(1);
 
-    const ring = circle.coordinates[0];
+    const ring = circle.coordinates[0] ?? [];
     // ring should have points + 1 vertices (closed ring)
     expect(ring).toHaveLength(points + 1);
     // first and last coordinates must match
@@ -165,10 +165,11 @@ describe('createGeoJSONCircle', () => {
     const center = { lat: 48.137, lng: 11.575 };
     const radiusMeters = 100;
     const circle = createGeoJSONCircle(center, radiusMeters, 16);
-    const ring = circle.coordinates[0];
+    const ring = circle.coordinates[0] ?? [];
 
     // Check each vertex distance from center
     for (const [lng, lat] of ring) {
+      if (lng === undefined || lat === undefined) continue;
       // 1 deg lat ~= 111,000m
       const dLatM = (lat - center.lat) * 111320;
       const dLngM = (lng - center.lng) * 111320 * Math.cos((center.lat * Math.PI) / 180);

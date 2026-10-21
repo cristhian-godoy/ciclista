@@ -201,9 +201,11 @@ export function finalizeVirtualRoute(
       finalCoords.push(c);
     } else {
       const last = finalCoords[finalCoords.length - 1];
-      const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
-      if (dist2 > 1e-14) {
-        finalCoords.push(c);
+      if (last) {
+        const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
+        if (dist2 > 1e-14) {
+          finalCoords.push(c);
+        }
       }
     }
   }
@@ -284,29 +286,37 @@ export function finalizeFallbackRoute(
     const nkMinus1 = stats.coordinates[stats.coordinates.length - 2];
     const nk = stats.coordinates[stats.coordinates.length - 1];
 
-    const projectedStart = projectPointOnSegment(start, n0, n1);
-    const projectedEnd = projectPointOnSegment(end, nkMinus1, nk);
+    if (n0 && n1 && nkMinus1 && nk) {
+      const projectedStart = projectPointOnSegment(start, n0, n1);
+      const projectedEnd = projectPointOnSegment(end, nkMinus1, nk);
 
-    const adjusted: Coordinate[] = [start, projectedStart];
-    for (let i = 1; i < stats.coordinates.length - 1; i++) {
-      adjusted.push(stats.coordinates[i]);
-    }
-    adjusted.push(projectedEnd);
-    adjusted.push(end);
+      const adjusted: Coordinate[] = [
+        start,
+        projectedStart,
+        ...stats.coordinates.slice(1, -1),
+        projectedEnd,
+        end,
+      ];
 
-    for (const c of adjusted) {
-      if (finalCoords.length === 0) {
-        finalCoords.push(c);
-      } else {
-        const last = finalCoords[finalCoords.length - 1];
-        const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
-        if (dist2 > 1e-14) {
+      for (const c of adjusted) {
+        if (finalCoords.length === 0) {
           finalCoords.push(c);
+        } else {
+          const last = finalCoords[finalCoords.length - 1];
+          if (last) {
+            const dist2 = Math.pow(c.lat - last.lat, 2) + Math.pow(c.lng - last.lng, 2);
+            if (dist2 > 1e-14) {
+              finalCoords.push(c);
+            }
+          }
         }
       }
     }
   } else if (stats.coordinates.length === 1) {
-    finalCoords = [start, stats.coordinates[0], end];
+    const single = stats.coordinates[0];
+    if (single) {
+      finalCoords = [start, single, end];
+    }
   }
 
   return {

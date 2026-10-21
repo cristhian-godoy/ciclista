@@ -40,10 +40,10 @@ describe('turn-evaluator', () => {
 
   it('respects custom TurnRuleConfig overrides', () => {
     const customConfig: TurnRuleConfig = {
-      id: 'custom-turns',
-      name: 'Custom',
       leftTurnPenaltySeconds: 8,
       rightTurnPenaltySeconds: 4,
+      greenArrowRightTurnSeconds: 2,
+      indirectLeftTurnSeconds: 6,
       uTurnPenaltySeconds: 45,
     };
 

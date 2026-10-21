@@ -151,6 +151,7 @@ export function buildRouteStatistics(
 
   for (let k = pathNodeIds.length - 1; k >= 0; k--) {
     const nodeId = pathNodeIds[k];
+    if (!nodeId) continue;
     let nNode: GraphNode | undefined;
     let curEdges: GraphEdge[] = [];
     if (virtualConfig && nodeId === 'virtual-start') {
@@ -179,42 +180,46 @@ export function buildRouteStatistics(
 
       if (k < pathNodeIds.length - 1) {
         const nextNodeId = pathNodeIds[k + 1];
-        const edge = curEdges.find((e) => e.target === nextNodeId);
-        if (edge) {
-          accumulatedDistance += edge.distance;
-          accumulatedDuration += calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
+        if (nextNodeId) {
+          const edge = curEdges.find((e) => e.target === nextNodeId);
+          if (edge) {
+            accumulatedDistance += edge.distance;
+            accumulatedDuration += calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
 
-          if (k > 0) {
-            const parentId = pathNodeIds[k - 1];
-            let pNode: GraphNode | undefined;
-            if (virtualConfig && parentId === 'virtual-start') {
-              pNode = virtualConfig.startNode;
-            } else if (virtualConfig && parentId === 'virtual-end') {
-              pNode = virtualConfig.endNode;
-            } else {
-              pNode = graph.nodes.get(parentId)?.node;
+            if (k > 0) {
+              const parentId = pathNodeIds[k - 1];
+              if (parentId) {
+                let pNode: GraphNode | undefined;
+                if (virtualConfig && parentId === 'virtual-start') {
+                  pNode = virtualConfig.startNode;
+                } else if (virtualConfig && parentId === 'virtual-end') {
+                  pNode = virtualConfig.endNode;
+                } else {
+                  pNode = graph.nodes.get(parentId)?.node;
+                }
+                const nextNNode = graph.nodes.get(nextNodeId)?.node;
+                if (pNode && nextNNode) {
+                  const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+                  accumulatedDuration += getEffectiveTurnPenalty(
+                    pNode,
+                    nNode,
+                    nextNNode,
+                    overrides,
+                    rulesConfig,
+                  );
+                }
+              }
             }
-            const nextNNode = graph.nodes.get(nextNodeId)?.node;
-            if (pNode && nextNNode) {
-              const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
-              accumulatedDuration += getEffectiveTurnPenalty(
-                pNode,
-                nNode,
-                nextNNode,
-                overrides,
-                rulesConfig,
-              );
-            }
+
+            const crossingParentId = k > 0 ? (pathNodeIds[k - 1] ?? null) : null;
+            const { timeDelta: crossingDelta } = getCrossingTurnEffect(
+              crossingParentId,
+              nodeId,
+              nextNodeId,
+              overrides,
+            );
+            accumulatedDuration += crossingDelta;
           }
-
-          const crossingParentId = k > 0 ? pathNodeIds[k - 1] : null;
-          const { timeDelta: crossingDelta } = getCrossingTurnEffect(
-            crossingParentId,
-            nodeId,
-            nextNodeId,
-            overrides,
-          );
-          accumulatedDuration += crossingDelta;
         }
       }
     }
@@ -226,6 +231,7 @@ export function buildRouteStatistics(
 
   for (let i = 0; i < pathNodeIds.length; i++) {
     const nodeId = pathNodeIds[i];
+    if (!nodeId) continue;
     let currentNode: GraphNode | undefined;
     let currentEdges: GraphEdge[] = [];
 
@@ -278,78 +284,82 @@ export function buildRouteStatistics(
 
     if (i < pathNodeIds.length - 1) {
       const nextNodeId = pathNodeIds[i + 1];
-      const edge = currentEdges.find((e) => e.target === nextNodeId);
-      if (edge) {
-        totalDistanceMeters += edge.distance;
-        if (edge.name) {
-          streetsSet.add(edge.name);
+      if (nextNodeId) {
+        const edge = currentEdges.find((e) => e.target === nextNodeId);
+        if (edge) {
+          totalDistanceMeters += edge.distance;
+          if (edge.name) {
+            streetsSet.add(edge.name);
+          }
+          const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
+
+          let turnPenalty = 0;
+          if (i > 0) {
+            const parentId = pathNodeIds[i - 1];
+            if (parentId) {
+              let parentNode: GraphNode | undefined;
+              if (virtualConfig && parentId === 'virtual-start') {
+                parentNode = virtualConfig.startNode;
+              } else if (virtualConfig && parentId === 'virtual-end') {
+                parentNode = virtualConfig.endNode;
+              } else {
+                parentNode = graph.nodes.get(parentId)?.node;
+              }
+
+              let nextNode: GraphNode | undefined;
+              if (virtualConfig && nextNodeId === 'virtual-start') {
+                nextNode = virtualConfig.startNode;
+              } else if (virtualConfig && nextNodeId === 'virtual-end') {
+                nextNode = virtualConfig.endNode;
+              } else {
+                nextNode = graph.nodes.get(nextNodeId)?.node;
+              }
+
+              if (parentNode && nextNode) {
+                const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
+                turnPenalty = getEffectiveTurnPenalty(
+                  parentNode,
+                  currentNode,
+                  nextNode,
+                  overrides,
+                  rulesConfig,
+                );
+              }
+            }
+          }
+
+          const crossingParentId = i > 0 ? (pathNodeIds[i - 1] ?? null) : null;
+          const { timeDelta: crossingDelta } = getCrossingTurnEffect(
+            crossingParentId,
+            nodeId,
+            nextNodeId,
+            overrides,
+          );
+
+          totalDisplayCost += displayCost + turnPenalty + crossingDelta;
+
+          const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
+          roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
+
+          const surfaceType = getSurfaceType(edge.tags);
+          surfaceTotals[surfaceType] += edge.distance;
+
+          const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
+            edge.tags.highway || '',
+            edge.tags,
+          );
+          edgesDetails.push({
+            sourceId: nodeId,
+            targetId: nextNodeId,
+            name: edge.name || 'Unnamed Street',
+            distance: edge.distance,
+            highway: edge.tags.highway || 'unknown',
+            tags: edge.tags,
+            cost: displayCost + turnPenalty + crossingDelta,
+            matchedSign,
+            matchedRoad,
+          });
         }
-        const displayCost = calculateDisplayCost(nodeId, edge, nextNodeId, overrides, graph);
-
-        let turnPenalty = 0;
-        if (i > 0) {
-          const parentId = pathNodeIds[i - 1];
-          let parentNode: GraphNode | undefined;
-          if (virtualConfig && parentId === 'virtual-start') {
-            parentNode = virtualConfig.startNode;
-          } else if (virtualConfig && parentId === 'virtual-end') {
-            parentNode = virtualConfig.endNode;
-          } else {
-            parentNode = graph.nodes.get(parentId)?.node;
-          }
-
-          let nextNode: GraphNode | undefined;
-          if (virtualConfig && nextNodeId === 'virtual-start') {
-            nextNode = virtualConfig.startNode;
-          } else if (virtualConfig && nextNodeId === 'virtual-end') {
-            nextNode = virtualConfig.endNode;
-          } else {
-            nextNode = graph.nodes.get(nextNodeId)?.node;
-          }
-
-          if (parentNode && nextNode) {
-            const rulesConfig = overrides.rulesConfig ?? DEFAULT_RULES_CONFIG;
-            turnPenalty = getEffectiveTurnPenalty(
-              parentNode,
-              currentNode,
-              nextNode,
-              overrides,
-              rulesConfig,
-            );
-          }
-        }
-
-        const crossingParentId = i > 0 ? pathNodeIds[i - 1] : null;
-        const { timeDelta: crossingDelta } = getCrossingTurnEffect(
-          crossingParentId,
-          nodeId,
-          nextNodeId,
-          overrides,
-        );
-
-        totalDisplayCost += displayCost + turnPenalty + crossingDelta;
-
-        const cat = getRoadTypeCategory(edge.tags.highway || 'unknown', edge.tags);
-        roadTypeTotals[cat] = (roadTypeTotals[cat] || 0) + edge.distance;
-
-        const surfaceType = getSurfaceType(edge.tags);
-        surfaceTotals[surfaceType] += edge.distance;
-
-        const { sign: matchedSign, road: matchedRoad } = mapOSMToSignAndRoad(
-          edge.tags.highway || '',
-          edge.tags,
-        );
-        edgesDetails.push({
-          sourceId: nodeId,
-          targetId: nextNodeId,
-          name: edge.name || 'Unnamed Street',
-          distance: edge.distance,
-          highway: edge.tags.highway || 'unknown',
-          tags: edge.tags,
-          cost: displayCost + turnPenalty + crossingDelta,
-          matchedSign,
-          matchedRoad,
-        });
       }
     }
   }

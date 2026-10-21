@@ -75,7 +75,7 @@ describe('cache storage utility', () => {
 
     const validEntries = await getValidCacheEntries();
     expect(validEntries).toHaveLength(1);
-    expect(validEntries[0].bbox).toEqual([48.13, 11.57, 48.14, 11.58]);
+    expect(validEntries[0]?.bbox).toEqual([48.13, 11.57, 48.14, 11.58]);
 
     // Subsequent calls return from memory without rescanning keys
     const keysMock = mockCache.keys as ReturnType<typeof vi.fn>;
@@ -97,6 +97,6 @@ describe('cache storage utility', () => {
 
     const updatedEntries = await getValidCacheEntries();
     expect(updatedEntries).toHaveLength(1);
-    expect(updatedEntries[0].bbox).toEqual([48.2, 11.6, 48.21, 11.61]);
+    expect(updatedEntries[0]?.bbox).toEqual([48.2, 11.6, 48.21, 11.61]);
   });
 });

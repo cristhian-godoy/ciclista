@@ -50,13 +50,13 @@ describe('OSMGraphParser', () => {
     expect(node10).toBeDefined();
     expect(node10?.node.lat).toBe(48.1);
     expect(node10?.edges.length).toBe(1);
-    expect(node10?.edges[0].target).toBe('20');
-    expect(node10?.edges[0].name).toBe('Test Street');
+    expect(node10?.edges[0]?.target).toBe('20');
+    expect(node10?.edges[0]?.name).toBe('Test Street');
 
     const node20 = graph.nodes.get('20');
     expect(node20).toBeDefined();
     expect(node20?.edges.length).toBe(1);
-    expect(node20?.edges[0].target).toBe('10'); // bidirectional by default
+    expect(node20?.edges[0]?.target).toBe('10'); // bidirectional by default
   });
 
   it('ignores motorways and steps', () => {

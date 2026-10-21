@@ -99,7 +99,10 @@ describe('Crossing Subgraph and Turn Routing', () => {
 
     it('creates valid circular GeoJSON polygon features', () => {
       const clusters = extractCrossingClusters(mockGraph);
-      const feature = createCrossingBoundingCircleGeoJSON(clusters[0], 16);
+      const firstCluster = clusters[0];
+      expect(firstCluster).toBeDefined();
+      if (!firstCluster) return;
+      const feature = createCrossingBoundingCircleGeoJSON(firstCluster, 16);
       expect(feature.type).toBe('Feature');
       expect(feature.geometry.type).toBe('Polygon');
       expect(feature.geometry.coordinates[0]).toHaveLength(17);

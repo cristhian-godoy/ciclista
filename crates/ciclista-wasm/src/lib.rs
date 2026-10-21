@@ -275,12 +275,15 @@ mod tests {
         let mock = WasmEngine::load_mock_graph();
         assert!(mock.node_count() > 0);
 
+        let json = mock.to_json().expect("Serialization should succeed");
+        let restored = WasmStreetGraph::from_json(&json).expect("Deserialization should succeed");
+        assert_eq!(restored.node_count(), mock.node_count());
+
+        let entries_json = mock.to_entries_json().expect("entries json");
+        assert!(entries_json.starts_with('['));
+
         graph.merge_with(&mock);
         assert_eq!(graph.node_count(), mock.node_count());
-
-        let json = graph.to_json().expect("Serialization should succeed");
-        let restored = WasmStreetGraph::from_json(&json).expect("Deserialization should succeed");
-        assert_eq!(restored.node_count(), graph.node_count());
 
         graph.clear();
         assert_eq!(graph.node_count(), 0);
@@ -298,5 +301,49 @@ mod tests {
         }"#;
         graph.merge_osm_json(raw_json);
         assert_eq!(graph.node_count(), 2);
+    }
+
+    #[test]
+    fn test_wasm_engine_parse_graph_json() {
+        let empty_json = r#"{"elements":[]}"#;
+        let fallback_graph = WasmEngine::parse_graph_json(empty_json);
+        assert_eq!(fallback_graph.node_count(), 7); // Falls back to mock graph on empty data
+
+        let raw_osm = r#"{
+            "elements": [
+                {"type": "node", "id": 1, "lat": 48.1, "lon": 11.1, "tags": {}},
+                {"type": "node", "id": 2, "lat": 48.2, "lon": 11.2, "tags": {}},
+                {"type": "way", "id": 10, "nodes": [1, 2], "tags": {"highway": "cycleway"}}
+            ]
+        }"#;
+        let parsed = WasmEngine::parse_graph_json(raw_osm);
+        assert_eq!(parsed.node_count(), 2);
+    }
+
+    #[test]
+    fn test_wasm_engine_routing_parity_internal() {
+        let graph = WasmEngine::load_mock_graph();
+        let start = Coordinate {
+            lat: 48.137,
+            lng: 11.575,
+        };
+        let end = Coordinate {
+            lat: 48.140,
+            lng: 11.580,
+        };
+        let overrides = LocalOverrides::default();
+
+        let astar_variants = find_route_variants_astar(&graph.inner, start, end, &overrides);
+        let dijkstra_variants = find_route_variants_dijkstra(&graph.inner, start, end, &overrides);
+
+        assert_eq!(astar_variants.len(), dijkstra_variants.len());
+        for (a, d) in astar_variants.iter().zip(dijkstra_variants.iter()) {
+            assert_eq!(a.label, d.label);
+            assert_eq!(a.result.path_node_ids, d.result.path_node_ids);
+            assert!(
+                (a.result.total_duration_seconds - d.result.total_duration_seconds).abs() < 1e-4
+            );
+            assert!((a.result.total_distance_meters - d.result.total_distance_meters).abs() < 1e-4);
+        }
     }
 }

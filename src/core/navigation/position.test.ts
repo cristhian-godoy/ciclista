@@ -172,7 +172,10 @@ describe('Position Providers', () => {
       }
 
       expect(posCallback).toHaveBeenCalled();
-      const firstCallCoord = posCallback.mock.calls[0][0];
+      const firstCall = posCallback.mock.calls[0];
+      expect(firstCall).toBeDefined();
+      if (!firstCall) return;
+      const firstCallCoord = firstCall[0];
       // Moving North: latitude should increase
       expect(firstCallCoord.lat).toBeGreaterThan(initial.lat);
       expect(firstCallCoord.lng).toBeCloseTo(initial.lng, 6);

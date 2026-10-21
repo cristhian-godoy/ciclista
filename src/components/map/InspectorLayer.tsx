@@ -296,9 +296,9 @@ export const InspectorLayer: React.FC = () => {
     let hoveredNodeId: string | number | null = null;
 
     const onMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
-      if (e.features && e.features.length > 0) {
+      const feature = e.features?.[0];
+      if (feature) {
         map.getCanvas().style.cursor = 'pointer';
-        const feature = e.features[0];
         if (hoveredNodeId !== null) {
           map.setFeatureState({ source: 'inspector-nodes', id: hoveredNodeId }, { hover: false });
         }
@@ -321,8 +321,9 @@ export const InspectorLayer: React.FC = () => {
 
     const onClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
-      if (e.features && e.features.length > 0) {
-        const nodeId = e.features[0].properties.nodeId;
+      const firstFeature = e.features?.[0];
+      if (firstFeature?.properties?.nodeId) {
+        const nodeId = firstFeature.properties.nodeId;
         setSelectedNodeIdRef.current(nodeId);
       }
     };

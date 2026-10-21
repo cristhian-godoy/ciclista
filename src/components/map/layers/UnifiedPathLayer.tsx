@@ -70,7 +70,7 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
             coordsList.push(coord);
           } else {
             const last = coordsList[coordsList.length - 1];
-            if (last[0] !== coord[0] || last[1] !== coord[1]) {
+            if (last && (last[0] !== coord[0] || last[1] !== coord[1])) {
               coordsList.push(coord);
             }
           }
@@ -199,7 +199,9 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
     const handleMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
       if (onPathHover && e.features && e.features.length > 0) {
         const feat = e.features[0];
-        onPathHover(feat.properties || {}, [e.lngLat.lng, e.lngLat.lat]);
+        if (feat) {
+          onPathHover(feat.properties || {}, [e.lngLat.lng, e.lngLat.lat]);
+        }
       }
     };
 
@@ -213,7 +215,10 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
     const handleClick = (e: maplibregl.MapLayerMouseEvent) => {
       if (onPathClick && e.features && e.features.length > 0) {
         e.preventDefault();
-        onPathClick(e.features[0].properties || {});
+        const feat = e.features[0];
+        if (feat) {
+          onPathClick(feat.properties || {});
+        }
       }
     };
 

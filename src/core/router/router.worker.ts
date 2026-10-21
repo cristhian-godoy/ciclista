@@ -71,6 +71,13 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
     }
 
     if (!startCoord || !endCoord) {
+      if (action !== 'clear' && action !== 'merge_chunk') {
+        const response: WorkerRoutingResponse = {
+          requestId,
+          error: 'Missing startCoord or endCoord for routing request.',
+        };
+        self.postMessage(response);
+      }
       return;
     }
 

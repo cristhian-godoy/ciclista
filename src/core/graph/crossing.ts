@@ -551,6 +551,7 @@ export function findCrossingTurnPath(
   for (let i = 0; i < waypoints.length - 1; i++) {
     const start = waypoints[i];
     const end = waypoints[i + 1];
+    if (!start || !end) return null;
     const leg = findLegPath(subgraph, start, end);
     if (!leg) return null;
 

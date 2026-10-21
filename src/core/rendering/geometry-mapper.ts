@@ -43,6 +43,7 @@ export function buildSegmentedPathGeoJSON(
   for (let i = 0; i < N - 1; i++) {
     const from = coords[i];
     const to = coords[i + 1];
+    if (!from || !to) continue;
 
     if (i < numStartVirtual) {
       // Virtual start connection (e.g. from start pin to snapped network node)
@@ -69,6 +70,7 @@ export function buildSegmentedPathGeoJSON(
       // Real edge from the street graph
       const edgeIndex = i - numStartVirtual;
       const edge = edges[edgeIndex];
+      if (!edge) continue;
       features.push({
         type: 'Feature',
         geometry: {

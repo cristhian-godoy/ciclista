@@ -58,6 +58,8 @@ describe('RulesRows Components', () => {
 
       const sliders = screen.getAllByRole('slider');
       const penaltySlider = sliders[1]; // The second slider is the avoidance penalty
+      expect(penaltySlider).toBeDefined();
+      if (!penaltySlider) return;
       fireEvent.change(penaltySlider, { target: { value: '25' } });
 
       expect(handleChange).toHaveBeenCalled();

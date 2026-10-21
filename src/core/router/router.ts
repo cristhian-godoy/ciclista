@@ -87,6 +87,7 @@ export class DijkstraRouter implements IRouter {
       visited[currentInt] = 1;
 
       const currentId = intToNodeId[currentInt];
+      if (!currentId) continue;
       let currentEdges: GraphEdge[] = [];
       let currentNode: GraphNode | undefined;
 
@@ -113,6 +114,7 @@ export class DijkstraRouter implements IRouter {
       if (!currentNode) continue;
 
       const currentDist = distances[currentInt];
+      if (currentDist === undefined) continue;
 
       for (const edge of currentEdges) {
         const neighborId = edge.target;
@@ -124,14 +126,14 @@ export class DijkstraRouter implements IRouter {
         let edgeCost = costFn(currentId, edge, neighborId, overrides, graph);
 
         const parentInt = previousInt[currentInt];
-        if (parentInt !== -1) {
+        if (parentInt !== undefined && parentInt !== -1) {
           const parentId = intToNodeId[parentInt];
           let parentNode: GraphNode | undefined;
           if (virtualConfig && parentId === 'virtual-start') {
             parentNode = virtualConfig.startNode;
           } else if (virtualConfig && parentId === 'virtual-end') {
             parentNode = virtualConfig.endNode;
-          } else {
+          } else if (parentId) {
             parentNode = graph.nodes.get(parentId)?.node;
           }
 
@@ -155,14 +157,16 @@ export class DijkstraRouter implements IRouter {
           }
         }
 
-        const parentId = parentInt !== -1 ? intToNodeId[parentInt] : null;
+        const parentId =
+          parentInt !== undefined && parentInt !== -1 ? (intToNodeId[parentInt] ?? null) : null;
         const crossingEffect = getCrossingTurnEffect(parentId, currentId, neighborId, overrides);
         if (crossingEffect.isBanned) continue;
         edgeCost += crossingEffect.timeDelta;
 
         const altDist = currentDist + edgeCost;
+        const targetDist = distances[neighborInt];
 
-        if (altDist < distances[neighborInt]) {
+        if (targetDist !== undefined && altDist < targetDist) {
           distances[neighborInt] = altDist;
           previousInt[neighborInt] = currentInt;
           heap.push(neighborInt, altDist);
@@ -172,8 +176,13 @@ export class DijkstraRouter implements IRouter {
 
     const previous = new Map<string, string>();
     for (let i = 0; i < N; i++) {
-      if (previousInt[i] !== -1) {
-        previous.set(intToNodeId[i], intToNodeId[previousInt[i]]);
+      const pInt = previousInt[i];
+      if (pInt !== undefined && pInt !== -1) {
+        const fromId = intToNodeId[i];
+        const toId = intToNodeId[pInt];
+        if (fromId && toId) {
+          previous.set(fromId, toId);
+        }
       }
     }
 
