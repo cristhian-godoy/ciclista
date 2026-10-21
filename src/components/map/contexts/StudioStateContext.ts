@@ -19,6 +19,11 @@ export interface PlaceModalState {
 }
 
 /**
+ * Selection tool mode for graph edge selection in events/studio mode.
+ */
+export type SelectionTool = 'click' | 'brush';
+
+/**
  * Backward compatibility alias for LandmarkModalState.
  */
 export type LandmarkModalState = PlaceModalState;

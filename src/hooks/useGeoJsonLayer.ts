@@ -135,7 +135,7 @@ export function useGeoJsonLayer({
 
         for (const [key, value] of Object.entries(l.paint)) {
           if (prevPaint.get(key) !== value) {
-            map.setPaintProperty(l.id, key, value);
+            map.setPaintProperty(l.id, key as Parameters<typeof map.setPaintProperty>[1], value);
             prevPaint.set(key, value);
           }
         }
@@ -150,7 +150,7 @@ export function useGeoJsonLayer({
 
         for (const [key, value] of Object.entries(l.layout)) {
           if (prevLayout.get(key) !== value) {
-            map.setLayoutProperty(l.id, key, value);
+            map.setLayoutProperty(l.id, key as Parameters<typeof map.setLayoutProperty>[1], value);
             prevLayout.set(key, value);
           }
         }

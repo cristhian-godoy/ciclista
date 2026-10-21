@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import type * as maplibregl from 'maplibre-gl';
+import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../core/graph/types';
@@ -17,11 +18,11 @@ describe('useMapGestures', () => {
 
   const nodes = new Map();
   nodes.set('node-1', {
-    node: { id: 'node-1', lat: 48.137, lng: 11.575, tags: {} },
+    node: { id: 'node-1', lat: 48.137, lng: 11.575 },
     edges: [{ target: 'node-2', distance: 100, tags: {} }],
   });
   nodes.set('node-2', {
-    node: { id: 'node-2', lat: 48.138, lng: 11.576, tags: {} },
+    node: { id: 'node-2', lat: 48.138, lng: 11.576 },
     edges: [{ target: 'node-1', distance: 100, tags: {} }],
   });
   const mockGraph = { nodes } as unknown as StreetGraph;
@@ -36,8 +37,8 @@ describe('useMapGestures', () => {
     setSelectedEdgeIdsMock = vi.fn();
 
     mockMap = {
-      on: onMock,
-      off: offMock,
+      on: onMock as unknown as maplibregl.Map['on'],
+      off: offMock as unknown as maplibregl.Map['off'],
       dragPan: {
         disable: disableDragPanMock,
         enable: enableDragPanMock,
@@ -59,7 +60,9 @@ describe('useMapGestures', () => {
         graph: mockGraph,
         selectionTool: 'brush',
         brushRadius: 50,
-        setSelectedEdgeIds: setSelectedEdgeIdsMock,
+        setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+          React.SetStateAction<string[]>
+        >,
       }),
     );
 
@@ -82,7 +85,9 @@ describe('useMapGestures', () => {
         graph: mockGraph,
         selectionTool: 'brush',
         brushRadius: 50,
-        setSelectedEdgeIds: setSelectedEdgeIdsMock,
+        setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+          React.SetStateAction<string[]>
+        >,
       }),
     );
 
@@ -97,7 +102,9 @@ describe('useMapGestures', () => {
         graph: mockGraph,
         selectionTool: 'brush',
         brushRadius: 200,
-        setSelectedEdgeIds: setSelectedEdgeIdsMock,
+        setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+          React.SetStateAction<string[]>
+        >,
       }),
     );
 
@@ -123,7 +130,9 @@ describe('useMapGestures', () => {
         graph: mockGraph,
         selectionTool: 'brush',
         brushRadius: 200,
-        setSelectedEdgeIds: setSelectedEdgeIdsMock,
+        setSelectedEdgeIds: setSelectedEdgeIdsMock as unknown as React.Dispatch<
+          React.SetStateAction<string[]>
+        >,
       }),
     );
 

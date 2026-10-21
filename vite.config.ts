@@ -4,6 +4,11 @@ import { defineConfig } from 'vitest/config';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    watch: {
+      ignored: ['**/.tasks/**', '**/target/**', '**/crates/**/target/**'],
+    },
+  },
   build: {
     rollupOptions: {
       output: {

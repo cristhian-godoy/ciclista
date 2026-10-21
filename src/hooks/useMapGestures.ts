@@ -1,9 +1,9 @@
 import type * as maplibregl from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import type { SelectionTool } from '../components/map/contexts/StudioStateContext';
 import { findEdgesWithinRadius } from '../core/common/geometry';
 import type { StreetGraph } from '../core/graph/types';
-import type { SelectionTool } from '../types/studio';
 
 /**
  * Configuration options for useMapGestures hook.

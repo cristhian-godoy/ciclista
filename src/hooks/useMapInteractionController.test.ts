@@ -1,7 +1,12 @@
 import { renderHook } from '@testing-library/react';
 import type * as maplibregl from 'maplibre-gl';
+import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ContextMenuData } from '../components/map/MapContext';
+import type { Coordinate } from '../core/common/types';
+import type { GraphNode } from '../core/graph/types';
+import type { Landmark } from '../core/landmarks/types';
 import { useMapInteractionController } from './useMapInteractionController';
 
 describe('useMapInteractionController', () => {
@@ -11,9 +16,7 @@ describe('useMapInteractionController', () => {
   let onStartDragMock: ReturnType<typeof vi.fn>;
   let onEndDragMock: ReturnType<typeof vi.fn>;
   let onNodeSelectMock: ReturnType<typeof vi.fn>;
-  let openCreatePlaceModalMock: ReturnType<typeof vi.fn>;
   let openEditPlaceModalMock: ReturnType<typeof vi.fn>;
-  let setIsPlacingPlaceMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     setContextMenuMock = vi.fn();
@@ -21,9 +24,7 @@ describe('useMapInteractionController', () => {
     onStartDragMock = vi.fn();
     onEndDragMock = vi.fn();
     onNodeSelectMock = vi.fn();
-    openCreatePlaceModalMock = vi.fn();
     openEditPlaceModalMock = vi.fn();
-    setIsPlacingPlaceMock = vi.fn();
 
     mockMap = {
       getLayer: vi.fn((id: string) =>
@@ -42,8 +43,10 @@ describe('useMapInteractionController', () => {
     const { result } = renderHook(() =>
       useMapInteractionController({
         map: mockMap as maplibregl.Map,
-        setContextMenu: setContextMenuMock,
-        setDockExpanded: setDockExpandedMock,
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+        setDockExpanded: setDockExpandedMock as (expanded: boolean) => void,
       }),
     );
 
@@ -59,24 +62,44 @@ describe('useMapInteractionController', () => {
     expect(setDockExpandedMock).toHaveBeenCalledWith(false);
   });
 
-  it('handles click in pin placement mode by opening create modal and exiting placement', () => {
+  it('handles crossing cluster clicks by expanding crossing and focusing map', () => {
+    const setManagedClusterIdMock = vi.fn();
+    const setManagedNodeIdsMock = vi.fn();
+    const setActiveCrossingIdMock = vi.fn();
+
+    (mockMap.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        properties: {
+          crossingId: 'crossing-100',
+          nodeIds: JSON.stringify(['node-1', 'node-2']),
+        },
+        geometry: {
+          coordinates: [11.575, 48.137],
+        },
+      },
+    ]);
+
     const { result } = renderHook(() =>
       useMapInteractionController({
         map: mockMap as maplibregl.Map,
-        isPlacingPlace: true,
-        setIsPlacingPlace: setIsPlacingPlaceMock,
-        openCreatePlaceModal: openCreatePlaceModalMock,
-        setContextMenu: setContextMenuMock,
+        setManagedClusterId: setManagedClusterIdMock,
+        setManagedNodeIds: setManagedNodeIdsMock,
+        setActiveCrossingId: setActiveCrossingIdMock,
       }),
     );
 
     result.current.handleClick({
-      point: { x: 100, y: 150 },
-      lngLat: { lat: 48.13, lng: 11.57 },
+      point: { x: 100, y: 100 },
+      lngLat: { lat: 48.137, lng: 11.575 },
     } as unknown as maplibregl.MapMouseEvent);
 
-    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
-    expect(openCreatePlaceModalMock).toHaveBeenCalledWith({ lat: 48.13, lng: 11.57 });
+    expect(setManagedClusterIdMock).toHaveBeenCalledWith('crossing-100');
+    expect(setManagedNodeIdsMock).toHaveBeenCalledWith(['node-1', 'node-2']);
+    expect(setActiveCrossingIdMock).toHaveBeenCalledWith('crossing-100');
+    expect(mockMap.easeTo).toHaveBeenCalledWith({
+      center: [11.575, 48.137],
+      zoom: 17.5,
+    });
   });
 
   it('places start coordinate when clicking empty space in routing mode', () => {
@@ -86,10 +109,12 @@ describe('useMapInteractionController', () => {
         appMode: 'routing',
         startCoord: null,
         endCoord: null,
-        onStartDrag: onStartDragMock,
-        onEndDrag: onEndDragMock,
-        onNodeSelect: onNodeSelectMock,
-        setContextMenu: setContextMenuMock,
+        onStartDrag: onStartDragMock as (coord: Coordinate | null) => void,
+        onEndDrag: onEndDragMock as (coord: Coordinate | null) => void,
+        onNodeSelect: onNodeSelectMock as (node: GraphNode | null) => void,
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
       }),
     );
 
@@ -103,12 +128,14 @@ describe('useMapInteractionController', () => {
   });
 
   it('opens edit modal when clicking place in places mode', () => {
-    const samplePlace = {
+    const samplePlace: Landmark = {
       id: 'p-1',
       name: 'Cafe',
-      category: 'amenity',
+      category: 'other',
       lat: 48.135,
       lng: 11.575,
+      createdAt: 1000,
+      updatedAt: 1000,
     };
 
     (mockMap.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockImplementation(
@@ -125,8 +152,10 @@ describe('useMapInteractionController', () => {
         map: mockMap as maplibregl.Map,
         appMode: 'places',
         places: [samplePlace],
-        openEditPlaceModal: openEditPlaceModalMock,
-        setContextMenu: setContextMenuMock,
+        openEditPlaceModal: openEditPlaceModalMock as (place: Landmark) => void,
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
       }),
     );
 

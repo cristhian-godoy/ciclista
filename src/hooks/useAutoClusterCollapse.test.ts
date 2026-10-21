@@ -13,10 +13,8 @@ describe('useAutoClusterCollapse', () => {
   let setManagedNodeIdsMock: ReturnType<typeof vi.fn>;
 
   const nodes = new Map();
-  nodes.set('node-1', {
-    node: { id: 'node-1', lat: 48.14, lng: 11.58, tags: {} },
-    edges: [],
-  });
+  nodes.set('node-1', { node: { id: 'node-1', lat: 48.14, lng: 11.58 } });
+  nodes.set('node-2', { node: { id: 'node-2', lat: 48.141, lng: 11.581 } });
   const mockGraph = { nodes } as unknown as StreetGraph;
 
   beforeEach(() => {
@@ -26,8 +24,8 @@ describe('useAutoClusterCollapse', () => {
     setManagedNodeIdsMock = vi.fn();
 
     mockMap = {
-      on: onMock,
-      off: offMock,
+      on: onMock as unknown as maplibregl.Map['on'],
+      off: offMock as unknown as maplibregl.Map['off'],
       getZoom: vi.fn(() => 17),
       getCenter: vi.fn(() => ({ lat: 48.14, lng: 11.58 }) as unknown as maplibregl.LngLat),
     };
@@ -40,8 +38,8 @@ describe('useAutoClusterCollapse', () => {
         managedClusterId: 'cluster-1',
         managedNodeIds: ['node-1'],
         graph: mockGraph,
-        setManagedClusterId: setManagedClusterIdMock,
-        setManagedNodeIds: setManagedNodeIdsMock,
+        setManagedClusterId: setManagedClusterIdMock as (id: string | null) => void,
+        setManagedNodeIds: setManagedNodeIdsMock as (ids: string[]) => void,
       }),
     );
 
@@ -58,8 +56,8 @@ describe('useAutoClusterCollapse', () => {
         managedClusterId: null,
         managedNodeIds: [],
         graph: mockGraph,
-        setManagedClusterId: setManagedClusterIdMock,
-        setManagedNodeIds: setManagedNodeIdsMock,
+        setManagedClusterId: setManagedClusterIdMock as (id: string | null) => void,
+        setManagedNodeIds: setManagedNodeIdsMock as (ids: string[]) => void,
       }),
     );
 
@@ -75,8 +73,8 @@ describe('useAutoClusterCollapse', () => {
         managedClusterId: 'cluster-1',
         managedNodeIds: ['node-1'],
         graph: mockGraph,
-        setManagedClusterId: setManagedClusterIdMock,
-        setManagedNodeIds: setManagedNodeIdsMock,
+        setManagedClusterId: setManagedClusterIdMock as (id: string | null) => void,
+        setManagedNodeIds: setManagedNodeIdsMock as (ids: string[]) => void,
       }),
     );
 
@@ -99,8 +97,8 @@ describe('useAutoClusterCollapse', () => {
         managedClusterId: 'cluster-1',
         managedNodeIds: ['node-1'],
         graph: mockGraph,
-        setManagedClusterId: setManagedClusterIdMock,
-        setManagedNodeIds: setManagedNodeIdsMock,
+        setManagedClusterId: setManagedClusterIdMock as (id: string | null) => void,
+        setManagedNodeIds: setManagedNodeIdsMock as (ids: string[]) => void,
       }),
     );
 
@@ -125,8 +123,8 @@ describe('useAutoClusterCollapse', () => {
         managedClusterId: 'cluster-1',
         managedNodeIds: ['node-1'],
         graph: mockGraph,
-        setManagedClusterId: setManagedClusterIdMock,
-        setManagedNodeIds: setManagedNodeIdsMock,
+        setManagedClusterId: setManagedClusterIdMock as (id: string | null) => void,
+        setManagedNodeIds: setManagedNodeIdsMock as (ids: string[]) => void,
       }),
     );
 

@@ -427,10 +427,10 @@ export const CrossingEditPanel: React.FC = () => {
           {/* Turn Configuration Form Keyed for Clean Sync */}
           <TurnConfigForm
             key={turnConfigKey}
-            activeCrossingId={activeCrossingId}
+            activeCrossingId={activeCrossingId ?? activeCluster.id}
             activeTurnSelection={activeTurnSelection}
             computedTurnPath={computedTurnPath}
-            existingOverride={existingOverrideForCurrentSelection}
+            existingOverride={existingOverrideForCurrentSelection ?? null}
             onSaveTurn={onSaveCrossingTurn}
             onDeleteTurn={onDeleteCrossingTurn}
             onRemoveWaypoint={handleRemoveWaypoint}

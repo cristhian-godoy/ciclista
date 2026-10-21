@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
+import type { SelectionTool } from '../components/map/contexts/StudioStateContext';
 import type { ContextMenuData, MapContextType } from '../components/map/MapContext';
 import {
   CrossingEditorContext,
@@ -14,7 +15,6 @@ import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry'
 import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
 import type { Landmark } from '../core/landmarks/types';
-import type { SelectionTool } from '../types/studio';
 import type { Place } from './usePlaces';
 
 /**
@@ -149,12 +149,14 @@ export function useMapInteractionController(
   const endCoordRef = useRef(endCoord);
   const isNavigatingRef = useRef(isNavigating);
   const appModeRef = useRef(appMode);
-  const selectedEdgeIdsRef = useRef(selectedEdgeIds);
-  const setSelectedEdgeIdsRef = useRef(setSelectedEdgeIds);
-  const selectionToolRef = useRef(selectionTool);
-  const brushRadiusRef = useRef(brushRadius);
-  const graphRef = useRef(graph);
-  const placesRef = useRef(places);
+  const selectedEdgeIdsRef = useRef<string[] | undefined>(selectedEdgeIds);
+  const setSelectedEdgeIdsRef = useRef<React.Dispatch<React.SetStateAction<string[]>> | undefined>(
+    setSelectedEdgeIds,
+  );
+  const selectionToolRef = useRef<SelectionTool | undefined>(selectionTool);
+  const brushRadiusRef = useRef<number | undefined>(brushRadius);
+  const graphRef = useRef<StreetGraph | null | undefined>(graph);
+  const placesRef = useRef<Landmark[]>(places);
   const openCreatePlaceModalRef = useRef(openCreatePlaceModal);
   const openEditPlaceModalRef = useRef(openEditPlaceModal);
   const onNodeSelectRef = useRef(onNodeSelect);
@@ -163,9 +165,11 @@ export function useMapInteractionController(
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
   const setActiveCrossingIdRef = useRef(setActiveCrossingId);
-  const isPlacingPlaceRef = useRef(isPlacingPlace);
+  const isPlacingPlaceRef = useRef<boolean | undefined>(isPlacingPlace);
   const setIsPlacingPlaceRef = useRef(setIsPlacingPlace);
-  const setContextMenuRef = useRef(setContextMenu);
+  const setContextMenuRef = useRef<
+    React.Dispatch<React.SetStateAction<ContextMenuData>> | undefined
+  >(setContextMenu);
   const setDockExpandedRef = useRef(setDockExpanded);
 
   useEffect(() => {
@@ -221,7 +225,9 @@ export function useMapInteractionController(
   // Dismiss context menu on outside window clicks
   useEffect(() => {
     const handleWindowClick = () => {
-      setContextMenuRef.current?.((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      setContextMenuRef.current?.((prev: ContextMenuData) =>
+        prev.visible ? { ...prev, visible: false } : prev,
+      );
     };
     window.addEventListener('click', handleWindowClick);
     return () => {
@@ -230,7 +236,9 @@ export function useMapInteractionController(
   }, []);
 
   const handleClick = useCallback((e: maplibregl.MapMouseEvent) => {
-    setContextMenuRef.current?.((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    setContextMenuRef.current?.((prev: ContextMenuData) =>
+      prev.visible ? { ...prev, visible: false } : prev,
+    );
 
     if (
       e.defaultPrevented ||
@@ -292,8 +300,8 @@ export function useMapInteractionController(
       if (clusterFeature) {
         const props = clusterFeature.properties ?? {};
         const coords = (clusterFeature.geometry as { coordinates?: number[] })?.coordinates;
-        const lat = coords ? coords[1] : e.lngLat.lat;
-        const lng = coords ? coords[0] : e.lngLat.lng;
+        const lat = coords?.[1] ?? e.lngLat.lat;
+        const lng = coords?.[0] ?? e.lngLat.lng;
 
         let nodeIds: string[] = [];
         if (props.nodeIds) {
@@ -336,8 +344,8 @@ export function useMapInteractionController(
         const props = signalFeature.properties ?? {};
         const currentGraph = graphRef.current;
         const coords = (signalFeature.geometry as { coordinates?: number[] })?.coordinates;
-        const lat = coords ? coords[1] : e.lngLat.lat;
-        const lng = coords ? coords[0] : e.lngLat.lng;
+        const lat = coords?.[1] ?? e.lngLat.lat;
+        const lng = coords?.[0] ?? e.lngLat.lng;
         const nodeId = String(props.id ?? signalFeature.id ?? '');
 
         if (nodeId) {
@@ -400,7 +408,7 @@ export function useMapInteractionController(
 
     if (placeFeatures.length > 0 && placeFeatures[0]?.properties?.id) {
       const placeId = String(placeFeatures[0].properties.id);
-      const targetPlace = placesRef.current?.find((lm) => lm.id === placeId);
+      const targetPlace = placesRef.current?.find((lm: Landmark) => lm.id === placeId);
       if (targetPlace) {
         if (appModeRef.current === 'places' || (appModeRef.current as string) === 'landmarks') {
           openEditPlaceModalRef.current?.(targetPlace);
@@ -450,15 +458,17 @@ export function useMapInteractionController(
 
         if (edgeId) {
           const targetId = edgeId;
-          setSelectedEdgeIdsRef.current?.((prev) =>
-            prev.includes(targetId) ? prev.filter((id) => id !== targetId) : [...prev, targetId],
+          setSelectedEdgeIdsRef.current?.((prev: string[]) =>
+            prev.includes(targetId)
+              ? prev.filter((id: string) => id !== targetId)
+              : [...prev, targetId],
           );
         }
       } else if (selectionToolRef.current === 'brush') {
         const coord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
         const matching = findEdgesWithinRadius(currentGraph, coord, brushRadiusRef.current ?? 20);
         if (matching.length > 0) {
-          setSelectedEdgeIdsRef.current?.((prev) => {
+          setSelectedEdgeIdsRef.current?.((prev: string[]) => {
             const set = new Set(prev);
             for (const id of matching) set.add(id);
             return Array.from(set);
@@ -511,7 +521,9 @@ export function useMapInteractionController(
           const matching = findEdgesWithinRadius(currentGraph, coord, brushRadiusRef.current ?? 20);
           if (matching.length > 0) {
             const toRemove = new Set(matching);
-            setSelectedEdgeIdsRef.current?.((prev) => prev.filter((id) => !toRemove.has(id)));
+            setSelectedEdgeIdsRef.current?.((prev: string[]) =>
+              prev.filter((id: string) => !toRemove.has(id)),
+            );
           }
         }
         return;
@@ -543,7 +555,9 @@ export function useMapInteractionController(
         if (edgeId) {
           e.originalEvent?.preventDefault?.();
           const targetId = edgeId;
-          setSelectedEdgeIdsRef.current?.((prev) => prev.filter((id) => id !== targetId));
+          setSelectedEdgeIdsRef.current?.((prev: string[]) =>
+            prev.filter((id: string) => id !== targetId),
+          );
           return;
         }
       }
@@ -569,7 +583,7 @@ export function useMapInteractionController(
     let clickedPlaceId: string | null = null;
     if (landmarkFeatures.length > 0 && landmarkFeatures[0]?.properties?.id) {
       const landmarkId = String(landmarkFeatures[0].properties.id);
-      const targetPlace = placesRef.current?.find((lm) => lm.id === landmarkId);
+      const targetPlace = placesRef.current?.find((lm: Landmark) => lm.id === landmarkId);
       if (targetPlace) {
         clickedPlaceId = targetPlace.id;
       }
@@ -578,11 +592,11 @@ export function useMapInteractionController(
     const features = currentMap.queryRenderedFeatures(e.point, {
       layers: ['traffic-lights-cluster'],
     });
-    const isCrossing = features.length > 0;
-    const crossingId =
-      isCrossing && features[0].properties ? (features[0].properties.crossingId as string) : null;
-    const nodeIds =
-      isCrossing && features[0].properties ? (features[0].properties.nodeIds as string) : null;
+    const firstFeature = features[0];
+    const crossingId = firstFeature?.properties
+      ? (firstFeature.properties.crossingId as string)
+      : null;
+    const nodeIds = firstFeature?.properties ? (firstFeature.properties.nodeIds as string) : null;
 
     setContextMenuRef.current?.({
       visible: true,
@@ -597,12 +611,16 @@ export function useMapInteractionController(
   }, []);
 
   const handleDragStart = useCallback(() => {
-    setContextMenuRef.current?.((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    setContextMenuRef.current?.((prev: ContextMenuData) =>
+      prev.visible ? { ...prev, visible: false } : prev,
+    );
     setDockExpandedRef.current?.(false);
   }, []);
 
   const handleZoomStart = useCallback(() => {
-    setContextMenuRef.current?.((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    setContextMenuRef.current?.((prev: ContextMenuData) =>
+      prev.visible ? { ...prev, visible: false } : prev,
+    );
     setDockExpandedRef.current?.(false);
   }, []);
 

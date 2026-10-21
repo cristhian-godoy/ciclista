@@ -2,7 +2,6 @@ export type {
   ContextMenuData,
   CrossingEditorContextType,
   LandmarkModalState,
-  MapContextType,
   MapInstanceContextType,
   NavigationStateContextType,
   PlaceModalState,
@@ -21,5 +20,5 @@ export {
   useRoutingStateContext,
   useStudioStateContext,
 } from './contexts';
-export { MapContext, useMapContext } from './mapContextInstance';
+export { MapContext, type MapContextType, useMapContext } from './mapContextInstance';
 export { MapProvider, type MapProviderProps } from './MapProvider';
