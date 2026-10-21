@@ -1,7 +1,13 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import * as maplibregl from 'maplibre-gl';
+import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef, useState } from 'react';
+
+// Configure MapLibre Web Worker URL for Vite bundler compatibility
+if (typeof maplibregl.setWorkerUrl === 'function') {
+  maplibregl.setWorkerUrl(maplibreglWorkerUrl);
+}
 
 import { fetchFilteredStyle } from '../../core/api/style';
 import { MAP_CONFIG } from '../../core/common/constants';

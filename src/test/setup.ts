@@ -252,12 +252,14 @@ vi.mock('maplibre-gl', () => {
     LngLatBounds,
     NavigationControl,
     Popup,
+    setWorkerUrl: vi.fn(),
     default: {
       Map,
       Marker,
       LngLatBounds,
       NavigationControl,
       Popup,
+      setWorkerUrl: vi.fn(),
     },
   };
 });

@@ -1,7 +1,7 @@
 const CACHE_NAME = 'ciclista-app-shell-v1';
 const MAP_TILES_CACHE_NAME = 'openfreemap-assets-cache-v1';
 
-const STATIC_EXTENSIONS = /\.(?:js|css|wasm|svg|html|json|webmanifest)(?:\?.*)?$/i;
+const STATIC_EXTENSIONS = /\.(?:js|mjs|css|wasm|svg|html|json|webmanifest)(?:\?.*)?$/i;
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -43,15 +43,18 @@ self.addEventListener('fetch', (event) => {
         try {
           const networkResponse = await fetch(request);
           if (networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
+            cache.put(request, networkResponse.clone()).catch(() => {});
           }
           return networkResponse;
         } catch (error) {
-          return cachedResponse || new Response('Network error occurred fetching map asset', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: { 'Content-Type': 'text/plain' },
-          });
+          return (
+            cachedResponse ||
+            new Response('Network error occurred fetching map asset', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/plain' },
+            })
+          );
         }
       }),
     );
@@ -78,7 +81,7 @@ self.addEventListener('fetch', (event) => {
       const networkFetch = fetch(request)
         .then((networkResponse) => {
           if (networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
+            cache.put(request, networkResponse.clone()).catch(() => {});
           }
           return networkResponse;
         })
