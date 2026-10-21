@@ -1,6 +1,7 @@
 import * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 /**
@@ -52,14 +53,14 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.width = '28px';
         startEl.style.height = '28px';
         startEl.style.borderRadius = '50%';
-        startEl.style.backgroundColor = '#10b981'; // Emerald Green
-        startEl.style.border = '3px solid #ffffff';
+        startEl.style.backgroundColor = MAP_THEME_TOKENS.status.success;
+        startEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
         startEl.style.cursor = 'grab';
         startEl.style.display = 'flex';
         startEl.style.alignItems = 'center';
         startEl.style.justifyContent = 'center';
-        startEl.style.color = '#ffffff';
+        startEl.style.color = MAP_THEME_TOKENS.overlay.white;
         startEl.style.fontWeight = 'bold';
         startEl.style.fontSize = '12px';
         startEl.style.fontFamily = 'inherit';
@@ -102,14 +103,14 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.width = '28px';
         endEl.style.height = '28px';
         endEl.style.borderRadius = '50%';
-        endEl.style.backgroundColor = '#ef4444'; // Red
-        endEl.style.border = '3px solid #ffffff';
+        endEl.style.backgroundColor = MAP_THEME_TOKENS.status.danger;
+        endEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
         endEl.style.cursor = 'grab';
         endEl.style.display = 'flex';
         endEl.style.alignItems = 'center';
         endEl.style.justifyContent = 'center';
-        endEl.style.color = '#ffffff';
+        endEl.style.color = MAP_THEME_TOKENS.overlay.white;
         endEl.style.fontWeight = 'bold';
         endEl.style.fontSize = '12px';
         endEl.style.fontFamily = 'inherit';

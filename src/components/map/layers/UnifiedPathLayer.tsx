@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
+import { MAP_THEME_TOKENS } from '../../../core/rendering/theme';
 import type { PathSegmentFeature, PathStyleConfig } from '../../../core/rendering/types';
 import { useMapContext } from '../MapContext';
 
@@ -122,7 +123,7 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
             'line-cap': 'round',
           },
           paint: {
-            'line-color': '#000',
+            'line-color': MAP_THEME_TOKENS.overlay.black,
             'line-width': 1,
             'line-opacity': 0,
           },
@@ -143,7 +144,7 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
             'line-cap': 'round',
           },
           paint: {
-            'line-color': '#000',
+            'line-color': MAP_THEME_TOKENS.overlay.black,
             'line-width': 1,
             'line-opacity': 0,
           },
@@ -164,7 +165,7 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
             'line-cap': 'round',
           },
           paint: {
-            'line-color': ['coalesce', ['get', 'color'], '#3b82f6'],
+            'line-color': ['coalesce', ['get', 'color'], MAP_THEME_TOKENS.status.info],
             'line-width': 1,
             'line-opacity': 0,
           },

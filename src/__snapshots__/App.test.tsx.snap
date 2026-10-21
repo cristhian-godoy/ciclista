@@ -395,163 +395,199 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
           Bike Profile
         </label>
         <div
-          class="strategy-selector"
+          aria-label="Bike Profile Selector"
+          class="speed-selector-container"
+          role="group"
         >
-          <button
-            class="strategy-btn active"
+          <div
+            class="speed-selector-buttons"
           >
-            <svg
-              aria-label="Standard Icon"
-              class="lucide lucide-bike"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
+            <button
+              aria-pressed="true"
+              class="speed-selector-btn  active"
+              type="button"
             >
-              <circle
-                cx="18.5"
-                cy="17.5"
-                r="3.5"
-              />
-              <circle
-                cx="5.5"
-                cy="17.5"
-                r="3.5"
-              />
-              <circle
-                cx="15"
-                cy="5"
-                r="1"
-              />
-              <path
-                d="M12 17.5V14l-3-3 4-3 2 3h2"
-              />
-            </svg>
-            <span>
-              Standard
-            </span>
-          </button>
-          <button
-            class="strategy-btn "
-          >
-            <svg
-              aria-label="Road Icon"
-              class="lucide lucide-zap"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
+              <span
+                class="speed-selector-btn-icon"
+              >
+                <svg
+                  aria-label="Standard Icon"
+                  class="lucide lucide-bike"
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="18.5"
+                    cy="17.5"
+                    r="3.5"
+                  />
+                  <circle
+                    cx="5.5"
+                    cy="17.5"
+                    r="3.5"
+                  />
+                  <circle
+                    cx="15"
+                    cy="5"
+                    r="1"
+                  />
+                  <path
+                    d="M12 17.5V14l-3-3 4-3 2 3h2"
+                  />
+                </svg>
+              </span>
+              <span>
+                Standard
+              </span>
+            </button>
+            <button
+              aria-pressed="false"
+              class="speed-selector-btn"
+              type="button"
             >
-              <path
-                d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
-              />
-            </svg>
-            <span>
-              Road
-            </span>
-          </button>
-          <button
-            class="strategy-btn "
-          >
-            <svg
-              aria-label="E-Bike Icon"
-              class="lucide lucide-zap"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
+              <span
+                class="speed-selector-btn-icon"
+              >
+                <svg
+                  aria-label="Road Icon"
+                  class="lucide lucide-zap"
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
+                  />
+                </svg>
+              </span>
+              <span>
+                Road
+              </span>
+            </button>
+            <button
+              aria-pressed="false"
+              class="speed-selector-btn"
+              type="button"
             >
-              <path
-                d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
-              />
-            </svg>
-            <span>
-              E-Bike
-            </span>
-          </button>
-          <button
-            class="strategy-btn "
-          >
-            <svg
-              aria-label="Cargo Icon"
-              class="lucide lucide-bike"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
+              <span
+                class="speed-selector-btn-icon"
+              >
+                <svg
+                  aria-label="E-Bike Icon"
+                  class="lucide lucide-zap"
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
+                  />
+                </svg>
+              </span>
+              <span>
+                E-Bike
+              </span>
+            </button>
+            <button
+              aria-pressed="false"
+              class="speed-selector-btn"
+              type="button"
             >
-              <circle
-                cx="18.5"
-                cy="17.5"
-                r="3.5"
-              />
-              <circle
-                cx="5.5"
-                cy="17.5"
-                r="3.5"
-              />
-              <circle
-                cx="15"
-                cy="5"
-                r="1"
-              />
-              <path
-                d="M12 17.5V14l-3-3 4-3 2 3h2"
-              />
-            </svg>
-            <span>
-              Cargo
-            </span>
-          </button>
-          <button
-            class="strategy-btn "
-          >
-            <svg
-              aria-label="Custom Icon"
-              class="lucide lucide-settings"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
+              <span
+                class="speed-selector-btn-icon"
+              >
+                <svg
+                  aria-label="Cargo Icon"
+                  class="lucide lucide-bike"
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="18.5"
+                    cy="17.5"
+                    r="3.5"
+                  />
+                  <circle
+                    cx="5.5"
+                    cy="17.5"
+                    r="3.5"
+                  />
+                  <circle
+                    cx="15"
+                    cy="5"
+                    r="1"
+                  />
+                  <path
+                    d="M12 17.5V14l-3-3 4-3 2 3h2"
+                  />
+                </svg>
+              </span>
+              <span>
+                Cargo
+              </span>
+            </button>
+            <button
+              aria-pressed="false"
+              class="speed-selector-btn"
+              type="button"
             >
-              <path
-                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
-              />
-              <circle
-                cx="12"
-                cy="12"
-                r="3"
-              />
-            </svg>
-            <span>
-              Custom
-            </span>
-          </button>
+              <span
+                class="speed-selector-btn-icon"
+              >
+                <svg
+                  aria-label="Custom Icon"
+                  class="lucide lucide-settings"
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                  />
+                </svg>
+              </span>
+              <span>
+                Custom
+              </span>
+            </button>
+          </div>
         </div>
       </section>
       <section
@@ -664,9 +700,11 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             <div
               class="rules-section"
             >
-              <button
+              <div
                 aria-expanded="false"
                 class="rules-section-toggle"
+                role="button"
+                tabindex="0"
               >
                 <span
                   class="rules-section-btn-label"
@@ -699,31 +737,37 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Traffic Signs
                 </span>
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-chevron-down"
-                  fill="none"
-                  height="13"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="13"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  class="rules-section-header-actions"
                 >
-                  <path
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-chevron-down"
+                    fill="none"
+                    height="13"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="13"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div
               class="rules-section"
             >
-              <button
+              <div
                 aria-expanded="false"
                 class="rules-section-toggle"
+                role="button"
+                tabindex="0"
               >
                 <span
                   class="rules-section-btn-label"
@@ -757,31 +801,37 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Road Classes
                 </span>
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-chevron-down"
-                  fill="none"
-                  height="13"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="13"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  class="rules-section-header-actions"
                 >
-                  <path
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-chevron-down"
+                    fill="none"
+                    height="13"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="13"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div
               class="rules-section"
             >
-              <button
+              <div
                 aria-expanded="false"
                 class="rules-section-toggle"
+                role="button"
+                tabindex="0"
               >
                 <span
                   class="rules-section-btn-label"
@@ -810,31 +860,37 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Intersections
                 </span>
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-chevron-down"
-                  fill="none"
-                  height="13"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="13"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  class="rules-section-header-actions"
                 >
-                  <path
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-chevron-down"
+                    fill="none"
+                    height="13"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="13"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div
               class="rules-section"
             >
-              <button
+              <div
                 aria-expanded="false"
                 class="rules-section-toggle"
+                role="button"
+                tabindex="0"
               >
                 <span
                   class="rules-section-btn-label"
@@ -861,24 +917,28 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Turn Penalties
                 </span>
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-chevron-down"
-                  fill="none"
-                  height="13"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="13"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  class="rules-section-header-actions"
                 >
-                  <path
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-chevron-down"
+                    fill="none"
+                    height="13"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="13"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </details>
@@ -886,16 +946,21 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       <section
         class="ciclista-card compare-panel-placeholder"
       >
-        <h2
-          class="compare-panel-title"
+        <div
+          class="ciclista-empty-state placeholder-text"
+          role="status"
         >
-          Route Comparison
-        </h2>
-        <p
-          class="placeholder-text"
-        >
-          No routes calculated yet. Move pins to generate route comparisons.
-        </p>
+          <h3
+            class="ciclista-empty-state-title"
+          >
+            Route Comparison
+          </h3>
+          <p
+            class="ciclista-empty-state-desc"
+          >
+            No routes calculated yet. Move pins to generate route comparisons.
+          </p>
+        </div>
       </section>
       <section
         class="ciclista-card attribution-panel"
@@ -903,10 +968,11 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
         <div
           class="rules-section attribution-accordion"
         >
-          <button
+          <div
             aria-expanded="false"
             class="rules-section-toggle attribution-panel-header"
-            type="button"
+            role="button"
+            tabindex="0"
           >
             <span
               class="rules-section-btn-label"
@@ -959,7 +1025,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 />
               </svg>
             </div>
-          </button>
+          </div>
         </div>
       </section>
     </div>

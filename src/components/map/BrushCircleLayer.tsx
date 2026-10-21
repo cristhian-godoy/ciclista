@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { createGeoJSONCircle } from '../../core/common/geometry';
 import type { Coordinate } from '../../core/common/types';
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 export const BRUSH_CIRCLE_SOURCE_ID = 'brush-circle-preview';
@@ -12,7 +13,7 @@ export const BRUSH_CIRCLE_LINE_LAYER_ID = 'brush-circle-preview-line';
 /**
  * High-visibility brand teal color token matching var(--ciclista-color-brand-secondary).
  */
-const BRUSH_COLOR = '#14b8a6';
+const BRUSH_COLOR = MAP_THEME_TOKENS.brand.teal;
 
 /**
  * MapLibre map overlay rendering a dynamic circular radius preview under the cursor

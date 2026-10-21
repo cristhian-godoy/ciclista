@@ -1,6 +1,9 @@
-import { MousePointer, Paintbrush, X } from 'lucide-react';
+import { MousePointer, Paintbrush } from 'lucide-react';
 import React from 'react';
 
+import { Badge } from '../common/Badge';
+import { CloseButton } from '../common/CloseButton';
+import { SliderField } from '../common/SliderField';
 import { useMapContext } from './MapContext';
 
 /**
@@ -35,22 +38,11 @@ export const SelectionToolsDock: React.FC = () => {
     >
       <div className="map-selection-dock-header">
         <span className="map-selection-dock-title">Selection Tools</span>
-        <span
-          className="ciclista-badge ciclista-badge--selected"
-          aria-label={`${selectedEdgeIds.length} edges selected`}
-        >
+        <Badge variant="selected" aria-label={`${selectedEdgeIds.length} edges selected`}>
           {selectedEdgeIds.length} selected
-        </span>
+        </Badge>
         {selectedEdgeIds.length > 0 && (
-          <button
-            type="button"
-            className="ciclista-btn ciclista-btn--sm map-selection-dock-clear"
-            onClick={onClearSelection}
-            aria-label="Clear Selection"
-            title="Clear Selection"
-          >
-            <X size={14} />
-          </button>
+          <CloseButton size="sm" onClick={onClearSelection} label="Clear Selection" />
         )}
       </div>
 
@@ -82,20 +74,17 @@ export const SelectionToolsDock: React.FC = () => {
 
       {selectionTool === 'brush' && (
         <div className="map-selection-dock-brush-controls" data-testid="brush-controls">
-          <div className="map-selection-dock-slider-row">
-            <span className="map-selection-dock-label">Radius: {brushRadius}m</span>
-            <input
-              id="map-selection-brush-radius"
-              type="range"
-              min={10}
-              max={200}
-              step={5}
-              value={brushRadius}
-              onChange={(e) => setBrushRadius(Number(e.target.value))}
-              className="ciclista-slider map-selection-dock-slider"
-              aria-label="Brush Radius Slider"
-            />
-          </div>
+          <SliderField
+            label="Radius"
+            value={brushRadius}
+            min={10}
+            max={200}
+            step={5}
+            unit="m"
+            onChange={setBrushRadius}
+            ariaLabel="Brush Radius Slider"
+            formatValueText={(lbl, val, u) => `${lbl}: ${val}${u}`}
+          />
 
           <div className="map-selection-dock-quick-buttons">
             <button

@@ -48,25 +48,48 @@
   --ciclista-radius-16: 16px;
   --ciclista-radius-lg: 20px;
   --ciclista-radius-round: 50%;
-  --ciclista-spacing-3xs: 1px;
-  --ciclista-spacing-2xs: 2px;
+
+  /* Standard Harmonic Spacing Scale (4px/8px base) */
+  --ciclista-space-3xs: 1px;
+  --ciclista-space-2xs: 2px;
+  --ciclista-space-xs: 4px;
+  --ciclista-space-sm: 8px;
+  --ciclista-space-md: 16px;
+  --ciclista-space-lg: 24px;
+  --ciclista-space-xl: 32px;
+  --ciclista-space-2xl: 48px;
+
+  /* Backward-Compatible Spacing Aliases */
+  --ciclista-spacing-3xs: var(--ciclista-space-3xs);
+  --ciclista-spacing-2xs: var(--ciclista-space-2xs);
   --ciclista-spacing-xxs: 3px;
-  --ciclista-spacing-xs: 4px;
+  --ciclista-spacing-xs: var(--ciclista-space-xs);
   --ciclista-spacing-5: 5px;
   --ciclista-spacing-6: 6px;
-  --ciclista-spacing-sm: 8px;
+  --ciclista-spacing-sm: var(--ciclista-space-sm);
   --ciclista-spacing-10: 10px;
   --ciclista-spacing-12: 12px;
   --ciclista-spacing-14: 14px;
-  --ciclista-spacing-md: 16px;
+  --ciclista-spacing-md: var(--ciclista-space-md);
   --ciclista-spacing-18: 18px;
   --ciclista-spacing-20: 20px;
-  --ciclista-spacing-lg: 24px;
+  --ciclista-spacing-lg: var(--ciclista-space-lg);
   --ciclista-spacing-28: 28px;
-  --ciclista-spacing-xl: 32px;
+  --ciclista-spacing-xl: var(--ciclista-space-xl);
   --ciclista-spacing-36: 36px;
   --ciclista-spacing-40: 40px;
-  --ciclista-spacing-48: 48px;
+  --ciclista-spacing-48: var(--ciclista-space-2xl);
+
+  /* Standard Harmonic Typography Scale */
+  --ciclista-text-2xs: 0.625rem; /* 10px */
+  --ciclista-text-xs: 0.75rem;   /* 12px */
+  --ciclista-text-sm: 0.875rem;  /* 14px */
+  --ciclista-text-base: 1rem;    /* 16px */
+  --ciclista-text-lg: 1.125rem;  /* 18px */
+  --ciclista-text-xl: 1.25rem;   /* 20px */
+  --ciclista-text-2xl: 1.5rem;   /* 24px */
+
+  /* Backward-Compatible Typography Aliases */
   --ciclista-font-2xs: 0.58rem;
   --ciclista-font-62: 0.62rem;
   --ciclista-font-xs: 0.65rem;

@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { useMapContext } from './MapContext';
 
 /**
@@ -12,8 +13,8 @@ function createArrowImage(): HTMLCanvasElement {
   canvas.height = 48;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = '#6366f1';
-  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = MAP_THEME_TOKENS.brand.indigo;
+  ctx.strokeStyle = MAP_THEME_TOKENS.overlay.white;
   ctx.lineWidth = 3;
 
   ctx.beginPath();
@@ -87,10 +88,10 @@ export const NavigationLayer: React.FC = () => {
           source: 'nav-raw-position',
           paint: {
             'circle-radius': 6,
-            'circle-color': '#f43f5e',
+            'circle-color': MAP_THEME_TOKENS.brand.rose,
             'circle-opacity': 0.8,
             'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff',
+            'circle-stroke-color': MAP_THEME_TOKENS.overlay.white,
           },
         });
       }

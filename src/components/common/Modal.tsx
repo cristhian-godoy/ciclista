@@ -1,8 +1,8 @@
-import { X } from 'lucide-react';
 import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { CloseButton } from './CloseButton';
 
 /**
  * Properties for the reusable Modal dialog component.
@@ -82,15 +82,7 @@ export const Modal: React.FC<ModalProps> = ({
             <h2 id="ciclista-modal-title" className="ciclista-modal-title">
               {title}
             </h2>
-            <button
-              type="button"
-              className="ciclista-modal-close-btn"
-              onClick={onClose}
-              aria-label="Close dialog"
-              title="Close"
-            >
-              <X size={18} />
-            </button>
+            <CloseButton variant="modal" size="lg" onClick={onClose} label="Close dialog" />
           </div>
         )}
         <div className="ciclista-modal-body">{children}</div>

@@ -83,10 +83,17 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
 
   return (
     <div className={`rules-section ${className}`.trim()}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className={`rules-section-toggle ${headerClassName}`.trim()}
         onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
         aria-expanded={isExpanded}
       >
         <span className="rules-section-btn-label">
@@ -97,7 +104,7 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
           {headerActions}
           {isExpanded ? <ChevronUp size={chevronSize} /> : <ChevronDown size={chevronSize} />}
         </div>
-      </button>
+      </div>
       {isExpanded && <div className={bodyClassName || undefined}>{children}</div>}
     </div>
   );

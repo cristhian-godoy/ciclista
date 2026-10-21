@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, BikeProfileId } from '../core/config';
+import { SegmentedControl } from './common/SegmentedControl';
 
 /**
  * Properties for the RoutingConfigPanel component.
@@ -263,24 +264,39 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       {/* Bike Profile */}
       <section className="ciclista-form-group">
         <label className="ciclista-label">Bike Profile</label>
-        <div className="strategy-selector">
-          {[
-            { id: 'normal', label: 'Standard', icon: Bike },
-            { id: 'road', label: 'Road', icon: Zap },
-            { id: 'ebike', label: 'E-Bike', icon: Zap },
-            { id: 'slow', label: 'Cargo', icon: Bike },
-            { id: 'custom', label: 'Custom', icon: Settings },
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={`strategy-btn ${bikeConfig.id === id ? 'active' : ''}`}
-              onClick={() => onBikeConfigChange({ ...bikeConfig, id: id as BikeProfileId })}
-            >
-              <Icon size={12} aria-label={`${label} Icon`} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={[
+            {
+              key: 'normal',
+              label: 'Standard',
+              icon: <Bike size={12} aria-label="Standard Icon" />,
+            },
+            {
+              key: 'road',
+              label: 'Road',
+              icon: <Zap size={12} aria-label="Road Icon" />,
+            },
+            {
+              key: 'ebike',
+              label: 'E-Bike',
+              icon: <Zap size={12} aria-label="E-Bike Icon" />,
+            },
+            {
+              key: 'slow',
+              label: 'Cargo',
+              icon: <Bike size={12} aria-label="Cargo Icon" />,
+            },
+            {
+              key: 'custom',
+              label: 'Custom',
+              icon: <Settings size={12} aria-label="Custom Icon" />,
+            },
+          ]}
+          value={bikeConfig.id}
+          onChange={(id) => onBikeConfigChange({ ...bikeConfig, id: id as BikeProfileId })}
+          showDescription={false}
+          ariaLabel="Bike Profile Selector"
+        />
 
         {/* Dynamic Road & Custom Bike Profile Settings & Turn Penalties */}
         {isCustomOrRoad && (

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { formatDistance, formatDuration } from '../utils/formatters';
+import { Badge } from './common/Badge';
 import { useMapContext } from './map/MapContext';
 
 /**
@@ -22,9 +23,13 @@ export const NavigationHUD: React.FC = () => {
           {Math.round(currentSpeedKmh)}
           <span className="hud-unit">km/h</span>
           {showWASD && (
-            <span className="hud-wasd-badge" title="Keyboard WASD controls active">
+            <Badge
+              variant="keyboard"
+              className="hud-wasd-badge"
+              title="Keyboard WASD controls active"
+            >
               WASD
-            </span>
+            </Badge>
           )}
         </span>
       </div>

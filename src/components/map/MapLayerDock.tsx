@@ -1,6 +1,7 @@
 import { ChevronDown, Search, Sliders, TrafficCone } from 'lucide-react';
 import React from 'react';
 
+import { CloseButton } from '../common/CloseButton';
 import { useMapContext } from './MapContext';
 
 /**
@@ -49,9 +50,12 @@ export const MapLayerDock: React.FC = () => {
             </button>
           )}
 
-          <button className="dock-close-btn" onClick={() => setDockExpanded(false)}>
-            <ChevronDown size={14} />
-          </button>
+          <CloseButton
+            variant="dock"
+            onClick={() => setDockExpanded(false)}
+            label="Collapse Map Controls"
+            icon={<ChevronDown size={14} />}
+          />
         </div>
       ) : (
         <button

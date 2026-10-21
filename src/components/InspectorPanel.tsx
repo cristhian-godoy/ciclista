@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 
 import type { InspectorBranchEvaluation } from '../core/inspector/types';
 import { getColorForEdge } from '../core/rendering/theme';
+import { Badge } from './common/Badge';
+import { CloseButton } from './common/CloseButton';
 import { useMapContext } from './map/MapContext';
 
 interface ColorDotProps {
@@ -71,9 +73,12 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
               To node: <span className="font-mono">{ev.targetId}</span>
             </div>
           </div>
-          <span className={`inspector-badge ${isChosen ? 'chosen' : ''}`}>
+          <Badge
+            variant={isChosen ? 'pass' : 'subtle'}
+            className={`inspector-badge ${isChosen ? 'chosen' : ''}`}
+          >
             {isChosen ? 'Chosen' : 'Alternative'}
-          </span>
+          </Badge>
         </div>
 
         <div className="inspector-grid">
@@ -116,17 +121,17 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         {ev.rulePenalties && ev.rulePenalties.length > 0 ? (
           <div className="inspector-penalties">
             {ev.rulePenalties.map((penalty, index) => {
-              const badgeClass =
+              const variant =
                 penalty.type === 'restriction'
-                  ? 'badge badge-signal'
+                  ? 'signal'
                   : penalty.type === 'node_delay'
-                    ? 'badge badge-bike'
-                    : 'badge';
+                    ? 'bike'
+                    : 'default';
 
               return (
-                <span key={index} className={badgeClass}>
+                <Badge key={index} variant={variant}>
                   {penalty.name}: +{Math.round(penalty.value)}s
-                </span>
+                </Badge>
               );
             })}
           </div>
@@ -137,31 +142,31 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             ev.turnPenaltySeconds > 0 ||
             ev.nodeDelaySeconds > 0) && (
             <div className="inspector-penalties">
-              {ev.matchedSign && <span className="badge">Sign: {ev.matchedSign}</span>}
+              {ev.matchedSign && <Badge>Sign: {ev.matchedSign}</Badge>}
               {ev.flatPenaltySeconds > 0 && (
-                <span className="badge badge-signal">
+                <Badge variant="signal">
                   Surface Penalty: +{Math.round(ev.flatPenaltySeconds)}s
-                </span>
+                </Badge>
               )}
               {ev.turnPenaltySeconds > 0 && (
-                <span className="badge">Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s</span>
+                <Badge>Turn Penalty: +{Math.round(ev.turnPenaltySeconds)}s</Badge>
               )}
               {ev.nodeDelaySeconds > 0 && (
-                <span className="badge badge-bike">
+                <Badge variant="bike">
                   {ev.nodeDelayType === 'signal' && 'Traffic Signal Delay'}
                   {ev.nodeDelayType === 'yield' && 'Yield Delay'}
                   {ev.nodeDelayType === 'stop' && 'Stop Sign Delay'}
                   {ev.nodeDelayType === 'crossing' && 'Crossing Delay'}
                   {ev.nodeDelayType === 'custom' && 'Custom Override Delay'}
                   {!ev.nodeDelayType && 'Intersection Delay'}: +{Math.round(ev.nodeDelaySeconds)}s
-                </span>
+                </Badge>
               )}
               {ev.isRestricted && (
-                <span className="badge badge-signal">
+                <Badge variant="signal">
                   {ev.restrictionReason === 'footway_not_bicycle_frei'
                     ? 'Bicycles Prohibited (Footway)'
                     : 'Bicycle Restricted'}
-                </span>
+                </Badge>
               )}
             </div>
           )
@@ -199,16 +204,14 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
       <div className="ciclista-card inspector-compare-card">
         <div className="inspector-header-row">
           <span className="font-medium">Comparing paths to destination</span>
-          <button
+          <CloseButton
+            variant="inspector"
             onClick={(e) => {
               e.stopPropagation();
               setSelectedAlternativeTargetId(null);
             }}
-            className="inspector-close-btn"
-            title="Clear comparison"
-          >
-            &times;
-          </button>
+            label="Clear comparison"
+          />
         </div>
         <div className="inspector-title-sub">
           Chosen remaining vs <strong>{selectedEval.name}</strong> alternative:
@@ -289,9 +292,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
       <div className="inspector-header-row">
         <h2 className="ciclista-label">Node Inspector</h2>
         {selectedNodeId && (
-          <button onClick={onClose} className="inspector-close-btn" title="Close Inspector">
-            &times;
-          </button>
+          <CloseButton variant="inspector" onClick={onClose} label="Close Inspector" />
         )}
       </div>
 

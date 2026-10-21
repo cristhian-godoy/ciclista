@@ -1204,6 +1204,19 @@ h2 {
   border-radius: var(--ciclista-radius-xs);
   display: inline-flex;
   align-items: center;
+  gap: var(--ciclista-spacing-xs);
+  line-height: 1.2;
+}
+
+.ciclista-badge--sm {
+  font-size: var(--ciclista-font-2xs);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-xs);
+}
+
+.ciclista-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ciclista-badge--pass {
@@ -1221,6 +1234,93 @@ h2 {
 .ciclista-badge--idle {
   font-size: var(--ciclista-font-70);
   color: var(--ciclista-color-text-muted);
+}
+
+.ciclista-badge--selected {
+  background: rgb(99 102 241 / 20%);
+  color: var(--ciclista-color-brand-main);
+  border: 1px solid rgb(99 102 241 / 40%);
+}
+
+.ciclista-badge--active {
+  font-size: var(--ciclista-font-xs);
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-6);
+  border-radius: var(--ciclista-radius-10);
+  font-weight: 600;
+}
+
+.ciclista-badge--signal {
+  background: var(--ciclista-color-danger-bg);
+  color: var(--ciclista-color-danger-text);
+  border: 1px solid var(--ciclista-color-danger-border);
+}
+
+.ciclista-badge--bike {
+  background: var(--ciclista-color-success-bg);
+  color: var(--ciclista-color-brand-secondary);
+  border: 1px solid var(--ciclista-color-success-border);
+}
+
+.ciclista-badge--tag {
+  font-size: var(--ciclista-font-62);
+  background: rgb(139 92 246 / 15%);
+  color: hsl(265deg 80% 72%);
+  border: 1px solid rgb(139 92 246 / 30%);
+  border-radius: var(--ciclista-radius-2xs);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-5);
+  font-family: monospace;
+}
+
+.ciclista-badge--road {
+  font-size: var(--ciclista-font-62);
+  background: rgb(14 165 233 / 12%);
+  color: hsl(200deg 80% 65%);
+  border: 1px solid rgb(14 165 233 / 25%);
+  border-radius: var(--ciclista-radius-2xs);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-5);
+  font-family: monospace;
+}
+
+.ciclista-badge--banned {
+  color: var(--ciclista-color-brand-danger);
+  background: var(--ciclista-color-surface-tertiary);
+  border-radius: var(--ciclista-radius-xs);
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-6);
+  font-size: var(--ciclista-font-xs);
+}
+
+.ciclista-badge--subtle {
+  font-size: var(--ciclista-font-xs);
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-6);
+  border-radius: var(--ciclista-radius-xs);
+  background: var(--ciclista-color-surface-tertiary);
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-badge--keyboard {
+  margin-left: var(--ciclista-spacing-6);
+  font-size: var(--ciclista-font-px-9);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-xs);
+  border-radius: var(--ciclista-radius-xs);
+  background: rgb(99 102 241 / 20%);
+  color: var(--ciclista-color-brand-main);
+  border: 1px solid rgb(99 102 241 / 40%);
+  font-weight: bold;
+}
+
+.ciclista-badge--strategy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-xs);
+  justify-content: center;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-weight: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
 .ciclista-detail-title {
@@ -2503,16 +2603,46 @@ h2 {
   cursor: pointer;
   padding: var(--ciclista-spacing-xs);
   border-radius: var(--ciclista-radius-sm);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: var(--ciclista-transition-fast);
+  flex-shrink: 0;
 }
 
 .ciclista-close-btn:hover,
 .ciclista-modal-close-btn:hover {
   color: var(--ciclista-color-text-primary);
   background: rgb(255 255 255 / 10%);
+}
+
+.ciclista-close-btn--sm {
+  padding: var(--ciclista-spacing-2xs);
+  border-radius: var(--ciclista-radius-xs);
+}
+
+.ciclista-close-btn--lg {
+  padding: var(--ciclista-spacing-sm);
+  border-radius: var(--ciclista-radius-md);
+}
+
+.ciclista-close-btn--toast {
+  border-radius: var(--ciclista-radius-xs);
+}
+
+.ciclista-close-btn--toast:hover {
+  background: var(--ciclista-glass-bg-hover);
+}
+
+.ciclista-close-btn--dock,
+.ciclista-close-btn--popup {
+  border-radius: var(--ciclista-radius-round);
+}
+
+.ciclista-close-btn--inspector {
+  color: var(--ciclista-color-text-secondary);
+  font-size: var(--ciclista-font-lg);
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-6);
 }
 
 .ciclista-modal-body {

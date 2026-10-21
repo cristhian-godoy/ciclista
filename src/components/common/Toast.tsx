@@ -1,6 +1,7 @@
-import { X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+
+import { CloseButton } from './CloseButton';
 
 /**
  * Screen anchor position variants for the toast container.
@@ -95,17 +96,7 @@ export const Toast: React.FC<ToastProps> = ({
       {icon && <span className="ciclista-toast-icon">{icon}</span>}
       <div className="ciclista-toast-content">{message}</div>
       {action && <div className="ciclista-toast-action">{action}</div>}
-      {onClose && (
-        <button
-          type="button"
-          className="ciclista-toast-close-btn"
-          onClick={onClose}
-          aria-label="Dismiss notification"
-          title="Dismiss"
-        >
-          <X size={14} />
-        </button>
-      )}
+      {onClose && <CloseButton variant="toast" onClick={onClose} label="Dismiss notification" />}
     </div>
   );
 

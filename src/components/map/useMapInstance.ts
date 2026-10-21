@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { fetchFilteredStyle } from '../../core/api/style';
 import { MAP_CONFIG } from '../../core/common/constants';
 import { logger } from '../../core/common/logger';
+import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { CustomNavigationControl } from './CustomNavigationControl';
 import { useCustomMapControls } from './useCustomMapControls';
 
@@ -261,7 +262,10 @@ export const useMapInstance = ({
                 id: 'background',
                 type: 'background',
                 paint: {
-                  'background-color': themeRef.current === 'bright' ? '#f8fafc' : '#0b0f19',
+                  'background-color':
+                    themeRef.current === 'bright'
+                      ? MAP_THEME_TOKENS.background.light
+                      : MAP_THEME_TOKENS.background.dark,
                 },
               },
             ],
@@ -342,7 +346,10 @@ export const useMapInstance = ({
                 id: 'background',
                 type: 'background',
                 paint: {
-                  'background-color': theme === 'bright' ? '#f8fafc' : '#0b0f19',
+                  'background-color':
+                    theme === 'bright'
+                      ? MAP_THEME_TOKENS.background.light
+                      : MAP_THEME_TOKENS.background.dark,
                 },
               },
             ],
