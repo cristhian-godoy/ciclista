@@ -1,0 +1,6 @@
+types.ts
+	TypeScript interface definitions and types for SVG icon primitives.
+icon-data.ts
+	Geometric node hierarchy definitions for all supported Ciclista icons.
+index.ts
+	Re-export module for icon components and types.

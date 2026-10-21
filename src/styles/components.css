@@ -1459,6 +1459,20 @@ h2 {
   padding: var(--ciclista-spacing-6) var(--ciclista-spacing-sm);
 }
 
+.ciclista-confirm-box {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ciclista-spacing-xs);
+  border: 1px solid var(--ciclista-color-brand-danger);
+  background-color: var(--ciclista-color-danger-bg);
+}
+
+.ciclista-confirm-actions {
+  display: flex;
+  gap: var(--ciclista-spacing-xs);
+  justify-content: flex-end;
+}
+
 /* ─── Global Controls Panel ────────────────────────────────────────── */
 
 .global-controls-panel {

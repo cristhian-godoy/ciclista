@@ -1,8 +1,8 @@
-import { Box, Moon, Palette, Sun, Wifi, WifiOff } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
 import { isDataSaverActive, setDataSaverActive } from '../core/storage/dataUsage';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
+import { Box, Moon, Palette, Sun, Wifi, WifiOff } from './common/Icon';
 
 /**
  * Properties for the GlobalControlsPanel component.

@@ -58,4 +58,12 @@ useCustomMapControls.ts
 	React hook for injecting custom zoom and compass map controls.
 layers
 	Directory containing unified path rendering components.
+OsmTagTable.tsx
+	Subcomponent rendering inspectable OpenStreetMap key-value tags table in NodePopup.
+OsmTagTable.test.tsx
+	Unit tests for OsmTagTable key-value rendering and empty states.
+TurnOverridesForm.tsx
+	Subcomponent rendering turn-by-turn penalty override selectors in NodePopup.
+TurnOverridesForm.test.tsx
+	Unit tests for TurnOverridesForm maneuver rendering and selection callbacks.
 

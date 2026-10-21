@@ -1,7 +1,7 @@
-import { Info } from 'lucide-react';
 import React from 'react';
 
 import { AccordionSection } from './common/AccordionSection';
+import { Info } from './common/Icon';
 
 interface AttributionItem {
   name: string;

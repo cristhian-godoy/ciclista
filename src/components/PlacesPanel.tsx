@@ -1,4 +1,3 @@
-import { Edit2, MapPin, Plus, Trash2 } from 'lucide-react';
 import React, { useContext, useMemo, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
@@ -7,6 +6,7 @@ import type { LandmarkCategory } from '../core/landmarks/types';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import type { CreatePlaceInput, Place, UpdatePlaceInput } from '../hooks/usePlaces';
 import { getCategoryIcon } from '../utils/formatters';
+import { Edit2, MapPin, Plus, Trash2 } from './common/Icon';
 import { SearchInput } from './common/SearchInput';
 import { Toast } from './common/Toast';
 import { MapContext } from './map/MapContext';

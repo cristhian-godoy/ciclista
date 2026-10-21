@@ -1,3 +1,5 @@
+import React from 'react';
+
 import {
   Briefcase,
   GraduationCap,
@@ -9,9 +11,7 @@ import {
   Train,
   Trees,
   Zap,
-} from 'lucide-react';
-import React from 'react';
-
+} from '../components/common/Icon';
 import type { LandmarkCategory } from '../core/landmarks/types';
 
 /**

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { StreetGraph } from './types';
-import { mergeGraphs } from './utils';
+import { getIncomingEdges, mergeGraphs } from './utils';
 
 describe('mergeGraphs', () => {
   it('correctly merges two empty graphs', () => {
@@ -47,5 +47,68 @@ describe('mergeGraphs', () => {
     expect(mergedA?.edges).toContainEqual(edge1);
     expect(mergedA?.edges).toContainEqual(edge2);
     // Duplicate edge to B should be filtered out
+  });
+});
+
+describe('getIncomingEdges', () => {
+  it('correctly retrieves incoming edges using reverse index', () => {
+    const graph: StreetGraph = {
+      nodes: new Map([
+        [
+          'A',
+          {
+            node: { id: 'A', lat: 1, lng: 1, tags: {} },
+            edges: [
+              { target: 'B', distance: 10, name: 'A-B', tags: {} },
+              { target: 'C', distance: 20, name: 'A-C', tags: {} },
+            ],
+          },
+        ],
+        [
+          'B',
+          {
+            node: { id: 'B', lat: 2, lng: 2, tags: {} },
+            edges: [{ target: 'C', distance: 15, name: 'B-C', tags: {} }],
+          },
+        ],
+        [
+          'C',
+          {
+            node: { id: 'C', lat: 3, lng: 3, tags: {} },
+            edges: [],
+          },
+        ],
+      ]),
+    };
+
+    const incomingToC = getIncomingEdges(graph, 'C');
+    expect(incomingToC).toHaveLength(2);
+    expect(incomingToC.map((i) => i.sourceId).sort()).toEqual(['A', 'B']);
+
+    const incomingToA = getIncomingEdges(graph, 'A');
+    expect(incomingToA).toHaveLength(0);
+
+    // Verify index was cached on graph
+    expect(graph.incomingEdgesIndex).toBeDefined();
+
+    // After merge, index is invalidated
+    const graph2: StreetGraph = {
+      nodes: new Map([
+        [
+          'D',
+          {
+            node: { id: 'D', lat: 4, lng: 4, tags: {} },
+            edges: [{ target: 'C', distance: 5, name: 'D-C', tags: {} }],
+          },
+        ],
+      ]),
+    };
+
+    mergeGraphs(graph, graph2);
+    expect(graph.incomingEdgesIndex).toBeUndefined();
+
+    // Re-indexing on next call
+    const updatedIncoming = getIncomingEdges(graph, 'C');
+    expect(updatedIncoming).toHaveLength(3);
   });
 });

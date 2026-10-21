@@ -199,5 +199,16 @@ describe('getBearing and getCompassDirection', () => {
     expect(getCompassDirection(225)).toBe('SW');
     expect(getCompassDirection(270)).toBe('W');
     expect(getCompassDirection(315)).toBe('NW');
+
+    // Long verbal heading format
+    expect(getCompassDirection(0, 'long')).toBe('Northbound');
+    expect(getCompassDirection(45, 'long')).toBe('Northeastbound');
+    expect(getCompassDirection(90, 'long')).toBe('Eastbound');
+    expect(getCompassDirection(180, 'long')).toBe('Southbound');
+    expect(getCompassDirection(270, 'long')).toBe('Westbound');
+
+    // Object overload for getBearing
+    expect(getBearing({ lat: 0, lng: 0 }, { lat: 1, lng: 0 })).toBeCloseTo(0, 1);
+    expect(getBearing({ lat: 0, lng: 0 }, { lat: 0, lng: 1 })).toBeCloseTo(90, 1);
   });
 });

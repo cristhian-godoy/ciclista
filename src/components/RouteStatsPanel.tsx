@@ -1,8 +1,8 @@
-import { Bug, Check, ChevronDown, ChevronUp, Clock, Copy, Ruler, TrafficCone } from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { formatDistance, formatTime, getStrategyLabel } from '../utils/formatters';
+import { Bug, Check, ChevronDown, ChevronUp, Clock, Copy, Ruler, TrafficCone } from './common/Icon';
 
 interface RouteStatsPanelProps {
   routeVariants: StrategyRouteVariant[];

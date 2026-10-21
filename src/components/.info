@@ -9,7 +9,9 @@ CrossingEditPanel.test.tsx
 CrossingEditPanel.tsx
 	Sidebar panel for TM:PE-style crossing turn penalty configuration and edge inspection.
 DataSaverPanel.tsx
-	Visual widgets for tracking data usage and adjusting cellular caching constraints.
+	Panel displaying network data transfer statistics, cache usage, offline state, and configurable data saving policies.
+DataSaverPanel.test.tsx
+	Unit tests for DataSaverPanel cache metrics, offline indicators, and Select policy updates.
 EventsPanel.test.tsx
 	Unit tests for EventsPanel selection, effect gating, and event list interactions.
 EventsPanel.tsx

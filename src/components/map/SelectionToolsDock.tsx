@@ -1,6 +1,6 @@
-import { MousePointer, Paintbrush, X } from 'lucide-react';
 import React from 'react';
 
+import { MousePointer, Paintbrush, X } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
 /**

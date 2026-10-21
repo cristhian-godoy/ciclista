@@ -18,3 +18,13 @@ SegmentedControl.tsx
 	Generic segmented button group control with active state tracking and dynamic hover description.
 DelayRuleRow.tsx
 	Shared collapsible row component combining AccordionSection and SliderField for traffic delay rules.
+Select.tsx
+	Reusable design-system select primitive adhering to Ciclista theme tokens.
+Select.test.tsx
+	Unit tests verifying Select primitive rendering, accessibility labels, and value change events.
+Icon.tsx
+	Zero-dependency SVG icon primitives and generic Icon component replacing lucide-react.
+Icon.test.tsx
+	Unit tests verifying SVG icon primitives, attributes, aliases, and dynamic registry lookups.
+icons
+	Directory re-exporting SVG icon primitives.

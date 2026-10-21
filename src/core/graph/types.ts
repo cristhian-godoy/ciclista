@@ -24,6 +24,20 @@ export interface GraphEdge {
 }
 
 /**
+ * Incoming directed edge reference pointing to a target graph node.
+ */
+export interface IncomingEdgeRef {
+  /**
+   * Source vertex identifier where the edge originates.
+   */
+  sourceId: string;
+  /**
+   * Edge descriptor linking sourceId to the target node.
+   */
+  edge: GraphEdge;
+}
+
+/**
  * Represents a complete street network graph as an adjacency list,
  * mapping node IDs to their respective GraphNode structure and outgoing edges.
  */
@@ -35,6 +49,11 @@ export interface StreetGraph {
       edges: GraphEdge[];
     }
   >;
+  /**
+   * Lazily evaluated reverse adjacency lookup index mapping target node IDs
+   * to incoming edge references.
+   */
+  incomingEdgesIndex?: Map<string, IncomingEdgeRef[]>;
 }
 
 /**

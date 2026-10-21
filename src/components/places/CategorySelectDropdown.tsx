@@ -1,8 +1,8 @@
-import { Check, ChevronDown } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { Check, ChevronDown } from '../common/Icon';
 import { SearchInput } from '../common/SearchInput';
 import { CATEGORY_MAP, PLACE_CATEGORIES, type PlaceCategory } from './types';
 

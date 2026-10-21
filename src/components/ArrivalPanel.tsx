@@ -1,8 +1,8 @@
-import { Award } from 'lucide-react';
 import React from 'react';
 
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { formatDistance, formatDuration } from '../utils/formatters';
+import { Award } from './common/Icon';
 import { useMapContext } from './map/MapContext';
 
 /**

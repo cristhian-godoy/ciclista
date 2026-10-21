@@ -1,8 +1,8 @@
-import { AlertTriangle, Footprints, Octagon, TrafficCone } from 'lucide-react';
 import React from 'react';
 
 import type { NodeDelayConfig } from '../core/config';
 import { DelayRuleRow } from './common/DelayRuleRow';
+import { AlertTriangle, Footprints, Octagon, TrafficCone } from './common/Icon';
 
 /**
  * Properties for configuring intersection node delays.
