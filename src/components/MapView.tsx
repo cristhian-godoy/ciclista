@@ -7,7 +7,6 @@ import { useMapInteractionController } from '../hooks/useMapInteractionControlle
 import { ArrivalPanel } from './ArrivalPanel';
 import { MapPin } from './common/Icon';
 import { Toast } from './common/Toast';
-import { BBoxBoundaryLayer } from './map/BBoxBoundaryLayer';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { BrushCircleLayer } from './map/BrushCircleLayer';
 import { InspectorLayer } from './map/InspectorLayer';
@@ -134,7 +133,6 @@ const MapViewContent: React.FC<{
           <BlockedEdgesLayer />
           <PlacesLayer />
           <RouteVariantsLayer />
-          <BBoxBoundaryLayer />
           <StartEndMarkers />
           <NavigationLayer />
           <InspectorLayer />

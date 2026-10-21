@@ -1,5 +1,3 @@
-BBoxBoundaryLayer.tsx
-	Layer component rendering OSM bounding box polygons.
 BlockedEdgesLayer.test.tsx
 	Unit tests verifying active road blockage barricade layer rendering.
 BlockedEdgesLayer.tsx
