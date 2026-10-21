@@ -1,0 +1,12 @@
+MapInstanceContext.ts
+	Domain context providing MapLibre GL map instance, theme, context menu, and active viewport controls.
+RoutingStateContext.ts
+	Domain context providing street graph, routing variants, node delay overrides, and route inspector states.
+NavigationStateContext.ts
+	Domain context providing turn-by-turn navigation telemetry and trip execution controls.
+StudioStateContext.ts
+	Domain context providing places, events, and road edge selection tools.
+CrossingEditorContext.ts
+	Domain context providing crossing micro-geometry editing and crossing turn override definitions.
+index.ts
+	Barrel module re-exporting all domain-scoped map contexts and hooks.

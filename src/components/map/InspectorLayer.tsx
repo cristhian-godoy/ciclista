@@ -5,6 +5,7 @@ import { buildSegmentedPathGeoJSON } from '../../core/rendering/geometry-mapper'
 import { buildPathSymbolsGeoJSON } from '../../core/rendering/symbols-mapper';
 import { PALETTES } from '../../core/rendering/theme';
 import type { PathSegmentFeature } from '../../core/rendering/types';
+import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
 import { UnifiedPathLayer } from './layers/UnifiedPathLayer';
 import { useMapContext } from './MapContext';
 
@@ -68,145 +69,230 @@ export const InspectorLayer: React.FC = () => {
     };
   }, []);
 
-  // 1. Setup non-path layers and sources
+  // Layers definitions for inspector sources
+  const nodesLayer = useMemo<GeoJsonLayerSpec>(
+    () => ({
+      id: 'inspector-nodes-layer',
+      type: 'circle',
+      source: 'inspector-nodes',
+      paint: {
+        'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 9, 6],
+        'circle-color': '#3b82f6',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.9,
+        'circle-stroke-opacity': 0.9,
+      },
+    }),
+    [],
+  );
+
+  const nodeSymbolsLayer = useMemo<GeoJsonLayerSpec>(
+    () => ({
+      id: 'inspector-node-symbols-layer',
+      type: 'symbol',
+      source: 'inspector-node-symbols',
+      layout: {
+        'text-field': [
+          'match',
+          ['get', 'type'],
+          'signal',
+          '🚦',
+          'stop',
+          '🛑',
+          'yield',
+          '⚠️',
+          'crossing',
+          '🚸',
+          '',
+        ],
+        'text-size': 14,
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+      },
+      paint: {
+        'text-color': [
+          'match',
+          ['get', 'type'],
+          'signal',
+          '#eab308',
+          'stop',
+          '#ef4444',
+          'yield',
+          '#f97316',
+          'crossing',
+          '#3b82f6',
+          '#ffffff',
+        ],
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.5,
+      },
+    }),
+    [],
+  );
+
+  const turnArrowsLayer = useMemo<GeoJsonLayerSpec>(
+    () => ({
+      id: 'inspector-turn-arrows-layer',
+      type: 'symbol',
+      source: 'inspector-turn-arrows',
+      layout: {
+        'text-field': '⬆',
+        'text-size': 12,
+        'text-rotate': ['get', 'bearing'],
+        'text-rotation-alignment': 'map',
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.5,
+      },
+    }),
+    [],
+  );
+
+  const alternativeLabelsLayer = useMemo<GeoJsonLayerSpec>(
+    () => ({
+      id: 'inspector-alternative-labels-layer',
+      type: 'symbol',
+      source: 'inspector-alternative-labels',
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-size': 10,
+        'text-offset': [0, 1.2],
+        'text-anchor': 'top',
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.5,
+      },
+    }),
+    [],
+  );
+
+  const activeRoute = useMemo(() => {
+    return routeVariants.find((a) => a.label === activeAlternativeLabel);
+  }, [routeVariants, activeAlternativeLabel]);
+
+  const { nodesGeoJson, nodeSymbolsGeoJson, turnArrowsGeoJson, labelsGeoJson } = useMemo(() => {
+    const empty = { type: 'FeatureCollection' as const, features: [] };
+    const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
+
+    if (!isInspectorModeActive || pathNodeIds.length === 0 || !activeRoute) {
+      return {
+        nodesGeoJson: empty,
+        nodeSymbolsGeoJson: empty,
+        turnArrowsGeoJson: empty,
+        labelsGeoJson: empty,
+      };
+    }
+
+    const nodeFeatures = pathNodeIds
+      .map((nodeId, idx) => {
+        const entry = graph?.nodes.get(nodeId);
+        if (!entry) return null;
+
+        const nextNodeId = pathNodeIds[idx + 1];
+        const prevNodeId = idx > 0 ? pathNodeIds[idx - 1] : null;
+
+        const hasDiverging = entry.edges.some(
+          (edge) => edge.target !== nextNodeId && edge.target !== prevNodeId,
+        );
+
+        if (!hasDiverging) {
+          return null;
+        }
+
+        return {
+          type: 'Feature' as const,
+          id: idx,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [entry.node.lng, entry.node.lat],
+          },
+          properties: {
+            nodeId,
+          },
+        };
+      })
+      .filter((f): f is NonNullable<typeof f> => f !== null);
+
+    const symbolsData = buildPathSymbolsGeoJSON(activeRoute.result, graph ?? { nodes: new Map() });
+    const symbolsFeatures = symbolsData.features.filter((f) => f.properties.type !== 'turn');
+    const turnFeatures = symbolsData.features.filter((f) => f.properties.type === 'turn');
+
+    let labelFeatures: Array<{
+      type: 'Feature';
+      geometry: { type: 'Point'; coordinates: number[] };
+      properties: { name: string };
+    }> = [];
+
+    if (selectedNodeId && graph && inspectorBranches.length > 0) {
+      const startNode = graph.nodes.get(selectedNodeId)?.node;
+      if (startNode) {
+        labelFeatures = inspectorBranches
+          .map((ev) => {
+            const endNode = graph.nodes.get(ev.targetId)?.node;
+            if (!endNode) return null;
+            const midLng = (startNode.lng + endNode.lng) / 2;
+            const midLat = (startNode.lat + endNode.lat) / 2;
+            return {
+              type: 'Feature' as const,
+              geometry: {
+                type: 'Point' as const,
+                coordinates: [midLng, midLat],
+              },
+              properties: {
+                name: ev.name,
+              },
+            };
+          })
+          .filter((f): f is NonNullable<typeof f> => f !== null);
+      }
+    }
+
+    return {
+      nodesGeoJson: { type: 'FeatureCollection' as const, features: nodeFeatures },
+      nodeSymbolsGeoJson: { type: 'FeatureCollection' as const, features: symbolsFeatures },
+      turnArrowsGeoJson: { type: 'FeatureCollection' as const, features: turnFeatures },
+      labelsGeoJson: { type: 'FeatureCollection' as const, features: labelFeatures },
+    };
+  }, [activeRoute, isInspectorModeActive, graph, selectedNodeId, inspectorBranches]);
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'inspector-nodes',
+    layer: nodesLayer,
+    data: nodesGeoJson,
+  });
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'inspector-node-symbols',
+    layer: nodeSymbolsLayer,
+    data: nodeSymbolsGeoJson,
+  });
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'inspector-turn-arrows',
+    layer: turnArrowsLayer,
+    data: turnArrowsGeoJson,
+  });
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'inspector-alternative-labels',
+    layer: alternativeLabelsLayer,
+    data: labelsGeoJson,
+  });
+
+  // Attach hover and click listeners for interactive inspector nodes
   useEffect(() => {
     if (!map) return;
-
-    // inspector-nodes source
-    if (!map.getSource('inspector-nodes')) {
-      map.addSource('inspector-nodes', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // inspector-nodes-layer (interactive circles for click-to-inspect)
-    if (!map.getLayer('inspector-nodes-layer')) {
-      map.addLayer({
-        id: 'inspector-nodes-layer',
-        type: 'circle',
-        source: 'inspector-nodes',
-        paint: {
-          'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 9, 6],
-          'circle-color': '#3b82f6',
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.9,
-          'circle-stroke-opacity': 0.9,
-        },
-      });
-    }
-
-    // inspector-node-symbols source
-    if (!map.getSource('inspector-node-symbols')) {
-      map.addSource('inspector-node-symbols', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // inspector-node-symbols-layer (always visible signs: 🚦, 🛑, etc.)
-    if (!map.getLayer('inspector-node-symbols-layer')) {
-      map.addLayer({
-        id: 'inspector-node-symbols-layer',
-        type: 'symbol',
-        source: 'inspector-node-symbols',
-        layout: {
-          'text-field': [
-            'match',
-            ['get', 'type'],
-            'signal',
-            '🚦',
-            'stop',
-            '🛑',
-            'yield',
-            '⚠️',
-            'crossing',
-            '🚸',
-            '',
-          ],
-          'text-size': 14,
-          'text-allow-overlap': false,
-          'text-ignore-placement': false,
-        },
-        paint: {
-          'text-color': [
-            'match',
-            ['get', 'type'],
-            'signal',
-            '#eab308',
-            'stop',
-            '#ef4444',
-            'yield',
-            '#f97316',
-            'crossing',
-            '#3b82f6',
-            '#ffffff',
-          ],
-          'text-halo-color': '#000000',
-          'text-halo-width': 1.5,
-        },
-      });
-    }
-
-    // inspector-turn-arrows source
-    if (!map.getSource('inspector-turn-arrows')) {
-      map.addSource('inspector-turn-arrows', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // inspector-turn-arrows-layer (always visible sharp turns arrows)
-    if (!map.getLayer('inspector-turn-arrows-layer')) {
-      map.addLayer({
-        id: 'inspector-turn-arrows-layer',
-        type: 'symbol',
-        source: 'inspector-turn-arrows',
-        layout: {
-          'text-field': '⬆',
-          'text-size': 12,
-          'text-rotate': ['get', 'bearing'],
-          'text-rotation-alignment': 'map',
-          'text-allow-overlap': false,
-          'text-ignore-placement': false,
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 1.5,
-        },
-      });
-    }
-
-    // inspector-alternative-labels source
-    if (!map.getSource('inspector-alternative-labels')) {
-      map.addSource('inspector-alternative-labels', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // inspector-alternative-labels-layer
-    if (!map.getLayer('inspector-alternative-labels-layer')) {
-      map.addLayer({
-        id: 'inspector-alternative-labels-layer',
-        type: 'symbol',
-        source: 'inspector-alternative-labels',
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 10,
-          'text-offset': [0, 1.2],
-          'text-anchor': 'top',
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 1.5,
-        },
-      });
-    }
-
     let hoveredNodeId: string | number | null = null;
 
     const onMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
@@ -249,152 +335,11 @@ export const InspectorLayer: React.FC = () => {
       map.off('mousemove', 'inspector-nodes-layer', onMouseMove);
       map.off('mouseleave', 'inspector-nodes-layer', onMouseLeave);
       map.off('click', 'inspector-nodes-layer', onClick);
-
-      if (map.getLayer('inspector-nodes-layer')) map.removeLayer('inspector-nodes-layer');
-      if (map.getSource('inspector-nodes')) map.removeSource('inspector-nodes');
-
-      if (map.getLayer('inspector-node-symbols-layer'))
-        map.removeLayer('inspector-node-symbols-layer');
-      if (map.getSource('inspector-node-symbols')) map.removeSource('inspector-node-symbols');
-
-      if (map.getLayer('inspector-turn-arrows-layer'))
-        map.removeLayer('inspector-turn-arrows-layer');
-      if (map.getSource('inspector-turn-arrows')) map.removeSource('inspector-turn-arrows');
-
-      if (map.getLayer('inspector-alternative-labels-layer'))
-        map.removeLayer('inspector-alternative-labels-layer');
-      if (map.getSource('inspector-alternative-labels'))
-        map.removeSource('inspector-alternative-labels');
-
       if (popupRef.current) popupRef.current.remove();
     };
   }, [map]);
 
-  // 2. Synchronize non-path GeoJSON sources
-  useEffect(() => {
-    if (!map) return;
-
-    const activeRoute = routeVariants.find((a) => a.label === activeAlternativeLabel);
-    const pathNodeIds = activeRoute?.result?.pathNodeIds ?? [];
-
-    const nodesSource = map.getSource('inspector-nodes') as maplibregl.GeoJSONSource;
-    const nodeSymbolsSource = map.getSource('inspector-node-symbols') as maplibregl.GeoJSONSource;
-    const turnArrowsSource = map.getSource('inspector-turn-arrows') as maplibregl.GeoJSONSource;
-    const labelsSource = map.getSource('inspector-alternative-labels') as maplibregl.GeoJSONSource;
-
-    if (!isInspectorModeActive || pathNodeIds.length === 0 || !activeRoute) {
-      if (nodesSource) nodesSource.setData({ type: 'FeatureCollection', features: [] });
-      if (nodeSymbolsSource) nodeSymbolsSource.setData({ type: 'FeatureCollection', features: [] });
-      if (turnArrowsSource) turnArrowsSource.setData({ type: 'FeatureCollection', features: [] });
-      if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
-      return;
-    }
-
-    // Nodes GeoJSON (interactive click points)
-    const nodeFeatures = pathNodeIds
-      .map((nodeId, idx) => {
-        const entry = graph?.nodes.get(nodeId);
-        if (!entry) return null;
-
-        const nextNodeId = pathNodeIds[idx + 1];
-        const prevNodeId = idx > 0 ? pathNodeIds[idx - 1] : null;
-
-        const hasDiverging = entry.edges.some(
-          (edge) => edge.target !== nextNodeId && edge.target !== prevNodeId,
-        );
-
-        if (!hasDiverging) {
-          return null;
-        }
-
-        return {
-          type: 'Feature' as const,
-          id: idx,
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [entry.node.lng, entry.node.lat],
-          },
-          properties: {
-            nodeId,
-          },
-        };
-      })
-      .filter((f): f is NonNullable<typeof f> => f !== null);
-
-    if (nodesSource) {
-      nodesSource.setData({
-        type: 'FeatureCollection',
-        features: nodeFeatures,
-      });
-    }
-
-    // Node symbols and turn arrows using buildPathSymbolsGeoJSON
-    const symbolsData = buildPathSymbolsGeoJSON(activeRoute.result, graph ?? { nodes: new Map() });
-
-    if (nodeSymbolsSource) {
-      nodeSymbolsSource.setData({
-        type: 'FeatureCollection',
-        features: symbolsData.features.filter((f) => f.properties.type !== 'turn'),
-      });
-    }
-
-    if (turnArrowsSource) {
-      turnArrowsSource.setData({
-        type: 'FeatureCollection',
-        features: symbolsData.features.filter((f) => f.properties.type === 'turn'),
-      });
-    }
-
-    // Alternative labels
-    if (selectedNodeId && graph && inspectorBranches.length > 0) {
-      const startNode = graph.nodes.get(selectedNodeId)?.node;
-      if (startNode) {
-        const labelFeatures = inspectorBranches
-          .map((ev) => {
-            const endNode = graph.nodes.get(ev.targetId)?.node;
-            if (!endNode) return null;
-            const midLng = (startNode.lng + endNode.lng) / 2;
-            const midLat = (startNode.lat + endNode.lat) / 2;
-            return {
-              type: 'Feature' as const,
-              geometry: {
-                type: 'Point' as const,
-                coordinates: [midLng, midLat],
-              },
-              properties: {
-                name: ev.name,
-              },
-            };
-          })
-          .filter((f): f is NonNullable<typeof f> => f !== null);
-
-        if (labelsSource) {
-          labelsSource.setData({
-            type: 'FeatureCollection',
-            features: labelFeatures,
-          });
-        }
-      } else {
-        if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
-      }
-    } else {
-      if (labelsSource) labelsSource.setData({ type: 'FeatureCollection', features: [] });
-    }
-  }, [
-    map,
-    graph,
-    isInspectorModeActive,
-    selectedNodeId,
-    routeVariants,
-    activeAlternativeLabel,
-    inspectorBranches,
-  ]);
-
   // Compute precision geometries for chosen path
-  const activeRoute = useMemo(() => {
-    return routeVariants.find((a) => a.label === activeAlternativeLabel);
-  }, [routeVariants, activeAlternativeLabel]);
-
   const chosenPathFeatures = useMemo(() => {
     if (!isInspectorModeActive || !activeRoute || !activeRoute.result) return [];
     return buildSegmentedPathGeoJSON(activeRoute.result).features;

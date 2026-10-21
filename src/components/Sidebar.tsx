@@ -3,13 +3,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Compass,
   GitFork,
-  Navigation2,
-  Play,
   Route,
   ShieldAlert,
-  Square,
   Star,
 } from 'lucide-react';
 import React, { useContext, useState } from 'react';
@@ -29,7 +25,13 @@ import { AttributionPanel } from './AttributionPanel';
 import { CrossingEditPanel } from './CrossingEditPanel';
 import { EventsPanel } from './EventsPanel';
 import { InspectorPanel } from './InspectorPanel';
-import { MapContext } from './map/MapContext';
+import {
+  MapInstanceContext,
+  NavigationStateContext,
+  RoutingStateContext,
+  StudioStateContext,
+} from './map/MapContext';
+import { NavigationControlCard } from './NavigationControlCard';
 import { PlacesPanel } from './PlacesPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
@@ -41,13 +43,13 @@ import type { ToolbarMode } from './SideToolbar';
  * Properties for the main dashboard Sidebar component.
  */
 export interface SidebarProps {
-  startCoord: Coordinate | null;
-  endCoord: Coordinate | null;
+  startCoord?: Coordinate | null;
+  endCoord?: Coordinate | null;
   routeResult: RouteResult | null;
-  routeVariants: StrategyRouteVariant[];
-  routingStrategy: 'standard' | 'avoid-stops' | 'quiet-streets';
+  routeVariants?: StrategyRouteVariant[];
+  routingStrategy?: 'standard' | 'avoid-stops' | 'quiet-streets';
   isFetchingOSM: boolean;
-  onStrategyChange: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
+  onStrategyChange?: (strategy: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
   /**
    * Callback fired when swapping start and end route coordinates.
    */
@@ -56,17 +58,17 @@ export interface SidebarProps {
   onRulesChange: (config: RulesConfiguration) => void;
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
-  isNavigating: boolean;
+  isNavigating?: boolean;
   onStartNavigation: () => void;
-  onStopNavigation: () => void;
+  onStopNavigation?: () => void;
   navigationProgress: NavigationProgress | null;
   onToggleCameraMode: () => void;
   cameraMode: CameraMode;
-  isInspectorModeActive: boolean;
-  selectedNodeId: string | null;
-  onSelectNodeId: (id: string | null) => void;
-  selectedAlternativeTargetId: string | null;
-  setSelectedAlternativeTargetId: (id: string | null) => void;
+  isInspectorModeActive?: boolean;
+  selectedNodeId?: string | null;
+  onSelectNodeId?: (id: string | null) => void;
+  selectedAlternativeTargetId?: string | null;
+  setSelectedAlternativeTargetId?: (id: string | null) => void;
   /**
    * Active application workflow mode ('routing', 'places', 'events', 'studio', or 'edit').
    */
@@ -217,52 +219,72 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isPlacingPlace: isPlacingPlaceProp,
   onPlacingPlaceChange: onPlacingPlaceChangeProp,
 }) => {
-  // Collapse state determines sidebar visibility and adjusts toggle button alignment.
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const mapCtx = useContext(MapContext);
-  const currentAppMode = appMode ?? mapCtx?.appMode ?? 'routing';
-  const currentEvents = events ?? mapCtx?.events ?? [];
-  const currentSelectedEdgeIds = selectedEdgeIds ?? mapCtx?.selectedEdgeIds ?? [];
-  const currentLandmarks = places ?? landmarks ?? mapCtx?.places ?? mapCtx?.landmarks ?? [];
-  const isPlacingPlace = isPlacingPlaceProp ?? mapCtx?.isPlacingPlace;
-  const onPlacingPlaceChange = onPlacingPlaceChangeProp ?? mapCtx?.setIsPlacingPlace;
+  const mapInstance = useContext(MapInstanceContext);
+  const routing = useContext(RoutingStateContext);
+  const navigationCtx = useContext(NavigationStateContext);
+  const studio = useContext(StudioStateContext);
+
+  const currentAppMode = appMode ?? mapInstance?.appMode ?? 'routing';
+  const currentStartCoord = startCoord ?? routing?.startCoord ?? null;
+  const currentEndCoord = endCoord ?? routing?.endCoord ?? null;
+  const currentRouteVariants = routeVariants ?? routing?.routeVariants ?? [];
+  const currentRoutingStrategy = routingStrategy ?? routing?.activeAlternativeLabel ?? 'standard';
+  const onStrategyChangeHandler = onStrategyChange ?? routing?.onSelectAlternative ?? (() => {});
+  const currentIsInspectorModeActive =
+    isInspectorModeActive ?? routing?.isInspectorModeActive ?? false;
+  const currentSelectedNodeId = selectedNodeId ?? routing?.selectedNodeId ?? null;
+  const onSelectNodeIdHandler = onSelectNodeId ?? routing?.setSelectedNodeId ?? (() => {});
+  const currentSelectedAlternativeTargetId =
+    selectedAlternativeTargetId ?? routing?.selectedAlternativeTargetId ?? null;
+  const setSelectedAlternativeTargetIdHandler =
+    setSelectedAlternativeTargetId ?? routing?.setSelectedAlternativeTargetId ?? (() => {});
+
+  const currentEvents = events ?? studio?.events ?? [];
+  const currentSelectedEdgeIds = selectedEdgeIds ?? studio?.selectedEdgeIds ?? [];
+  const currentLandmarks = places ?? landmarks ?? studio?.places ?? [];
+  const isPlacingPlace = isPlacingPlaceProp ?? studio?.isPlacingPlace ?? false;
+  const onPlacingPlaceChange = onPlacingPlaceChangeProp ?? studio?.setIsPlacingPlace;
+
+  const currentIsNavigating = isNavigating ?? navigationCtx?.isNavigating ?? false;
+  const onStopNavigationHandler = onStopNavigation ?? navigationCtx?.onStopNavigation ?? (() => {});
 
   const handleCreateLandmark = (input: CreateLandmarkInput) => {
-    const fn = onCreatePlace ?? onCreateLandmark;
+    const fn = onCreatePlace ?? onCreateLandmark ?? studio?.onCreatePlace;
     if (fn) {
       fn(input);
       return;
     }
     const created = createLandmarkDomain(input);
-    mapCtx?.setLandmarks((prev) => [created, ...prev]);
+    studio?.setPlaces?.((prev) => [created, ...prev]);
   };
 
   const handleUpdateLandmark = (id: string, updates: UpdateLandmarkInput) => {
-    const fn = onUpdatePlace ?? onUpdateLandmark;
+    const fn = onUpdatePlace ?? onUpdateLandmark ?? studio?.onUpdatePlace;
     if (fn) {
       fn(id, updates);
       return;
     }
-    mapCtx?.setLandmarks((prev) =>
+    studio?.setPlaces?.((prev) =>
       prev.map((item) => (item.id === id ? updateLandmarkDomain(item, updates) : item)),
     );
   };
 
   const handleDeleteLandmark = (id: string) => {
-    const fn = onDeletePlace ?? onDeleteLandmark;
+    const fn = onDeletePlace ?? onDeleteLandmark ?? studio?.onDeletePlace;
     if (fn) {
       fn(id);
       return;
     }
-    mapCtx?.setLandmarks((prev) => deleteLandmarkDomain(prev, id));
+    studio?.setPlaces?.((prev) => deleteLandmarkDomain(prev, id));
   };
 
   const handleSetStartCoord = (coord: Coordinate) => {
     if (onSetStartCoord) {
       onSetStartCoord(coord);
     } else {
-      mapCtx?.onStartDrag(coord);
+      routing?.onStartDrag?.(coord);
     }
   };
 
@@ -270,13 +292,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onSetEndCoord) {
       onSetEndCoord(coord);
     } else {
-      mapCtx?.onEndDrag(coord);
+      routing?.onEndDrag?.(coord);
     }
   };
 
   const handleCenterMap = (coord: Coordinate) => {
-    if (mapCtx?.map) {
-      mapCtx.map.easeTo({
+    if (mapInstance?.map) {
+      mapInstance.map.easeTo({
         center: [coord.lng, coord.lat],
         zoom: 15,
       });
@@ -284,11 +306,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const currentMapCenter: Coordinate | null = (() => {
-    if (mapCtx?.map && typeof mapCtx.map.getCenter === 'function') {
-      const c = mapCtx.map.getCenter();
+    if (mapInstance?.map && typeof mapInstance.map.getCenter === 'function') {
+      const c = mapInstance.map.getCenter();
       return { lat: c.lat, lng: c.lng };
     }
-    return startCoord ?? endCoord ?? null;
+    return currentStartCoord ?? currentEndCoord ?? null;
   })();
 
   const handleSwapCoords = () => {
@@ -296,9 +318,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onSwapCoords();
       return;
     }
-    if (startCoord && endCoord) {
-      const prevStart = startCoord;
-      const prevEnd = endCoord;
+    if (currentStartCoord && currentEndCoord) {
+      const prevStart = currentStartCoord;
+      const prevEnd = currentEndCoord;
       handleSetStartCoord(prevEnd);
       handleSetEndCoord(prevStart);
     }
@@ -309,21 +331,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onCreateEvent(name, description);
       return;
     }
-    if (!mapCtx) return;
+    if (!studio) return;
     const newEvent: MapEvent = {
       id: `event-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       name,
       description,
       active: true,
-      edgeIds: [...mapCtx.selectedEdgeIds],
+      edgeIds: [...studio.selectedEdgeIds],
       effect: {
         type: 'road_blockage',
         penaltySeconds: 30,
       },
       createdAt: Date.now(),
     };
-    mapCtx.setEvents((prev) => [...prev, newEvent]);
-    mapCtx.setSelectedEdgeIds([]);
+    studio.setEvents((prev) => [...prev, newEvent]);
+    studio.setSelectedEdgeIds([]);
   };
 
   const handleToggleEvent = (id: string) => {
@@ -331,7 +353,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onToggleEvent(id);
       return;
     }
-    mapCtx?.setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, active: !e.active } : e)));
+    studio?.setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, active: !e.active } : e)));
   };
 
   const handleDeleteEvent = (id: string) => {
@@ -339,7 +361,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onDeleteEvent(id);
       return;
     }
-    mapCtx?.setEvents((prev) => prev.filter((e) => e.id !== id));
+    studio?.setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleClearSelection = () => {
@@ -347,7 +369,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onClearSelection();
       return;
     }
-    mapCtx?.onClearSelection();
+    studio?.onClearSelection();
   };
 
   return (
@@ -399,8 +421,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onSetEndCoord={handleSetEndCoord}
               onCenterMap={handleCenterMap}
               currentMapCenter={currentMapCenter}
-              startCoord={startCoord}
-              endCoord={endCoord}
+              startCoord={currentStartCoord}
+              endCoord={currentEndCoord}
               isPlacingPlace={isPlacingPlace}
               onPlacingPlaceChange={onPlacingPlaceChange}
             />
@@ -408,8 +430,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <>
               {/* Section 1 & 2b: Routing configuration inputs */}
               <RoutingConfigPanel
-                startCoord={startCoord}
-                endCoord={endCoord}
+                startCoord={currentStartCoord}
+                endCoord={currentEndCoord}
                 waypoints={waypoints}
                 onSwapCoords={handleSwapCoords}
                 onSetStartCoord={handleSetStartCoord}
@@ -424,90 +446,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {/* Section 2: Route Alternatives Selector & Stats */}
               <RouteStatsPanel
-                routeVariants={routeVariants}
-                routingStrategy={routingStrategy}
-                onStrategyChange={onStrategyChange}
+                routeVariants={currentRouteVariants}
+                routingStrategy={currentRoutingStrategy}
+                onStrategyChange={onStrategyChangeHandler}
                 routeResult={routeResult}
-                isNavigating={isNavigating}
+                isNavigating={currentIsNavigating}
               />
 
               {/* Inspector Mode Details Panel */}
-              {routeResult !== null && !isNavigating && isInspectorModeActive && (
+              {routeResult !== null && !currentIsNavigating && currentIsInspectorModeActive && (
                 <InspectorPanel
-                  selectedNodeId={selectedNodeId}
+                  selectedNodeId={currentSelectedNodeId}
                   nextNodeId={
-                    selectedNodeId
-                      ? routeResult.pathNodeIds[routeResult.pathNodeIds.indexOf(selectedNodeId) + 1]
+                    currentSelectedNodeId
+                      ? routeResult.pathNodeIds[
+                          routeResult.pathNodeIds.indexOf(currentSelectedNodeId) + 1
+                        ]
                       : undefined
                   }
-                  onClose={() => onSelectNodeId(null)}
-                  selectedAlternativeTargetId={selectedAlternativeTargetId}
-                  setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
+                  onClose={() => onSelectNodeIdHandler(null)}
+                  selectedAlternativeTargetId={currentSelectedAlternativeTargetId}
+                  setSelectedAlternativeTargetId={setSelectedAlternativeTargetIdHandler}
                 />
               )}
 
               {/* Navigation Control Panel */}
               {routeResult !== null && (
-                <div className="ciclista-card sidebar-nav-card">
-                  {!isNavigating ? (
-                    <button
-                      className="ciclista-btn ciclista-btn--primary sidebar-nav-btn"
-                      onClick={() => {
-                        setIsCollapsed(true);
-                        onStartNavigation();
-                      }}
-                    >
-                      <Play size={16} />
-                      Start Navigation
-                    </button>
-                  ) : (
-                    <div className="sidebar-active-nav">
-                      <div className="sidebar-active-row">
-                        <span className="sidebar-active-title">Active Navigation</span>
-                        <div className="sidebar-actions-group">
-                          <button
-                            className="ciclista-btn ciclista-btn--secondary sidebar-icon-btn"
-                            onClick={onToggleCameraMode}
-                            title={`Toggle camera mode (current: ${cameraMode})`}
-                          >
-                            {cameraMode === 'north-up' ? (
-                              <Compass size={16} />
-                            ) : (
-                              <Navigation2 size={16} />
-                            )}
-                          </button>
-                          <button
-                            className="ciclista-btn ciclista-btn--danger sidebar-icon-btn"
-                            onClick={onStopNavigation}
-                            title="Stop Navigation"
-                          >
-                            <Square size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      {navigationProgress && (
-                        <div className="sidebar-nav-grid">
-                          <div>
-                            <div className="sidebar-nav-lbl">Remaining</div>
-                            <div className="sidebar-nav-val">
-                              {navigationProgress.distanceRemainingM >= 1000
-                                ? `${(navigationProgress.distanceRemainingM / 1000).toFixed(1)} km`
-                                : `${Math.round(navigationProgress.distanceRemainingM)} m`}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="sidebar-nav-lbl">ETA</div>
-                            <div className="sidebar-nav-val">
-                              {Math.floor(navigationProgress.etaSeconds / 60) > 0
-                                ? `${Math.floor(navigationProgress.etaSeconds / 60)}m ${Math.round(navigationProgress.etaSeconds % 60)}s`
-                                : `${Math.round(navigationProgress.etaSeconds)}s`}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <NavigationControlCard
+                  isNavigating={currentIsNavigating}
+                  onStartNavigation={onStartNavigation}
+                  onStopNavigation={onStopNavigationHandler}
+                  onToggleCameraMode={onToggleCameraMode}
+                  cameraMode={cameraMode}
+                  navigationProgress={navigationProgress}
+                  onBeforeStartNavigation={() => setIsCollapsed(true)}
+                />
               )}
 
               {/* Section 3: Road Rules Configuration */}
@@ -515,9 +488,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {/* Section 4: Route Comparison Panel */}
               <RouteComparePanel
-                routeVariants={routeVariants}
-                activeAlternativeLabel={routingStrategy}
-                onSelectAlternative={onStrategyChange}
+                routeVariants={currentRouteVariants}
+                activeAlternativeLabel={currentRoutingStrategy}
+                onSelectAlternative={onStrategyChangeHandler}
               />
 
               <AttributionPanel />

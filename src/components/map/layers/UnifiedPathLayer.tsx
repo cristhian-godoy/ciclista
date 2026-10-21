@@ -2,6 +2,7 @@ import type * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useMemo } from 'react';
 
 import type { PathSegmentFeature, PathStyleConfig } from '../../../core/rendering/types';
+import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../../hooks/useGeoJsonLayer';
 import { useMapContext } from '../MapContext';
 
 /**
@@ -90,147 +91,93 @@ export const UnifiedPathLayer: React.FC<UnifiedPathLayerProps> = ({
     ];
   }, [features]);
 
-  // 1. Manage Sources and Layers lifecycle
-  useEffect(() => {
-    if (!map) return;
+  const isVisible = visible !== false;
+  const glowVisibility = isVisible ? 'visible' : 'none';
+  const coreVisibility = isVisible && !useSemanticColors ? 'visible' : 'none';
+  const semanticVisibility = isVisible && useSemanticColors ? 'visible' : 'none';
 
-    // Add segmented source if not present
-    if (!map.getSource(sourceSegmentedId)) {
-      map.addSource(sourceSegmentedId, {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // Add continuous source if not present
-    if (!map.getSource(sourceContinuousId)) {
-      map.addSource(sourceContinuousId, {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    // Glow layer (bottom, uses continuous source to prevent overlapping dot joints)
-    if (!map.getLayer(glowId)) {
-      map.addLayer(
-        {
-          id: glowId,
-          type: 'line',
-          source: sourceContinuousId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#000',
-            'line-width': 1,
-            'line-opacity': 0,
-          },
+  const continuousLayers = useMemo<GeoJsonLayerSpec[]>(
+    () => [
+      {
+        id: glowId,
+        type: 'line',
+        source: sourceContinuousId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+          visibility: glowVisibility,
         },
-        beforeId,
-      );
-    }
-
-    // Core layer (middle, uses continuous source to prevent overlapping dot joints)
-    if (!map.getLayer(coreId)) {
-      map.addLayer(
-        {
-          id: coreId,
-          type: 'line',
-          source: sourceContinuousId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#000',
-            'line-width': 1,
-            'line-opacity': 0,
-          },
+        paint: {
+          'line-color': color,
+          'line-width': styleConfig.glowWidth ?? 9,
+          'line-opacity': styleConfig.glowOpacity ?? 0,
         },
-        beforeId,
-      );
-    }
-
-    // Semantic layer (top, uses segmented source to support per-segment colors)
-    if (!map.getLayer(semanticId)) {
-      map.addLayer(
-        {
-          id: semanticId,
-          type: 'line',
-          source: sourceSegmentedId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': ['coalesce', ['get', 'color'], '#3b82f6'],
-            'line-width': 1,
-            'line-opacity': 0,
-          },
+      },
+      {
+        id: coreId,
+        type: 'line',
+        source: sourceContinuousId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+          visibility: coreVisibility,
         },
-        beforeId,
-      );
-    }
+        paint: {
+          'line-color': color,
+          'line-width': styleConfig.width,
+          'line-opacity': styleConfig.opacity,
+        },
+      },
+    ],
+    [glowId, coreId, sourceContinuousId, glowVisibility, coreVisibility, color, styleConfig],
+  );
 
-    return () => {
-      if (map.getLayer(glowId)) map.removeLayer(glowId);
-      if (map.getLayer(coreId)) map.removeLayer(coreId);
-      if (map.getLayer(semanticId)) map.removeLayer(semanticId);
-      if (map.getSource(sourceSegmentedId)) map.removeSource(sourceSegmentedId);
-      if (map.getSource(sourceContinuousId)) map.removeSource(sourceContinuousId);
-    };
-  }, [map, sourceSegmentedId, sourceContinuousId, glowId, coreId, semanticId, beforeId]);
+  const segmentedLayers = useMemo<GeoJsonLayerSpec[]>(
+    () => [
+      {
+        id: semanticId,
+        type: 'line',
+        source: sourceSegmentedId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+          visibility: semanticVisibility,
+        },
+        paint: {
+          'line-color': ['coalesce', ['get', 'color'], '#3b82f6'],
+          'line-width': styleConfig.width,
+          'line-opacity': styleConfig.opacity,
+        },
+      },
+    ],
+    [semanticId, sourceSegmentedId, semanticVisibility, styleConfig],
+  );
 
-  // 2. Synchronize Source GeoJSON Data
-  useEffect(() => {
-    if (!map) return;
-    const sourceSeg = map.getSource(sourceSegmentedId) as maplibregl.GeoJSONSource;
-    if (sourceSeg) {
-      sourceSeg.setData({
-        type: 'FeatureCollection',
-        features,
-      });
-    }
+  const continuousGeoJson = useMemo(
+    () => ({ type: 'FeatureCollection' as const, features: continuousFeatures }),
+    [continuousFeatures],
+  );
 
-    const sourceCont = map.getSource(sourceContinuousId) as maplibregl.GeoJSONSource;
-    if (sourceCont) {
-      sourceCont.setData({
-        type: 'FeatureCollection',
-        features: continuousFeatures,
-      });
-    }
-  }, [map, sourceSegmentedId, sourceContinuousId, features, continuousFeatures]);
+  const segmentedGeoJson = useMemo(
+    () => ({ type: 'FeatureCollection' as const, features }),
+    [features],
+  );
 
-  // 3. Synchronize Styles and Visibilities
-  useEffect(() => {
-    if (!map) return;
+  useGeoJsonLayer({
+    map,
+    sourceId: sourceContinuousId,
+    layers: continuousLayers,
+    beforeId,
+    data: continuousGeoJson,
+  });
 
-    const isVisible = visible !== false;
-    const glowVisibility = isVisible ? 'visible' : 'none';
-    const coreVisibility = isVisible && !useSemanticColors ? 'visible' : 'none';
-    const semanticVisibility = isVisible && useSemanticColors ? 'visible' : 'none';
-
-    if (map.getLayer(glowId)) {
-      map.setLayoutProperty(glowId, 'visibility', glowVisibility);
-      map.setPaintProperty(glowId, 'line-color', color);
-      map.setPaintProperty(glowId, 'line-width', styleConfig.glowWidth ?? 9);
-      map.setPaintProperty(glowId, 'line-opacity', styleConfig.glowOpacity ?? 0);
-    }
-
-    if (map.getLayer(coreId)) {
-      map.setLayoutProperty(coreId, 'visibility', coreVisibility);
-      map.setPaintProperty(coreId, 'line-color', color);
-      map.setPaintProperty(coreId, 'line-width', styleConfig.width);
-      map.setPaintProperty(coreId, 'line-opacity', styleConfig.opacity);
-    }
-
-    if (map.getLayer(semanticId)) {
-      map.setLayoutProperty(semanticId, 'visibility', semanticVisibility);
-      map.setPaintProperty(semanticId, 'line-width', styleConfig.width);
-      map.setPaintProperty(semanticId, 'line-opacity', styleConfig.opacity);
-    }
-  }, [map, glowId, coreId, semanticId, styleConfig, color, useSemanticColors, visible]);
+  useGeoJsonLayer({
+    map,
+    sourceId: sourceSegmentedId,
+    layers: segmentedLayers,
+    beforeId,
+    data: segmentedGeoJson,
+  });
 
   // 4. Manage Layer Positions
   useEffect(() => {

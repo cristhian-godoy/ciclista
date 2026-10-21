@@ -233,134 +233,23 @@ describe('PlacesLayer', () => {
     );
   });
 
-  it('registers click and contextmenu listeners on place layers and cleans up on unmount', () => {
-    const { unmount } = renderWithContext();
+  it('does not register competing click or contextmenu listeners on place layers', () => {
+    renderWithContext();
 
-    expect(onMock).toHaveBeenCalledWith('click', 'landmarks-circle-layer', expect.any(Function));
-    expect(onMock).toHaveBeenCalledWith(
+    expect(onMock).not.toHaveBeenCalledWith(
+      'click',
+      'landmarks-circle-layer',
+      expect.any(Function),
+    );
+    expect(onMock).not.toHaveBeenCalledWith(
       'contextmenu',
       'landmarks-circle-layer',
       expect.any(Function),
     );
-    expect(onMock).toHaveBeenCalledWith(
+    expect(onMock).not.toHaveBeenCalledWith(
       'contextmenu',
       'landmarks-label-layer',
       expect.any(Function),
     );
-
-    unmount();
-
-    expect(offMock).toHaveBeenCalledWith('click', 'landmarks-circle-layer', expect.any(Function));
-    expect(offMock).toHaveBeenCalledWith(
-      'contextmenu',
-      'landmarks-circle-layer',
-      expect.any(Function),
-    );
-    expect(offMock).toHaveBeenCalledWith(
-      'contextmenu',
-      'landmarks-label-layer',
-      expect.any(Function),
-    );
-  });
-
-  it('opens edit modal when clicking existing place in places mode', () => {
-    const openEditLandmarkModalMock = vi.fn();
-    const onStartDragMock = vi.fn();
-
-    renderWithContext({
-      appMode: 'places',
-      openEditLandmarkModal: openEditLandmarkModalMock,
-      onStartDrag: onStartDragMock,
-    });
-
-    const clickHandler = onMock.mock.calls.find(
-      (call) => call[0] === 'click' && call[1] === 'landmarks-circle-layer',
-    )?.[2];
-
-    expect(clickHandler).toBeDefined();
-
-    clickHandler({
-      features: [
-        {
-          properties: { id: 'place-1', lat: 48.137, lng: 11.575 },
-        },
-      ],
-      originalEvent: { shiftKey: false },
-    });
-
-    expect(openEditLandmarkModalMock).toHaveBeenCalledWith(samplePlaces[0]);
-    expect(onStartDragMock).not.toHaveBeenCalled();
-  });
-
-  it('sets routing start pin when clicking existing place in routing mode', () => {
-    const openEditLandmarkModalMock = vi.fn();
-    const onStartDragMock = vi.fn();
-
-    renderWithContext({
-      appMode: 'routing',
-      openEditLandmarkModal: openEditLandmarkModalMock,
-      onStartDrag: onStartDragMock,
-    });
-
-    const clickHandler = onMock.mock.calls.find(
-      (call) => call[0] === 'click' && call[1] === 'landmarks-circle-layer',
-    )?.[2];
-
-    expect(clickHandler).toBeDefined();
-
-    clickHandler({
-      features: [
-        {
-          properties: { id: 'place-1', lat: 48.137, lng: 11.575 },
-        },
-      ],
-      originalEvent: { shiftKey: false },
-    });
-
-    expect(openEditLandmarkModalMock).not.toHaveBeenCalled();
-    expect(onStartDragMock).toHaveBeenCalledWith({ lat: 48.137, lng: 11.575 });
-  });
-
-  it('opens context menu and does NOT directly open edit modal when right clicking an existing place marker', () => {
-    const openEditLandmarkModalMock = vi.fn();
-    const setContextMenuMock = vi.fn();
-    const preventDefaultMock = vi.fn();
-
-    renderWithContext({
-      appMode: 'routing',
-      openEditLandmarkModal: openEditLandmarkModalMock,
-      setContextMenu: setContextMenuMock as unknown as React.Dispatch<
-        React.SetStateAction<import('./MapContext').ContextMenuData>
-      >,
-    });
-
-    const contextMenuHandler = onMock.mock.calls.find(
-      (call) => call[0] === 'contextmenu' && call[1] === 'landmarks-circle-layer',
-    )?.[2];
-
-    expect(contextMenuHandler).toBeDefined();
-
-    contextMenuHandler({
-      point: { x: 120, y: 180 },
-      features: [
-        {
-          properties: { id: 'place-2', lat: 48.145, lng: 11.585 },
-        },
-      ],
-      originalEvent: { preventDefault: preventDefaultMock },
-    });
-
-    expect(preventDefaultMock).toHaveBeenCalled();
-    expect(openEditLandmarkModalMock).not.toHaveBeenCalled();
-    expect(setContextMenuMock).toHaveBeenCalledWith({
-      visible: true,
-      x: 120,
-      y: 180,
-      lng: 11.585,
-      lat: 48.145,
-      crossingId: null,
-      nodeIds: null,
-      placeId: 'place-2',
-    });
   });
 });

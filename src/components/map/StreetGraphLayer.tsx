@@ -1,7 +1,7 @@
-import type * as maplibregl from 'maplibre-gl';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { convertGraphToGeoJSON } from '../../core/graph/geojson';
+import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
 import { useMapContext } from './MapContext';
 
 type GeoJSONFeature =
@@ -34,65 +34,28 @@ export const StreetGraphLayer: React.FC = () => {
     showMinorControls,
     managedClusterId,
     managedNodeIds,
-    setManagedClusterId,
-    setManagedNodeIds,
-    onNodeSelect,
     isPlacingPlace,
-    setActiveCrossingId,
   } = useMapContext();
 
-  // Keep callback handlers in refs to prevent stale closures in map listeners
-  const onNodeSelectRef = useRef(onNodeSelect);
-  const setManagedClusterIdRef = useRef(setManagedClusterId);
-  const setManagedNodeIdsRef = useRef(setManagedNodeIds);
-  const setActiveCrossingIdRef = useRef(setActiveCrossingId);
-  const graphRef = useRef(graph);
   const isPlacingPlaceRef = useRef(isPlacingPlace);
-
   useEffect(() => {
     isPlacingPlaceRef.current = isPlacingPlace;
   }, [isPlacingPlace]);
 
-  useEffect(() => {
-    graphRef.current = graph;
-  }, [graph]);
-
-  useEffect(() => {
-    onNodeSelectRef.current = onNodeSelect;
-  }, [onNodeSelect]);
-
-  useEffect(() => {
-    setManagedClusterIdRef.current = setManagedClusterId;
-  }, [setManagedClusterId]);
-
-  useEffect(() => {
-    setManagedNodeIdsRef.current = setManagedNodeIds;
-  }, [setManagedNodeIds]);
-
-  useEffect(() => {
-    setActiveCrossingIdRef.current = setActiveCrossingId;
-  }, [setActiveCrossingId]);
-
-  // Setup layers and sources
-  useEffect(() => {
-    if (!map) return;
-    if (!map.getSource('network-streets')) {
-      map.addSource('network-streets', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
+  const { streetFeatures, lightFeatures } = useMemo(() => {
+    if (!graph) {
+      return { streetFeatures: [] as GeoJSONFeature[], lightFeatures: [] as GeoJSONFeature[] };
     }
+    const geojson = convertGraphToGeoJSON(graph, customNodeDelays, showMinorControls);
+    return {
+      streetFeatures: geojson.streets as GeoJSONFeature[],
+      lightFeatures: geojson.controls as GeoJSONFeature[],
+    };
+  }, [graph, customNodeDelays, showMinorControls]);
 
-    if (!map.getSource('traffic-lights')) {
-      map.addSource('traffic-lights', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-        cluster: false,
-      });
-    }
-
-    if (!map.getLayer('network-streets-layer')) {
-      map.addLayer({
+  const streetLayers = useMemo<GeoJsonLayerSpec[]>(
+    () => [
+      {
         id: 'network-streets-layer',
         type: 'line',
         source: 'network-streets',
@@ -100,11 +63,14 @@ export const StreetGraphLayer: React.FC = () => {
           'line-color': 'rgba(99, 102, 241, 0.15)',
           'line-width': 1.5,
         },
-      });
-    }
+      },
+    ],
+    [],
+  );
 
-    if (!map.getLayer('traffic-lights-cluster')) {
-      map.addLayer({
+  const trafficLayers = useMemo<GeoJsonLayerSpec[]>(
+    () => [
+      {
         id: 'traffic-lights-cluster',
         type: 'circle',
         source: 'traffic-lights',
@@ -114,14 +80,14 @@ export const StreetGraphLayer: React.FC = () => {
             'match',
             ['get', 'controlType'],
             'signal',
-            '#ef4444', // Red for signals
+            '#ef4444',
             'stop',
-            '#ea580c', // Orange-Red for stop signs
+            '#ea580c',
             'yield',
-            '#f59e0b', // Amber/Yellow for yield signs
+            '#f59e0b',
             'crossing',
-            '#3b82f6', // Blue for pedestrian crossings
-            '#9ca3af', // Grey fallback
+            '#3b82f6',
+            '#9ca3af',
           ],
           'circle-radius': [
             'interpolate',
@@ -161,8 +127,8 @@ export const StreetGraphLayer: React.FC = () => {
           'circle-stroke-color': [
             'case',
             ['==', ['get', 'hasCustomDelay'], 'true'],
-            '#14b8a6', // Teal halo for custom delays
-            '#ffffff', // White otherwise
+            '#14b8a6',
+            '#ffffff',
           ],
           'circle-stroke-width': [
             'interpolate',
@@ -177,15 +143,12 @@ export const StreetGraphLayer: React.FC = () => {
           ],
           'circle-opacity': 0.85,
         },
-      });
-    }
-
-    if (!map.getLayer('traffic-lights-unclustered')) {
-      map.addLayer({
+      },
+      {
         id: 'traffic-lights-unclustered',
         type: 'circle',
         source: 'traffic-lights',
-        filter: ['==', ['get', 'type'], 'signal-hidden'], // Start hidden
+        filter: ['==', ['get', 'type'], 'signal-hidden'],
         paint: {
           'circle-radius': [
             'case',
@@ -196,7 +159,7 @@ export const StreetGraphLayer: React.FC = () => {
           'circle-color': [
             'case',
             ['has', 'customDelay'],
-            '#14b8a6', // Custom delay timed nodes (Teal)
+            '#14b8a6',
             [
               'match',
               ['get', 'controlType'],
@@ -215,10 +178,39 @@ export const StreetGraphLayer: React.FC = () => {
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.85,
         },
-      });
-    }
+      },
+    ],
+    [],
+  );
 
-    // Set cursor handlers
+  const streetsGeoJson = useMemo(
+    () => ({ type: 'FeatureCollection' as const, features: streetFeatures }),
+    [streetFeatures],
+  );
+
+  const trafficGeoJson = useMemo(
+    () => ({ type: 'FeatureCollection' as const, features: lightFeatures }),
+    [lightFeatures],
+  );
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'network-streets',
+    layers: streetLayers,
+    data: streetsGeoJson,
+  });
+
+  useGeoJsonLayer({
+    map,
+    sourceId: 'traffic-lights',
+    sourceOptions: { cluster: false },
+    layers: trafficLayers,
+    data: trafficGeoJson,
+  });
+
+  // Pointer cursor on hovering traffic signals
+  useEffect(() => {
+    if (!map) return;
     const setPointerCursor = () => {
       if (isPlacingPlaceRef.current) return;
       map.getCanvas().style.cursor = 'pointer';
@@ -233,193 +225,39 @@ export const StreetGraphLayer: React.FC = () => {
     map.on('mouseenter', 'traffic-lights-cluster', setPointerCursor);
     map.on('mouseleave', 'traffic-lights-cluster', resetCursor);
 
-    // Click handler for unclustered traffic signals
-    const handleUnclusteredClick = (e: maplibregl.MapLayerMouseEvent) => {
-      if (isPlacingPlaceRef.current) {
-        // In pin placement mode: bypass signal selection so map click handles coordinate picking
-        return;
-      }
-      e.preventDefault();
-      if (e.originalEvent) {
-        e.originalEvent.preventDefault?.();
-        e.originalEvent.stopPropagation?.();
-      }
-      const mapWithDrag = map as unknown as { isDragging?: () => boolean };
-      if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
-      if (!e.features || e.features.length === 0) return;
-      const feature = e.features[0];
-      const properties = feature.properties;
-      const geometry = feature.geometry;
-
-      if (geometry && 'coordinates' in geometry && properties && properties.id) {
-        const coords = (geometry as { coordinates: number[] }).coordinates;
-        const nodeId = String(properties.id);
-        const nodeEntry = graphRef.current?.nodes.get(nodeId);
-
-        let tags: Record<string, string> = {};
-        if (properties.tags) {
-          if (typeof properties.tags === 'string') {
-            try {
-              tags = JSON.parse(properties.tags);
-            } catch {
-              tags = {};
-            }
-          } else if (typeof properties.tags === 'object') {
-            tags = properties.tags as Record<string, string>;
-          }
-        }
-
-        if (onNodeSelectRef.current) {
-          const target = nodeEntry?.node ?? {
-            id: nodeId,
-            lat: coords[1],
-            lng: coords[0],
-            tags:
-              nodeEntry?.node.tags ??
-              (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
-          };
-          onNodeSelectRef.current({ ...target });
-        }
-
-        map.easeTo({
-          center: [coords[0], coords[1]],
-          duration: 400,
-        });
-      }
-    };
-
-    // Click handler for crossing clusters
-    const handleClusterClick = (e: maplibregl.MapLayerMouseEvent) => {
-      if (isPlacingPlaceRef.current) {
-        // In pin placement mode: bypass cluster expansion so map click handles coordinate picking
-        return;
-      }
-      e.preventDefault();
-      if (e.originalEvent) {
-        e.originalEvent.preventDefault?.();
-        e.originalEvent.stopPropagation?.();
-      }
-      const mapWithDrag = map as unknown as { isDragging?: () => boolean };
-      if (typeof mapWithDrag.isDragging === 'function' && mapWithDrag.isDragging()) return;
-      if (!e.features || e.features.length === 0) return;
-      const feature = e.features[0];
-      const geometry = feature.geometry;
-      const properties = feature.properties;
-
-      if (geometry && 'coordinates' in geometry && properties) {
-        const coords = (geometry as { coordinates: number[] }).coordinates;
-        const crossingId = properties.crossingId as string;
-        let nodeIds: string[] = [];
-        if (properties.nodeIds) {
-          if (typeof properties.nodeIds === 'string') {
-            try {
-              nodeIds = JSON.parse(properties.nodeIds);
-            } catch {
-              nodeIds = [];
-            }
-          } else if (Array.isArray(properties.nodeIds)) {
-            nodeIds = properties.nodeIds.map(String);
-          }
-        }
-
-        if (setManagedClusterIdRef.current) {
-          setManagedClusterIdRef.current(crossingId);
-        }
-        if (setManagedNodeIdsRef.current) {
-          setManagedNodeIdsRef.current(nodeIds);
-        }
-        if (setActiveCrossingIdRef.current) {
-          setActiveCrossingIdRef.current(crossingId);
-        }
-
-        map.easeTo({
-          center: [coords[0], coords[1]],
-          zoom: 17.5,
-          duration: 400,
-        });
-      }
-    };
-
-    map.on('click', 'traffic-lights-unclustered', handleUnclusteredClick);
-    map.on('click', 'traffic-lights-cluster', handleClusterClick);
-
     return () => {
       map.off('mouseenter', 'traffic-lights-unclustered', setPointerCursor);
       map.off('mouseleave', 'traffic-lights-unclustered', resetCursor);
       map.off('mouseenter', 'traffic-lights-cluster', setPointerCursor);
       map.off('mouseleave', 'traffic-lights-cluster', resetCursor);
-      map.off('click', 'traffic-lights-unclustered', handleUnclusteredClick);
-      map.off('click', 'traffic-lights-cluster', handleClusterClick);
-
-      // Clean up layers and sources
-      if (map.getLayer('traffic-lights-unclustered')) {
-        map.removeLayer('traffic-lights-unclustered');
-      }
-      if (map.getLayer('traffic-lights-cluster')) {
-        map.removeLayer('traffic-lights-cluster');
-      }
-      if (map.getLayer('network-streets-layer')) {
-        map.removeLayer('network-streets-layer');
-      }
-      if (map.getSource('traffic-lights')) {
-        map.removeSource('traffic-lights');
-      }
-      if (map.getSource('network-streets')) {
-        map.removeSource('network-streets');
-      }
     };
   }, [map]);
-
-  // Synchronize sources with data changes
-  useEffect(() => {
-    if (!map) return;
-    let lineFeatures: GeoJSONFeature[] = [];
-    let lightFeatures: GeoJSONFeature[] = [];
-
-    if (graph) {
-      const geojson = convertGraphToGeoJSON(graph, customNodeDelays, showMinorControls);
-      lineFeatures = geojson.streets as GeoJSONFeature[];
-      lightFeatures = geojson.controls as GeoJSONFeature[];
-    }
-
-    const streetSource = map.getSource('network-streets') as maplibregl.GeoJSONSource;
-    if (streetSource) {
-      streetSource.setData({
-        type: 'FeatureCollection',
-        features: lineFeatures,
-      });
-    }
-
-    const lightSource = map.getSource('traffic-lights') as maplibregl.GeoJSONSource;
-    if (lightSource) {
-      lightSource.setData({
-        type: 'FeatureCollection',
-        features: lightFeatures,
-      });
-    }
-  }, [map, graph, customNodeDelays, showMinorControls]);
 
   // Synchronize layer filters when managed states update
   useEffect(() => {
     if (!map) return;
     if (managedClusterId !== null && managedNodeIds.length > 0) {
-      // Hide the managed crossing cluster, keep other crossing clusters visible
-      map.setFilter('traffic-lights-cluster', [
-        'all',
-        ['==', ['get', 'type'], 'crossing'],
-        ['!=', ['get', 'crossingId'], managedClusterId],
-      ]);
-      // Show ONLY the individual signals belonging to the managed crossing
-      map.setFilter('traffic-lights-unclustered', [
-        'all',
-        ['==', ['get', 'type'], 'signal'],
-        ['==', ['get', 'parentCrossingId'], managedClusterId],
-      ]);
+      if (map.getLayer('traffic-lights-cluster')) {
+        map.setFilter('traffic-lights-cluster', [
+          'all',
+          ['==', ['get', 'type'], 'crossing'],
+          ['!=', ['get', 'crossingId'], managedClusterId],
+        ]);
+      }
+      if (map.getLayer('traffic-lights-unclustered')) {
+        map.setFilter('traffic-lights-unclustered', [
+          'all',
+          ['==', ['get', 'type'], 'signal'],
+          ['==', ['get', 'parentCrossingId'], managedClusterId],
+        ]);
+      }
     } else {
-      // Show all crossings
-      map.setFilter('traffic-lights-cluster', ['==', ['get', 'type'], 'crossing']);
-      // Hide all individual signals
-      map.setFilter('traffic-lights-unclustered', ['==', ['get', 'type'], 'signal-hidden']);
+      if (map.getLayer('traffic-lights-cluster')) {
+        map.setFilter('traffic-lights-cluster', ['==', ['get', 'type'], 'crossing']);
+      }
+      if (map.getLayer('traffic-lights-unclustered')) {
+        map.setFilter('traffic-lights-unclustered', ['==', ['get', 'type'], 'signal-hidden']);
+      }
     }
   }, [map, managedClusterId, managedNodeIds]);
 

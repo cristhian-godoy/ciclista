@@ -44,6 +44,10 @@ MapView.tsx
 	MapLibre GL JS map orchestrator rendering markers, studio selection tools, and interactive layers.
 NavigationHUD.tsx
 	Floating glassmorphic head-up display showing active navigation telemetry.
+NavigationControlCard.test.tsx
+	Unit tests for NavigationControlCard start navigation and active journey controls.
+NavigationControlCard.tsx
+	Sidebar card component presenting navigation initiation and active journey telemetry.
 RouteComparePanel.test.tsx
 	Unit tests for route speed and comfort comparisons.
 RouteComparePanel.tsx

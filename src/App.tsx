@@ -271,49 +271,22 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
           }}
         />
         <Sidebar
-          startCoord={startCoord}
-          endCoord={endCoord}
+          routeResult={routeResult}
+          isFetchingOSM={isFetchingOSM}
           waypoints={waypoints}
           onAddWaypoint={addWaypoint}
           onRemoveWaypoint={removeWaypoint}
           onUpdateWaypoint={updateWaypoint}
-          routeResult={routeResult}
-          routeVariants={routeVariants}
-          routingStrategy={routingStrategy}
-          isFetchingOSM={isFetchingOSM}
-          onStrategyChange={setRoutingStrategy}
           onSwapCoords={handleSwapCoords}
           rulesConfig={rulesConfig}
           onRulesChange={setRulesConfig}
           bikeConfig={bikeConfig}
           onBikeConfigChange={setBikeConfig}
-          isNavigating={
-            navigation.state.status === 'active' || navigation.state.status === 'paused'
-          }
           onStartNavigation={navigation.startNavigation}
           onStopNavigation={navigation.stopNavigation}
-          navigationProgress={navigation.state.progress}
           onToggleCameraMode={navigation.toggleCameraMode}
           cameraMode={navigation.state.cameraMode}
-          isInspectorModeActive={isInspectorModeActive}
-          selectedNodeId={selectedNodeId}
-          onSelectNodeId={setSelectedNodeId}
-          selectedAlternativeTargetId={selectedAlternativeTargetId}
-          setSelectedAlternativeTargetId={setSelectedAlternativeTargetId}
-          appMode={appMode}
-          events={events}
-          selectedEdgeIds={selectedEdgeIds}
-          onClearSelection={() => setSelectedEdgeIds([])}
-          places={places}
-          onCreatePlace={addPlace}
-          onUpdatePlace={updatePlace}
-          onDeletePlace={deletePlace}
-          landmarks={places}
-          onCreateLandmark={addPlace}
-          onUpdateLandmark={updatePlace}
-          onDeleteLandmark={deletePlace}
-          onSetStartCoord={handleStartDrag}
-          onSetEndCoord={handleEndDrag}
+          navigationProgress={navigation.state.progress}
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
         <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />

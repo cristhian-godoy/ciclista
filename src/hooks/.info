@@ -1,34 +1,54 @@
+useAutoClusterCollapse.test.ts
+	Unit tests verifying useAutoClusterCollapse threshold distance and zoom collapse triggers.
+useAutoClusterCollapse.ts
+	React hook automatically collapsing expanded crossing clusters upon zoom out or camera pan exceeding threshold.
+useCrossingEditorData.ts
+	React hook extracting crossing clusters, active cluster subgraph, and computing turn paths.
+useEdgeGeoJSON.ts
+	React hook transforming graph edge identifiers into memoized GeoJSON FeatureCollection LineStrings.
+useEscapeKey.ts
+	React lifecycle hook attaching window keydown listener for Escape key dismissal.
+useGeoJsonLayer.test.ts
+	Unit tests verifying useGeoJsonLayer source registration, layer registration, teardown, and setData synchronization.
+useGeoJsonLayer.ts
+	React hook unifiying imperative MapLibre GL GeoJSON source and layer setup, teardown, and reactive data updates.
+useInspectorMode.ts
+	React hook managing inspector mode toggle status and selected route node.
+useIntersectionBranches.ts
+	React hook managing dynamic intersection branches and alternative outgoing evaluations.
+useLandmarks.ts
+	Backward-compatible re-export module for usePlaces hook.
+useLatestRef.ts
+	React hook storing latest prop or callback reference to avoid stale closures.
+useMapCursor.test.ts
+	Unit tests verifying useMapCursor canvas cursor updates and Escape key cancellation.
+useMapCursor.ts
+	React hook managing map canvas cursor style and Escape cancellation during pin placement mode.
+useMapGestures.test.ts
+	Unit tests verifying useMapGestures studio/events brush selection and deselection drag gestures.
+useMapGestures.ts
+	React hook managing brush drag gestures (select on left-click drag, deselect on right-click drag) during studio and events modes.
+useMapInteractionController.test.ts
+	Unit tests verifying useMapInteractionController click, contextmenu, drag start, and zoom start handlers.
+useMapInteractionController.ts
+	React hook consolidating map canvas user interactions: click, contextmenu, drag start, and zoom start.
 useNavigation.test.ts
 	Unit tests verifying useNavigation continuous GPS tracking, wake lock, orientation handling, and error states.
 useNavigation.ts
 	React hook orchestrating position providers and navigation calculations.
+useOnClickOutside.ts
+	React lifecycle hook attaching document listener for outside click detection on referenced elements.
 useOSMData.test.ts
 	Unit tests verifying useOSMData hook caching, bounds handling, and Data Saver network enforcement.
 useOSMData.ts
 	React hook managing fetch cycles and caching for Overpass API datasets.
 useOverrides.ts
 	React hook managing node delays, notes, custom routing rules, and crossing turn overrides in local storage.
-useRoutingState.test.ts
-	Unit tests verifying useRoutingState coordinate management, intermediate waypoints, and URL search parameter synchronization.
-useRoutingState.ts
-	React hook managing coordinates, routing options, and active route paths.
-useInspectorMode.ts
-	React hook managing inspector mode toggle status and selected route node.
-useIntersectionBranches.ts
-	React hook managing dynamic intersection branches and alternative outgoing evaluations.
 usePlaces.test.ts
 	Unit tests verifying usePlaces hook persistence, creation, and state management.
 usePlaces.ts
 	React hook managing persistent places state and CRUD actions.
-useCrossingEditorData.ts
-	React hook extracting crossing clusters, active cluster subgraph, and computing turn paths.
-useEdgeGeoJSON.ts
-	React hook transforming graph edge identifiers into memoized GeoJSON FeatureCollection LineStrings.
-useLandmarks.ts
-	Backward-compatible re-export module for usePlaces hook.
-useEscapeKey.ts
-	React lifecycle hook attaching window keydown listener for Escape key dismissal.
-useOnClickOutside.ts
-	React lifecycle hook attaching document listener for outside click detection on referenced elements.
-useLatestRef.ts
-	React hook storing latest prop or callback reference to avoid stale closures.
+useRoutingState.test.ts
+	Unit tests verifying useRoutingState coordinate management, intermediate waypoints, and URL search parameter synchronization.
+useRoutingState.ts
+	React hook managing coordinates, routing options, and active route paths.
