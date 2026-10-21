@@ -681,7 +681,7 @@ describe('MapView Contextual Map Interactions', () => {
     expect(onEndDragMock).not.toHaveBeenCalled();
   });
 
-  it('bypasses direct layer clicks on StreetGraphLayer when in pin placement mode', () => {
+  it('does not register competing layer-level click listeners on StreetGraphLayer or PlacesLayer', () => {
     renderMapViewWithContext({
       isPlacingPlace: true,
       setIsPlacingPlace: setIsPlacingPlaceMock,
@@ -689,43 +689,19 @@ describe('MapView Contextual Map Interactions', () => {
 
     const unclusteredClickHandler = (
       mockMapInstance.on as ReturnType<typeof vi.fn>
-    ).mock.calls.find(
-      (call) => call[0] === 'click' && call[1] === 'traffic-lights-unclustered',
-    )?.[2];
+    ).mock.calls.find((call) => call[0] === 'click' && call[1] === 'traffic-lights-unclustered');
 
     const clusterClickHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
       (call) => call[0] === 'click' && call[1] === 'traffic-lights-cluster',
-    )?.[2];
+    );
 
-    expect(unclusteredClickHandler).toBeDefined();
-    expect(clusterClickHandler).toBeDefined();
+    const placesClickHandler = (mockMapInstance.on as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => call[0] === 'click' && call[1] === 'landmarks-circle-layer',
+    );
 
-    const mockPreventDefault = vi.fn();
-    unclusteredClickHandler({
-      preventDefault: mockPreventDefault,
-      features: [
-        {
-          properties: { id: 'node-1' },
-          geometry: { coordinates: [11.575, 48.137] },
-        },
-      ],
-    });
-
-    expect(mockPreventDefault).not.toHaveBeenCalled();
-    expect(onNodeSelectMock).not.toHaveBeenCalled();
-
-    clusterClickHandler({
-      preventDefault: mockPreventDefault,
-      features: [
-        {
-          properties: { crossingId: 'c-1', nodeIds: '["node-1"]' },
-          geometry: { coordinates: [11.575, 48.137] },
-        },
-      ],
-    });
-
-    expect(mockPreventDefault).not.toHaveBeenCalled();
-    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(unclusteredClickHandler).toBeUndefined();
+    expect(clusterClickHandler).toBeUndefined();
+    expect(placesClickHandler).toBeUndefined();
   });
 
   it('unselects a single edge on right-click contextmenu when in studio mode with click tool', () => {

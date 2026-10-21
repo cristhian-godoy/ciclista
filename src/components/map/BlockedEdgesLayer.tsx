@@ -1,8 +1,8 @@
-import type * as maplibregl from 'maplibre-gl';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { type EdgeFeatureEntry, useEdgeGeoJSON } from '../../hooks/useEdgeGeoJSON';
+import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
 import { useMapContext } from './MapContext';
 
 const SOURCE_ID = 'blocked-edges';
@@ -36,54 +36,31 @@ export const BlockedEdgesLayer: React.FC = () => {
 
   const geojson = useEdgeGeoJSON(graph, blockedEdgeItems);
 
-  // Register MapLibre source and dashed barricade layer
-  useEffect(() => {
-    if (!map) return;
+  const layer = useMemo<GeoJsonLayerSpec>(
+    () => ({
+      id: LAYER_ID,
+      type: 'line',
+      source: SOURCE_ID,
+      paint: {
+        'line-color': BARRICADE_COLOR,
+        'line-width': 4,
+        'line-dasharray': [2, 2],
+        'line-opacity': 0.95,
+      },
+      layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+      },
+    }),
+    [],
+  );
 
-    if (!map.getSource(SOURCE_ID)) {
-      map.addSource(SOURCE_ID, {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    if (!map.getLayer(LAYER_ID)) {
-      map.addLayer({
-        id: LAYER_ID,
-        type: 'line',
-        source: SOURCE_ID,
-        paint: {
-          'line-color': BARRICADE_COLOR,
-          'line-width': 4,
-          'line-dasharray': [2, 2],
-          'line-opacity': 0.95,
-        },
-        layout: {
-          'line-cap': 'round',
-          'line-join': 'round',
-        },
-      });
-    }
-
-    return () => {
-      if (map.getLayer(LAYER_ID)) {
-        map.removeLayer(LAYER_ID);
-      }
-      if (map.getSource(SOURCE_ID)) {
-        map.removeSource(SOURCE_ID);
-      }
-    };
-  }, [map]);
-
-  // Synchronize active road blockage edges into the GeoJSON layer source
-  useEffect(() => {
-    if (!map) return;
-
-    const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-    if (!source || typeof source.setData !== 'function') return;
-
-    source.setData(geojson);
-  }, [map, geojson]);
+  useGeoJsonLayer({
+    map,
+    sourceId: SOURCE_ID,
+    layer,
+    data: geojson,
+  });
 
   return null;
 };

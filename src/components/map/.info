@@ -27,7 +27,7 @@ MapLayerDock.tsx
 InspectorLayer.tsx
 	Map overlay rendering clickable route nodes and divergent alternative path segments in inspector mode.
 PlacesLayer.test.tsx
-	Unit tests verifying places layer MapLibre integration and click/contextmenu actions.
+	Unit tests verifying places layer MapLibre integration and absence of competing layer listeners.
 PlacesLayer.tsx
 	Map overlay rendering favorite places as styled point markers with category glows and labels.
 NavigationLayer.test.tsx
@@ -56,6 +56,8 @@ mapContextInstance.ts
 	Definition of MapContext and useMapContext hook.
 useCustomMapControls.ts
 	React hook for injecting custom zoom and compass map controls.
+contexts
+	Directory containing focused domain-scoped contexts (MapInstance, RoutingState, NavigationState, StudioState, CrossingEditor).
 layers
 	Directory containing unified path rendering components.
 OsmTagTable.tsx

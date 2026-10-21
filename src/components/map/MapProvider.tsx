@@ -26,10 +26,20 @@ import { useIntersectionBranches } from '../../hooks/useIntersectionBranches';
 import type { ToolbarMode } from '../SideToolbar';
 import {
   type ContextMenuData,
+  CrossingEditorContext,
+  type CrossingEditorContextType,
   type LandmarkModalState,
   MapContext,
   type MapContextType,
-} from './mapContextInstance';
+  MapInstanceContext,
+  type MapInstanceContextType,
+  NavigationStateContext,
+  type NavigationStateContextType,
+  RoutingStateContext,
+  type RoutingStateContextType,
+  StudioStateContext,
+  type StudioStateContextType,
+} from './MapContext';
 
 /**
  * Properties for the MapProvider component.
@@ -348,12 +358,41 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     setSelectedEdgeIds([]);
   }, [setSelectedEdgeIds]);
 
-  const contextValue = useMemo<MapContextType>(
+  const mapInstanceValue = useMemo<MapInstanceContextType>(
     () => ({
       map,
       setMap,
       mapReady,
       setMapReady,
+      theme,
+      shouldFitBounds,
+      setShouldFitBounds,
+      dockExpanded,
+      setDockExpanded,
+      contextMenu,
+      setContextMenu,
+      appMode,
+      setAppMode,
+    }),
+    [
+      map,
+      setMap,
+      mapReady,
+      setMapReady,
+      theme,
+      shouldFitBounds,
+      setShouldFitBounds,
+      dockExpanded,
+      setDockExpanded,
+      contextMenu,
+      setContextMenu,
+      appMode,
+      setAppMode,
+    ],
+  );
+
+  const routingStateValue = useMemo<RoutingStateContextType>(
+    () => ({
       graph,
       loadedBBoxes,
       startCoord,
@@ -371,7 +410,12 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       onSaveNodeOverride,
       onSaveNodeTurns,
       onClearNodeOverride,
-      theme,
+      showMinorControls,
+      setShowMinorControls,
+      managedClusterId,
+      setManagedClusterId,
+      managedNodeIds,
+      setManagedNodeIds,
       isInspectorModeActive,
       onToggleInspectorMode,
       selectedNodeId,
@@ -379,24 +423,53 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       selectedAlternativeTargetId,
       setSelectedAlternativeTargetId,
       inspectorBranches,
-      shouldFitBounds,
-      setShouldFitBounds,
+    }),
+    [
+      graph,
+      loadedBBoxes,
+      startCoord,
+      endCoord,
+      routeVariants,
+      activeAlternativeLabel,
+      onSelectAlternative,
+      customNodeDelays,
+      customNodeNotes,
+      customNodeTurns,
+      selectedNode,
+      onStartDrag,
+      onEndDrag,
+      onNodeSelect,
+      onSaveNodeOverride,
+      onSaveNodeTurns,
+      onClearNodeOverride,
       showMinorControls,
       setShowMinorControls,
-      dockExpanded,
-      setDockExpanded,
       managedClusterId,
       setManagedClusterId,
       managedNodeIds,
       setManagedNodeIds,
-      contextMenu,
-      setContextMenu,
+      isInspectorModeActive,
+      onToggleInspectorMode,
+      selectedNodeId,
+      setSelectedNodeId,
+      selectedAlternativeTargetId,
+      setSelectedAlternativeTargetId,
+      inspectorBranches,
+    ],
+  );
+
+  const navigationStateValue = useMemo<NavigationStateContextType>(
+    () => ({
       navigationState,
       isNavigating,
       rideStats,
       onStopNavigation,
-      appMode,
-      setAppMode,
+    }),
+    [navigationState, isNavigating, rideStats, onStopNavigation],
+  );
+
+  const studioStateValue = useMemo<StudioStateContextType>(
+    () => ({
       places: landmarks,
       setPlaces: setLandmarks,
       landmarks,
@@ -429,62 +502,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       onDeleteLandmark: handleDeleteLandmark,
       isPlacingPlace,
       setIsPlacingPlace,
-      activeCrossingId,
-      setActiveCrossingId,
-      activeTurnSelection,
-      setActiveTurnSelection,
-      crossingTurns,
-      onSaveCrossingTurn: handleSaveCrossingTurn,
-      onDeleteCrossingTurn: handleDeleteCrossingTurn,
     }),
     [
-      map,
-      setMap,
-      mapReady,
-      setMapReady,
-      graph,
-      loadedBBoxes,
-      startCoord,
-      endCoord,
-      routeVariants,
-      activeAlternativeLabel,
-      onSelectAlternative,
-      customNodeDelays,
-      customNodeNotes,
-      customNodeTurns,
-      selectedNode,
-      onStartDrag,
-      onEndDrag,
-      onNodeSelect,
-      onSaveNodeOverride,
-      onSaveNodeTurns,
-      onClearNodeOverride,
-      theme,
-      isInspectorModeActive,
-      onToggleInspectorMode,
-      selectedNodeId,
-      setSelectedNodeId,
-      selectedAlternativeTargetId,
-      setSelectedAlternativeTargetId,
-      inspectorBranches,
-      shouldFitBounds,
-      setShouldFitBounds,
-      showMinorControls,
-      setShowMinorControls,
-      dockExpanded,
-      setDockExpanded,
-      managedClusterId,
-      setManagedClusterId,
-      managedNodeIds,
-      setManagedNodeIds,
-      contextMenu,
-      setContextMenu,
-      navigationState,
-      isNavigating,
-      rideStats,
-      onStopNavigation,
-      appMode,
-      setAppMode,
       landmarks,
       setLandmarks,
       selectedEdgeIds,
@@ -506,6 +525,20 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       handleDeleteLandmark,
       isPlacingPlace,
       setIsPlacingPlace,
+    ],
+  );
+
+  const crossingEditorValue = useMemo<CrossingEditorContextType>(
+    () => ({
+      activeCrossingId,
+      setActiveCrossingId,
+      activeTurnSelection,
+      setActiveTurnSelection,
+      crossingTurns,
+      onSaveCrossingTurn: handleSaveCrossingTurn,
+      onDeleteCrossingTurn: handleDeleteCrossingTurn,
+    }),
+    [
       activeCrossingId,
       setActiveCrossingId,
       activeTurnSelection,
@@ -516,5 +549,34 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     ],
   );
 
-  return <MapContext.Provider value={contextValue}>{children}</MapContext.Provider>;
+  const contextValue = useMemo<MapContextType>(
+    () => ({
+      ...mapInstanceValue,
+      ...routingStateValue,
+      ...navigationStateValue,
+      ...studioStateValue,
+      ...crossingEditorValue,
+    }),
+    [
+      mapInstanceValue,
+      routingStateValue,
+      navigationStateValue,
+      studioStateValue,
+      crossingEditorValue,
+    ],
+  );
+
+  return (
+    <MapInstanceContext.Provider value={mapInstanceValue}>
+      <RoutingStateContext.Provider value={routingStateValue}>
+        <NavigationStateContext.Provider value={navigationStateValue}>
+          <StudioStateContext.Provider value={studioStateValue}>
+            <CrossingEditorContext.Provider value={crossingEditorValue}>
+              <MapContext.Provider value={contextValue}>{children}</MapContext.Provider>
+            </CrossingEditorContext.Provider>
+          </StudioStateContext.Provider>
+        </NavigationStateContext.Provider>
+      </RoutingStateContext.Provider>
+    </MapInstanceContext.Provider>
+  );
 };

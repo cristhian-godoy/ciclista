@@ -1,9 +1,10 @@
 import type * as maplibregl from 'maplibre-gl';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { createGeoJSONCircle } from '../../core/common/geometry';
 import type { Coordinate } from '../../core/common/types';
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
+import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
 import { useMapContext } from './MapContext';
 
 export const BRUSH_CIRCLE_SOURCE_ID = 'brush-circle-preview';
@@ -25,19 +26,9 @@ export const BrushCircleLayer: React.FC = () => {
   const { map, appMode, selectionTool, brushRadius } = useMapContext();
   const lastCoordRef = useRef<Coordinate | null>(null);
 
-  // Initialize MapLibre source and preview layers
-  useEffect(() => {
-    if (!map) return;
-
-    if (!map.getSource(BRUSH_CIRCLE_SOURCE_ID)) {
-      map.addSource(BRUSH_CIRCLE_SOURCE_ID, {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-      });
-    }
-
-    if (!map.getLayer(BRUSH_CIRCLE_FILL_LAYER_ID)) {
-      map.addLayer({
+  const layers = useMemo<GeoJsonLayerSpec[]>(
+    () => [
+      {
         id: BRUSH_CIRCLE_FILL_LAYER_ID,
         type: 'fill',
         source: BRUSH_CIRCLE_SOURCE_ID,
@@ -45,11 +36,8 @@ export const BrushCircleLayer: React.FC = () => {
           'fill-color': BRUSH_COLOR,
           'fill-opacity': 0.12,
         },
-      });
-    }
-
-    if (!map.getLayer(BRUSH_CIRCLE_LINE_LAYER_ID)) {
-      map.addLayer({
+      },
+      {
         id: BRUSH_CIRCLE_LINE_LAYER_ID,
         type: 'line',
         source: BRUSH_CIRCLE_SOURCE_ID,
@@ -59,36 +47,27 @@ export const BrushCircleLayer: React.FC = () => {
           'line-dasharray': [3, 2],
           'line-opacity': 0.8,
         },
-      });
-    }
+      },
+    ],
+    [],
+  );
 
-    return () => {
-      if (map.getLayer(BRUSH_CIRCLE_LINE_LAYER_ID)) {
-        map.removeLayer(BRUSH_CIRCLE_LINE_LAYER_ID);
-      }
-      if (map.getLayer(BRUSH_CIRCLE_FILL_LAYER_ID)) {
-        map.removeLayer(BRUSH_CIRCLE_FILL_LAYER_ID);
-      }
-      if (map.getSource(BRUSH_CIRCLE_SOURCE_ID)) {
-        map.removeSource(BRUSH_CIRCLE_SOURCE_ID);
-      }
-    };
-  }, [map]);
+  const { setData } = useGeoJsonLayer({
+    map,
+    sourceId: BRUSH_CIRCLE_SOURCE_ID,
+    layers,
+  });
 
   // Update or hide circle preview on mouse movement or mode/tool change
   useEffect(() => {
     if (!map) return;
 
-    const source = map.getSource(BRUSH_CIRCLE_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-
     const clearPreview = () => {
       lastCoordRef.current = null;
-      if (source && typeof source.setData === 'function') {
-        source.setData({
-          type: 'FeatureCollection',
-          features: [],
-        });
-      }
+      setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
     };
 
     const isBrushActive =
@@ -100,9 +79,8 @@ export const BrushCircleLayer: React.FC = () => {
     }
 
     const updatePreviewAt = (coord: Coordinate) => {
-      if (!source || typeof source.setData !== 'function') return;
       const polygon = createGeoJSONCircle(coord, brushRadius);
-      source.setData({
+      setData({
         type: 'FeatureCollection',
         features: [
           {
@@ -147,7 +125,7 @@ export const BrushCircleLayer: React.FC = () => {
       }
       clearPreview();
     };
-  }, [map, appMode, selectionTool, brushRadius]);
+  }, [map, appMode, selectionTool, brushRadius, setData]);
 
   return null;
 };
