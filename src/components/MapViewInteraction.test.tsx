@@ -205,6 +205,15 @@ describe('MapView Contextual Map Interactions', () => {
       onDeleteLandmark: vi.fn(),
       isPlacingPlace: false,
       setIsPlacingPlace: setIsPlacingPlaceMock,
+      activeCrossingId: null,
+      setActiveCrossingId: vi.fn(),
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: vi.fn(),
+      crossingTurns: [],
+      onSaveCrossingTurn: vi.fn(),
+      onDeleteCrossingTurn: vi.fn(),
+      editSubMode: 'paths',
+      setEditSubMode: vi.fn(),
       ...contextOverrides,
     };
 
@@ -360,7 +369,7 @@ describe('MapView Contextual Map Interactions', () => {
     });
   });
 
-  it('selects traffic light node and prevents marker placement when clicking on unclustered signal', () => {
+  it('selects traffic light node and opens popup when clicking on unclustered signal in signals edit sub-mode', () => {
     (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
       {
         layer: { id: 'traffic-lights-unclustered' },
@@ -372,7 +381,7 @@ describe('MapView Contextual Map Interactions', () => {
       },
     ]);
 
-    renderMapViewWithContext({ appMode: 'routing', startCoord: null, endCoord: null });
+    renderMapViewWithContext({ appMode: 'edit', editSubMode: 'signals' });
 
     expect(capturedOptions).not.toBeNull();
 
@@ -396,7 +405,7 @@ describe('MapView Contextual Map Interactions', () => {
     });
   });
 
-  it('expands cluster, zooms in, and does NOT select node or open popup when clicking on crossing cluster', () => {
+  it('expands cluster, zooms in, and unclusters signals when clicking on crossing cluster in signals edit sub-mode', () => {
     (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
       {
         layer: { id: 'traffic-lights-cluster' },
@@ -409,7 +418,7 @@ describe('MapView Contextual Map Interactions', () => {
       },
     ]);
 
-    const { container } = renderMapViewWithContext({ appMode: 'routing' });
+    const { container } = renderMapViewWithContext({ appMode: 'edit', editSubMode: 'signals' });
 
     expect(capturedOptions).not.toBeNull();
 
@@ -428,6 +437,70 @@ describe('MapView Contextual Map Interactions', () => {
       center: [11.58, 48.14],
       zoom: 17.5,
     });
+  });
+
+  it('places start route pin and does NOT query or hijack click with traffic lights when in routing mode', () => {
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-unclustered' },
+        geometry: { coordinates: [11.575, 48.137] },
+        properties: {
+          id: 'node-signal-1',
+          tags: JSON.stringify({ highway: 'traffic_signals', name: 'Sendlinger Tor' }),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({ appMode: 'routing', startCoord: null, endCoord: null });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 150, y: 250 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    });
+
+    expect(onNodeSelectMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'node-signal-1' }),
+    );
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(onStartDragMock).toHaveBeenCalledWith({
+      lat: 48.137,
+      lng: 11.575,
+    });
+  });
+
+  it('sets activeCrossingId ONLY and does NOT uncluster signals when clicking cluster in paths edit sub-mode', () => {
+    const setActiveCrossingIdMock = vi.fn();
+    (mockMapInstance.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        layer: { id: 'traffic-lights-cluster' },
+        geometry: { coordinates: [11.58, 48.14] },
+        properties: {
+          type: 'crossing',
+          crossingId: 'crossing-node-1',
+          nodeIds: JSON.stringify(['node-1', 'node-2']),
+        },
+      },
+    ]);
+
+    renderMapViewWithContext({
+      appMode: 'edit',
+      editSubMode: 'paths',
+      setActiveCrossingId: setActiveCrossingIdMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+
+    capturedOptions!.onClick({
+      point: { x: 200, y: 300 },
+      lngLat: { lat: 48.14, lng: 11.58 },
+    });
+
+    expect(setActiveCrossingIdMock).toHaveBeenCalledWith('crossing-node-1');
+    expect(setManagedClusterIdMock).not.toHaveBeenCalled();
+    expect(setManagedNodeIdsMock).not.toHaveBeenCalled();
+    expect(onNodeSelectMock).not.toHaveBeenCalled();
   });
 
   it('clears node selection but keeps expanded cluster when clicking empty map space', () => {

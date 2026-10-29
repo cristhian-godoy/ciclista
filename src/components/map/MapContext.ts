@@ -1,6 +1,7 @@
 export type {
   ContextMenuData,
   CrossingEditorContextType,
+  EditSubMode,
   LandmarkModalState,
   MapInstanceContextType,
   NavigationStateContextType,

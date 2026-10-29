@@ -54,6 +54,8 @@ MapProvider.test.tsx
 	Unit tests verifying mode transition cleanup, pin placement reset, and context menu dismissal.
 MapProvider.tsx
 	Context provider component hosting memoized map state and operations.
+MapProvider.test.tsx
+	Unit tests verifying crossing turn selection lifecycle, crossing switch resets, and mode exit teardown.
 mapContextInstance.ts
 	Definition of MapContext and useMapContext hook.
 useCustomMapControls.ts

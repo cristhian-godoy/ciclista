@@ -36,6 +36,7 @@ export const CrossingEditorLayer: React.FC = () => {
     map,
     graph,
     appMode,
+    editSubMode = 'paths',
     activeCrossingId = null,
     activeTurnSelection = { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
     setActiveTurnSelection = () => {},
@@ -43,7 +44,7 @@ export const CrossingEditorLayer: React.FC = () => {
     showMinorControls,
   } = useMapContext();
 
-  const isEditMode = appMode === 'edit';
+  const isEditMode = appMode === 'edit' && editSubMode === 'paths';
 
   const { activeCluster, crossingSubgraph, computedTurnPath } = useCrossingEditorData({
     graph,
@@ -173,7 +174,19 @@ export const CrossingEditorLayer: React.FC = () => {
         type: 'circle',
         source: NODES_SOURCE_ID,
         paint: {
-          'circle-radius': ['match', ['get', 'status'], 'start', 8, 'end', 8, 'waypoint', 7, 5],
+          'circle-radius': [
+            'match',
+            ['get', 'status'],
+            'start',
+            8,
+            'end',
+            8,
+            'waypoint',
+            7,
+            'path',
+            6,
+            5,
+          ],
           'circle-color': [
             'match',
             ['get', 'status'],
@@ -183,6 +196,8 @@ export const CrossingEditorLayer: React.FC = () => {
             MAP_THEME_TOKENS.status.danger,
             'waypoint',
             MAP_THEME_TOKENS.brand.purple,
+            'path',
+            MAP_THEME_TOKENS.brand.amber,
             MAP_THEME_TOKENS.overlay.white,
           ],
           'circle-stroke-color': MAP_THEME_TOKENS.overlay.darkNavy,
@@ -248,13 +263,15 @@ export const CrossingEditorLayer: React.FC = () => {
 
       const nodeFeatures: GeoJSON.Feature<GeoJSON.Point>[] = [];
       crossingSubgraph.nodes.forEach((node) => {
-        let status: 'start' | 'end' | 'waypoint' | 'normal' = 'normal';
+        let status: 'start' | 'end' | 'waypoint' | 'path' | 'normal' = 'normal';
         if (node.id === activeTurnSelection.fromNodeId) {
           status = 'start';
         } else if (node.id === activeTurnSelection.toNodeId) {
           status = 'end';
         } else if (activeTurnSelection.waypointNodeIds.includes(node.id)) {
           status = 'waypoint';
+        } else if (computedTurnPath && computedTurnPath.includes(node.id)) {
+          status = 'path';
         }
 
         nodeFeatures.push({
@@ -341,6 +358,18 @@ export const CrossingEditorLayer: React.FC = () => {
     if (!map) return;
 
     const handleNodeClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault?.();
+      if (e.originalEvent) {
+        e.originalEvent.preventDefault?.();
+        try {
+          Object.defineProperty(e.originalEvent, 'defaultPrevented', {
+            value: true,
+            configurable: true,
+          });
+        } catch {
+          // Ignore if object is sealed or non-configurable
+        }
+      }
       const feat = e.features?.[0];
       const nodeId = feat?.properties?.nodeId ? String(feat.properties.nodeId) : null;
       if (!nodeId) return;
@@ -375,6 +404,7 @@ export const CrossingEditorLayer: React.FC = () => {
     };
 
     const handleEdgeClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (e.defaultPrevented || e.originalEvent?.defaultPrevented) return;
       const feat = e.features?.[0];
       const sourceId = feat?.properties?.sourceId ? String(feat.properties.sourceId) : null;
       const targetId = feat?.properties?.targetId ? String(feat.properties.targetId) : null;

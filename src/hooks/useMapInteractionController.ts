@@ -2,7 +2,7 @@ import type * as maplibregl from 'maplibre-gl';
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import type { SelectionTool } from '../components/map/contexts/StudioStateContext';
-import type { ContextMenuData, MapContextType } from '../components/map/MapContext';
+import type { ContextMenuData, EditSubMode, MapContextType } from '../components/map/MapContext';
 import {
   CrossingEditorContext,
   MapContext,
@@ -37,6 +37,8 @@ export interface UseMapInteractionControllerOptions {
   graph?: StreetGraph | null;
   /** Active application mode */
   appMode?: string;
+  /** Active edit sub-mode ('paths' | 'signals') */
+  editSubMode?: EditSubMode;
   /** Selected edge identifiers */
   selectedEdgeIds?: string[];
   /** State setter for selected edge identifiers */
@@ -163,12 +165,15 @@ export function useMapInteractionController(
   const setPlacingStopIndex = options.setPlacingStopIndex ?? ctx.setPlacingStopIndex;
   const onAddWaypoint = options.onAddWaypoint ?? ctx.onAddWaypoint;
   const onUpdateWaypoint = options.onUpdateWaypoint ?? ctx.onUpdateWaypoint;
+  const editSubMode =
+    options.editSubMode !== undefined ? options.editSubMode : (ctx.editSubMode ?? 'paths');
 
   const mapRef = useRef(map);
   const startCoordRef = useRef(startCoord);
   const endCoordRef = useRef(endCoord);
   const isNavigatingRef = useRef(isNavigating);
   const appModeRef = useRef(appMode);
+  const editSubModeRef = useRef<EditSubMode>(editSubMode);
   const selectedEdgeIdsRef = useRef<string[] | undefined>(selectedEdgeIds);
   const setSelectedEdgeIdsRef = useRef<React.Dispatch<React.SetStateAction<string[]>> | undefined>(
     setSelectedEdgeIds,
@@ -204,6 +209,7 @@ export function useMapInteractionController(
     endCoordRef.current = endCoord;
     isNavigatingRef.current = isNavigating;
     appModeRef.current = appMode;
+    editSubModeRef.current = editSubMode;
     selectedEdgeIdsRef.current = selectedEdgeIds;
     setSelectedEdgeIdsRef.current = setSelectedEdgeIds;
     selectionToolRef.current = selectionTool;
@@ -234,6 +240,7 @@ export function useMapInteractionController(
     endCoord,
     isNavigating,
     appMode,
+    editSubMode,
     selectedEdgeIds,
     setSelectedEdgeIds,
     selectionTool,
@@ -319,32 +326,58 @@ export function useMapInteractionController(
       return;
     }
 
-    // Prioritize traffic lights and crossing clusters across all modes
-    const availableTrafficLayers: string[] = [];
-    if (typeof currentMap.getLayer === 'function') {
-      if (currentMap.getLayer('traffic-lights-unclustered'))
-        availableTrafficLayers.push('traffic-lights-unclustered');
-      if (currentMap.getLayer('traffic-lights-cluster'))
-        availableTrafficLayers.push('traffic-lights-cluster');
-    }
-    const trafficLayersToQuery =
-      availableTrafficLayers.length > 0
-        ? availableTrafficLayers
-        : ['traffic-lights-unclustered', 'traffic-lights-cluster'];
+    // Traffic layer queries are strictly scoped:
+    // - In 'routing' mode: NEVER query traffic layers so clicks place pins without interference.
+    // - In 'places' or 'events'/'studio' modes: clicks target domain features.
+    // - In 'edit' mode:
+    //   * When editSubMode === 'paths': query ONLY 'traffic-lights-cluster', setting activeCrossingId ONLY.
+    //   * When editSubMode === 'signals': query 'traffic-lights-cluster' (expands cluster) and 'traffic-lights-unclustered'.
+    // - When appMode is undefined: query both for generic/backwards compatibility.
+    const isRouting = appModeRef.current === 'routing';
+    const isEdit = appModeRef.current === 'edit';
+    const currentSubMode = editSubModeRef.current;
 
-    const trafficBbox: [maplibregl.PointLike, maplibregl.PointLike] = [
-      [e.point.x - 10, e.point.y - 10],
-      [e.point.x + 10, e.point.y + 10],
-    ];
+    const shouldQueryTraffic =
+      !isRouting &&
+      appModeRef.current !== 'places' &&
+      appModeRef.current !== 'landmarks' &&
+      appModeRef.current !== 'events' &&
+      (appModeRef.current as string) !== 'studio';
 
     let trafficFeatures: maplibregl.MapGeoJSONFeature[] = [];
-    if (typeof currentMap.queryRenderedFeatures === 'function') {
-      try {
-        trafficFeatures = currentMap.queryRenderedFeatures(trafficBbox, {
-          layers: trafficLayersToQuery,
-        });
-      } catch {
-        trafficFeatures = [];
+
+    if (shouldQueryTraffic) {
+      let trafficLayersToQuery: string[];
+
+      if (isEdit && currentSubMode === 'paths') {
+        trafficLayersToQuery = ['traffic-lights-cluster'];
+      } else {
+        const availableTrafficLayers: string[] = [];
+        if (typeof currentMap.getLayer === 'function') {
+          if (currentMap.getLayer('traffic-lights-unclustered'))
+            availableTrafficLayers.push('traffic-lights-unclustered');
+          if (currentMap.getLayer('traffic-lights-cluster'))
+            availableTrafficLayers.push('traffic-lights-cluster');
+        }
+        trafficLayersToQuery =
+          availableTrafficLayers.length > 0
+            ? availableTrafficLayers
+            : ['traffic-lights-unclustered', 'traffic-lights-cluster'];
+      }
+
+      const trafficBbox: [maplibregl.PointLike, maplibregl.PointLike] = [
+        [e.point.x - 10, e.point.y - 10],
+        [e.point.x + 10, e.point.y + 10],
+      ];
+
+      if (typeof currentMap.queryRenderedFeatures === 'function') {
+        try {
+          trafficFeatures = currentMap.queryRenderedFeatures(trafficBbox, {
+            layers: trafficLayersToQuery,
+          });
+        } catch {
+          trafficFeatures = [];
+        }
       }
     }
 
@@ -379,9 +412,13 @@ export function useMapInteractionController(
         const crossingId = props.crossingId ? String(props.crossingId) : null;
 
         if (crossingId) {
-          setManagedClusterIdRef.current?.(crossingId);
-          setManagedNodeIdsRef.current?.(nodeIds);
-          setActiveCrossingIdRef.current?.(crossingId);
+          if (isEdit && currentSubMode === 'paths') {
+            setActiveCrossingIdRef.current?.(crossingId);
+          } else {
+            setManagedClusterIdRef.current?.(crossingId);
+            setManagedNodeIdsRef.current?.(nodeIds);
+            setActiveCrossingIdRef.current?.(crossingId);
+          }
         }
 
         currentMap.easeTo?.({
@@ -392,55 +429,57 @@ export function useMapInteractionController(
       }
 
       // Priority B: Individual unclustered signal feature (select light and open popup)
-      const signalFeature = trafficFeatures.find(
-        (f) =>
-          f.layer?.id === 'traffic-lights-unclustered' ||
-          f.properties?.type === 'signal' ||
-          (Boolean(f.properties?.id) && !f.properties?.crossingId) ||
-          (f.id !== undefined && f.id !== null && !f.properties?.crossingId),
-      );
+      if (!isEdit || currentSubMode === 'signals') {
+        const signalFeature = trafficFeatures.find(
+          (f) =>
+            f.layer?.id === 'traffic-lights-unclustered' ||
+            f.properties?.type === 'signal' ||
+            (Boolean(f.properties?.id) && !f.properties?.crossingId) ||
+            (f.id !== undefined && f.id !== null && !f.properties?.crossingId),
+        );
 
-      if (signalFeature) {
-        const props = signalFeature.properties ?? {};
-        const currentGraph = graphRef.current;
-        const coords = (signalFeature.geometry as { coordinates?: number[] })?.coordinates;
-        const lat = coords?.[1] ?? e.lngLat.lat;
-        const lng = coords?.[0] ?? e.lngLat.lng;
-        const nodeId = String(props.id ?? signalFeature.id ?? '');
+        if (signalFeature) {
+          const props = signalFeature.properties ?? {};
+          const currentGraph = graphRef.current;
+          const coords = (signalFeature.geometry as { coordinates?: number[] })?.coordinates;
+          const lat = coords?.[1] ?? e.lngLat.lat;
+          const lng = coords?.[0] ?? e.lngLat.lng;
+          const nodeId = String(props.id ?? signalFeature.id ?? '');
 
-        if (nodeId) {
-          const graphEntry = currentGraph?.nodes.get(nodeId);
+          if (nodeId) {
+            const graphEntry = currentGraph?.nodes.get(nodeId);
 
-          let tags: Record<string, string> = {};
-          if (props.tags) {
-            if (typeof props.tags === 'string') {
-              try {
-                tags = JSON.parse(props.tags);
-              } catch {
-                tags = {};
+            let tags: Record<string, string> = {};
+            if (props.tags) {
+              if (typeof props.tags === 'string') {
+                try {
+                  tags = JSON.parse(props.tags);
+                } catch {
+                  tags = {};
+                }
+              } else if (typeof props.tags === 'object') {
+                tags = props.tags as Record<string, string>;
               }
-            } else if (typeof props.tags === 'object') {
-              tags = props.tags as Record<string, string>;
             }
+
+            const targetNode: GraphNode = {
+              ...(graphEntry?.node ?? {
+                id: nodeId,
+                lat,
+                lng,
+                tags:
+                  graphEntry?.node.tags ??
+                  (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
+              }),
+            };
+
+            onNodeSelectRef.current?.(targetNode);
+            currentMap.easeTo?.({
+              center: [lng, lat],
+              duration: 400,
+            });
+            return;
           }
-
-          const targetNode: GraphNode = {
-            ...(graphEntry?.node ?? {
-              id: nodeId,
-              lat,
-              lng,
-              tags:
-                graphEntry?.node.tags ??
-                (Object.keys(tags).length > 0 ? tags : { highway: 'traffic_signals' }),
-            }),
-          };
-
-          onNodeSelectRef.current?.(targetNode);
-          currentMap.easeTo?.({
-            center: [lng, lat],
-            duration: 400,
-          });
-          return;
         }
       }
     }

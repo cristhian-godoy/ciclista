@@ -14,6 +14,7 @@ import {
   snapCoordinateToEdge,
 } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
+import type { AppSettings } from './core/config/settings';
 import type { SettingCategory } from './core/config/settingsMetadata';
 import type { LocalOverrides } from './core/config/types';
 import type { MapEvent } from './core/events';
@@ -56,13 +57,13 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
   // Modal visibility states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsCategory, setSettingsCategory] = useState<SettingCategory | undefined>();
-  const [settingsHighlightKey, setSettingsHighlightKey] = useState<string | undefined>();
+  const [settingsHighlightKey, setSettingsHighlightKey] = useState<keyof AppSettings | undefined>();
   const [isSearchAllOpen, setIsSearchAllOpen] = useState(false);
   const [searchAllInitialTab, setSearchAllInitialTab] = useState<SearchTab>('all');
 
   const handleOpenSettings = useCallback((category?: SettingCategory, highlightKey?: string) => {
     setSettingsCategory(category);
-    setSettingsHighlightKey(highlightKey);
+    setSettingsHighlightKey(highlightKey as keyof AppSettings | undefined);
     setIsSettingsOpen(true);
   }, []);
 
@@ -427,7 +428,9 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
           setStartCoord(null);
           setEndCoord(null);
         },
-        setRoutingStrategy,
+        setRoutingStrategy: (strategy: string) => {
+          setRoutingStrategy(strategy as 'standard' | 'avoid-stops' | 'quiet-streets');
+        },
         setBikeConfig,
       },
       navigation: {
@@ -447,6 +450,10 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       },
       places: {
         places: places as unknown as Landmark[],
+        selectPlace: (p: Landmark) => {
+          setStartCoord({ lat: p.lat, lng: p.lng });
+          setIsSearchAllOpen(false);
+        },
       },
       openSettings: handleOpenSettings,
       openSearchAll: handleOpenSearchAll,
@@ -596,11 +603,6 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
             onOpenSettings={(cat, key) => {
               setIsSearchAllOpen(false);
               handleOpenSettings(cat, key);
-            }}
-            places={places}
-            onSelectPlace={(p) => {
-              setStartCoord({ lat: p.lat, lng: p.lng });
-              setIsSearchAllOpen(false);
             }}
           />
         )}

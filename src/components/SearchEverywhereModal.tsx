@@ -298,7 +298,10 @@ export const SearchEverywhereModal: React.FC<SearchEverywhereModalProps> = ({
     const nextIndex = forward
       ? (currentIndex + 1) % tabs.length
       : (currentIndex - 1 + tabs.length) % tabs.length;
-    setActiveTab(tabs[nextIndex]);
+    const nextTab = tabs[nextIndex];
+    if (nextTab) {
+      setActiveTab(nextTab);
+    }
   };
 
   const handleSelectEntry = (entry: SearchEntry) => {

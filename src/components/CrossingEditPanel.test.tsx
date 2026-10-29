@@ -343,4 +343,156 @@ describe('CrossingEditPanel Component', () => {
     const directBtn = screen.getByRole('button', { name: 'Direct' });
     expect(directBtn.className).toContain('active');
   });
+
+  it('renders Clear Selection button when turn selection is dirty and calls onClearSelection on click', async () => {
+    const user = userEvent.setup();
+    const handleSetActiveTurnSelection = vi.fn();
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: handleSetActiveTurnSelection,
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    const clearBtn = screen.getByRole('button', { name: /Clear Selection/i });
+    expect(clearBtn).toBeInTheDocument();
+
+    await user.click(clearBtn);
+
+    expect(handleSetActiveTurnSelection).toHaveBeenCalledWith({
+      fromNodeId: null,
+      toNodeId: null,
+      waypointNodeIds: [],
+    });
+  });
+
+  it('does NOT render Clear Selection button when turn selection is clean', () => {
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.queryByRole('button', { name: /Clear Selection/i })).not.toBeInTheDocument();
+  });
+
+  it('clears dirty turn selection when Escape key is pressed', async () => {
+    const user = userEvent.setup();
+    const handleSetActiveTurnSelection = vi.fn();
+    const handleSetActiveCrossingId = vi.fn();
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: 'node-2', waypointNodeIds: [] },
+      setActiveTurnSelection: handleSetActiveTurnSelection,
+      setActiveCrossingId: handleSetActiveCrossingId,
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    await user.keyboard('{Escape}');
+
+    expect(handleSetActiveTurnSelection).toHaveBeenCalledWith({
+      fromNodeId: null,
+      toNodeId: null,
+      waypointNodeIds: [],
+    });
+    expect(handleSetActiveCrossingId).not.toHaveBeenCalled();
+  });
+
+  it('deselects crossing when Escape key is pressed with clean turn selection', async () => {
+    const user = userEvent.setup();
+    const handleSetActiveCrossingId = vi.fn();
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+      setActiveCrossingId: handleSetActiveCrossingId,
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    await user.keyboard('{Escape}');
+
+    expect(handleSetActiveCrossingId).toHaveBeenCalledWith(null);
+  });
+
+  it('renders segmented sub-mode toggle and switches between paths and signals', async () => {
+    const user = userEvent.setup();
+    const handleSetEditSubMode = vi.fn();
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      editSubMode: 'paths',
+      setEditSubMode: handleSetEditSubMode,
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByRole('button', { name: /Turn Paths/i })).toBeInTheDocument();
+    const signalsBtn = screen.getByRole('button', { name: /Traffic Signals/i });
+    expect(signalsBtn).toBeInTheDocument();
+
+    await user.click(signalsBtn);
+    expect(handleSetEditSubMode).toHaveBeenCalledWith('signals');
+  });
+
+  it('renders signal configuration overview and suppresses turn path form in signals sub-mode', () => {
+    const customDelays = new Map([['node-1', 12]]);
+    const ctx = createMockContext({
+      activeCrossingId: 'crossing-node-1',
+      editSubMode: 'signals',
+      customNodeDelays: customDelays,
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByText(/Intersection #node-1/)).toBeInTheDocument();
+    expect(screen.getByText('Signal Configuration')).toBeInTheDocument();
+    expect(screen.getByText(/Click an unclustered signal on the map/i)).toBeInTheDocument();
+    expect(screen.getByText('Signal #node-1')).toBeInTheDocument();
+    expect(screen.getByText('+12s')).toBeInTheDocument();
+    expect(screen.queryByText('Crossing Edge Classification')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Save Turn Override/i })).not.toBeInTheDocument();
+  });
+
+  it('renders select an intersection empty state in signals sub-mode when no crossing is active', () => {
+    const ctx = createMockContext({
+      activeCrossingId: null,
+      editSubMode: 'signals',
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <CrossingEditPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByText('Select an Intersection')).toBeInTheDocument();
+    expect(screen.queryByText('Crossing Edge Classification')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Save Turn Override/i })).not.toBeInTheDocument();
+  });
 });

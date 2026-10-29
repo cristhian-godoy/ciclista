@@ -87,13 +87,6 @@ vi.mock('maplibre-gl', () => {
       }
       return this;
     }
-    getElement() {
-      return this.element;
-    }
-    setDraggable(draggable: boolean) {
-      this.draggable = draggable;
-      return this;
-    }
   }
 
   class NavigationControl {}
