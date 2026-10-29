@@ -11,24 +11,35 @@ export interface UseMapCursorOptions {
   isPlacingPlace?: boolean;
   /** Callback to set or toggle pin placement mode */
   setIsPlacingPlace?: (isPlacing: boolean) => void;
+  /** Whether route intermediate stop placement mode is active */
+  isPlacingStop?: boolean;
+  /** Callback to set or toggle route intermediate stop placement mode */
+  setIsPlacingStop?: (isPlacing: boolean) => void;
+  /** Callback to cancel route intermediate stop placement mode */
+  onCancelPlacingStop?: () => void;
 }
 
 /**
  * Hook to manage map canvas cursor style and Escape cancellation
- * during pin placement mode.
+ * during place pin and route stop placement mode.
  */
 export function useMapCursor({
   map,
   isPlacingPlace = false,
   setIsPlacingPlace,
+  isPlacingStop = false,
+  setIsPlacingStop,
+  onCancelPlacingStop,
 }: UseMapCursorOptions): void {
-  // Set map canvas cursor to crosshair during pin placement mode
+  const isCrosshair = isPlacingPlace || isPlacingStop;
+
+  // Set map canvas cursor to crosshair during pin or stop placement mode
   useEffect(() => {
     if (!map) return;
     const canvas = map.getCanvas?.();
     if (!canvas) return;
 
-    if (isPlacingPlace) {
+    if (isCrosshair) {
       canvas.style.cursor = 'crosshair';
     } else {
       canvas.style.cursor = '';
@@ -39,15 +50,24 @@ export function useMapCursor({
         canvas.style.cursor = '';
       }
     };
-  }, [map, isPlacingPlace]);
+  }, [map, isCrosshair]);
 
-  // Handle Escape key to cancel pin placement mode
+  // Handle Escape key to cancel active placement modes
   useEffect(() => {
-    if (!isPlacingPlace) return;
+    if (!isCrosshair) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsPlacingPlace?.(false);
+        if (isPlacingStop) {
+          if (onCancelPlacingStop) {
+            onCancelPlacingStop();
+          } else {
+            setIsPlacingStop?.(false);
+          }
+        }
+        if (isPlacingPlace) {
+          setIsPlacingPlace?.(false);
+        }
       }
     };
 
@@ -55,5 +75,12 @@ export function useMapCursor({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isPlacingPlace, setIsPlacingPlace]);
+  }, [
+    isCrosshair,
+    isPlacingPlace,
+    isPlacingStop,
+    setIsPlacingPlace,
+    setIsPlacingStop,
+    onCancelPlacingStop,
+  ]);
 }

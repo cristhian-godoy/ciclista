@@ -41,6 +41,9 @@ describe('MapContextMenu Component', () => {
       loadedBBoxes: [],
       startCoord: null,
       endCoord: null,
+      waypoints: [],
+      isPlacingStop: false,
+      placingStopIndex: null,
       routeVariants: [],
       activeAlternativeLabel: 'standard',
       onSelectAlternative: vi.fn(),
@@ -260,5 +263,69 @@ describe('MapContextMenu Component', () => {
     });
 
     expect(container.firstChild).toBeNull();
+  });
+
+  it('renders Add as Route Stop on empty map space when startCoord is set', async () => {
+    const user = userEvent.setup();
+    const onAddWaypointMock = vi.fn();
+
+    renderWithContext({
+      startCoord: { lat: 48.13, lng: 11.57 },
+      onAddWaypoint: onAddWaypointMock,
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 200,
+        lat: 48.138,
+        lng: 11.578,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    const addStopBtn = screen.getByRole('button', { name: /Add as Route Stop/i });
+    expect(addStopBtn).toBeInTheDocument();
+
+    await user.click(addStopBtn);
+    expect(onAddWaypointMock).toHaveBeenCalledWith({ lat: 48.138, lng: 11.578 });
+    expect(setContextMenuMock).toHaveBeenCalled();
+  });
+
+  it('renders Add to Route as Stop when right clicking an existing place in routing mode', async () => {
+    const user = userEvent.setup();
+    const onAddWaypointMock = vi.fn();
+
+    const samplePlace: Landmark = {
+      id: 'place-bakery',
+      name: 'Bakery',
+      category: 'other',
+      lat: 48.14,
+      lng: 11.58,
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+
+    renderWithContext({
+      appMode: 'routing',
+      landmarks: [samplePlace],
+      onAddWaypoint: onAddWaypointMock,
+      contextMenu: {
+        visible: true,
+        x: 120,
+        y: 220,
+        lat: 48.14,
+        lng: 11.58,
+        crossingId: null,
+        nodeIds: null,
+        placeId: 'place-bakery',
+      },
+    });
+
+    const addStopBtn = screen.getByRole('button', { name: /Add to Route as Stop/i });
+    expect(addStopBtn).toBeInTheDocument();
+
+    await user.click(addStopBtn);
+    expect(onAddWaypointMock).toHaveBeenCalledWith({ lat: 48.14, lng: 11.58 });
+    expect(setContextMenuMock).toHaveBeenCalled();
   });
 });

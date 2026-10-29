@@ -63,6 +63,11 @@ const MapViewContent: React.FC<{
     onUpdatePlace,
     isPlacingPlace,
     setIsPlacingPlace,
+    isPlacingStop,
+    setIsPlacingStop,
+    placingStopIndex,
+    cancelPlacingStop,
+    waypoints,
   } = useMapContext();
 
   const closePlace = closePlaceModal ?? closeLandmarkModal;
@@ -74,6 +79,9 @@ const MapViewContent: React.FC<{
     map,
     isPlacingPlace,
     setIsPlacingPlace,
+    isPlacingStop,
+    setIsPlacingStop,
+    onCancelPlacingStop: cancelPlacingStop,
   });
 
   // Auto-collapse expanded crossing clusters on zoom out or far pan
@@ -180,6 +188,21 @@ const MapViewContent: React.FC<{
           position="bottom-right"
           persistent
           onClose={() => setIsPlacingPlace?.(false)}
+        />
+      )}
+
+      {/* Persistent toast notifying user to place or reposition route intermediate stop */}
+      {isPlacingStop && (
+        <Toast
+          message={`Click on the map to place Stop ${
+            typeof placingStopIndex === 'number' && placingStopIndex >= 0
+              ? placingStopIndex + 1
+              : (waypoints?.length ?? 0) + 1
+          } (Esc to cancel)`}
+          icon={<MapPin size={16} />}
+          position="bottom-right"
+          persistent
+          onClose={() => (cancelPlacingStop ? cancelPlacingStop() : setIsPlacingStop?.(false))}
         />
       )}
     </div>

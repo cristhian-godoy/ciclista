@@ -2,7 +2,19 @@ import React, { useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, BikeProfileId } from '../core/config';
-import { ArrowUpDown, Bike, MapPin, Plus, RefreshCw, Settings, Trash2, Zap } from './common/Icon';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Bike,
+  Crosshair,
+  MapPin,
+  Plus,
+  RefreshCw,
+  Settings,
+  Trash2,
+  Zap,
+} from './common/Icon';
 import { SegmentedControl } from './common/SegmentedControl';
 
 /**
@@ -18,6 +30,10 @@ export interface RoutingConfigPanelProps {
   onAddWaypoint?: () => void;
   onRemoveWaypoint?: (index: number) => void;
   onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
+  isPlacingStop?: boolean;
+  placingStopIndex?: number | null;
+  onStartPlacingStop?: (index?: number) => void;
   isFetchingOSM: boolean;
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
@@ -51,28 +67,56 @@ function parseCoordinateInput(value: string): Coordinate | null {
  * Formats a coordinate into a comma-separated latitude and longitude string.
  */
 function formatCoordinate(coord: Coordinate | null): string {
-  if (!coord) return '';
+  if (
+    !coord ||
+    typeof coord.lat !== 'number' ||
+    typeof coord.lng !== 'number' ||
+    isNaN(coord.lat) ||
+    isNaN(coord.lng)
+  ) {
+    return '';
+  }
   return `${coord.lat.toFixed(5)}, ${coord.lng.toFixed(5)}`;
 }
 
 interface WaypointItemProps {
   index: number;
+  totalWaypoints: number;
   coord: Coordinate;
+  isPlacingThisStop?: boolean;
   onUpdate?: (coord: Coordinate) => void;
   onRemove?: () => void;
+  onPickOnMap?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-const WaypointItem: React.FC<WaypointItemProps> = ({ index, coord, onUpdate, onRemove }) => {
-  const [val, setVal] = useState(() =>
-    coord.lat === 0 && coord.lng === 0 ? '' : formatCoordinate(coord),
-  );
+const WaypointItem: React.FC<WaypointItemProps> = ({
+  index,
+  totalWaypoints,
+  coord,
+  isPlacingThisStop,
+  onUpdate,
+  onRemove,
+  onPickOnMap,
+  onMoveUp,
+  onMoveDown,
+}) => {
+  const isCoordValid =
+    coord &&
+    typeof coord.lat === 'number' &&
+    typeof coord.lng === 'number' &&
+    !isNaN(coord.lat) &&
+    !isNaN(coord.lng);
+  const isZero = isCoordValid && coord.lat === 0 && coord.lng === 0;
+  const [val, setVal] = useState(() => (isZero || !isCoordValid ? '' : formatCoordinate(coord)));
 
   const handleBlur = () => {
     const parsed = parseCoordinateInput(val);
     if (parsed && onUpdate) {
       onUpdate(parsed);
     } else {
-      setVal(coord.lat === 0 && coord.lng === 0 ? '' : formatCoordinate(coord));
+      setVal(isZero || !isCoordValid ? '' : formatCoordinate(coord));
     }
   };
 
@@ -84,6 +128,9 @@ const WaypointItem: React.FC<WaypointItemProps> = ({ index, coord, onUpdate, onR
 
   return (
     <div className="ciclista-form-group ciclista-route-location-form-group ciclista-waypoint-row">
+      <span className="ciclista-waypoint-badge" aria-hidden="true">
+        {index + 1}
+      </span>
       <div className="ciclista-waypoint-field">
         <label className="ciclista-label" htmlFor={`route-stop-${index}-input`}>
           Stop {index + 1}
@@ -93,21 +140,54 @@ const WaypointItem: React.FC<WaypointItemProps> = ({ index, coord, onUpdate, onR
           className="ciclista-input ciclista-route-location-input"
           type="text"
           value={val}
-          placeholder="Enter stop lat, lng"
+          placeholder="Click map or enter lat, lng"
           onChange={(e) => setVal(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
         />
       </div>
-      <button
-        type="button"
-        className="ciclista-btn ciclista-btn--secondary ciclista-waypoint-remove-btn"
-        onClick={onRemove}
-        aria-label={`Remove stop ${index + 1}`}
-        title={`Remove stop ${index + 1}`}
-      >
-        <Trash2 size={14} />
-      </button>
+      <div className="ciclista-waypoint-actions">
+        <button
+          type="button"
+          className={`ciclista-btn ciclista-btn--secondary ciclista-waypoint-action-btn ${
+            isPlacingThisStop ? 'ciclista-btn--active' : ''
+          }`}
+          onClick={onPickOnMap}
+          aria-label={`Pick stop ${index + 1} on map`}
+          title={`Pick stop ${index + 1} on map`}
+        >
+          <Crosshair size={14} />
+        </button>
+        <button
+          type="button"
+          className="ciclista-btn ciclista-btn--secondary ciclista-waypoint-action-btn"
+          onClick={onMoveUp}
+          disabled={index === 0}
+          aria-label={`Move stop ${index + 1} up`}
+          title={`Move stop ${index + 1} up`}
+        >
+          <ArrowUp size={14} />
+        </button>
+        <button
+          type="button"
+          className="ciclista-btn ciclista-btn--secondary ciclista-waypoint-action-btn"
+          onClick={onMoveDown}
+          disabled={index === totalWaypoints - 1}
+          aria-label={`Move stop ${index + 1} down`}
+          title={`Move stop ${index + 1} down`}
+        >
+          <ArrowDown size={14} />
+        </button>
+        <button
+          type="button"
+          className="ciclista-btn ciclista-btn--secondary ciclista-waypoint-remove-btn"
+          onClick={onRemove}
+          aria-label={`Remove stop ${index + 1}`}
+          title={`Remove stop ${index + 1}`}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
     </div>
   );
 };
@@ -126,6 +206,10 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   onAddWaypoint,
   onRemoveWaypoint,
   onUpdateWaypoint,
+  onReorderWaypoints,
+  isPlacingStop = false,
+  placingStopIndex = null,
+  onStartPlacingStop,
   isFetchingOSM,
   bikeConfig,
   onBikeConfigChange,
@@ -211,9 +295,14 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               <WaypointItem
                 key={idx}
                 index={idx}
+                totalWaypoints={waypoints.length}
                 coord={wp}
+                isPlacingThisStop={isPlacingStop && placingStopIndex === idx}
                 onUpdate={(c) => onUpdateWaypoint?.(idx, c)}
                 onRemove={() => onRemoveWaypoint?.(idx)}
+                onPickOnMap={() => onStartPlacingStop?.(idx)}
+                onMoveUp={() => onReorderWaypoints?.(idx, idx - 1)}
+                onMoveDown={() => onReorderWaypoints?.(idx, idx + 1)}
               />
             ))}
 
@@ -234,15 +323,36 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
             </div>
 
             {onAddWaypoint && (
-              <button
-                type="button"
-                className="ciclista-btn ciclista-btn--secondary ciclista-add-stop-btn"
-                onClick={onAddWaypoint}
-                aria-label="+ Add Stop"
-              >
-                <Plus size={14} />
-                <span>+ Add Stop</span>
-              </button>
+              <div className="ciclista-add-stop-container">
+                <button
+                  type="button"
+                  className="ciclista-btn ciclista-btn--secondary ciclista-add-stop-btn"
+                  onClick={() => {
+                    if (onStartPlacingStop) {
+                      onStartPlacingStop();
+                    } else {
+                      onAddWaypoint?.();
+                    }
+                  }}
+                  disabled={!startCoord || !endCoord || isPlacingStop}
+                  aria-label="Add Stop"
+                  title={
+                    !startCoord || !endCoord
+                      ? 'Set start and destination before adding intermediate stops'
+                      : isPlacingStop
+                        ? 'Click on the map to place Stop'
+                        : 'Add Stop'
+                  }
+                >
+                  <Plus size={14} />
+                  <span>Add Stop</span>
+                </button>
+                {(!startCoord || !endCoord) && (
+                  <p className="ciclista-field-helper">
+                    Set start and destination before adding intermediate stops
+                  </p>
+                )}
+              </div>
             )}
           </div>
           <button

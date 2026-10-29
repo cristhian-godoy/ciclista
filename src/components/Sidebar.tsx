@@ -165,6 +165,22 @@ export interface SidebarProps {
    * Callback fired to update coordinates of an intermediate waypoint.
    */
   onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  /**
+   * Callback fired to reorder intermediate waypoints.
+   */
+  onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
+  /**
+   * Whether intermediate stop placement mode is active.
+   */
+  isPlacingStop?: boolean;
+  /**
+   * Index of intermediate stop being repositioned on the map.
+   */
+  placingStopIndex?: number | null;
+  /**
+   * Callback fired to initiate intermediate stop placement on map.
+   */
+  onStartPlacingStop?: (index?: number) => void;
 }
 
 /**
@@ -178,6 +194,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onAddWaypoint,
   onRemoveWaypoint,
   onUpdateWaypoint,
+  onReorderWaypoints,
+  isPlacingStop,
+  placingStopIndex,
+  onStartPlacingStop,
   routeResult,
   routeVariants,
   routingStrategy,
@@ -439,6 +459,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onAddWaypoint={onAddWaypoint}
                 onRemoveWaypoint={onRemoveWaypoint}
                 onUpdateWaypoint={onUpdateWaypoint}
+                onReorderWaypoints={onReorderWaypoints}
+                isPlacingStop={isPlacingStop}
+                placingStopIndex={placingStopIndex}
+                onStartPlacingStop={onStartPlacingStop}
                 isFetchingOSM={isFetchingOSM}
                 bikeConfig={bikeConfig}
                 onBikeConfigChange={onBikeConfigChange}

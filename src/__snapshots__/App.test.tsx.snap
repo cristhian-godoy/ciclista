@@ -321,35 +321,46 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 value=""
               />
             </div>
-            <button
-              aria-label="+ Add Stop"
-              class="ciclista-btn ciclista-btn--secondary ciclista-add-stop-btn"
-              type="button"
+            <div
+              class="ciclista-add-stop-container"
             >
-              <svg
-                aria-hidden="true"
-                class="lucide lucide-plus"
-                fill="none"
-                height="14"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                width="14"
-                xmlns="http://www.w3.org/2000/svg"
+              <button
+                aria-label="Add Stop"
+                class="ciclista-btn ciclista-btn--secondary ciclista-add-stop-btn"
+                disabled=""
+                title="Set start and destination before adding intermediate stops"
+                type="button"
               >
-                <path
-                  d="M5 12h14"
-                />
-                <path
-                  d="M12 5v14"
-                />
-              </svg>
-              <span>
-                + Add Stop
-              </span>
-            </button>
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-plus"
+                  fill="none"
+                  height="14"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 12h14"
+                  />
+                  <path
+                    d="M12 5v14"
+                  />
+                </svg>
+                <span>
+                  Add Stop
+                </span>
+              </button>
+              <p
+                class="ciclista-field-helper"
+              >
+                Set start and destination before adding intermediate stops
+              </p>
+            </div>
           </div>
           <button
             aria-label="Swap start and destination"

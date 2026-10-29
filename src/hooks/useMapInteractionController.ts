@@ -68,6 +68,18 @@ export interface UseMapInteractionControllerOptions {
   isPlacingPlace?: boolean;
   /** Setter for pin placement mode */
   setIsPlacingPlace?: (isPlacing: boolean) => void;
+  /** Intermediate route stop placement mode active flag */
+  isPlacingStop?: boolean;
+  /** Setter for intermediate route stop placement mode */
+  setIsPlacingStop?: (isPlacing: boolean) => void;
+  /** Index of intermediate route stop being repositioned */
+  placingStopIndex?: number | null;
+  /** Setter for intermediate route stop reposition index */
+  setPlacingStopIndex?: (index: number | null) => void;
+  /** Callback to append intermediate waypoint */
+  onAddWaypoint?: (coord: Coordinate) => void;
+  /** Callback to update intermediate waypoint */
+  onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
 }
 
 /**
@@ -143,6 +155,14 @@ export function useMapInteractionController(
   const isPlacingPlace =
     options.isPlacingPlace !== undefined ? options.isPlacingPlace : ctx.isPlacingPlace;
   const setIsPlacingPlace = options.setIsPlacingPlace ?? ctx.setIsPlacingPlace;
+  const isPlacingStop =
+    options.isPlacingStop !== undefined ? options.isPlacingStop : ctx.isPlacingStop;
+  const setIsPlacingStop = options.setIsPlacingStop ?? ctx.setIsPlacingStop;
+  const placingStopIndex =
+    options.placingStopIndex !== undefined ? options.placingStopIndex : ctx.placingStopIndex;
+  const setPlacingStopIndex = options.setPlacingStopIndex ?? ctx.setPlacingStopIndex;
+  const onAddWaypoint = options.onAddWaypoint ?? ctx.onAddWaypoint;
+  const onUpdateWaypoint = options.onUpdateWaypoint ?? ctx.onUpdateWaypoint;
 
   const mapRef = useRef(map);
   const startCoordRef = useRef(startCoord);
@@ -167,6 +187,12 @@ export function useMapInteractionController(
   const setActiveCrossingIdRef = useRef(setActiveCrossingId);
   const isPlacingPlaceRef = useRef<boolean | undefined>(isPlacingPlace);
   const setIsPlacingPlaceRef = useRef(setIsPlacingPlace);
+  const isPlacingStopRef = useRef<boolean | undefined>(isPlacingStop);
+  const setIsPlacingStopRef = useRef(setIsPlacingStop);
+  const placingStopIndexRef = useRef<number | null | undefined>(placingStopIndex);
+  const setPlacingStopIndexRef = useRef(setPlacingStopIndex);
+  const onAddWaypointRef = useRef(onAddWaypoint);
+  const onUpdateWaypointRef = useRef(onUpdateWaypoint);
   const setContextMenuRef = useRef<
     React.Dispatch<React.SetStateAction<ContextMenuData>> | undefined
   >(setContextMenu);
@@ -194,6 +220,12 @@ export function useMapInteractionController(
     setActiveCrossingIdRef.current = setActiveCrossingId;
     isPlacingPlaceRef.current = isPlacingPlace;
     setIsPlacingPlaceRef.current = setIsPlacingPlace;
+    isPlacingStopRef.current = isPlacingStop;
+    setIsPlacingStopRef.current = setIsPlacingStop;
+    placingStopIndexRef.current = placingStopIndex;
+    setPlacingStopIndexRef.current = setPlacingStopIndex;
+    onAddWaypointRef.current = onAddWaypoint;
+    onUpdateWaypointRef.current = onUpdateWaypoint;
     setContextMenuRef.current = setContextMenu;
     setDockExpandedRef.current = setDockExpanded;
   }, [
@@ -218,6 +250,12 @@ export function useMapInteractionController(
     setActiveCrossingId,
     isPlacingPlace,
     setIsPlacingPlace,
+    isPlacingStop,
+    setIsPlacingStop,
+    placingStopIndex,
+    setPlacingStopIndex,
+    onAddWaypoint,
+    onUpdateWaypoint,
     setContextMenu,
     setDockExpanded,
   ]);
@@ -256,6 +294,21 @@ export function useMapInteractionController(
       const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
       setIsPlacingPlaceRef.current?.(false);
       openCreatePlaceModalRef.current?.(clickedCoord);
+      return;
+    }
+
+    // Handle route stop placement mode
+    if (isPlacingStopRef.current) {
+      const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      const targetIndex = placingStopIndexRef.current;
+      setIsPlacingStopRef.current?.(false);
+      setPlacingStopIndexRef.current?.(null);
+
+      if (typeof targetIndex === 'number' && targetIndex >= 0) {
+        onUpdateWaypointRef.current?.(targetIndex, clickedCoord);
+      } else {
+        onAddWaypointRef.current?.(clickedCoord);
+      }
       return;
     }
 

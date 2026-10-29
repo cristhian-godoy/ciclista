@@ -71,4 +71,24 @@ describe('useMapCursor', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(setIsPlacingPlaceMock).not.toHaveBeenCalled();
   });
+
+  it('sets cursor to crosshair when isPlacingStop is true and invokes onCancelPlacingStop on Escape', () => {
+    const onCancelPlacingStopMock = vi.fn();
+
+    const { unmount } = renderHook(() =>
+      useMapCursor({
+        map: mockMap as maplibregl.Map,
+        isPlacingStop: true,
+        onCancelPlacingStop: onCancelPlacingStopMock,
+      }),
+    );
+
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(onCancelPlacingStopMock).toHaveBeenCalled();
+
+    unmount();
+    expect(mockCanvas.style.cursor).toBe('');
+  });
 });

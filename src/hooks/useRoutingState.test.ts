@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { Coordinate } from '../core/common/types';
 import {
   formatCoordQuery,
   formatWaypointsQuery,
@@ -49,6 +50,15 @@ describe('useRoutingState & URL parameter synchronization', () => {
       expect(parseWaypointsString(null)).toEqual([]);
       expect(parseWaypointsString('')).toEqual([]);
       expect(formatWaypointsQuery([])).toBe('');
+      expect(
+        formatWaypointsQuery([
+          { lat: NaN, lng: 11 } as unknown as Coordinate,
+          { lat: 48.1, lng: 11.1 },
+        ]),
+      ).toBe('48.10000,11.10000');
+      expect(formatWaypointsQuery([{ stopPropagation: () => {} } as unknown as Coordinate])).toBe(
+        '',
+      );
       expect(parseWaypointsString('48.1,11.1;invalid;48.2,11.2')).toEqual([
         { lat: 48.1, lng: 11.1 },
         { lat: 48.2, lng: 11.2 },
@@ -138,9 +148,9 @@ describe('useRoutingState & URL parameter synchronization', () => {
       expect(result.current.waypoints).toEqual([]);
 
       act(() => {
-        result.current.addWaypoint();
+        result.current.addWaypoint({ lat: 48.15, lng: 11.58 });
       });
-      expect(result.current.waypoints).toEqual([{ lat: 0, lng: 0 }]);
+      expect(result.current.waypoints).toEqual([{ lat: 48.15, lng: 11.58 }]);
 
       act(() => {
         result.current.setWaypoints([
@@ -207,6 +217,76 @@ describe('useRoutingState & URL parameter synchronization', () => {
 
       expect(result.current.startCoord).toEqual({ lat: 48.15, lng: 11.6 });
       expect(result.current.endCoord).toEqual({ lat: 48.16, lng: 11.61 });
+    });
+
+    it('safely ignores invalid or synthetic event objects in addWaypoint', () => {
+      const { result } = renderHook(() => useRoutingState());
+
+      act(() => {
+        // Parameterless call
+        result.current.addWaypoint();
+        // MouseEvent simulation
+        result.current.addWaypoint({
+          stopPropagation: () => {},
+          target: {},
+        } as unknown as Coordinate);
+        // Null / undefined / NaN lat/lng
+        result.current.addWaypoint({ lat: NaN, lng: 11.5 } as unknown as Coordinate);
+      });
+
+      expect(result.current.waypoints).toEqual([]);
+    });
+
+    it('reorders waypoints safely', () => {
+      const { result } = renderHook(() => useRoutingState());
+
+      act(() => {
+        result.current.addWaypoint({ lat: 48.1, lng: 11.1 });
+        result.current.addWaypoint({ lat: 48.2, lng: 11.2 });
+        result.current.addWaypoint({ lat: 48.3, lng: 11.3 });
+      });
+
+      expect(result.current.waypoints).toHaveLength(3);
+
+      act(() => {
+        result.current.reorderWaypoints(0, 2);
+      });
+
+      expect(result.current.waypoints).toEqual([
+        { lat: 48.2, lng: 11.2 },
+        { lat: 48.3, lng: 11.3 },
+        { lat: 48.1, lng: 11.1 },
+      ]);
+
+      // Out of bounds reordering does not alter state
+      act(() => {
+        result.current.reorderWaypoints(-1, 5);
+      });
+      expect(result.current.waypoints).toHaveLength(3);
+    });
+
+    it('manages isPlacingStop and placingStopIndex states', () => {
+      const { result } = renderHook(() => useRoutingState());
+      expect(result.current.isPlacingStop).toBe(false);
+      expect(result.current.placingStopIndex).toBeNull();
+
+      act(() => {
+        result.current.startPlacingStop();
+      });
+      expect(result.current.isPlacingStop).toBe(true);
+      expect(result.current.placingStopIndex).toBeNull();
+
+      act(() => {
+        result.current.startPlacingStop(2);
+      });
+      expect(result.current.isPlacingStop).toBe(true);
+      expect(result.current.placingStopIndex).toBe(2);
+
+      act(() => {
+        result.current.cancelPlacingStop();
+      });
+      expect(result.current.isPlacingStop).toBe(false);
+      expect(result.current.placingStopIndex).toBeNull();
     });
   });
 });

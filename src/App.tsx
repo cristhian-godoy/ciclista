@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
@@ -108,6 +108,13 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     addWaypoint,
     removeWaypoint,
     updateWaypoint,
+    reorderWaypoints,
+    isPlacingStop,
+    setIsPlacingStop,
+    placingStopIndex,
+    setPlacingStopIndex,
+    startPlacingStop,
+    cancelPlacingStop,
     selectedNode,
     setSelectedNode,
     routingStrategy,
@@ -119,6 +126,11 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     resetInspectorMode();
   }, [startCoord, endCoord, resetInspectorMode]);
 
+  // Reset stop placement mode on appMode switch or unmount
+  useEffect(() => {
+    cancelPlacingStop();
+  }, [appMode, cancelPlacingStop]);
+
   const handleStartDrag = (coord: Coordinate | null) => {
     setStartCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
@@ -126,6 +138,24 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
   const handleEndDrag = (coord: Coordinate | null) => {
     setEndCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
+
+  const handleUpdateWaypoint = useCallback(
+    (index: number, coord: Coordinate) => {
+      if (!coord || typeof coord.lat !== 'number' || typeof coord.lng !== 'number') return;
+      const snapped = snapCoordinateToEdge(coord, graph);
+      updateWaypoint(index, snapped);
+    },
+    [graph, updateWaypoint],
+  );
+
+  const handleAddWaypoint = useCallback(
+    (coord?: Coordinate) => {
+      if (!coord || typeof coord.lat !== 'number' || typeof coord.lng !== 'number') return;
+      const snapped = snapCoordinateToEdge(coord, graph);
+      addWaypoint(snapped);
+    },
+    [graph, addWaypoint],
+  );
 
   const handleSwapCoords = () => {
     setStartCoord(endCoord);
@@ -211,13 +241,24 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     const overridesChanged = prevOverridesRef.current !== effectiveOverrides;
     const isInitialGraph = prevGraphRef.current === null;
 
+    // Filter waypoints defensively to only include valid placed coordinates
+    const validWaypoints = (waypoints || []).filter(
+      (w) =>
+        w &&
+        typeof w.lat === 'number' &&
+        typeof w.lng === 'number' &&
+        !isNaN(w.lat) &&
+        !isNaN(w.lng) &&
+        (w.lat !== 0 || w.lng !== 0),
+    );
+
     // Check if any newly merged bounding boxes intersect the active route bounding box
     const previousBBoxes = prevLoadedBBoxesRef.current;
     const newBBoxes = loadedBBoxes.slice(previousBBoxes.length);
 
     let routeIntersectsNewChunks = false;
     if (newBBoxes.length > 0) {
-      const allRoutePoints = [startCoord, ...(waypoints || []), endCoord];
+      const allRoutePoints = [startCoord, ...validWaypoints, endCoord];
       const routeBBox = calculateMultiPointBoundingBox(allRoutePoints);
       routeIntersectsNewChunks = newBBoxes.some((b) => doBBoxesIntersect(b, routeBBox));
     }
@@ -239,7 +280,7 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       graph,
       startCoord,
       endCoord,
-      waypoints,
+      waypoints: validWaypoints,
       overrides: effectiveOverrides,
     };
     worker.postMessage(request);
@@ -272,6 +313,17 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       selectedNode={selectedNode}
       onStartDrag={handleStartDrag}
       onEndDrag={handleEndDrag}
+      waypoints={waypoints}
+      onAddWaypoint={handleAddWaypoint}
+      onRemoveWaypoint={removeWaypoint}
+      onUpdateWaypoint={handleUpdateWaypoint}
+      onReorderWaypoints={reorderWaypoints}
+      isPlacingStop={isPlacingStop}
+      onPlacingStopChange={setIsPlacingStop}
+      placingStopIndex={placingStopIndex}
+      onPlacingStopIndexChange={setPlacingStopIndex}
+      onStartPlacingStop={startPlacingStop}
+      onCancelPlacingStop={cancelPlacingStop}
       onNodeSelect={setSelectedNode}
       onSaveNodeOverride={handleSaveNodeOverride}
       onSaveNodeTurns={handleSaveNodeTurns}
@@ -324,9 +376,13 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
           routeResult={routeResult}
           isFetchingOSM={isFetchingOSM}
           waypoints={waypoints}
-          onAddWaypoint={addWaypoint}
+          onAddWaypoint={handleAddWaypoint}
           onRemoveWaypoint={removeWaypoint}
-          onUpdateWaypoint={updateWaypoint}
+          onUpdateWaypoint={handleUpdateWaypoint}
+          onReorderWaypoints={reorderWaypoints}
+          isPlacingStop={isPlacingStop}
+          placingStopIndex={placingStopIndex}
+          onStartPlacingStop={startPlacingStop}
           onSwapCoords={handleSwapCoords}
           rulesConfig={rulesConfig}
           onRulesChange={setRulesConfig}

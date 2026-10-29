@@ -38,8 +38,10 @@ NodePopup.tsx
 	Glassmorphic popup configuring node delays and custom notes.
 RouteVariantsLayer.tsx
 	Layer rendering route variant paths and selection glows.
+StartEndMarkers.test.tsx
+	Unit tests for draggable start, destination, and intermediate waypoint markers.
 StartEndMarkers.tsx
-	Draggable marker pins for navigation origin and destination.
+	Draggable marker pins for navigation origin, destination, and intermediate waypoints.
 StreetGraphLayer.tsx
 	Layer rendering GeoJSON streets network and clustered traffic signals.
 useMapInstance.ts

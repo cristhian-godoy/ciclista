@@ -15,6 +15,17 @@ export interface RoutingStateContextType {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
+  waypoints?: Coordinate[];
+  onAddWaypoint?: (coord: Coordinate) => void;
+  onRemoveWaypoint?: (index: number) => void;
+  onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
+  isPlacingStop?: boolean;
+  placingStopIndex?: number | null;
+  setIsPlacingStop?: (placing: boolean) => void;
+  setPlacingStopIndex?: (index: number | null) => void;
+  startPlacingStop?: (index?: number) => void;
+  cancelPlacingStop?: () => void;
   routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;

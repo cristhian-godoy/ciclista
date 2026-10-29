@@ -59,7 +59,15 @@ export function parseWaypointsString(val: string | null): Coordinate[] {
  * @returns Serialized coordinate string.
  */
 export function formatCoordQuery(coord: Coordinate | null): string {
-  if (!coord) return '';
+  if (
+    !coord ||
+    typeof coord.lat !== 'number' ||
+    typeof coord.lng !== 'number' ||
+    isNaN(coord.lat) ||
+    isNaN(coord.lng)
+  ) {
+    return '';
+  }
   return `${coord.lat.toFixed(5)},${coord.lng.toFixed(5)}`;
 }
 
@@ -70,8 +78,18 @@ export function formatCoordQuery(coord: Coordinate | null): string {
  * @returns Serialized waypoints string.
  */
 export function formatWaypointsQuery(waypoints: Coordinate[]): string {
-  if (waypoints.length === 0) return '';
-  return waypoints.map((w) => `${w.lat.toFixed(5)},${w.lng.toFixed(5)}`).join(';');
+  if (!Array.isArray(waypoints) || waypoints.length === 0) return '';
+  return waypoints
+    .filter(
+      (w) =>
+        w &&
+        typeof w.lat === 'number' &&
+        typeof w.lng === 'number' &&
+        !isNaN(w.lat) &&
+        !isNaN(w.lng),
+    )
+    .map((w) => `${w.lat.toFixed(5)},${w.lng.toFixed(5)}`)
+    .join(';');
 }
 
 /**
@@ -117,17 +135,76 @@ export function useRoutingState() {
   const [routingStrategy, setRoutingStrategy] = useState<RoutingStrategy>(
     () => getInitialRoutingState().strategy,
   );
+  const [isPlacingStop, setIsPlacingStop] = useState(false);
+  const [placingStopIndex, setPlacingStopIndex] = useState<number | null>(null);
 
-  const addWaypoint = useCallback((coord: Coordinate = { lat: 0, lng: 0 }) => {
+  const startPlacingStop = useCallback((index?: number) => {
+    setIsPlacingStop(true);
+    setPlacingStopIndex(typeof index === 'number' ? index : null);
+  }, []);
+
+  const cancelPlacingStop = useCallback(() => {
+    setIsPlacingStop(false);
+    setPlacingStopIndex(null);
+  }, []);
+
+  const addWaypoint = useCallback((coord?: Coordinate) => {
+    if (
+      !coord ||
+      typeof coord.lat !== 'number' ||
+      typeof coord.lng !== 'number' ||
+      isNaN(coord.lat) ||
+      isNaN(coord.lng)
+    ) {
+      return;
+    }
     setWaypoints((prev) => [...prev, coord]);
   }, []);
 
   const removeWaypoint = useCallback((index: number) => {
     setWaypoints((prev) => prev.filter((_, i) => i !== index));
+    setPlacingStopIndex((prev) => {
+      if (prev === null) return null;
+      if (prev === index) {
+        setIsPlacingStop(false);
+        return null;
+      }
+      if (prev > index) return prev - 1;
+      return prev;
+    });
   }, []);
 
   const updateWaypoint = useCallback((index: number, coord: Coordinate) => {
+    if (
+      !coord ||
+      typeof coord.lat !== 'number' ||
+      typeof coord.lng !== 'number' ||
+      isNaN(coord.lat) ||
+      isNaN(coord.lng)
+    ) {
+      return;
+    }
     setWaypoints((prev) => prev.map((w, i) => (i === index ? coord : w)));
+  }, []);
+
+  const reorderWaypoints = useCallback((fromIndex: number, toIndex: number) => {
+    setWaypoints((prev) => {
+      if (
+        fromIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex < 0 ||
+        toIndex >= prev.length ||
+        fromIndex === toIndex
+      ) {
+        return prev;
+      }
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      if (item !== undefined) {
+        next.splice(toIndex, 0, item);
+      }
+      return next;
+    });
   }, []);
 
   // Synchronize route state to URL search parameters without triggering infinite update loops
@@ -201,6 +278,13 @@ export function useRoutingState() {
     addWaypoint,
     removeWaypoint,
     updateWaypoint,
+    reorderWaypoints,
+    isPlacingStop,
+    setIsPlacingStop,
+    placingStopIndex,
+    setPlacingStopIndex,
+    startPlacingStop,
+    cancelPlacingStop,
     selectedNode,
     setSelectedNode,
     routingStrategy,

@@ -136,6 +136,17 @@ h2 {
   filter: brightness(1.1);
 }
 
+.ciclista-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ciclista-btn--active {
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  border-color: var(--ciclista-color-brand-hover);
+}
+
 /* ─── Road Rules Config Panel ──────────────────────────────────────── */
 
 .rules-panel {
@@ -448,13 +459,63 @@ h2 {
   margin-top: var(--ciclista-spacing-xs);
 }
 
+.ciclista-waypoint-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--ciclista-radius-round);
+  background: var(--ciclista-color-brand-main);
+  color: var(--ciclista-color-text-primary);
+  font-size: var(--ciclista-font-xs);
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: var(--ciclista-shadow-glow);
+}
+
 .ciclista-waypoint-field {
   flex: 1;
+}
+
+.ciclista-waypoint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-2xs);
+  flex-shrink: 0;
+}
+
+.ciclista-waypoint-action-btn {
+  padding: var(--ciclista-spacing-xs);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ciclista-waypoint-remove-btn {
   flex-shrink: 0;
   padding: var(--ciclista-spacing-xs);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ciclista-add-stop-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-field-helper {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+  margin: 0;
+  line-height: 1.3;
 }
 
 .ciclista-bike-custom-settings {
@@ -2225,6 +2286,10 @@ h2 {
 
 .context-icon-danger {
   color: var(--ciclista-color-brand-danger);
+}
+
+.context-icon-info {
+  color: var(--ciclista-color-brand-main);
 }
 
 .context-icon-favorite,

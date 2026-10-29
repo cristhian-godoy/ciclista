@@ -166,4 +166,63 @@ describe('useMapInteractionController', () => {
 
     expect(openEditPlaceModalMock).toHaveBeenCalledWith(samplePlace);
   });
+
+  it('captures click during isPlacingStop mode to add a new intermediate waypoint', () => {
+    const onAddWaypointMock = vi.fn();
+    const setIsPlacingStopMock = vi.fn();
+    const setPlacingStopIndexMock = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'routing',
+        isPlacingStop: true,
+        setIsPlacingStop: setIsPlacingStopMock,
+        setPlacingStopIndex: setPlacingStopIndexMock,
+        onAddWaypoint: onAddWaypointMock,
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleClick({
+      point: { x: 75, y: 75 },
+      lngLat: { lat: 48.14, lng: 11.58 },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(setIsPlacingStopMock).toHaveBeenCalledWith(false);
+    expect(setPlacingStopIndexMock).toHaveBeenCalledWith(null);
+    expect(onAddWaypointMock).toHaveBeenCalledWith({ lat: 48.14, lng: 11.58 });
+  });
+
+  it('captures click during isPlacingStop mode to reposition an existing waypoint', () => {
+    const onUpdateWaypointMock = vi.fn();
+    const setIsPlacingStopMock = vi.fn();
+    const setPlacingStopIndexMock = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'routing',
+        isPlacingStop: true,
+        placingStopIndex: 1,
+        setIsPlacingStop: setIsPlacingStopMock,
+        setPlacingStopIndex: setPlacingStopIndexMock,
+        onUpdateWaypoint: onUpdateWaypointMock,
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleClick({
+      point: { x: 75, y: 75 },
+      lngLat: { lat: 48.145, lng: 11.585 },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(setIsPlacingStopMock).toHaveBeenCalledWith(false);
+    expect(setPlacingStopIndexMock).toHaveBeenCalledWith(null);
+    expect(onUpdateWaypointMock).toHaveBeenCalledWith(1, { lat: 48.145, lng: 11.585 });
+  });
 });
