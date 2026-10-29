@@ -6,15 +6,17 @@ import { useMapContext } from './MapContext';
 
 /**
  * Component that manages the lifecycle and positioning of the draggable
- * start (origin) and end (destination) pin markers on the map canvas.
+ * start (origin), destination, and intermediate waypoint pin markers on the map canvas.
  */
 export const StartEndMarkers: React.FC = () => {
   const {
     map,
     startCoord,
     endCoord,
+    waypoints = [],
     onStartDrag,
     onEndDrag,
+    onUpdateWaypoint,
     setShouldFitBounds,
     isNavigating,
     appMode,
@@ -24,9 +26,11 @@ export const StartEndMarkers: React.FC = () => {
 
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const waypointMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
+  const onUpdateWaypointRef = useRef(onUpdateWaypoint);
 
   useEffect(() => {
     onStartDragRef.current = onStartDrag;
@@ -35,6 +39,10 @@ export const StartEndMarkers: React.FC = () => {
   useEffect(() => {
     onEndDragRef.current = onEndDrag;
   }, [onEndDrag]);
+
+  useEffect(() => {
+    onUpdateWaypointRef.current = onUpdateWaypoint;
+  }, [onUpdateWaypoint]);
 
   // Clean up all markers on unmount or map instance change
   useEffect(() => {
@@ -47,6 +55,8 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current.remove();
         endMarkerRef.current = null;
       }
+      waypointMarkersRef.current.forEach((marker) => marker.remove());
+      waypointMarkersRef.current = [];
     };
   }, [map]);
 
@@ -62,8 +72,14 @@ export const StartEndMarkers: React.FC = () => {
     if (endEl) {
       endEl.style.cursor = isDraggable ? 'grab' : 'default';
     }
+    waypointMarkersRef.current.forEach((marker) => {
+      marker.setDraggable(isDraggable);
+      const wpEl = marker.getElement?.();
+      if (wpEl) {
+        wpEl.style.cursor = isDraggable ? 'grab' : 'default';
+      }
+    });
   }, [isDraggable]);
-
   // Dynamically manage Start Marker
   useEffect(() => {
     if (!map) return;
@@ -163,6 +179,86 @@ export const StartEndMarkers: React.FC = () => {
       }
     }
   }, [map, endCoord, setShouldFitBounds, isDraggable]);
+
+  // Dynamically manage intermediate waypoint markers
+  useEffect(() => {
+    if (!map) return;
+
+    const validWaypoints = waypoints.filter(
+      (wp) =>
+        wp &&
+        typeof wp.lat === 'number' &&
+        typeof wp.lng === 'number' &&
+        !isNaN(wp.lat) &&
+        !isNaN(wp.lng) &&
+        (wp.lat !== 0 || wp.lng !== 0),
+    );
+
+    // Prune excess markers
+    while (waypointMarkersRef.current.length > validWaypoints.length) {
+      const removed = waypointMarkersRef.current.pop();
+      removed?.remove();
+    }
+
+    let needsFitBounds = false;
+
+    validWaypoints.forEach((wp, index) => {
+      const existing = waypointMarkersRef.current[index];
+      if (!existing) {
+        const el = document.createElement('div');
+        el.className = 'ciclista-waypoint-marker';
+        el.dataset.index = String(index);
+        el.style.width = '28px';
+        el.style.height = '28px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = MAP_THEME_TOKENS.status.info;
+        el.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
+        el.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.8)';
+        el.style.cursor = isDraggable ? 'grab' : 'default';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = MAP_THEME_TOKENS.overlay.white;
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '12px';
+        el.style.fontFamily = 'inherit';
+        el.textContent = `${index + 1}`;
+
+        const marker = new maplibregl.Marker({ element: el, draggable: isDraggable })
+          .setLngLat([wp.lng, wp.lat])
+          .addTo(map);
+
+        marker.on('dragend', () => {
+          const currentIndex = parseInt(marker.getElement()?.dataset.index ?? String(index), 10);
+          const lngLat = marker.getLngLat();
+          onUpdateWaypointRef.current?.(currentIndex, { lat: lngLat.lat, lng: lngLat.lng });
+        });
+
+        waypointMarkersRef.current.push(marker);
+        needsFitBounds = true;
+      } else {
+        const el = existing.getElement();
+        if (el) {
+          el.dataset.index = String(index);
+          if (el.textContent !== `${index + 1}`) {
+            el.textContent = `${index + 1}`;
+          }
+        }
+
+        const currentMarkerLngLat = existing.getLngLat();
+        const diffLat = Math.abs(wp.lat - currentMarkerLngLat.lat);
+        const diffLng = Math.abs(wp.lng - currentMarkerLngLat.lng);
+        existing.setLngLat([wp.lng, wp.lat]);
+        if (diffLat > 0.0001 || diffLng > 0.0001) {
+          needsFitBounds = true;
+        }
+      }
+    });
+
+    if (needsFitBounds) {
+      setShouldFitBounds(true);
+    }
+  }, [map, waypoints, setShouldFitBounds, isDraggable]);
 
   return null;
 };

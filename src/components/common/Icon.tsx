@@ -71,6 +71,13 @@ export const AlertTriangle: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
   },
 );
 
+/** ArrowDown SVG icon primitive */
+export const ArrowDown: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
+  function ArrowDown(props, ref) {
+    return renderIcon('ArrowDown', props, ref);
+  },
+);
+
 /** ArrowLeft SVG icon primitive */
 export const ArrowLeft: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
   function ArrowLeft(props, ref) {
@@ -82,6 +89,13 @@ export const ArrowLeft: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
 export const ArrowRight: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
   function ArrowRight(props, ref) {
     return renderIcon('ArrowRight', props, ref);
+  },
+);
+
+/** ArrowUp SVG icon primitive */
+export const ArrowUp: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
+  function ArrowUp(props, ref) {
+    return renderIcon('ArrowUp', props, ref);
   },
 );
 
@@ -204,6 +218,13 @@ export const CornerDownLeft: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
 export const CornerUpRight: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
   function CornerUpRight(props, ref) {
     return renderIcon('CornerUpRight', props, ref);
+  },
+);
+
+/** Crosshair SVG icon primitive */
+export const Crosshair: LucideIcon = forwardRef<SVGSVGElement, IconProps>(
+  function Crosshair(props, ref) {
+    return renderIcon('Crosshair', props, ref);
   },
 );
 
@@ -508,12 +529,18 @@ const iconRegistry: Record<string, LucideIcon> = {
   AlertTriangle: AlertTriangle,
   alerttriangle: AlertTriangle,
   'alert-triangle': AlertTriangle,
+  ArrowDown: ArrowDown,
+  arrowdown: ArrowDown,
+  'arrow-down': ArrowDown,
   ArrowLeft: ArrowLeft,
   arrowleft: ArrowLeft,
   'arrow-left': ArrowLeft,
   ArrowRight: ArrowRight,
   arrowright: ArrowRight,
   'arrow-right': ArrowRight,
+  ArrowUp: ArrowUp,
+  arrowup: ArrowUp,
+  'arrow-up': ArrowUp,
   ArrowUpDown: ArrowUpDown,
   arrowupdown: ArrowUpDown,
   'arrow-up-down': ArrowUpDown,
@@ -562,6 +589,8 @@ const iconRegistry: Record<string, LucideIcon> = {
   CornerUpRight: CornerUpRight,
   cornerupright: CornerUpRight,
   'corner-up-right': CornerUpRight,
+  Crosshair: Crosshair,
+  crosshair: Crosshair,
   Database: Database,
   database: Database,
   Download: Download,

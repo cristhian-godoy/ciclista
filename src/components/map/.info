@@ -39,9 +39,9 @@ NodePopup.tsx
 RouteVariantsLayer.tsx
 	Layer rendering route variant paths and selection glows.
 StartEndMarkers.test.tsx
-	Unit tests verifying start and destination marker draggability gating and cursor updates across modes.
+	Unit tests for draggable start, destination, and intermediate waypoint markers and mode-aware drag freezing.
 StartEndMarkers.tsx
-	Draggable marker pins for navigation origin and destination with mode-aware drag freezing.
+	Draggable marker pins for navigation origin, destination, and intermediate waypoints with mode-aware drag freezing.
 StreetGraphLayer.tsx
 	Layer rendering GeoJSON streets network and clustered traffic signals.
 useMapInstance.ts

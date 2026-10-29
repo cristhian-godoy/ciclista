@@ -75,6 +75,22 @@ export const ICON_NODES: Record<string, IconNodeChild[]> = {
       },
     ],
   ],
+  ArrowDown: [
+    [
+      'path',
+      {
+        d: 'M12 5v14',
+        key: 'arrowdown-1',
+      },
+    ],
+    [
+      'path',
+      {
+        d: 'm19 12-7 7-7-7',
+        key: 'arrowdown-2',
+      },
+    ],
+  ],
   ArrowLeft: [
     [
       'path',
@@ -104,6 +120,22 @@ export const ICON_NODES: Record<string, IconNodeChild[]> = {
       {
         d: 'm12 5 7 7-7 7',
         key: 'xquz4c',
+      },
+    ],
+  ],
+  ArrowUp: [
+    [
+      'path',
+      {
+        d: 'm5 12 7-7 7 7',
+        key: 'arrowup-1',
+      },
+    ],
+    [
+      'path',
+      {
+        d: 'M12 19V5',
+        key: 'arrowup-2',
       },
     ],
   ],
@@ -548,6 +580,57 @@ export const ICON_NODES: Record<string, IconNodeChild[]> = {
       {
         d: 'M4 20v-7a4 4 0 0 1 4-4h12',
         key: '1lu4f8',
+      },
+    ],
+  ],
+  Crosshair: [
+    [
+      'circle',
+      {
+        cx: '12',
+        cy: '12',
+        r: '10',
+        key: 'crosshair-1',
+      },
+    ],
+    [
+      'line',
+      {
+        x1: '22',
+        x2: '18',
+        y1: '12',
+        y2: '12',
+        key: 'crosshair-2',
+      },
+    ],
+    [
+      'line',
+      {
+        x1: '6',
+        x2: '2',
+        y1: '12',
+        y2: '12',
+        key: 'crosshair-3',
+      },
+    ],
+    [
+      'line',
+      {
+        x1: '12',
+        x2: '12',
+        y1: '2',
+        y2: '6',
+        key: 'crosshair-4',
+      },
+    ],
+    [
+      'line',
+      {
+        x1: '12',
+        x2: '12',
+        y1: '22',
+        y2: '18',
+        key: 'crosshair-5',
       },
     ],
   ],

@@ -1,5 +1,5 @@
 import type * as maplibregl from 'maplibre-gl';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import type {
@@ -49,6 +49,21 @@ export interface MapProviderProps {
   loadedBBoxes: [number, number, number, number][];
   startCoord: Coordinate | null;
   endCoord: Coordinate | null;
+  waypoints?: Coordinate[];
+  onAddWaypoint?: (coord: Coordinate) => void;
+  onRemoveWaypoint?: (index: number) => void;
+  onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
+  isPlacingStop?: boolean;
+  onPlacingStopChange?:
+    React.Dispatch<React.SetStateAction<boolean>> | ((placing: boolean) => void);
+  initialIsPlacingStop?: boolean;
+  placingStopIndex?: number | null;
+  onPlacingStopIndexChange?:
+    React.Dispatch<React.SetStateAction<number | null>> | ((index: number | null) => void);
+  initialPlacingStopIndex?: number | null;
+  onStartPlacingStop?: (index?: number) => void;
+  onCancelPlacingStop?: () => void;
   routeVariants: StrategyRouteVariant[];
   activeAlternativeLabel: 'standard' | 'avoid-stops' | 'quiet-streets';
   onSelectAlternative: (label: 'standard' | 'avoid-stops' | 'quiet-streets') => void;
@@ -118,6 +133,19 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   loadedBBoxes,
   startCoord,
   endCoord,
+  waypoints: propWaypoints = [],
+  onAddWaypoint,
+  onRemoveWaypoint,
+  onUpdateWaypoint,
+  onReorderWaypoints,
+  isPlacingStop: controlledIsPlacingStop,
+  onPlacingStopChange,
+  initialIsPlacingStop,
+  placingStopIndex: controlledPlacingStopIndex,
+  onPlacingStopIndexChange,
+  initialPlacingStopIndex,
+  onStartPlacingStop: controlledStartPlacingStop,
+  onCancelPlacingStop: controlledCancelPlacingStop,
   routeVariants,
   activeAlternativeLabel,
   onSelectAlternative,
@@ -246,6 +274,37 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const isPlacingPlace = controlledIsPlacingPlace ?? internalIsPlacingPlace;
   const setIsPlacingPlace = onPlacingPlaceChange ?? setInternalIsPlacingPlace;
 
+  const [internalIsPlacingStop, setInternalIsPlacingStop] = useState(initialIsPlacingStop ?? false);
+  const isPlacingStop = controlledIsPlacingStop ?? internalIsPlacingStop;
+  const setIsPlacingStop = onPlacingStopChange ?? setInternalIsPlacingStop;
+
+  const [internalPlacingStopIndex, setInternalPlacingStopIndex] = useState<number | null>(
+    initialPlacingStopIndex ?? null,
+  );
+  const placingStopIndex = controlledPlacingStopIndex ?? internalPlacingStopIndex;
+  const setPlacingStopIndex = onPlacingStopIndexChange ?? setInternalPlacingStopIndex;
+
+  const startPlacingStop = useCallback(
+    (index?: number) => {
+      if (controlledStartPlacingStop) {
+        controlledStartPlacingStop(index);
+      } else {
+        setIsPlacingStop(true);
+        setPlacingStopIndex(typeof index === 'number' ? index : null);
+      }
+    },
+    [controlledStartPlacingStop, setIsPlacingStop, setPlacingStopIndex],
+  );
+
+  const cancelPlacingStop = useCallback(() => {
+    if (controlledCancelPlacingStop) {
+      controlledCancelPlacingStop();
+    } else {
+      setIsPlacingStop(false);
+      setPlacingStopIndex(null);
+    }
+  }, [controlledCancelPlacingStop, setIsPlacingStop, setPlacingStopIndex]);
+
   const [prevAppMode, setPrevAppMode] = useState(appMode);
   if (prevAppMode !== appMode) {
     setPrevAppMode(appMode);
@@ -262,6 +321,11 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     // Dismiss any open context menu on mode change
     setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
   }
+
+  // Teardown stop placement mode on appMode switch or navigation start
+  useEffect(() => {
+    cancelPlacingStop();
+  }, [appMode, isNavigating, cancelPlacingStop]);
 
   const [activeCrossingId, setActiveCrossingId] = useState<string | null>(null);
   const [activeTurnSelection, setActiveTurnSelection] = useState<{
@@ -414,6 +478,17 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       loadedBBoxes,
       startCoord,
       endCoord,
+      waypoints: propWaypoints,
+      onAddWaypoint,
+      onRemoveWaypoint,
+      onUpdateWaypoint,
+      onReorderWaypoints,
+      isPlacingStop,
+      placingStopIndex,
+      setIsPlacingStop,
+      setPlacingStopIndex,
+      startPlacingStop,
+      cancelPlacingStop,
       routeVariants,
       activeAlternativeLabel,
       onSelectAlternative,
@@ -446,6 +521,17 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       loadedBBoxes,
       startCoord,
       endCoord,
+      propWaypoints,
+      onAddWaypoint,
+      onRemoveWaypoint,
+      onUpdateWaypoint,
+      onReorderWaypoints,
+      isPlacingStop,
+      placingStopIndex,
+      setIsPlacingStop,
+      setPlacingStopIndex,
+      startPlacingStop,
+      cancelPlacingStop,
       routeVariants,
       activeAlternativeLabel,
       onSelectAlternative,

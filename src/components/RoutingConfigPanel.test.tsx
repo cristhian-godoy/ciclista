@@ -230,10 +230,10 @@ describe('RoutingConfigPanel', () => {
 
     expect(screen.getByLabelText('Stop 1')).toHaveValue('48.14000, 11.58000');
 
-    // Add stop button
-    const addStopBtn = screen.getByRole('button', { name: /\+ Add Stop/i });
+    // Add stop button (parameterless call, no event passed)
+    const addStopBtn = screen.getByRole('button', { name: /Add Stop/i });
     await user.click(addStopBtn);
-    expect(handleAddWaypoint).toHaveBeenCalledTimes(1);
+    expect(handleAddWaypoint).toHaveBeenCalledWith();
 
     // Remove stop button
     const removeStopBtn = screen.getByRole('button', { name: /Remove stop 1/i });
@@ -245,5 +245,113 @@ describe('RoutingConfigPanel', () => {
     await user.clear(stopInput);
     await user.type(stopInput, '48.142, 11.582{Enter}');
     expect(handleUpdateWaypoint).toHaveBeenCalledWith(0, { lat: 48.142, lng: 11.582 });
+  });
+
+  it('disables Add Stop button with guidance helper when start or destination are missing', () => {
+    const handleAddWaypoint = vi.fn();
+
+    const { rerender } = render(
+      <RoutingConfigPanel
+        startCoord={null}
+        endCoord={{ lat: 48.15, lng: 11.59 }}
+        waypoints={[]}
+        onAddWaypoint={handleAddWaypoint}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    const addStopBtn = screen.getByRole('button', { name: /Add Stop/i });
+    expect(addStopBtn).toBeDisabled();
+    expect(
+      screen.getByText('Set start and destination before adding intermediate stops'),
+    ).toBeInTheDocument();
+
+    rerender(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.13, lng: 11.57 }}
+        endCoord={null}
+        waypoints={[]}
+        onAddWaypoint={handleAddWaypoint}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /Add Stop/i })).toBeDisabled();
+    expect(
+      screen.getByText('Set start and destination before adding intermediate stops'),
+    ).toBeInTheDocument();
+  });
+
+  it('disables Add Stop button when active stop placement is in progress', () => {
+    render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.13, lng: 11.57 }}
+        endCoord={{ lat: 48.15, lng: 11.59 }}
+        waypoints={[]}
+        isPlacingStop={true}
+        onAddWaypoint={vi.fn()}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /Add Stop/i })).toBeDisabled();
+  });
+
+  it('supports stop reordering and map pick button controls', async () => {
+    const user = userEvent.setup();
+    const handleReorderWaypoints = vi.fn();
+    const handleStartPlacingStop = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.13, lng: 11.57 }}
+        endCoord={{ lat: 48.15, lng: 11.59 }}
+        waypoints={[
+          { lat: 48.135, lng: 11.575 },
+          { lat: 48.14, lng: 11.58 },
+          { lat: 48.145, lng: 11.585 },
+        ]}
+        onAddWaypoint={vi.fn()}
+        onReorderWaypoints={handleReorderWaypoints}
+        onStartPlacingStop={handleStartPlacingStop}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    // Numbered badges match stop index
+    expect(screen.getByText('1')).toHaveClass('ciclista-waypoint-badge');
+    expect(screen.getByText('2')).toHaveClass('ciclista-waypoint-badge');
+    expect(screen.getByText('3')).toHaveClass('ciclista-waypoint-badge');
+
+    // First stop: Move Up is disabled, Move Down is enabled
+    const moveUpStop1 = screen.getByRole('button', { name: /Move stop 1 up/i });
+    const moveDownStop1 = screen.getByRole('button', { name: /Move stop 1 down/i });
+    expect(moveUpStop1).toBeDisabled();
+    expect(moveDownStop1).not.toBeDisabled();
+
+    await user.click(moveDownStop1);
+    expect(handleReorderWaypoints).toHaveBeenCalledWith(0, 1);
+
+    // Last stop: Move Down is disabled, Move Up is enabled
+    const moveUpStop3 = screen.getByRole('button', { name: /Move stop 3 up/i });
+    const moveDownStop3 = screen.getByRole('button', { name: /Move stop 3 down/i });
+    expect(moveDownStop3).toBeDisabled();
+    expect(moveUpStop3).not.toBeDisabled();
+
+    await user.click(moveUpStop3);
+    expect(handleReorderWaypoints).toHaveBeenCalledWith(2, 1);
+
+    // Pick on map button
+    const pickStop2 = screen.getByRole('button', { name: /Pick stop 2 on map/i });
+    await user.click(pickStop2);
+    expect(handleStartPlacingStop).toHaveBeenCalledWith(1);
   });
 });

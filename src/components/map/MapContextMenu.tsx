@@ -36,8 +36,11 @@ export const MapContextMenu: React.FC = () => {
     setManagedNodeIds,
     onStartDrag,
     onEndDrag,
-    isNavigating,
+    onAddWaypoint,
+    startCoord,
+    endCoord,
     appMode,
+    isNavigating,
     openCreatePlaceModal,
     openCreateLandmarkModal,
     openEditPlaceModal,
@@ -59,6 +62,7 @@ export const MapContextMenu: React.FC = () => {
 
   const onStartDragRef = useRef(onStartDrag);
   const onEndDragRef = useRef(onEndDrag);
+  const onAddWaypointRef = useRef(onAddWaypoint);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
 
@@ -69,6 +73,10 @@ export const MapContextMenu: React.FC = () => {
   useEffect(() => {
     onEndDragRef.current = onEndDrag;
   }, [onEndDrag]);
+
+  useEffect(() => {
+    onAddWaypointRef.current = onAddWaypoint;
+  }, [onAddWaypoint]);
 
   useEffect(() => {
     setManagedClusterIdRef.current = setManagedClusterId;
@@ -156,6 +164,19 @@ export const MapContextMenu: React.FC = () => {
               <MapPin size={14} className="context-icon-danger" />
               <span>Set as Destination</span>
             </button>
+            {onAddWaypoint && (
+              <button
+                type="button"
+                className="map-context-menu-item"
+                onClick={() => {
+                  onAddWaypointRef.current?.({ lat: targetPlace.lat, lng: targetPlace.lng });
+                  setContextMenu((prev) => ({ ...prev, visible: false }));
+                }}
+              >
+                <MapPin size={14} className="context-icon-info" />
+                <span>Add to Route as Stop</span>
+              </button>
+            )}
           </>
         )}
         {canManagePlaces && (
@@ -236,6 +257,19 @@ export const MapContextMenu: React.FC = () => {
             <MapPin size={14} className="context-icon-danger" />
             <span>End Route Here</span>
           </button>
+          {(startCoord || endCoord) && onAddWaypoint && (
+            <button
+              type="button"
+              className="map-context-menu-item"
+              onClick={() => {
+                onAddWaypointRef.current?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+                setContextMenu((prev) => ({ ...prev, visible: false }));
+              }}
+            >
+              <MapPin size={14} className="context-icon-info" />
+              <span>Add as Route Stop</span>
+            </button>
+          )}
         </>
       )}
       {canManagePlaces && (
