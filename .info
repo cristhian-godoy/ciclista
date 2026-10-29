@@ -1,3 +1,5 @@
+.agents
+	Agent instruction protocols, project guardrails, and quality governance rules.
 .github
 	GitHub configuration templates and workflows.
 .gitignore

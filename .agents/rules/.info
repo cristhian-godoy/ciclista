@@ -1,0 +1,8 @@
+core_domain_isolation.md
+	Rules enforcing framework decoupling, Web Worker isolation, and central configuration for core routing logic.
+design_system_rules.md
+	Rules enforcing CSS token usage, semantic component reuse, and dynamic theme integration.
+interaction_and_ux_integrity.md
+	Rules governing map-first human-centric UX, explicit mode lifecycle and teardown, event precedence, and surface integration.
+linter_and_type_integrity.md
+	Rules enforcing strict TypeScript typing, linter compliance without suppression directives, and JSDoc documentation.
