@@ -246,6 +246,23 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const isPlacingPlace = controlledIsPlacingPlace ?? internalIsPlacingPlace;
   const setIsPlacingPlace = onPlacingPlaceChange ?? setInternalIsPlacingPlace;
 
+  const [prevAppMode, setPrevAppMode] = useState(appMode);
+  if (prevAppMode !== appMode) {
+    setPrevAppMode(appMode);
+    // When switching away from places mode, cancel active pin placement
+    if (appMode !== 'places' && (appMode as string) !== 'landmarks') {
+      if (isPlacingPlace) {
+        setIsPlacingPlace(false);
+      }
+    }
+    // When switching away from events/studio mode, reset selection tool
+    if (appMode !== 'events' && (appMode as string) !== 'studio') {
+      setSelectionTool('click');
+    }
+    // Dismiss any open context menu on mode change
+    setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+  }
+
   const [activeCrossingId, setActiveCrossingId] = useState<string | null>(null);
   const [activeTurnSelection, setActiveTurnSelection] = useState<{
     fromNodeId: string | null;

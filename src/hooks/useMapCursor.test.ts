@@ -71,4 +71,32 @@ describe('useMapCursor', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(setIsPlacingPlaceMock).not.toHaveBeenCalled();
   });
+
+  it('suppresses crosshair and resets placement when appMode is non-places mode', () => {
+    const setIsPlacingPlaceMock = vi.fn();
+
+    renderHook(() =>
+      useMapCursor({
+        map: mockMap as maplibregl.Map,
+        isPlacingPlace: true,
+        setIsPlacingPlace: setIsPlacingPlaceMock,
+        appMode: 'edit',
+      }),
+    );
+
+    expect(mockCanvas.style.cursor).toBe('');
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+  });
+
+  it('allows crosshair when appMode is places mode', () => {
+    renderHook(() =>
+      useMapCursor({
+        map: mockMap as maplibregl.Map,
+        isPlacingPlace: true,
+        appMode: 'places',
+      }),
+    );
+
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+  });
 });

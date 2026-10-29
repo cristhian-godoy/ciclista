@@ -261,4 +261,157 @@ describe('MapContextMenu Component', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it('dismisses context menu on Escape key press', () => {
+    renderWithContext({
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(setContextMenuMock).toHaveBeenCalled();
+    const updater = setContextMenuMock.mock.calls[0]?.[0];
+    if (typeof updater === 'function') {
+      const result = updater({ visible: true, x: 100, y: 100 });
+      expect(result.visible).toBe(false);
+    }
+  });
+
+  it('suppresses route buttons on empty map in edit mode and only shows crossing actions if available', () => {
+    const { container: emptyContainer } = renderWithContext({
+      appMode: 'edit',
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    expect(emptyContainer.firstChild).toBeNull();
+
+    // When crossing cluster is right-clicked in edit mode
+    renderWithContext({
+      appMode: 'edit',
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: 'crossing-123',
+        nodeIds: JSON.stringify(['node-1', 'node-2']),
+      },
+    });
+
+    expect(screen.getByRole('button', { name: /Manage Traffic Lights/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Start Route Here/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /End Route Here/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Add Place/i })).not.toBeInTheDocument();
+  });
+
+  it('suppresses route buttons and place options in events mode', () => {
+    const samplePlace: Landmark = {
+      id: 'place-home',
+      name: 'Home',
+      category: 'home',
+      lat: 48.137,
+      lng: 11.575,
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+
+    const { container: emptyContainer } = renderWithContext({
+      appMode: 'events',
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    expect(emptyContainer.firstChild).toBeNull();
+
+    // Right-clicking place in events mode suppresses Set as Start / Destination
+    const { container: placeContainer } = renderWithContext({
+      appMode: 'events',
+      landmarks: [samplePlace],
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+        placeId: 'place-home',
+      },
+    });
+
+    expect(placeContainer.firstChild).toBeNull();
+  });
+
+  it('suppresses route buttons in places mode while preserving Add Place and Edit Place', () => {
+    const samplePlace: Landmark = {
+      id: 'place-home',
+      name: 'Home',
+      category: 'home',
+      lat: 48.137,
+      lng: 11.575,
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+
+    renderWithContext({
+      appMode: 'places',
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    expect(screen.getByRole('button', { name: /Add Place/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Start Route Here/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /End Route Here/i })).not.toBeInTheDocument();
+
+    // Right-clicking a place in places mode shows Edit Place but suppresses Set as Start / Destination
+    renderWithContext({
+      appMode: 'places',
+      landmarks: [samplePlace],
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+        placeId: 'place-home',
+      },
+    });
+
+    expect(screen.getByRole('button', { name: /Edit Place/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Delete Place/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Set as Start/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Set as Destination/i })).not.toBeInTheDocument();
+  });
 });

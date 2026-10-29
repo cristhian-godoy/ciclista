@@ -780,4 +780,56 @@ describe('MapView Contextual Map Interactions', () => {
     expect(preventDefaultMock).toHaveBeenCalled();
     expect(setSelectedEdgeIdsMock).toHaveBeenCalledTimes(1);
   });
+
+  it('cancels placement mode, restores standard cursor, unmounts toast, and suppresses PlaceModal when entering edit mode', () => {
+    const mockCanvas = { style: { cursor: '' } };
+    mockMapInstance.getCanvas = vi.fn(() => mockCanvas) as unknown as () => HTMLCanvasElement;
+
+    const { unmount } = renderMapViewWithContext({
+      appMode: 'places',
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+    expect(screen.getByText('Click on the map to set place location')).toBeInTheDocument();
+
+    unmount();
+
+    // Transition to edit mode
+    renderMapViewWithContext({
+      appMode: 'edit',
+      isPlacingPlace: false,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(mockCanvas.style.cursor).toBe('');
+    expect(screen.queryByText('Click on the map to set place location')).not.toBeInTheDocument();
+
+    // Map clicks in edit mode must not open PlaceModal
+    expect(capturedOptions).not.toBeNull();
+    capturedOptions!.onClick({
+      point: { x: 120, y: 150 },
+      lngLat: { lat: 48.138, lng: 11.576 },
+    });
+
+    expect(openCreateLandmarkModalMock).not.toHaveBeenCalled();
+  });
+
+  it('suppresses PlaceModal and resets isPlacingPlace on map click if placement leaked into edit mode', () => {
+    renderMapViewWithContext({
+      appMode: 'edit',
+      isPlacingPlace: true,
+      setIsPlacingPlace: setIsPlacingPlaceMock,
+    });
+
+    expect(capturedOptions).not.toBeNull();
+    capturedOptions!.onClick({
+      point: { x: 120, y: 150 },
+      lngLat: { lat: 48.138, lng: 11.576 },
+    });
+
+    expect(openCreateLandmarkModalMock).not.toHaveBeenCalled();
+    expect(setIsPlacingPlaceMock).toHaveBeenCalledWith(false);
+  });
 });

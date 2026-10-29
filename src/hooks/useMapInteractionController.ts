@@ -251,12 +251,19 @@ export function useMapInteractionController(
     const currentMap = mapRef.current;
     if (!currentMap) return;
 
-    // Handle pin placement mode
+    // Handle pin placement mode strictly outside non-placement modes
     if (isPlacingPlaceRef.current) {
-      const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      const isInvalidMode =
+        appModeRef.current === 'edit' ||
+        appModeRef.current === 'events' ||
+        (appModeRef.current as string) === 'studio';
+      if (!isInvalidMode) {
+        const clickedCoord = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        setIsPlacingPlaceRef.current?.(false);
+        openCreatePlaceModalRef.current?.(clickedCoord);
+        return;
+      }
       setIsPlacingPlaceRef.current?.(false);
-      openCreatePlaceModalRef.current?.(clickedCoord);
-      return;
     }
 
     // Prioritize traffic lights and crossing clusters across all modes
@@ -561,6 +568,10 @@ export function useMapInteractionController(
           return;
         }
       }
+
+      // In events/studio mode, suppress opening the context menu when clicking empty map space
+      e.originalEvent?.preventDefault?.();
+      return;
     }
 
     const availableLandmarkLayers: string[] = [];
@@ -597,6 +608,12 @@ export function useMapInteractionController(
       ? (firstFeature.properties.crossingId as string)
       : null;
     const nodeIds = firstFeature?.properties ? (firstFeature.properties.nodeIds as string) : null;
+
+    // In edit mode (crossing editor), only open context menu when a crossing cluster was clicked
+    if (appModeRef.current === 'edit' && !crossingId) {
+      e.originalEvent?.preventDefault?.();
+      return;
+    }
 
     setContextMenuRef.current?.({
       visible: true,

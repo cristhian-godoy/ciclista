@@ -37,6 +37,7 @@ export const MapContextMenu: React.FC = () => {
     onStartDrag,
     onEndDrag,
     isNavigating,
+    appMode,
     openCreatePlaceModal,
     openCreateLandmarkModal,
     openEditPlaceModal,
@@ -77,17 +78,43 @@ export const MapContextMenu: React.FC = () => {
     setManagedNodeIdsRef.current = setManagedNodeIds;
   }, [setManagedNodeIds]);
 
+  // Universal Escape key dismissal contract
+  useEffect(() => {
+    if (!contextMenu.visible) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [contextMenu.visible, setContextMenu]);
+
   if (!map || !contextMenu.visible) return null;
+
+  const canRoute = !isNavigating && (appMode === 'routing' || !appMode);
+  const isSpecializedMode =
+    appMode === 'edit' || appMode === 'events' || (appMode as string) === 'studio';
+  const canManagePlaces = !isSpecializedMode;
+  const canManageCrossing = contextMenu.crossingId !== null;
 
   const currentPlaces = places ?? landmarks ?? [];
   const targetPlace = contextMenu.placeId
     ? currentPlaces.find((p) => p.id === contextMenu.placeId)
     : null;
 
-  return (
-    <div ref={menuRef} className="map-context-menu" onClick={(e) => e.stopPropagation()}>
-      {targetPlace ? (
-        <>
+  if (targetPlace) {
+    if (!canManagePlaces && !canRoute) {
+      return null;
+    }
+
+    return (
+      <div ref={menuRef} className="map-context-menu" onClick={(e) => e.stopPropagation()}>
+        {canManagePlaces && (
           <button
             type="button"
             className="map-context-menu-item"
@@ -100,36 +127,38 @@ export const MapContextMenu: React.FC = () => {
             <Edit2 size={14} className="context-icon-place" />
             <span>Edit Place</span>
           </button>
-          {!isNavigating && (
-            <>
-              <button
-                type="button"
-                className="map-context-menu-item"
-                onClick={() => {
-                  if (onStartDragRef.current) {
-                    onStartDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
-                  }
-                  setContextMenu((prev) => ({ ...prev, visible: false }));
-                }}
-              >
-                <MapPin size={14} className="context-icon-success" />
-                <span>Set as Start</span>
-              </button>
-              <button
-                type="button"
-                className="map-context-menu-item"
-                onClick={() => {
-                  if (onEndDragRef.current) {
-                    onEndDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
-                  }
-                  setContextMenu((prev) => ({ ...prev, visible: false }));
-                }}
-              >
-                <MapPin size={14} className="context-icon-danger" />
-                <span>Set as Destination</span>
-              </button>
-            </>
-          )}
+        )}
+        {canRoute && (
+          <>
+            <button
+              type="button"
+              className="map-context-menu-item"
+              onClick={() => {
+                if (onStartDragRef.current) {
+                  onStartDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
+                }
+                setContextMenu((prev) => ({ ...prev, visible: false }));
+              }}
+            >
+              <MapPin size={14} className="context-icon-success" />
+              <span>Set as Start</span>
+            </button>
+            <button
+              type="button"
+              className="map-context-menu-item"
+              onClick={() => {
+                if (onEndDragRef.current) {
+                  onEndDragRef.current({ lat: targetPlace.lat, lng: targetPlace.lng });
+                }
+                setContextMenu((prev) => ({ ...prev, visible: false }));
+              }}
+            >
+              <MapPin size={14} className="context-icon-danger" />
+              <span>Set as Destination</span>
+            </button>
+          </>
+        )}
+        {canManagePlaces && (
           <button
             type="button"
             className="map-context-menu-item map-context-menu-item--danger"
@@ -142,78 +171,86 @@ export const MapContextMenu: React.FC = () => {
             <Trash2 size={14} className="context-icon-danger" />
             <span>Delete Place</span>
           </button>
-        </>
-      ) : (
-        <>
-          {contextMenu.crossingId !== null && (
-            <button
-              type="button"
-              className="map-context-menu-item"
-              onClick={() => {
-                if (contextMenu.crossingId !== null) {
-                  const nodeIds = parseNodeIds(contextMenu.nodeIds);
-                  if (setManagedClusterIdRef.current) {
-                    setManagedClusterIdRef.current(contextMenu.crossingId);
-                  }
-                  if (setManagedNodeIdsRef.current) {
-                    setManagedNodeIdsRef.current(nodeIds);
-                  }
+        )}
+      </div>
+    );
+  }
 
-                  map.easeTo({
-                    center: [contextMenu.lng, contextMenu.lat],
-                    zoom: 17.5,
-                  });
-                }
-                setContextMenu((prev) => ({ ...prev, visible: false }));
-              }}
-            >
-              <ZoomIn size={14} className="context-icon-warn" />
-              <span>Manage Traffic Lights</span>
-            </button>
-          )}
-          {!isNavigating && (
-            <>
-              <button
-                type="button"
-                className="map-context-menu-item"
-                onClick={() => {
-                  if (onStartDragRef.current) {
-                    onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-                  }
-                  setContextMenu((prev) => ({ ...prev, visible: false }));
-                }}
-              >
-                <MapPin size={14} className="context-icon-success" />
-                <span>Start Route Here</span>
-              </button>
-              <button
-                type="button"
-                className="map-context-menu-item"
-                onClick={() => {
-                  if (onEndDragRef.current) {
-                    onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
-                  }
-                  setContextMenu((prev) => ({ ...prev, visible: false }));
-                }}
-              >
-                <MapPin size={14} className="context-icon-danger" />
-                <span>End Route Here</span>
-              </button>
-            </>
-          )}
+  if (!canManageCrossing && !canRoute && !canManagePlaces) {
+    return null;
+  }
+
+  return (
+    <div ref={menuRef} className="map-context-menu" onClick={(e) => e.stopPropagation()}>
+      {canManageCrossing && (
+        <button
+          type="button"
+          className="map-context-menu-item"
+          onClick={() => {
+            if (contextMenu.crossingId !== null) {
+              const nodeIds = parseNodeIds(contextMenu.nodeIds);
+              if (setManagedClusterIdRef.current) {
+                setManagedClusterIdRef.current(contextMenu.crossingId);
+              }
+              if (setManagedNodeIdsRef.current) {
+                setManagedNodeIdsRef.current(nodeIds);
+              }
+
+              map.easeTo({
+                center: [contextMenu.lng, contextMenu.lat],
+                zoom: 17.5,
+              });
+            }
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+          }}
+        >
+          <ZoomIn size={14} className="context-icon-warn" />
+          <span>Manage Traffic Lights</span>
+        </button>
+      )}
+      {canRoute && (
+        <>
           <button
             type="button"
             className="map-context-menu-item"
             onClick={() => {
-              const createModalFn = openCreatePlaceModal ?? openCreateLandmarkModal;
-              createModalFn?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+              if (onStartDragRef.current) {
+                onStartDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              }
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
           >
-            <Star size={14} className="context-icon-place context-icon-favorite" />
-            <span>Add Place</span>
+            <MapPin size={14} className="context-icon-success" />
+            <span>Start Route Here</span>
+          </button>
+          <button
+            type="button"
+            className="map-context-menu-item"
+            onClick={() => {
+              if (onEndDragRef.current) {
+                onEndDragRef.current({ lat: contextMenu.lat, lng: contextMenu.lng });
+              }
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+          >
+            <MapPin size={14} className="context-icon-danger" />
+            <span>End Route Here</span>
           </button>
         </>
+      )}
+      {canManagePlaces && (
+        <button
+          type="button"
+          className="map-context-menu-item"
+          onClick={() => {
+            const createModalFn = openCreatePlaceModal ?? openCreateLandmarkModal;
+            createModalFn?.({ lat: contextMenu.lat, lng: contextMenu.lng });
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+          }}
+        >
+          <Star size={14} className="context-icon-place context-icon-favorite" />
+          <span>Add Place</span>
+        </button>
       )}
     </div>
   );

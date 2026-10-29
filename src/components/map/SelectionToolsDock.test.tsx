@@ -187,4 +187,69 @@ describe('SelectionToolsDock', () => {
     await user.click(clearBtn);
     expect(onClearSelectionMock).toHaveBeenCalledTimes(1);
   });
+
+  it('resets brush tool to click tool when Escape key is pressed', () => {
+    const setSelectionToolMock = vi.fn();
+    const onClearSelectionMock = vi.fn();
+    const context = createDefaultContext({
+      appMode: 'studio',
+      selectionTool: 'brush',
+      setSelectionTool: setSelectionToolMock,
+      onClearSelection: onClearSelectionMock,
+    });
+
+    render(
+      <MapContext.Provider value={context}>
+        <SelectionToolsDock />
+      </MapContext.Provider>,
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(setSelectionToolMock).toHaveBeenCalledWith('click');
+    expect(onClearSelectionMock).not.toHaveBeenCalled();
+  });
+
+  it('clears selected edges when Escape key is pressed in click tool mode', () => {
+    const setSelectionToolMock = vi.fn();
+    const onClearSelectionMock = vi.fn();
+    const context = createDefaultContext({
+      appMode: 'studio',
+      selectionTool: 'click',
+      selectedEdgeIds: ['edge-1', 'edge-2'],
+      setSelectionTool: setSelectionToolMock,
+      onClearSelection: onClearSelectionMock,
+    });
+
+    render(
+      <MapContext.Provider value={context}>
+        <SelectionToolsDock />
+      </MapContext.Provider>,
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(onClearSelectionMock).toHaveBeenCalledTimes(1);
+    expect(setSelectionToolMock).not.toHaveBeenCalled();
+  });
+
+  it('does not trigger Escape actions when not in events/studio mode', () => {
+    const setSelectionToolMock = vi.fn();
+    const onClearSelectionMock = vi.fn();
+    const context = createDefaultContext({
+      appMode: 'routing',
+      selectionTool: 'brush',
+      selectedEdgeIds: ['edge-1'],
+      setSelectionTool: setSelectionToolMock,
+      onClearSelection: onClearSelectionMock,
+    });
+
+    render(
+      <MapContext.Provider value={context}>
+        <SelectionToolsDock />
+      </MapContext.Provider>,
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(setSelectionToolMock).not.toHaveBeenCalled();
+    expect(onClearSelectionMock).not.toHaveBeenCalled();
+  });
 });

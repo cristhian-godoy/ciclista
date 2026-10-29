@@ -52,10 +52,26 @@ vi.mock('maplibre-gl', () => {
         lat: this.lngLat ? this.lngLat[1] : 0,
       };
     }
+    setDraggable(shouldBeDraggable?: boolean) {
+      this.draggable = Boolean(shouldBeDraggable);
+      return this;
+    }
+    isDraggable(): boolean {
+      return Boolean(this.draggable);
+    }
+    getElement(): HTMLElement | undefined {
+      return this.element;
+    }
     addTo() {
+      if (this.element) {
+        document.body.appendChild(this.element);
+      }
       return this;
     }
     remove() {
+      if (this.element && this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
       return this;
     }
     on(event: string, handler: Handler) {

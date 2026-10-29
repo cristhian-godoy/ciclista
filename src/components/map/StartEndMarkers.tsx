@@ -9,8 +9,18 @@ import { useMapContext } from './MapContext';
  * start (origin) and end (destination) pin markers on the map canvas.
  */
 export const StartEndMarkers: React.FC = () => {
-  const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds, isNavigating } =
-    useMapContext();
+  const {
+    map,
+    startCoord,
+    endCoord,
+    onStartDrag,
+    onEndDrag,
+    setShouldFitBounds,
+    isNavigating,
+    appMode,
+  } = useMapContext();
+
+  const isDraggable = !isNavigating && (appMode === 'routing' || !appMode);
 
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -39,11 +49,21 @@ export const StartEndMarkers: React.FC = () => {
       }
     };
   }, [map]);
-  // Synchronize draggable option when navigation starts/stops
+
+  // Synchronize draggable option and cursor style when mode or navigation status changes
   useEffect(() => {
-    startMarkerRef.current?.setDraggable(!isNavigating);
-    endMarkerRef.current?.setDraggable(!isNavigating);
-  }, [isNavigating]);
+    startMarkerRef.current?.setDraggable(isDraggable);
+    endMarkerRef.current?.setDraggable(isDraggable);
+    const startEl = startMarkerRef.current?.getElement?.();
+    if (startEl) {
+      startEl.style.cursor = isDraggable ? 'grab' : 'default';
+    }
+    const endEl = endMarkerRef.current?.getElement?.();
+    if (endEl) {
+      endEl.style.cursor = isDraggable ? 'grab' : 'default';
+    }
+  }, [isDraggable]);
+
   // Dynamically manage Start Marker
   useEffect(() => {
     if (!map) return;
@@ -56,7 +76,7 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.backgroundColor = MAP_THEME_TOKENS.status.success;
         startEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
-        startEl.style.cursor = 'grab';
+        startEl.style.cursor = isDraggable ? 'grab' : 'default';
         startEl.style.display = 'flex';
         startEl.style.alignItems = 'center';
         startEl.style.justifyContent = 'center';
@@ -66,7 +86,7 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.fontFamily = 'inherit';
         startEl.textContent = 'A';
 
-        const startMarker = new maplibregl.Marker({ element: startEl, draggable: !isNavigating })
+        const startMarker = new maplibregl.Marker({ element: startEl, draggable: isDraggable })
           .setLngLat([startCoord.lng, startCoord.lat])
           .addTo(map);
 
@@ -92,7 +112,7 @@ export const StartEndMarkers: React.FC = () => {
         startMarkerRef.current = null;
       }
     }
-  }, [map, startCoord, setShouldFitBounds, isNavigating]);
+  }, [map, startCoord, setShouldFitBounds, isDraggable]);
 
   // Dynamically manage End Marker
   useEffect(() => {
@@ -106,7 +126,7 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.backgroundColor = MAP_THEME_TOKENS.status.danger;
         endEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
-        endEl.style.cursor = 'grab';
+        endEl.style.cursor = isDraggable ? 'grab' : 'default';
         endEl.style.display = 'flex';
         endEl.style.alignItems = 'center';
         endEl.style.justifyContent = 'center';
@@ -116,7 +136,7 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.fontFamily = 'inherit';
         endEl.textContent = 'B';
 
-        const endMarker = new maplibregl.Marker({ element: endEl, draggable: !isNavigating })
+        const endMarker = new maplibregl.Marker({ element: endEl, draggable: isDraggable })
           .setLngLat([endCoord.lng, endCoord.lat])
           .addTo(map);
 
@@ -142,7 +162,7 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current = null;
       }
     }
-  }, [map, endCoord, setShouldFitBounds, isNavigating]);
+  }, [map, endCoord, setShouldFitBounds, isDraggable]);
 
   return null;
 };

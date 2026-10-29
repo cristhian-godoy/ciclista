@@ -166,4 +166,91 @@ describe('useMapInteractionController', () => {
 
     expect(openEditPlaceModalMock).toHaveBeenCalledWith(samplePlace);
   });
+
+  it('suppresses context menu on right click in events mode when not on edge', () => {
+    const preventDefaultMock = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'events',
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.135, lng: 11.575 },
+      originalEvent: { preventDefault: preventDefaultMock },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(preventDefaultMock).toHaveBeenCalled();
+    expect(setContextMenuMock).not.toHaveBeenCalled();
+  });
+
+  it('suppresses context menu on right click in edit mode when no crossing cluster is clicked', () => {
+    const preventDefaultMock = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'edit',
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.135, lng: 11.575 },
+      originalEvent: { preventDefault: preventDefaultMock },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(preventDefaultMock).toHaveBeenCalled();
+    expect(setContextMenuMock).not.toHaveBeenCalled();
+  });
+
+  it('opens context menu on right click in edit mode when a crossing cluster is clicked', () => {
+    (mockMap.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockImplementation(
+      (_point, opts) => {
+        if (opts?.layers?.includes('traffic-lights-cluster')) {
+          return [
+            {
+              properties: {
+                crossingId: 'crossing-99',
+                nodeIds: JSON.stringify(['n-1']),
+              },
+            },
+          ];
+        }
+        return [];
+      },
+    );
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'edit',
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.135, lng: 11.575 },
+      originalEvent: { preventDefault: vi.fn() },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(setContextMenuMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visible: true,
+        crossingId: 'crossing-99',
+      }),
+    );
+  });
 });

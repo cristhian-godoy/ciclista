@@ -11,6 +11,8 @@ export interface UseMapCursorOptions {
   isPlacingPlace?: boolean;
   /** Callback to set or toggle pin placement mode */
   setIsPlacingPlace?: (isPlacing: boolean) => void;
+  /** Active application mode */
+  appMode?: string;
 }
 
 /**
@@ -21,14 +23,26 @@ export function useMapCursor({
   map,
   isPlacingPlace = false,
   setIsPlacingPlace,
+  appMode,
 }: UseMapCursorOptions): void {
+  const isInvalidMode =
+    appMode === 'edit' || appMode === 'events' || (appMode as string) === 'studio';
+  const isPlacementActive = isPlacingPlace && !isInvalidMode;
+
+  // Cancel pin placement if leaked into an invalid mode
+  useEffect(() => {
+    if (isPlacingPlace && isInvalidMode) {
+      setIsPlacingPlace?.(false);
+    }
+  }, [isPlacingPlace, isInvalidMode, setIsPlacingPlace]);
+
   // Set map canvas cursor to crosshair during pin placement mode
   useEffect(() => {
     if (!map) return;
     const canvas = map.getCanvas?.();
     if (!canvas) return;
 
-    if (isPlacingPlace) {
+    if (isPlacementActive) {
       canvas.style.cursor = 'crosshair';
     } else {
       canvas.style.cursor = '';
@@ -39,7 +53,7 @@ export function useMapCursor({
         canvas.style.cursor = '';
       }
     };
-  }, [map, isPlacingPlace]);
+  }, [map, isPlacementActive]);
 
   // Handle Escape key to cancel pin placement mode
   useEffect(() => {

@@ -38,8 +38,10 @@ NodePopup.tsx
 	Glassmorphic popup configuring node delays and custom notes.
 RouteVariantsLayer.tsx
 	Layer rendering route variant paths and selection glows.
+StartEndMarkers.test.tsx
+	Unit tests verifying start and destination marker draggability gating and cursor updates across modes.
 StartEndMarkers.tsx
-	Draggable marker pins for navigation origin and destination.
+	Draggable marker pins for navigation origin and destination with mode-aware drag freezing.
 StreetGraphLayer.tsx
 	Layer rendering GeoJSON streets network and clustered traffic signals.
 useMapInstance.ts
@@ -48,6 +50,8 @@ CustomNavigationControl.ts
 	Custom navigation control replacing MapLibre's built-in NavigationControl.
 MapContext.ts
 	Re-export module for MapProvider, MapContext, and useMapContext hook.
+MapProvider.test.tsx
+	Unit tests verifying mode transition cleanup, pin placement reset, and context menu dismissal.
 MapProvider.tsx
 	Context provider component hosting memoized map state and operations.
 mapContextInstance.ts

@@ -74,6 +74,7 @@ const MapViewContent: React.FC<{
     map,
     isPlacingPlace,
     setIsPlacingPlace,
+    appMode,
   });
 
   // Auto-collapse expanded crossing clusters on zoom out or far pan

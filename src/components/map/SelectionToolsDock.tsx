@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Badge } from '../common/Badge';
 import { CloseButton } from '../common/CloseButton';
@@ -26,6 +26,27 @@ export const SelectionToolsDock: React.FC = () => {
   } = useMapContext();
 
   const isEventsMode = appMode === 'events' || (appMode as string) === 'studio';
+
+  // Universal Escape key cancellation contract: reset brush or clear selected edges
+  useEffect(() => {
+    if (!isEventsMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectionTool === 'brush') {
+          setSelectionTool('click');
+        } else if (selectedEdgeIds.length > 0) {
+          onClearSelection();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isEventsMode, selectionTool, setSelectionTool, selectedEdgeIds.length, onClearSelection]);
+
   if (!isEventsMode) {
     return null;
   }
