@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { haversineDistance } from '../core/common/geo';
 import type { StreetGraph } from '../core/graph/types';
+import { useSettings } from '../store/settingsStore';
 
 /**
  * Options for useAutoClusterCollapse hook.
@@ -16,6 +17,8 @@ export interface UseAutoClusterCollapseOptions {
   managedNodeIds?: string[];
   /** Street network graph */
   graph?: StreetGraph | null;
+  /** Optional override for whether auto-collapse is enabled */
+  autoCollapse?: boolean;
   /** Callback to clear or update the active cluster ID */
   setManagedClusterId?: (clusterId: string | null) => void;
   /** Callback to clear or update active node IDs */
@@ -26,15 +29,20 @@ export interface UseAutoClusterCollapseOptions {
 /**
  * Hook to automatically collapse expanded crossing clusters when zooming out
  * below threshold (< 15.5) or panning farther than 450 meters from centroid.
+ * Respects autoCollapseCrossingClusters configuration setting.
  */
 export function useAutoClusterCollapse({
   map,
   managedClusterId,
   managedNodeIds = [],
   graph,
+  autoCollapse,
   setManagedClusterId,
   setManagedNodeIds,
 }: UseAutoClusterCollapseOptions): void {
+  const settings = useSettings();
+  const shouldAutoCollapse = autoCollapse ?? settings.autoCollapseCrossingClusters;
+
   const graphRef = useRef(graph);
   const setManagedClusterIdRef = useRef(setManagedClusterId);
   const setManagedNodeIdsRef = useRef(setManagedNodeIds);
@@ -46,7 +54,7 @@ export function useAutoClusterCollapse({
   }, [graph, setManagedClusterId, setManagedNodeIds]);
 
   useEffect(() => {
-    if (!map || !managedClusterId || managedNodeIds.length === 0) return;
+    if (!shouldAutoCollapse || !map || !managedClusterId || managedNodeIds.length === 0) return;
 
     let clusterLat = 0;
     let clusterLng = 0;
@@ -103,5 +111,5 @@ export function useAutoClusterCollapse({
         map.off('moveend', checkClusterProximity);
       }
     };
-  }, [map, managedClusterId, managedNodeIds, graph]);
+  }, [map, managedClusterId, managedNodeIds, graph, shouldAutoCollapse]);
 }

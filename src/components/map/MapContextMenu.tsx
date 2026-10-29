@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
+import { useSettings } from '../../store/settingsStore';
 import { Edit2, MapPin, Star, Trash2, ZoomIn } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
@@ -45,7 +46,13 @@ export const MapContextMenu: React.FC = () => {
     onDeleteLandmark,
     places,
     landmarks,
+    appMode,
   } = useMapContext();
+  const settings = useSettings();
+
+  const isPinsFrozen = Boolean(
+    (appMode === 'edit' && settings.freezePinsOnEditMode) || isNavigating,
+  );
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +107,7 @@ export const MapContextMenu: React.FC = () => {
             <Edit2 size={14} className="context-icon-place" />
             <span>Edit Place</span>
           </button>
-          {!isNavigating && (
+          {!isPinsFrozen && (
             <>
               <button
                 type="button"
@@ -171,7 +178,7 @@ export const MapContextMenu: React.FC = () => {
               <span>Manage Traffic Lights</span>
             </button>
           )}
-          {!isNavigating && (
+          {!isPinsFrozen && (
             <>
               <button
                 type="button"

@@ -1,0 +1,4 @@
+settingsStore.test.ts
+	Unit tests for reactive SettingsStore state mutations and useSettings hook.
+settingsStore.ts
+	Decoupled reactive SettingsStore and useSettings hook using useSyncExternalStore.

@@ -1,7 +1,7 @@
 useAutoClusterCollapse.test.ts
 	Unit tests verifying useAutoClusterCollapse threshold distance and zoom collapse triggers.
 useAutoClusterCollapse.ts
-	React hook automatically collapsing expanded crossing clusters upon zoom out or camera pan exceeding threshold.
+	React hook automatically collapsing expanded crossing clusters upon zoom out or camera pan exceeding threshold, gated by settings.
 useCrossingEditorData.ts
 	React hook extracting crossing clusters, active cluster subgraph, and computing turn paths.
 useEdgeGeoJSON.ts

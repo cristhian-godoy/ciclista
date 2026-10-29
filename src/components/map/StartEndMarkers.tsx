@@ -2,15 +2,28 @@ import * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
+import { useSettings } from '../../store/settingsStore';
 import { useMapContext } from './MapContext';
 
 /**
  * Component that manages the lifecycle and positioning of the draggable
  * start (origin) and end (destination) pin markers on the map canvas.
+ * Respects freezePinsOnEditMode setting to lock markers during edit mode.
  */
 export const StartEndMarkers: React.FC = () => {
-  const { map, startCoord, endCoord, onStartDrag, onEndDrag, setShouldFitBounds, isNavigating } =
-    useMapContext();
+  const {
+    map,
+    startCoord,
+    endCoord,
+    onStartDrag,
+    onEndDrag,
+    setShouldFitBounds,
+    isNavigating,
+    appMode,
+  } = useMapContext();
+  const settings = useSettings();
+
+  const isFrozen = Boolean((appMode === 'edit' && settings.freezePinsOnEditMode) || isNavigating);
 
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -39,11 +52,36 @@ export const StartEndMarkers: React.FC = () => {
       }
     };
   }, [map]);
-  // Synchronize draggable option when navigation starts/stops
+
+  // Synchronize draggable and cursor options when frozen state changes
   useEffect(() => {
-    startMarkerRef.current?.setDraggable(!isNavigating);
-    endMarkerRef.current?.setDraggable(!isNavigating);
-  }, [isNavigating]);
+    const draggable = !isFrozen;
+    startMarkerRef.current?.setDraggable(draggable);
+    endMarkerRef.current?.setDraggable(draggable);
+
+    if (startMarkerRef.current) {
+      const el = startMarkerRef.current.getElement();
+      if (el) {
+        el.style.cursor = draggable ? 'grab' : 'default';
+        el.title =
+          isFrozen && appMode === 'edit'
+            ? 'Origin pin (frozen in Edit mode)'
+            : 'Origin pin (draggable)';
+      }
+    }
+
+    if (endMarkerRef.current) {
+      const el = endMarkerRef.current.getElement();
+      if (el) {
+        el.style.cursor = draggable ? 'grab' : 'default';
+        el.title =
+          isFrozen && appMode === 'edit'
+            ? 'Destination pin (frozen in Edit mode)'
+            : 'Destination pin (draggable)';
+      }
+    }
+  }, [isFrozen, appMode]);
+
   // Dynamically manage Start Marker
   useEffect(() => {
     if (!map) return;
@@ -56,7 +94,7 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.backgroundColor = MAP_THEME_TOKENS.status.success;
         startEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         startEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.8)';
-        startEl.style.cursor = 'grab';
+        startEl.style.cursor = !isFrozen ? 'grab' : 'default';
         startEl.style.display = 'flex';
         startEl.style.alignItems = 'center';
         startEl.style.justifyContent = 'center';
@@ -65,8 +103,12 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.fontSize = '12px';
         startEl.style.fontFamily = 'inherit';
         startEl.textContent = 'A';
+        startEl.title =
+          isFrozen && appMode === 'edit'
+            ? 'Origin pin (frozen in Edit mode)'
+            : 'Origin pin (draggable)';
 
-        const startMarker = new maplibregl.Marker({ element: startEl, draggable: !isNavigating })
+        const startMarker = new maplibregl.Marker({ element: startEl, draggable: !isFrozen })
           .setLngLat([startCoord.lng, startCoord.lat])
           .addTo(map);
 
@@ -92,7 +134,7 @@ export const StartEndMarkers: React.FC = () => {
         startMarkerRef.current = null;
       }
     }
-  }, [map, startCoord, setShouldFitBounds, isNavigating]);
+  }, [map, startCoord, setShouldFitBounds, isFrozen, appMode]);
 
   // Dynamically manage End Marker
   useEffect(() => {
@@ -106,7 +148,7 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.backgroundColor = MAP_THEME_TOKENS.status.danger;
         endEl.style.border = `3px solid ${MAP_THEME_TOKENS.overlay.white}`;
         endEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
-        endEl.style.cursor = 'grab';
+        endEl.style.cursor = !isFrozen ? 'grab' : 'default';
         endEl.style.display = 'flex';
         endEl.style.alignItems = 'center';
         endEl.style.justifyContent = 'center';
@@ -115,8 +157,12 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.fontSize = '12px';
         endEl.style.fontFamily = 'inherit';
         endEl.textContent = 'B';
+        endEl.title =
+          isFrozen && appMode === 'edit'
+            ? 'Destination pin (frozen in Edit mode)'
+            : 'Destination pin (draggable)';
 
-        const endMarker = new maplibregl.Marker({ element: endEl, draggable: !isNavigating })
+        const endMarker = new maplibregl.Marker({ element: endEl, draggable: !isFrozen })
           .setLngLat([endCoord.lng, endCoord.lat])
           .addTo(map);
 
@@ -142,7 +188,7 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current = null;
       }
     }
-  }, [map, endCoord, setShouldFitBounds, isNavigating]);
+  }, [map, endCoord, setShouldFitBounds, isFrozen, appMode]);
 
   return null;
 };

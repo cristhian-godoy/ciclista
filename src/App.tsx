@@ -1,19 +1,24 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
+import { SearchEverywhereModal, type SearchTab } from './components/SearchEverywhereModal';
+import { SettingsModal } from './components/SettingsModal';
 import { Sidebar } from './components/Sidebar';
 import { SideToolbar, type ToolbarMode } from './components/SideToolbar';
+import type { ActionContext } from './core/actions/types';
 import {
   calculateMultiPointBoundingBox,
   doBBoxesIntersect,
   snapCoordinateToEdge,
 } from './core/common/geo';
 import type { Coordinate } from './core/common/types';
+import type { SettingCategory } from './core/config/settingsMetadata';
 import type { LocalOverrides } from './core/config/types';
 import type { MapEvent } from './core/events';
 import type { StreetGraph } from './core/graph/types';
+import type { Landmark } from './core/landmarks/types';
 import type {
   StrategyRouteVariant,
   WorkerRoutingRequest,
@@ -26,6 +31,7 @@ import { useOSMData } from './hooks/useOSMData';
 import { useOverrides } from './hooks/useOverrides';
 import { usePlaces } from './hooks/usePlaces';
 import { useRoutingState } from './hooks/useRoutingState';
+import { settingsStore, useSettings } from './store/settingsStore';
 
 const storage = new LocalStorageProvider();
 
@@ -39,22 +45,130 @@ interface DashboardAppProps {
  * Primary dashboard view component executing main map and routing hooks.
  */
 function DashboardApp({ onNavigate }: DashboardAppProps) {
-  const [theme, setTheme] = useState<'bright' | 'liberty' | 'dark'>(() => {
-    return storage.loadTheme() ?? 'bright';
-  });
+  const settings = useSettings();
+  const theme = settings.theme;
   const [appMode, setAppMode] = useState<ToolbarMode>('routing');
   const [events, setEvents] = useState<MapEvent[]>(() => {
     return storage.loadEventsSync();
   });
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    storage.saveTheme(theme);
-  }, [theme]);
+  // Modal visibility states
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsCategory, setSettingsCategory] = useState<SettingCategory | undefined>();
+  const [settingsHighlightKey, setSettingsHighlightKey] = useState<string | undefined>();
+  const [isSearchAllOpen, setIsSearchAllOpen] = useState(false);
+  const [searchAllInitialTab, setSearchAllInitialTab] = useState<SearchTab>('all');
+
+  const handleOpenSettings = useCallback((category?: SettingCategory, highlightKey?: string) => {
+    setSettingsCategory(category);
+    setSettingsHighlightKey(highlightKey);
+    setIsSettingsOpen(true);
+  }, []);
+
+  const handleOpenSearchAll = useCallback((tab: SearchTab = 'all') => {
+    setSearchAllInitialTab(tab);
+    setIsSearchAllOpen(true);
+  }, []);
+
+  const handleThemeChange = useCallback((nextTheme: 'bright' | 'liberty' | 'dark') => {
+    settingsStore.updateSettings({ theme: nextTheme });
+  }, []);
 
   useEffect(() => {
     storage.saveEventsSync(events);
   }, [events]);
+
+  const lastShiftTapTimeRef = useRef<number>(0);
+  const shiftKeyDownTimeRef = useRef<number>(0);
+  const shiftConsumedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInputFocused =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'SELECT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          (activeEl as HTMLElement).isContentEditable);
+
+      // Standalone Shift double-press detection
+      if (e.key === 'Shift') {
+        if (isInputFocused || e.repeat) {
+          shiftConsumedRef.current = true;
+          return;
+        }
+
+        const now = Date.now();
+        shiftKeyDownTimeRef.current = now;
+        shiftConsumedRef.current = false;
+
+        if (
+          lastShiftTapTimeRef.current > 0 &&
+          now - lastShiftTapTimeRef.current < 400 &&
+          now - lastShiftTapTimeRef.current > 40
+        ) {
+          e.preventDefault();
+          handleOpenSearchAll('all');
+          lastShiftTapTimeRef.current = 0;
+          shiftKeyDownTimeRef.current = 0;
+          shiftConsumedRef.current = true;
+          return;
+        }
+        return;
+      }
+
+      // Any non-Shift key cancels the standalone Shift tap sequence
+      shiftConsumedRef.current = true;
+      lastShiftTapTimeRef.current = 0;
+
+      // Settings shortcut: Ctrl+, or Cmd+,
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        handleOpenSettings();
+        return;
+      }
+
+      // Search Everywhere shortcut: Ctrl+K or Cmd+K
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        handleOpenSearchAll('all');
+        return;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        const now = Date.now();
+        const pressDuration = now - shiftKeyDownTimeRef.current;
+        if (!shiftConsumedRef.current && pressDuration < 300 && shiftKeyDownTimeRef.current > 0) {
+          lastShiftTapTimeRef.current = now;
+        } else {
+          lastShiftTapTimeRef.current = 0;
+        }
+      }
+    };
+
+    const handlePointerInteraction = () => {
+      shiftConsumedRef.current = true;
+      lastShiftTapTimeRef.current = 0;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('pointerdown', handlePointerInteraction, { capture: true });
+    window.addEventListener('mousedown', handlePointerInteraction, { capture: true });
+    window.addEventListener('wheel', handlePointerInteraction, { capture: true, passive: true });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('pointerdown', handlePointerInteraction, { capture: true });
+      window.removeEventListener('mousedown', handlePointerInteraction, { capture: true });
+      window.removeEventListener('wheel', handlePointerInteraction, { capture: true });
+    };
+  }, [handleOpenSearchAll, handleOpenSettings]);
 
   const { places, addPlace, updatePlace, deletePlace, setPlaces } = usePlaces();
 
@@ -127,10 +241,10 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     setEndCoord(coord ? snapCoordinateToEdge(coord, graph) : null);
   };
 
-  const handleSwapCoords = () => {
+  const handleSwapCoords = useCallback(() => {
     setStartCoord(endCoord);
     setEndCoord(startCoord);
-  };
+  }, [startCoord, endCoord, setStartCoord, setEndCoord]);
 
   const effectiveOverrides: LocalOverrides = useMemo(() => {
     const blockedEdges = new Set<string>();
@@ -255,6 +369,73 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     routeCoordinates: routeResult?.coordinates ?? [],
   });
 
+  const actionContext: ActionContext = useMemo(
+    () => ({
+      settings,
+      updateSettings: (newSettings) => settingsStore.updateSettings(newSettings),
+      appMode,
+      setAppMode,
+      routing: {
+        startCoord: startCoord ? [startCoord.lat, startCoord.lng] : null,
+        endCoord: endCoord ? [endCoord.lat, endCoord.lng] : null,
+        hasActiveRoute: Boolean(routeResult),
+        routingStrategy,
+        bikeConfig,
+        swapStartEnd: handleSwapCoords,
+        clearRoute: () => {
+          setStartCoord(null);
+          setEndCoord(null);
+        },
+        setRoutingStrategy,
+        setBikeConfig,
+      },
+      navigation: {
+        isNavigating: navigation.state.status === 'active' || navigation.state.status === 'paused',
+        cameraMode: navigation.state.cameraMode,
+        startNavigation: navigation.startNavigation,
+        stopNavigation: navigation.stopNavigation,
+        toggleCameraMode: navigation.toggleCameraMode,
+      },
+      map: {
+        showStreetGraph: settings.showStreetGraph,
+        toggleStreetGraph: () => {
+          settingsStore.updateSettings({ showStreetGraph: !settings.showStreetGraph });
+        },
+        isInspectorActive: isInspectorModeActive,
+        toggleInspector: toggleInspectorMode,
+      },
+      places: {
+        places: places as unknown as Landmark[],
+      },
+      openSettings: handleOpenSettings,
+      openSearchAll: handleOpenSearchAll,
+    }),
+    [
+      settings,
+      appMode,
+      startCoord,
+      endCoord,
+      routeResult,
+      routingStrategy,
+      bikeConfig,
+      handleSwapCoords,
+      setStartCoord,
+      setEndCoord,
+      setRoutingStrategy,
+      setBikeConfig,
+      navigation.state.status,
+      navigation.state.cameraMode,
+      navigation.startNavigation,
+      navigation.stopNavigation,
+      navigation.toggleCameraMode,
+      isInspectorModeActive,
+      toggleInspectorMode,
+      places,
+      handleOpenSettings,
+      handleOpenSearchAll,
+    ],
+  );
+
   return (
     <MapProvider
       graph={graph}
@@ -319,6 +500,8 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
               window.dispatchEvent(new PopStateEvent('popstate'));
             }
           }}
+          onOpenSettings={() => handleOpenSettings()}
+          onOpenSearchAll={() => handleOpenSearchAll('all')}
         />
         <Sidebar
           routeResult={routeResult}
@@ -339,7 +522,32 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
           navigationProgress={navigation.state.progress}
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
-        <GlobalControlsPanel theme={theme} onThemeChange={setTheme} />
+        <GlobalControlsPanel theme={theme} onThemeChange={handleThemeChange} />
+        {isSettingsOpen && (
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            initialCategory={settingsCategory}
+            highlightKey={settingsHighlightKey}
+          />
+        )}
+        {isSearchAllOpen && (
+          <SearchEverywhereModal
+            isOpen={isSearchAllOpen}
+            onClose={() => setIsSearchAllOpen(false)}
+            initialTab={searchAllInitialTab}
+            actionContext={actionContext}
+            onOpenSettings={(cat, key) => {
+              setIsSearchAllOpen(false);
+              handleOpenSettings(cat, key);
+            }}
+            places={places}
+            onSelectPlace={(p) => {
+              setStartCoord({ lat: p.lat, lng: p.lng });
+              setIsSearchAllOpen(false);
+            }}
+          />
+        )}
       </div>
     </MapProvider>
   );

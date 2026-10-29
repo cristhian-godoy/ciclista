@@ -88,6 +88,7 @@ export function useGeoJsonLayer({
     if (!map) return;
     const lastPaintProps = lastPaintPropsRef.current;
     const lastLayoutProps = lastLayoutPropsRef.current;
+    const managedLayerIds = managedLayerIdsRef.current;
 
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
@@ -99,14 +100,14 @@ export function useGeoJsonLayer({
 
     return () => {
       // Remove all layers managed by this hook instance before removing the source
-      for (const id of Array.from(managedLayerIdsRef.current)) {
+      for (const id of Array.from(managedLayerIds)) {
         if (map.getLayer(id)) {
           map.removeLayer(id);
         }
         lastPaintProps.delete(id);
         lastLayoutProps.delete(id);
       }
-      managedLayerIdsRef.current.clear();
+      managedLayerIds.clear();
 
       if (map.getSource(sourceId)) {
         map.removeSource(sourceId);

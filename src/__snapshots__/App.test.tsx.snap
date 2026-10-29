@@ -177,6 +177,36 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
     <div
       class="ciclista-toolbar-footer"
     >
+      <button
+        aria-label="Search All"
+        class="ciclista-toolbar-btn ciclista-toolbar-btn--search"
+        data-testid="toolbar-search-all-btn"
+        title="Search All (⇧⇧ or Ctrl+K)"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21 21-4.34-4.34"
+          />
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+        </svg>
+      </button>
       <a
         aria-label="Test Runner"
         class="ciclista-toolbar-btn ciclista-toolbar-btn--test"
@@ -207,6 +237,36 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
           />
         </svg>
       </a>
+      <button
+        aria-label="Settings"
+        class="ciclista-toolbar-btn ciclista-toolbar-btn--settings"
+        data-testid="toolbar-settings-btn"
+        title="Settings (Ctrl+,)"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-settings ciclista-toolbar-icon"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+          />
+        </svg>
+      </button>
     </div>
   </aside>
   <aside
