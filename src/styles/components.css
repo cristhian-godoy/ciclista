@@ -1483,7 +1483,7 @@ h2 {
 }
 
 .data-saver-icon-muted {
-  opacity: 0.5;
+  color: var(--ciclista-color-text-muted);
 }
 
 .data-saver-grid {
@@ -1522,7 +1522,7 @@ h2 {
 
 .data-saver-sub {
   font-size: var(--ciclista-font-2xs);
-  opacity: 0.6;
+  color: var(--ciclista-color-text-muted);
   margin-top: var(--ciclista-spacing-2xs);
 }
 
@@ -2198,7 +2198,6 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ciclista-spacing-sm);
-  opacity: 0.9;
 }
 
 .sidebar-nav-lbl {

@@ -13,8 +13,8 @@
   --ciclista-color-surface-elevated: hsl(220deg 20% 13%);
   --ciclista-color-surface-tertiary: hsl(220deg 15% 18%);
   --ciclista-color-text-primary: hsl(220deg 20% 95%);
-  --ciclista-color-text-secondary: hsl(220deg 10% 70%);
-  --ciclista-color-text-muted: hsl(220deg 10% 45%);
+  --ciclista-color-text-secondary: hsl(220deg 15% 80%);
+  --ciclista-color-text-muted: hsl(220deg 14% 68%);
   --ciclista-color-danger-bg: rgb(239 68 68 / 15%);
   --ciclista-color-danger-border: rgb(239 68 68 / 30%);
   --ciclista-color-danger-text: hsl(0deg 85% 65%);
