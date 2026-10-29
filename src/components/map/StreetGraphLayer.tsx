@@ -40,6 +40,8 @@ export const StreetGraphLayer: React.FC = () => {
     managedClusterId,
     managedNodeIds,
     isPlacingPlace,
+    appMode,
+    editSubMode = 'paths',
   } = useMapContext();
 
   const isPlacingPlaceRef = useRef(isPlacingPlace);
@@ -311,7 +313,12 @@ export const StreetGraphLayer: React.FC = () => {
   // Synchronize layer filters when managed states update
   useEffect(() => {
     if (!map) return;
-    if (managedClusterId !== null && managedNodeIds.length > 0) {
+    const isEditMode = appMode === 'edit';
+    const isSignalsSubMode = isEditMode && editSubMode === 'signals';
+    const shouldAllowUnclustering =
+      (isSignalsSubMode || !appMode) && managedClusterId !== null && managedNodeIds.length > 0;
+
+    if (shouldAllowUnclustering) {
       if (map.getLayer('traffic-lights-cluster')) {
         map.setFilter('traffic-lights-cluster', [
           'all',
@@ -334,7 +341,7 @@ export const StreetGraphLayer: React.FC = () => {
         map.setFilter('traffic-lights-unclustered', ['==', ['get', 'type'], 'signal-hidden']);
       }
     }
-  }, [map, managedClusterId, managedNodeIds]);
+  }, [map, managedClusterId, managedNodeIds, appMode, editSubMode]);
 
   return null;
 };

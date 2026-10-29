@@ -3,6 +3,7 @@ import type * as maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { StreetGraph } from '../../../core/graph/types';
+import { MAP_THEME_TOKENS } from '../../../core/rendering/theme';
 import { MapContext, type MapContextType } from '../MapContext';
 import { CrossingEditorLayer } from './CrossingEditorLayer';
 
@@ -24,8 +25,15 @@ describe('CrossingEditorLayer', () => {
           edges: [
             {
               target: 'node-2',
-              distance: 25,
+              distance: 15,
               name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+            {
+              target: 'node-5',
+              distance: 10,
+              name: 'Side Path',
               speedLimit: 20,
               tags: { highway: 'cycleway' },
             },
@@ -35,12 +43,71 @@ describe('CrossingEditorLayer', () => {
       [
         'node-2',
         {
-          node: { id: 'node-2', lat: 48.1372, lng: 11.5752, tags: { highway: 'traffic_signals' } },
+          node: { id: 'node-2', lat: 48.1371, lng: 11.5751, tags: { highway: 'traffic_signals' } },
           edges: [
             {
               target: 'node-1',
-              distance: 25,
+              distance: 15,
               name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+            {
+              target: 'node-3',
+              distance: 15,
+              name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+          ],
+        },
+      ],
+      [
+        'node-3',
+        {
+          node: { id: 'node-3', lat: 48.1372, lng: 11.5752, tags: { highway: 'traffic_signals' } },
+          edges: [
+            {
+              target: 'node-2',
+              distance: 15,
+              name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+            {
+              target: 'node-4',
+              distance: 15,
+              name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+          ],
+        },
+      ],
+      [
+        'node-4',
+        {
+          node: { id: 'node-4', lat: 48.1373, lng: 11.5753, tags: { highway: 'traffic_signals' } },
+          edges: [
+            {
+              target: 'node-3',
+              distance: 15,
+              name: 'Bike Path',
+              speedLimit: 20,
+              tags: { highway: 'cycleway' },
+            },
+          ],
+        },
+      ],
+      [
+        'node-5',
+        {
+          node: { id: 'node-5', lat: 48.13705, lng: 11.5749, tags: { highway: 'traffic_signals' } },
+          edges: [
+            {
+              target: 'node-1',
+              distance: 10,
+              name: 'Side Path',
               speedLimit: 20,
               tags: { highway: 'cycleway' },
             },
@@ -386,5 +453,165 @@ describe('CrossingEditorLayer', () => {
         features: [],
       });
     }
+  });
+
+  it('clears all sources when editSubMode is signals', () => {
+    renderWithContext({
+      appMode: 'edit',
+      editSubMode: 'signals',
+      activeCrossingId: 'crossing-node-1',
+    });
+
+    for (const [, src] of mockSources.entries()) {
+      expect(src.setData).toHaveBeenCalledWith({
+        type: 'FeatureCollection',
+        features: [],
+      });
+    }
+  });
+
+  it('configures nodes layer paint properties with 5-tier status styling', () => {
+    renderWithContext();
+
+    expect(addLayerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'crossing-editor-nodes-circle',
+        paint: expect.objectContaining({
+          'circle-radius': [
+            'match',
+            ['get', 'status'],
+            'start',
+            8,
+            'end',
+            8,
+            'waypoint',
+            7,
+            'path',
+            6,
+            5,
+          ],
+          'circle-color': [
+            'match',
+            ['get', 'status'],
+            'start',
+            MAP_THEME_TOKENS.status.success,
+            'end',
+            MAP_THEME_TOKENS.status.danger,
+            'waypoint',
+            MAP_THEME_TOKENS.brand.purple,
+            'path',
+            MAP_THEME_TOKENS.brand.amber,
+            MAP_THEME_TOKENS.overlay.white,
+          ],
+          'circle-stroke-color': MAP_THEME_TOKENS.overlay.darkNavy,
+          'circle-stroke-width': 2,
+        }),
+      }),
+    );
+  });
+
+  it('assigns 5-tier status (start, end, waypoint, path, normal) to crossing nodes', () => {
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: {
+        fromNodeId: 'node-1',
+        toNodeId: 'node-4',
+        waypointNodeIds: ['node-3'],
+      },
+    });
+
+    const nodesSource = mockSources.get('crossing-editor-nodes-source');
+    expect(nodesSource?.setData).toHaveBeenCalled();
+    const calls = nodesSource?.setData.mock.calls;
+    const lastCall = calls?.[calls.length - 1]?.[0] as GeoJSON.FeatureCollection;
+    expect(lastCall.type).toBe('FeatureCollection');
+
+    const statusByNodeId = new Map(
+      lastCall.features.map((f) => [f.properties?.nodeId, f.properties?.status]),
+    );
+
+    expect(statusByNodeId.get('node-1')).toBe('start');
+    expect(statusByNodeId.get('node-4')).toBe('end');
+    expect(statusByNodeId.get('node-3')).toBe('waypoint');
+    expect(statusByNodeId.get('node-2')).toBe('path');
+    expect(statusByNodeId.get('node-5')).toBe('normal');
+  });
+
+  it('prevents edge click handling when node click sets originalEvent.defaultPrevented', () => {
+    const setActiveTurnSelectionMock = vi.fn();
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: null, toNodeId: null, waypointNodeIds: [] },
+      setActiveTurnSelection: setActiveTurnSelectionMock,
+    });
+
+    const nodeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-editor-nodes-circle',
+    )?.[2];
+    const edgeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-edges-layer',
+    )?.[2];
+
+    expect(nodeClickHandler).toBeDefined();
+    expect(edgeClickHandler).toBeDefined();
+
+    const sharedEvent: {
+      defaultPrevented: boolean;
+      originalEvent: { defaultPrevented: boolean };
+      preventDefault: ReturnType<typeof vi.fn>;
+      features: Array<{ properties: Record<string, string> }>;
+    } = {
+      defaultPrevented: false,
+      originalEvent: { defaultPrevented: false },
+      preventDefault: vi.fn(),
+      features: [{ properties: { nodeId: 'node-1' } }],
+    };
+
+    // Node click fires first
+    nodeClickHandler(sharedEvent);
+    expect(sharedEvent.originalEvent.defaultPrevented).toBe(true);
+    expect(setActiveTurnSelectionMock).toHaveBeenCalledTimes(1);
+
+    // Edge click fires subsequently with the same event
+    sharedEvent.features = [{ properties: { sourceId: 'node-1', targetId: 'node-2' } }];
+    edgeClickHandler(sharedEvent);
+
+    // Should NOT have called setActiveTurnSelection again
+    expect(setActiveTurnSelectionMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('toggles waypoint node when start and end are already selected', () => {
+    const setActiveTurnSelectionMock = vi.fn();
+    renderWithContext({
+      activeCrossingId: 'crossing-node-1',
+      activeTurnSelection: { fromNodeId: 'node-1', toNodeId: 'node-4', waypointNodeIds: [] },
+      setActiveTurnSelection: setActiveTurnSelectionMock,
+    });
+
+    const nodeClickHandler = onMock.mock.calls.find(
+      (c) => c[0] === 'click' && c[1] === 'crossing-editor-nodes-circle',
+    )?.[2];
+    expect(nodeClickHandler).toBeDefined();
+
+    nodeClickHandler({
+      preventDefault: vi.fn(),
+      originalEvent: { defaultPrevented: false },
+      features: [{ properties: { nodeId: 'node-3' } }],
+    });
+
+    expect(setActiveTurnSelectionMock).toHaveBeenCalled();
+    const updateFn = setActiveTurnSelectionMock.mock.calls[0]?.[0];
+    expect(updateFn).toBeDefined();
+    if (!updateFn) return;
+    const updated = updateFn({ fromNodeId: 'node-1', toNodeId: 'node-4', waypointNodeIds: [] });
+    expect(updated.waypointNodeIds).toEqual(['node-3']);
+
+    // Toggling again removes the waypoint
+    const toggledOff = updateFn({
+      fromNodeId: 'node-1',
+      toNodeId: 'node-4',
+      waypointNodeIds: ['node-3'],
+    });
+    expect(toggledOff.waypointNodeIds).toEqual([]);
   });
 });

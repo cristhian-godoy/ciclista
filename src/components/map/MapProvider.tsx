@@ -1,5 +1,5 @@
 import type * as maplibregl from 'maplibre-gl';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Coordinate } from '../../core/common/types';
 import type {
@@ -28,6 +28,7 @@ import {
   type ContextMenuData,
   CrossingEditorContext,
   type CrossingEditorContextType,
+  type EditSubMode,
   type LandmarkModalState,
   MapContext,
   type MapContextType,
@@ -104,6 +105,9 @@ export interface MapProviderProps {
   crossingTurns?: CrossingTurnOverride[];
   onSaveCrossingTurn?: (override: CrossingTurnOverride) => void;
   onDeleteCrossingTurn?: (id: string) => void;
+  editSubMode?: EditSubMode;
+  onEditSubModeChange?: (mode: EditSubMode) => void;
+  initialEditSubMode?: EditSubMode;
   children: React.ReactNode;
 }
 
@@ -173,6 +177,9 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   crossingTurns: controlledCrossingTurns,
   onSaveCrossingTurn: onSaveCrossingTurnProp,
   onDeleteCrossingTurn: onDeleteCrossingTurnProp,
+  editSubMode: controlledEditSubMode,
+  onEditSubModeChange,
+  initialEditSubMode,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -246,7 +253,7 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const isPlacingPlace = controlledIsPlacingPlace ?? internalIsPlacingPlace;
   const setIsPlacingPlace = onPlacingPlaceChange ?? setInternalIsPlacingPlace;
 
-  const [activeCrossingId, setActiveCrossingId] = useState<string | null>(null);
+  const [activeCrossingId, setActiveCrossingIdInternal] = useState<string | null>(null);
   const [activeTurnSelection, setActiveTurnSelection] = useState<{
     fromNodeId: string | null;
     toNodeId: string | null;
@@ -256,8 +263,45 @@ export const MapProvider: React.FC<MapProviderProps> = ({
     toNodeId: null,
     waypointNodeIds: [],
   });
+
+  const setActiveCrossingId = useCallback((action: React.SetStateAction<string | null>) => {
+    setActiveCrossingIdInternal((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      if (next !== prev) {
+        setActiveTurnSelection({
+          fromNodeId: null,
+          toNodeId: null,
+          waypointNodeIds: [],
+        });
+      }
+      return next;
+    });
+  }, []);
+
   const [internalCrossingTurns, setInternalCrossingTurns] = useState<CrossingTurnOverride[]>([]);
   const crossingTurns = controlledCrossingTurns ?? internalCrossingTurns;
+
+  const [internalEditSubMode, setInternalEditSubMode] = useState<EditSubMode>(
+    initialEditSubMode ?? 'paths',
+  );
+  const editSubMode = controlledEditSubMode ?? internalEditSubMode;
+  const setEditSubMode = onEditSubModeChange ?? setInternalEditSubMode;
+
+  const prevAppModeRef = useRef<ToolbarMode>(appMode);
+  useEffect(() => {
+    if (prevAppModeRef.current === 'edit' && appMode !== 'edit') {
+      setActiveCrossingIdInternal(null);
+      setActiveTurnSelection({
+        fromNodeId: null,
+        toNodeId: null,
+        waypointNodeIds: [],
+      });
+      setManagedClusterId(null);
+      setManagedNodeIds([]);
+      setEditSubMode('paths');
+    }
+    prevAppModeRef.current = appMode;
+  }, [appMode, setEditSubMode]);
 
   const handleSaveCrossingTurn = useCallback(
     (override: CrossingTurnOverride) => {
@@ -537,6 +581,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       crossingTurns,
       onSaveCrossingTurn: handleSaveCrossingTurn,
       onDeleteCrossingTurn: handleDeleteCrossingTurn,
+      editSubMode,
+      setEditSubMode,
     }),
     [
       activeCrossingId,
@@ -546,6 +592,8 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       crossingTurns,
       handleSaveCrossingTurn,
       handleDeleteCrossingTurn,
+      editSubMode,
+      setEditSubMode,
     ],
   );
 

@@ -3319,3 +3319,32 @@ h2 {
   color: var(--ciclista-color-text-secondary);
   margin-top: var(--ciclista-spacing-6);
 }
+
+.ciclista-crossing-submode-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.ciclista-crossing-signals-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-sm);
+  padding: var(--ciclista-spacing-12);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+}
+
+.ciclista-crossing-signals-prompt {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+  line-height: var(--ciclista-line-height-relaxed);
+  margin: 0;
+}
+
+.ciclista-crossing-signals-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-primary);
+}

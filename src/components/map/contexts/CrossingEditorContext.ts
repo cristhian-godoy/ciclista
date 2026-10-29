@@ -4,6 +4,11 @@ import { createContext, useContext } from 'react';
 import type { CrossingTurnOverride } from '../../../core/config';
 
 /**
+ * Sub-mode discriminator within Edit Mode toggling between micro-path routing and signal wait times.
+ */
+export type EditSubMode = 'paths' | 'signals';
+
+/**
  * Domain context type defining crossing edge and node selection and turn delays in Crossing Edit mode.
  */
 export interface CrossingEditorContextType {
@@ -24,6 +29,8 @@ export interface CrossingEditorContextType {
   crossingTurns?: CrossingTurnOverride[];
   onSaveCrossingTurn?: (override: CrossingTurnOverride) => void;
   onDeleteCrossingTurn?: (id: string) => void;
+  editSubMode?: EditSubMode;
+  setEditSubMode?: (mode: EditSubMode) => void;
 }
 
 /**
