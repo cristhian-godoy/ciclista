@@ -2,11 +2,13 @@ import * as maplibregl from 'maplibre-gl';
 import React, { useEffect, useRef } from 'react';
 
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
+import { useSettings } from '../../store/settingsStore';
 import { useMapContext } from './MapContext';
 
 /**
  * Component that manages the lifecycle and positioning of the draggable
  * start (origin), destination, and intermediate waypoint pin markers on the map canvas.
+ * Respects freezePinsOnEditMode setting and active mode to lock markers when appropriate.
  */
 export const StartEndMarkers: React.FC = () => {
   const {
@@ -21,8 +23,12 @@ export const StartEndMarkers: React.FC = () => {
     isNavigating,
     appMode,
   } = useMapContext();
+  const settings = useSettings();
 
-  const isDraggable = !isNavigating && (appMode === 'routing' || !appMode);
+  const isDraggable =
+    !isNavigating &&
+    (appMode === 'routing' || !appMode || (appMode === 'edit' && !settings.freezePinsOnEditMode));
+  const isFrozen = !isDraggable;
 
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -60,17 +66,25 @@ export const StartEndMarkers: React.FC = () => {
     };
   }, [map]);
 
-  // Synchronize draggable option and cursor style when mode or navigation status changes
+  // Synchronize draggable option and cursor style when mode, settings, or navigation status changes
   useEffect(() => {
     startMarkerRef.current?.setDraggable(isDraggable);
     endMarkerRef.current?.setDraggable(isDraggable);
     const startEl = startMarkerRef.current?.getElement?.();
     if (startEl) {
       startEl.style.cursor = isDraggable ? 'grab' : 'default';
+      startEl.title =
+        isFrozen && appMode === 'edit'
+          ? 'Origin pin (frozen in Edit mode)'
+          : 'Origin pin (draggable)';
     }
     const endEl = endMarkerRef.current?.getElement?.();
     if (endEl) {
       endEl.style.cursor = isDraggable ? 'grab' : 'default';
+      endEl.title =
+        isFrozen && appMode === 'edit'
+          ? 'Destination pin (frozen in Edit mode)'
+          : 'Destination pin (draggable)';
     }
     waypointMarkersRef.current.forEach((marker) => {
       marker.setDraggable(isDraggable);
@@ -79,7 +93,8 @@ export const StartEndMarkers: React.FC = () => {
         wpEl.style.cursor = isDraggable ? 'grab' : 'default';
       }
     });
-  }, [isDraggable]);
+  }, [isDraggable, isFrozen, appMode]);
+
   // Dynamically manage Start Marker
   useEffect(() => {
     if (!map) return;
@@ -101,6 +116,10 @@ export const StartEndMarkers: React.FC = () => {
         startEl.style.fontSize = '12px';
         startEl.style.fontFamily = 'inherit';
         startEl.textContent = 'A';
+        startEl.title =
+          isFrozen && appMode === 'edit'
+            ? 'Origin pin (frozen in Edit mode)'
+            : 'Origin pin (draggable)';
 
         const startMarker = new maplibregl.Marker({ element: startEl, draggable: isDraggable })
           .setLngLat([startCoord.lng, startCoord.lat])
@@ -128,7 +147,7 @@ export const StartEndMarkers: React.FC = () => {
         startMarkerRef.current = null;
       }
     }
-  }, [map, startCoord, setShouldFitBounds, isDraggable]);
+  }, [map, startCoord, setShouldFitBounds, isDraggable, isFrozen, appMode]);
 
   // Dynamically manage End Marker
   useEffect(() => {
@@ -151,6 +170,10 @@ export const StartEndMarkers: React.FC = () => {
         endEl.style.fontSize = '12px';
         endEl.style.fontFamily = 'inherit';
         endEl.textContent = 'B';
+        endEl.title =
+          isFrozen && appMode === 'edit'
+            ? 'Destination pin (frozen in Edit mode)'
+            : 'Destination pin (draggable)';
 
         const endMarker = new maplibregl.Marker({ element: endEl, draggable: isDraggable })
           .setLngLat([endCoord.lng, endCoord.lat])
@@ -178,7 +201,7 @@ export const StartEndMarkers: React.FC = () => {
         endMarkerRef.current = null;
       }
     }
-  }, [map, endCoord, setShouldFitBounds, isDraggable]);
+  }, [map, endCoord, setShouldFitBounds, isDraggable, isFrozen, appMode]);
 
   // Dynamically manage intermediate waypoint markers
   useEffect(() => {

@@ -1,7 +1,7 @@
-import { Compass, Navigation2, Play, Square } from 'lucide-react';
 import React from 'react';
 
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
+import { Compass, Navigation2, Play, Square } from './common/Icon';
 
 /**
  * Properties for the NavigationControlCard component.

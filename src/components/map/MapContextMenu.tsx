@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
+import { useSettings } from '../../store/settingsStore';
 import { Edit2, MapPin, Star, Trash2, ZoomIn } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
@@ -50,6 +51,11 @@ export const MapContextMenu: React.FC = () => {
     places,
     landmarks,
   } = useMapContext();
+  const settings = useSettings();
+
+  const isPinsFrozen = Boolean(
+    (appMode === 'edit' && settings.freezePinsOnEditMode) || isNavigating,
+  );
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -104,7 +110,9 @@ export const MapContextMenu: React.FC = () => {
 
   if (!map || !contextMenu.visible) return null;
 
-  const canRoute = !isNavigating && (appMode === 'routing' || !appMode);
+  const canRoute =
+    !isPinsFrozen &&
+    (appMode === 'routing' || !appMode || (appMode === 'edit' && !settings.freezePinsOnEditMode));
   const isSpecializedMode =
     appMode === 'edit' || appMode === 'events' || (appMode as string) === 'studio';
   const canManagePlaces = !isSpecializedMode;

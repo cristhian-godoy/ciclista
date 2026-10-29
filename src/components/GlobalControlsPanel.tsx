@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 
-import { isDataSaverActive, setDataSaverActive } from '../core/storage/dataUsage';
+import { setDataSaverActive } from '../core/storage/dataUsage';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
+import { settingsStore, useSettings } from '../store/settingsStore';
 import { Box, Moon, Palette, Sun, Wifi, WifiOff } from './common/Icon';
 
 /**
@@ -26,14 +27,15 @@ export const GlobalControlsPanel: React.FC<GlobalControlsPanelProps> = ({
   theme,
   onThemeChange,
 }) => {
-  const [dataSaver, setDataSaver] = useState(isDataSaverActive());
+  const settings = useSettings();
+  const dataSaver = settings.dataSaver;
   const [isThemeExpanded, setIsThemeExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const handleToggleDataSaver = () => {
     const nextVal = !dataSaver;
-    setDataSaver(nextVal);
     setDataSaverActive(nextVal);
+    settingsStore.updateSettings({ dataSaver: nextVal });
   };
 
   useOnClickOutside(panelRef, () => setIsThemeExpanded(false), isThemeExpanded, 'click');

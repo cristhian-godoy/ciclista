@@ -1,8 +1,9 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import * as maplibregl from 'maplibre-gl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Coordinate } from '../../core/common/types';
+import { settingsStore } from '../../store/settingsStore';
 import type { MapContextType } from './MapContext';
 import { MapContext } from './MapContext';
 import { StartEndMarkers } from './StartEndMarkers';
@@ -18,6 +19,7 @@ describe('StartEndMarkers Component', () => {
   const defaultEndCoord: Coordinate = { lat: 48.145, lng: 11.585 };
 
   beforeEach(() => {
+    settingsStore.resetSettings();
     onStartDragMock = vi.fn();
     onEndDragMock = vi.fn();
     onUpdateWaypointMock = vi.fn();
@@ -147,7 +149,8 @@ describe('StartEndMarkers Component', () => {
     });
   });
 
-  it('freezes markers with default cursor when in edit mode', () => {
+  it('freezes markers with default cursor and title when in edit mode with freezePinsOnEditMode enabled', () => {
+    settingsStore.updateSettings({ freezePinsOnEditMode: true });
     renderWithContext({ appMode: 'edit', isNavigating: false });
 
     const markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
@@ -155,22 +158,28 @@ describe('StartEndMarkers Component', () => {
 
     markerElements.forEach((el) => {
       expect((el as HTMLElement).style.cursor).toBe('default');
+      expect((el as HTMLElement).title).toContain('frozen in Edit mode');
     });
   });
 
-  it('freezes markers with default cursor when in events mode', () => {
+  it('unfreezes markers dynamically when freezePinsOnEditMode is disabled in settings', () => {
+    settingsStore.updateSettings({ freezePinsOnEditMode: true });
+    renderWithContext({ appMode: 'edit', isNavigating: false });
+
+    let markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
+    expect((markerElements[0] as HTMLElement).style.cursor).toBe('default');
+
+    act(() => {
+      settingsStore.updateSettings({ freezePinsOnEditMode: false });
+    });
+
+    markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
+    expect((markerElements[0] as HTMLElement).style.cursor).toBe('grab');
+    expect((markerElements[0] as HTMLElement).title).toBe('Origin pin (draggable)');
+  });
+
+  it('freezes markers with default cursor when in events or places mode', () => {
     renderWithContext({ appMode: 'events', isNavigating: false });
-
-    const markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
-    expect(markerElements.length).toBe(2);
-
-    markerElements.forEach((el) => {
-      expect((el as HTMLElement).style.cursor).toBe('default');
-    });
-  });
-
-  it('freezes markers with default cursor when in places mode', () => {
-    renderWithContext({ appMode: 'places', isNavigating: false });
 
     const markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
     expect(markerElements.length).toBe(2);
@@ -186,38 +195,6 @@ describe('StartEndMarkers Component', () => {
     const markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
     expect(markerElements.length).toBe(2);
 
-    markerElements.forEach((el) => {
-      expect((el as HTMLElement).style.cursor).toBe('default');
-    });
-  });
-
-  it('updates marker cursor dynamically when transitioning from routing mode to edit mode', () => {
-    const { rerender } = renderWithContext({ appMode: 'routing', isNavigating: false });
-
-    let markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
-    markerElements.forEach((el) => {
-      expect((el as HTMLElement).style.cursor).toBe('grab');
-    });
-
-    rerender(
-      <MapContext.Provider
-        value={
-          {
-            map: mockMap as maplibregl.Map,
-            startCoord: defaultStartCoord,
-            endCoord: defaultEndCoord,
-            waypoints: [],
-            appMode: 'edit',
-            isNavigating: false,
-            setShouldFitBounds: setShouldFitBoundsMock,
-          } as unknown as MapContextType
-        }
-      >
-        <StartEndMarkers />
-      </MapContext.Provider>,
-    );
-
-    markerElements = document.querySelectorAll('div[style*="border-radius: 50%"]');
     markerElements.forEach((el) => {
       expect((el as HTMLElement).style.cursor).toBe('default');
     });

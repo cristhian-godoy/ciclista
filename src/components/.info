@@ -72,6 +72,14 @@ RulesRows.tsx
 	Interactive form rows detailing custom rules and penalties.
 RulesSelectorFields.tsx
 	Dropdown controls for specific speed modifiers and base options.
+SearchEverywhereModal.test.tsx
+	Unit tests for IntelliJ-style Search All modal tabs, fuzzy search, action execution, and setting toggles.
+SearchEverywhereModal.tsx
+	IntelliJ-style Search Everywhere and Find Action dialog allowing rapid search across modes, actions, settings, and places.
+SettingsModal.test.tsx
+	Unit tests for IntelliJ-style split-view SettingsModal category filtering, local staging, apply/ok actions, and deep-linking.
+SettingsModal.tsx
+	IntelliJ-style centralized preferences modal dialog with searchable category sidebar, staging controls, and import/export.
 Sidebar.test.tsx
 	Integration tests checking sidebar synchronization with map states.
 Sidebar.tsx

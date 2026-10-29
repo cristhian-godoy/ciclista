@@ -10,6 +10,10 @@ dataUsage.test.ts
 	Unit tests for network and cache bandwidth tracking, connectivity detection, and data saver toggles.
 dataUsage.ts
 	Data usage tracking utility and cellular connectivity / data saver mode state manager.
+settingsStorage.test.ts
+	Unit tests for application settings persistence, JSON export/import, and legacy migration.
+settingsStorage.ts
+	Pure domain persistence adapter for application settings and configuration backup.
 storage.test.ts
 	Unit tests checking localStorage serialization, loading, and clear mock events.
 storage.ts

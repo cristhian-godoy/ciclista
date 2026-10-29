@@ -16,6 +16,8 @@ index.css
 	CSS import entry point.
 main.tsx
 	React document bootstrapper.
+store
+	Decoupled reactive stores and external store consumers.
 styles
 	Theme variables, widgets, and absolute layouts.
 test

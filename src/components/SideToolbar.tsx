@@ -1,6 +1,15 @@
 import React from 'react';
 
-import { FlaskConical, GitFork, Navigation, Route, ShieldAlert, Star } from './common/Icon';
+import {
+  FlaskConical,
+  GitFork,
+  Navigation,
+  Route,
+  Search,
+  Settings,
+  ShieldAlert,
+  Star,
+} from './common/Icon';
 
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
@@ -23,16 +32,26 @@ export interface SideToolbarProps {
    * Optional callback triggered when the test runner button is clicked.
    */
   onOpenTestRunner?: () => void;
+  /**
+   * Optional callback triggered when the central settings button is clicked.
+   */
+  onOpenSettings?: () => void;
+  /**
+   * Optional callback triggered when the Search All button is clicked.
+   */
+  onOpenSearchAll?: () => void;
 }
 
 /**
  * Non-floating left side toolbar docked against the left edge of the viewport.
- * Provides rapid switching between routing mode, places mode, events mode, edit mode, and the test suite.
+ * Provides rapid switching between routing mode, places mode, events mode, edit mode, search, settings, and the test suite.
  */
 export const SideToolbar: React.FC<SideToolbarProps> = ({
   mode,
   onModeChange,
   onOpenTestRunner,
+  onOpenSettings,
+  onOpenSearchAll,
 }) => {
   const handleTestRunnerClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (onOpenTestRunner) {
@@ -99,6 +118,19 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
       </nav>
 
       <div className="ciclista-toolbar-footer">
+        {onOpenSearchAll && (
+          <button
+            type="button"
+            className="ciclista-toolbar-btn ciclista-toolbar-btn--search"
+            aria-label="Search All"
+            title="Search All (⇧⇧ or Ctrl+K)"
+            onClick={onOpenSearchAll}
+            data-testid="toolbar-search-all-btn"
+          >
+            <Search size={20} className="ciclista-toolbar-icon" />
+          </button>
+        )}
+
         <a
           href="/test"
           className="ciclista-toolbar-btn ciclista-toolbar-btn--test"
@@ -108,6 +140,19 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
         >
           <FlaskConical size={20} className="ciclista-toolbar-icon" />
         </a>
+
+        {onOpenSettings && (
+          <button
+            type="button"
+            className="ciclista-toolbar-btn ciclista-toolbar-btn--settings"
+            aria-label="Settings"
+            title="Settings (Ctrl+,)"
+            onClick={onOpenSettings}
+            data-testid="toolbar-settings-btn"
+          >
+            <Settings size={20} className="ciclista-toolbar-icon" />
+          </button>
+        )}
       </div>
     </aside>
   );

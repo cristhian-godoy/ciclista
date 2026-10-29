@@ -1,0 +1,8 @@
+index.ts
+	Barrel exports for domain actions catalog and type definitions.
+registry.ts
+	Central registry catalog containing discrete user actions, availability checkers, and handlers.
+registry.test.ts
+	Unit tests for action registration, filtering, availability checks, and search capabilities.
+types.ts
+	Type interfaces for action metadata, execution contexts, availability checkers, and workflow modes.

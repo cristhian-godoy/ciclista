@@ -5,6 +5,7 @@ import { convertGraphToGeoJSONInWorker } from '../../core/graph/parser.client';
 import type { NodeEntry } from '../../core/graph/types';
 import { MAP_THEME_TOKENS } from '../../core/rendering/theme';
 import { type GeoJsonLayerSpec, useGeoJsonLayer } from '../../hooks/useGeoJsonLayer';
+import { useSettings } from '../../store/settingsStore';
 import { useMapContext } from './MapContext';
 
 type GeoJSONFeature =
@@ -41,6 +42,7 @@ export const StreetGraphLayer: React.FC = () => {
     managedNodeIds,
     isPlacingPlace,
   } = useMapContext();
+  const settings = useSettings();
 
   const isPlacingPlaceRef = useRef(isPlacingPlace);
   useEffect(() => {
@@ -53,13 +55,16 @@ export const StreetGraphLayer: React.FC = () => {
         id: 'network-streets-layer',
         type: 'line',
         source: 'network-streets',
+        layout: {
+          visibility: settings.showStreetGraph ? 'visible' : 'none',
+        },
         paint: {
           'line-color': 'rgba(99, 102, 241, 0.15)',
           'line-width': 1.5,
         },
       },
     ],
-    [],
+    [settings.showStreetGraph],
   );
 
   const trafficLayers = useMemo<GeoJsonLayerSpec[]>(
@@ -68,6 +73,9 @@ export const StreetGraphLayer: React.FC = () => {
         id: 'traffic-lights-cluster',
         type: 'circle',
         source: 'traffic-lights',
+        layout: {
+          visibility: settings.showTrafficSignals ? 'visible' : 'none',
+        },
         filter: ['==', ['get', 'type'], 'crossing'],
         paint: {
           'circle-color': [
@@ -142,6 +150,9 @@ export const StreetGraphLayer: React.FC = () => {
         id: 'traffic-lights-unclustered',
         type: 'circle',
         source: 'traffic-lights',
+        layout: {
+          visibility: settings.showTrafficSignals ? 'visible' : 'none',
+        },
         filter: ['==', ['get', 'type'], 'signal-hidden'],
         paint: {
           'circle-radius': [
@@ -174,7 +185,7 @@ export const StreetGraphLayer: React.FC = () => {
         },
       },
     ],
-    [],
+    [settings.showTrafficSignals],
   );
 
   useGeoJsonLayer({

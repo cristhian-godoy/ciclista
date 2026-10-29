@@ -5,11 +5,10 @@ import {
   clearDataUsage,
   getConnectionType,
   getDataUsage,
-  isCellularDownloadAllowed,
-  isDataSaverActive,
   setCellularDownloadAllowed,
   setDataSaverActive,
 } from '../core/storage/dataUsage';
+import { settingsStore, useSettings } from '../store/settingsStore';
 import { Database, HardDrive, Wifi, WifiOff } from './common/Icon';
 import { Select } from './common/Select';
 
@@ -18,10 +17,9 @@ import { Select } from './common/Select';
  * and configurable data saving policies using design-system controls.
  */
 export const DataSaverPanel: React.FC = () => {
+  const settings = useSettings();
   const [stats, setStats] = useState(getDataUsage());
   const [connType, setConnType] = useState(getConnectionType());
-  const [dataSaver, setDataSaver] = useState(isDataSaverActive());
-  const [allowCellular, setAllowCellular] = useState(isCellularDownloadAllowed());
   const [isOnline, setIsOnline] = useState<boolean>(() => {
     return typeof navigator !== 'undefined' ? navigator.onLine : true;
   });
@@ -65,18 +63,18 @@ export const DataSaverPanel: React.FC = () => {
   const cacheHitRatioPercent =
     totalProcessedBytes > 0 ? Math.round((stats.cacheBytes / totalProcessedBytes) * 100) : 0;
 
-  const currentPolicyMode = !dataSaver ? 'off' : 'always';
+  const currentPolicyMode = !settings.dataSaver ? 'off' : 'always';
 
   const handlePolicyChange = (mode: string) => {
     const active = mode === 'always';
-    setDataSaver(active);
     setDataSaverActive(active);
+    settingsStore.updateSettings({ dataSaver: active });
   };
 
   const handleCellularPolicyChange = (val: string) => {
     const allowed = val === 'allowed';
-    setAllowCellular(allowed);
     setCellularDownloadAllowed(allowed);
+    settingsStore.updateSettings({ allowCellularDownloads: allowed });
   };
 
   const executeClearCache = async () => {
@@ -180,7 +178,7 @@ export const DataSaverPanel: React.FC = () => {
 
         <Select
           label="Cellular Data Policy"
-          value={allowCellular ? 'allowed' : 'blocked'}
+          value={settings.allowCellularDownloads ? 'allowed' : 'blocked'}
           onChange={handleCellularPolicyChange}
           options={[
             { value: 'allowed', label: 'Allowed (Download on cellular)' },
