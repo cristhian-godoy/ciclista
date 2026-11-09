@@ -33,6 +33,8 @@ function getStatusBadgeVariant(status: 'Loaded' | 'Cached' | 'Pending'): BadgeVa
   }
 }
 
+const EMPTY_CHUNK_IDS: string[] = [];
+
 /**
  * Properties for the DebugPanel component.
  */
@@ -53,7 +55,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
   const routingCtx = useContext(RoutingStateContext);
 
   const graph = mapCtx?.graph ?? routingCtx?.graph ?? null;
-  const loadedChunkIds = mapCtx?.loadedChunkIds ?? routingCtx?.loadedChunkIds ?? [];
+  const loadedChunkIds = mapCtx?.loadedChunkIds ?? routingCtx?.loadedChunkIds ?? EMPTY_CHUNK_IDS;
   const onRefreshChunk = mapCtx?.onRefreshChunk ?? routingCtx?.onRefreshChunk;
   const debugSubModeFromCtx = mapCtx?.debugSubMode ?? routingCtx?.debugSubMode;
   const setDebugSubMode = mapCtx?.setDebugSubMode ?? routingCtx?.setDebugSubMode;
@@ -63,7 +65,10 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
       : routingCtx?.selectedDebugChunkId;
   const setSelectedDebugChunkId =
     mapCtx?.setSelectedDebugChunkId ?? routingCtx?.setSelectedDebugChunkId;
-  const routeVariants = mapCtx?.routeVariants ?? routingCtx?.routeVariants ?? [];
+  const routeVariants = useMemo(
+    () => mapCtx?.routeVariants ?? routingCtx?.routeVariants ?? [],
+    [mapCtx?.routeVariants, routingCtx?.routeVariants],
+  );
   const activeAlternativeLabel =
     mapCtx?.activeAlternativeLabel ?? routingCtx?.activeAlternativeLabel ?? 'standard';
   const map = mapCtx?.map ?? mapInstanceCtx?.map;
@@ -81,9 +86,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
 
   const [localSelectedChunkId, setLocalSelectedChunkId] = useState<string | null>(null);
   const activeSelectedChunkId =
-    selectedDebugChunkIdFromCtx !== undefined
-      ? selectedDebugChunkIdFromCtx
-      : localSelectedChunkId;
+    selectedDebugChunkIdFromCtx !== undefined ? selectedDebugChunkIdFromCtx : localSelectedChunkId;
 
   useEscapeKey(() => {
     if (activeSelectedChunkId) {

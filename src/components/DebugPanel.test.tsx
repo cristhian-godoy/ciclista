@@ -28,7 +28,13 @@ describe('DebugPanel', () => {
 
   const mockGraph: StreetGraph = {
     nodes: new Map([
-      ['n1', { node: { id: 'n1', lat: 48.13, lng: 11.58, tags: {} }, edges: [{ target: 'n2', distance: 50, tags: {} }] }],
+      [
+        'n1',
+        {
+          node: { id: 'n1', lat: 48.13, lng: 11.58, tags: {} },
+          edges: [{ target: 'n2', distance: 50, tags: {} }],
+        },
+      ],
       ['n2', { node: { id: 'n2', lat: 48.14, lng: 11.59, tags: {} }, edges: [] }],
     ]),
   };
@@ -44,7 +50,10 @@ describe('DebugPanel', () => {
     crossingCount: 0,
     roadTypeTotals: {},
     surfaceTotals: { paved: 500, gravel: 0, cobblestone: 0 },
-    coordinates: [[11.58, 48.13], [11.59, 48.14]],
+    coordinates: [
+      [11.58, 48.13],
+      [11.59, 48.14],
+    ],
     edges: [
       {
         name: 'Main Street',
@@ -145,7 +154,13 @@ describe('DebugPanel', () => {
       if (chunkId === '4813,1158') {
         return {
           nodes: new Map([
-            ['c1', { node: { id: 'c1', lat: 48.13, lng: 11.58, tags: {} }, edges: [{ target: 'c2', distance: 10, tags: {} }] }],
+            [
+              'c1',
+              {
+                node: { id: 'c1', lat: 48.13, lng: 11.58, tags: {} },
+                edges: [{ target: 'c2', distance: 10, tags: {} }],
+              },
+            ],
           ]),
         };
       }
