@@ -323,6 +323,27 @@ describe('MapContextMenu Component', () => {
     expect(screen.queryByRole('button', { name: /Add Place/i })).not.toBeInTheDocument();
   });
 
+  it('never displays Manage Traffic Lights button in routing mode even if crossingId is present', () => {
+    renderWithContext({
+      appMode: 'routing',
+      contextMenu: {
+        visible: true,
+        x: 100,
+        y: 100,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: 'crossing-123',
+        nodeIds: JSON.stringify(['node-1', 'node-2']),
+      },
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Manage Traffic Lights/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Start Route Here/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /End Route Here/i })).toBeInTheDocument();
+  });
+
   it('suppresses route buttons and place options in events mode', () => {
     const samplePlace: Landmark = {
       id: 'place-home',

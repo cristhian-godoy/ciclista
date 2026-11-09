@@ -266,4 +266,26 @@ describe('Sidebar Integration', () => {
     expect(screen.getByText('Select a Crossing')).toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
   });
+
+  it('renders mode-specific helper notes in sidebar-footer', () => {
+    // 1. Routing mode footer note
+    const { rerender } = render(<Sidebar {...defaultProps} appMode="routing" />);
+    expect(
+      screen.getByText('Drag green/red pins or right-click map to route.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Click red nodes to time stoplights.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Click junctions to configure turn paths or time stoplights.'),
+    ).not.toBeInTheDocument();
+
+    // 2. Edit mode footer note
+    rerender(<Sidebar {...defaultProps} appMode="edit" />);
+    expect(
+      screen.getByText('Click junctions to configure turn paths or time stoplights.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Drag green/red pins or right-click map to route.'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Click red nodes to time stoplights.')).not.toBeInTheDocument();
+  });
 });

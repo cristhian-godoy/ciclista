@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 // Mock MapLibre GL constructor to avoid WebGL errors in jsdom
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '' }));
 vi.mock('maplibre-gl', () => {
   function MockMap() {
     return {

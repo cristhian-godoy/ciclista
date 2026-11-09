@@ -254,6 +254,38 @@ describe('useMapInteractionController', () => {
     );
   });
 
+  it('does not query traffic light clusters on right-click in routing mode', () => {
+    (mockMap.queryRenderedFeatures as ReturnType<typeof vi.fn>).mockClear();
+
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'routing',
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleContextMenu({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.135, lng: 11.575 },
+      originalEvent: { preventDefault: vi.fn() },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(mockMap.queryRenderedFeatures).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ layers: ['traffic-lights-cluster'] }),
+    );
+    expect(setContextMenuMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visible: true,
+        crossingId: null,
+        nodeIds: null,
+      }),
+    );
+  });
+
   it('captures click during isPlacingStop mode to add a new intermediate waypoint', () => {
     const onAddWaypointMock = vi.fn();
     const setIsPlacingStopMock = vi.fn();

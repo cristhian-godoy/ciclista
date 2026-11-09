@@ -51,6 +51,8 @@ export const StreetGraphLayer: React.FC = () => {
     isPlacingPlaceRef.current = isPlacingPlace;
   }, [isPlacingPlace]);
 
+  const isTrafficSignalsVisible = settings.showTrafficSignals && (!appMode || appMode === 'edit');
+
   const streetLayers = useMemo<GeoJsonLayerSpec[]>(
     () => [
       {
@@ -76,7 +78,7 @@ export const StreetGraphLayer: React.FC = () => {
         type: 'circle',
         source: 'traffic-lights',
         layout: {
-          visibility: settings.showTrafficSignals ? 'visible' : 'none',
+          visibility: isTrafficSignalsVisible ? 'visible' : 'none',
         },
         filter: ['==', ['get', 'type'], 'crossing'],
         paint: {
@@ -153,7 +155,7 @@ export const StreetGraphLayer: React.FC = () => {
         type: 'circle',
         source: 'traffic-lights',
         layout: {
-          visibility: settings.showTrafficSignals ? 'visible' : 'none',
+          visibility: isTrafficSignalsVisible ? 'visible' : 'none',
         },
         filter: ['==', ['get', 'type'], 'signal-hidden'],
         paint: {
@@ -187,7 +189,7 @@ export const StreetGraphLayer: React.FC = () => {
         },
       },
     ],
-    [settings.showTrafficSignals],
+    [isTrafficSignalsVisible],
   );
 
   useGeoJsonLayer({
@@ -203,17 +205,34 @@ export const StreetGraphLayer: React.FC = () => {
     layers: trafficLayers,
   });
 
+  // Imperatively synchronize visibility of traffic signal layers when active mode or setting changes
+  useEffect(() => {
+    if (!map) return;
+    const visibility = isTrafficSignalsVisible ? 'visible' : 'none';
+    if (map.getLayer('traffic-lights-cluster') && typeof map.setLayoutProperty === 'function') {
+      map.setLayoutProperty('traffic-lights-cluster', 'visibility', visibility);
+    }
+    if (map.getLayer('traffic-lights-unclustered') && typeof map.setLayoutProperty === 'function') {
+      map.setLayoutProperty('traffic-lights-unclustered', 'visibility', visibility);
+    }
+  }, [map, isTrafficSignalsVisible]);
+
   // Pointer cursor on hovering traffic signals
   useEffect(() => {
     if (!map) return;
+    const canHover = !appMode || appMode === 'edit';
     const setPointerCursor = () => {
-      if (isPlacingPlaceRef.current) return;
+      if (isPlacingPlaceRef.current || !canHover) return;
       map.getCanvas().style.cursor = 'pointer';
     };
     const resetCursor = () => {
       if (isPlacingPlaceRef.current) return;
       map.getCanvas().style.cursor = '';
     };
+
+    if (!canHover && map.getCanvas()?.style?.cursor === 'pointer') {
+      map.getCanvas().style.cursor = '';
+    }
 
     map.on('mouseenter', 'traffic-lights-unclustered', setPointerCursor);
     map.on('mouseleave', 'traffic-lights-unclustered', resetCursor);
@@ -226,7 +245,7 @@ export const StreetGraphLayer: React.FC = () => {
       map.off('mouseenter', 'traffic-lights-cluster', setPointerCursor);
       map.off('mouseleave', 'traffic-lights-cluster', resetCursor);
     };
-  }, [map]);
+  }, [map, appMode]);
 
   const accumulatedStreetsRef = useRef<Map<string, GeoJSONFeature>>(new Map());
   const processedNodeIdsRef = useRef<Set<string>>(new Set());

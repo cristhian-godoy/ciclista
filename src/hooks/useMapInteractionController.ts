@@ -692,9 +692,12 @@ export function useMapInteractionController(
       }
     }
 
-    const features = currentMap.queryRenderedFeatures(e.point, {
-      layers: ['traffic-lights-cluster'],
-    });
+    const canQueryCrossing = !appModeRef.current || appModeRef.current === 'edit';
+    const features = canQueryCrossing
+      ? currentMap.queryRenderedFeatures(e.point, {
+          layers: ['traffic-lights-cluster'],
+        })
+      : [];
     const firstFeature = features[0];
     const crossingId = firstFeature?.properties
       ? (firstFeature.properties.crossingId as string)

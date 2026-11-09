@@ -42,6 +42,8 @@ StartEndMarkers.test.tsx
 	Unit tests for draggable start, destination, and intermediate waypoint markers and mode-aware drag freezing.
 StartEndMarkers.tsx
 	Draggable marker pins for navigation origin, destination, and intermediate waypoints with mode-aware drag freezing.
+StreetGraphLayer.test.tsx
+	Unit tests for street graph and traffic signal layer visibility and cursor interaction across app modes.
 StreetGraphLayer.tsx
 	Layer rendering GeoJSON streets network and clustered traffic signals.
 useMapInstance.ts

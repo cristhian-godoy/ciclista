@@ -525,11 +525,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="sidebar-footer">
           {currentAppMode === 'events' || (currentAppMode as string) === 'studio' ? (
             <p>Click or drag brush on roads to select and configure blockages.</p>
+          ) : currentAppMode === 'edit' ? (
+            <p>Click junctions to configure turn paths or time stoplights.</p>
           ) : (
-            <>
-              <p>Drag green/red pins or right-click map to route.</p>
-              <p className="sidebar-footer-note">Click red nodes to time stoplights.</p>
-            </>
+            <p>Drag green/red pins or right-click map to route.</p>
           )}
         </div>
       </aside>

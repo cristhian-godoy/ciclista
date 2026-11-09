@@ -116,7 +116,7 @@ export const MapContextMenu: React.FC = () => {
   const isSpecializedMode =
     appMode === 'edit' || appMode === 'events' || (appMode as string) === 'studio';
   const canManagePlaces = !isSpecializedMode;
-  const canManageCrossing = contextMenu.crossingId !== null;
+  const canManageCrossing = contextMenu.crossingId !== null && (!appMode || appMode === 'edit');
 
   const currentPlaces = places ?? landmarks ?? [];
   const targetPlace = contextMenu.placeId

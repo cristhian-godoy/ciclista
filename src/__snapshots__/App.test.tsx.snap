@@ -1106,11 +1106,6 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       <p>
         Drag green/red pins or right-click map to route.
       </p>
-      <p
-        class="sidebar-footer-note"
-      >
-        Click red nodes to time stoplights.
-      </p>
     </div>
   </aside>
   <button

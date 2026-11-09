@@ -410,13 +410,14 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       setManagedClusterId(null);
       setManagedNodeIds([]);
       setEditSubMode('paths');
+      onNodeSelect?.(null);
     }
     if (prevAppModeRef.current === 'debug' && appMode !== 'debug') {
       setSelectedDebugChunkId(null);
       setDebugSubMode('chunks');
     }
     prevAppModeRef.current = appMode;
-  }, [appMode, setEditSubMode, setSelectedDebugChunkId, setDebugSubMode]);
+  }, [appMode, setEditSubMode, setSelectedDebugChunkId, setDebugSubMode, onNodeSelect]);
 
   const handleSaveCrossingTurn = useCallback(
     (override: CrossingTurnOverride) => {

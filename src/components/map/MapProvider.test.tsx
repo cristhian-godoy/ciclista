@@ -208,15 +208,16 @@ describe('MapProvider Mode Transition Lifecycle & Crossing State Teardown', () =
     });
   });
 
-  it('automatically tears down activeCrossingId, activeTurnSelection, and managedClusterId when leaving edit mode', () => {
+  it('automatically tears down activeCrossingId, activeTurnSelection, and managedClusterId and closes NodePopup when leaving edit mode', () => {
     let setModeExternally: (mode: ToolbarMode) => void = () => {};
+    const onNodeSelectMock = vi.fn();
 
     const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const [currentMode, setCurrentMode] = useState<ToolbarMode>('edit');
       setModeExternally = setCurrentMode;
 
       return (
-        <MapProvider {...baseProps} appMode={currentMode}>
+        <MapProvider {...baseProps} onNodeSelect={onNodeSelectMock} appMode={currentMode}>
           {children}
         </MapProvider>
       );
@@ -261,6 +262,7 @@ describe('MapProvider Mode Transition Lifecycle & Crossing State Teardown', () =
     expect(result.current.routing.managedClusterId).toBeNull();
     expect(result.current.routing.managedNodeIds).toEqual([]);
     expect(result.current.crossing.editSubMode).toBe('paths');
+    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
   });
 
   it('automatically tears down debugSubMode and selectedDebugChunkId when leaving debug mode', () => {
