@@ -1,4 +1,6 @@
 export const API_CONFIG = {
+  // IMPORTANT: Any mirror origin added here must also be added to the
+  // Content-Security-Policy `connect-src` directive in `index.html`.
   OVERPASS_MIRRORS: [
     'https://overpass-api.de/api/interpreter',
     'https://lz4.overpass-api.de/api/interpreter',

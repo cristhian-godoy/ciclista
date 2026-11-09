@@ -6,6 +6,8 @@ import * as path from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
+import { API_CONFIG } from '../core/common/constants';
+
 /**
  * File discovery options for scanning directory trees.
  */
@@ -310,6 +312,20 @@ describe('Architectural Invariants', () => {
       } catch {
         // Pass gracefully in environments without a git working tree
       }
+    });
+
+    it('ensures every Overpass mirror origin in API_CONFIG.OVERPASS_MIRRORS is permitted by index.html CSP connect-src', () => {
+      const indexHtmlPath = path.join(projectRoot, 'index.html');
+      const indexHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
+      const connectSrcMatch = indexHtml.match(/connect-src\s+'self'\s+([^;"]+)/);
+      expect(connectSrcMatch).not.toBeNull();
+      const connectSrcDirective = connectSrcMatch?.[1] ?? '';
+
+      const missingOrigins = API_CONFIG.OVERPASS_MIRRORS.map((url) => new URL(url).origin).filter(
+        (origin) => !connectSrcDirective.includes(origin),
+      );
+
+      expect(missingOrigins).toEqual([]);
     });
   });
 });
