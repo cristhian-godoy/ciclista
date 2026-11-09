@@ -98,27 +98,6 @@ describe('RouteStatsPanel', () => {
     expect(handleStrategyChange).toHaveBeenCalledWith('avoid-stops');
   });
 
-  it('reveals and collapses debug edges section when clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <RouteStatsPanel
-        routeVariants={mockAlternatives}
-        routingStrategy="standard"
-        onStrategyChange={vi.fn()}
-        routeResult={mockRouteResult}
-        isNavigating={false}
-      />,
-    );
-
-    expect(screen.queryByText('1. Main Street')).not.toBeInTheDocument();
-
-    const debugHeader = screen.getByText(/Debug Route Edges/i);
-    await user.click(debugHeader);
-
-    expect(screen.getByText('1. Main Street')).toBeInTheDocument();
-    expect(screen.getByText('2. Side Street')).toBeInTheDocument();
-  });
-
   it('does not trigger onStrategyChange when clicking strategies while navigating', async () => {
     const user = userEvent.setup();
     const handleStrategyChange = vi.fn();

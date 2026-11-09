@@ -253,8 +253,14 @@ describe('Sidebar Integration', () => {
     unmountStudio();
 
     // 4. Edit mode
-    render(<Sidebar {...defaultProps} appMode="edit" />);
+    const { unmount: unmountEdit } = render(<Sidebar {...defaultProps} appMode="edit" />);
     expect(screen.getByRole('heading', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
+    unmountEdit();
+
+    // 5. Debug mode
+    render(<Sidebar {...defaultProps} appMode="debug" />);
+    expect(screen.getByRole('heading', { name: 'Debug' })).toBeInTheDocument();
     expect(screen.queryByText('Ciclista')).not.toBeInTheDocument();
   });
 
@@ -287,5 +293,17 @@ describe('Sidebar Integration', () => {
       screen.queryByText('Drag green/red pins or right-click map to route.'),
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Click red nodes to time stoplights.')).not.toBeInTheDocument();
+  });
+
+  it('renders DebugPanel and debug footer note when in debug mode', () => {
+    render(<Sidebar {...defaultProps} appMode="debug" />);
+
+    expect(screen.getByRole('heading', { name: 'Debug' })).toBeInTheDocument();
+    expect(screen.getByText('Cached Chunks')).toBeInTheDocument();
+    expect(screen.getByText('Route Edges')).toBeInTheDocument();
+    expect(
+      screen.getByText('Inspect cached network chunks or route edge costs.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
   });
 });

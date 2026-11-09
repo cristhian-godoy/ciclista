@@ -13,6 +13,7 @@ import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
 import {
+  Bug,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,7 @@ import {
   Star,
 } from './common/Icon';
 import { CrossingEditPanel } from './CrossingEditPanel';
+import { DebugPanel } from './DebugPanel';
 import { EventsPanel } from './EventsPanel';
 import { InspectorPanel } from './InspectorPanel';
 import {
@@ -411,6 +413,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Star size={20} className="sidebar-header-icon" />
               <h2>Places</h2>
             </>
+          ) : currentAppMode === 'debug' ? (
+            <>
+              <Bug size={20} className="sidebar-header-icon" />
+              <h2>Debug</h2>
+            </>
           ) : (
             <>
               <Route size={20} className="sidebar-header-icon" />
@@ -446,6 +453,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               isPlacingPlace={isPlacingPlace}
               onPlacingPlaceChange={onPlacingPlaceChange}
             />
+          ) : currentAppMode === 'debug' ? (
+            <DebugPanel routeResult={routeResult} />
           ) : (
             <>
               {/* Section 1 & 2b: Routing configuration inputs */}
@@ -527,6 +536,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <p>Click or drag brush on roads to select and configure blockages.</p>
           ) : currentAppMode === 'edit' ? (
             <p>Click junctions to configure turn paths or time stoplights.</p>
+          ) : currentAppMode === 'debug' ? (
+            <p>Inspect cached network chunks or route edge costs.</p>
           ) : (
             <p>Drag green/red pins or right-click map to route.</p>
           )}

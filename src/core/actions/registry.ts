@@ -106,6 +106,22 @@ export const ACTIONS: ActionDefinition[] = [
       ctx.setAppMode('edit');
     },
   }),
+  makeAction({
+    id: 'mode.debug',
+    title: 'Switch to Debug Mode',
+    category: 'Modes',
+    description: 'Inspect cached network chunks and route edge costs',
+    shortcut: '5',
+    keywords: ['debug', 'chunks', 'cache', 'edges', 'mode'],
+    icon: 'Bug',
+    checkAvailability: (ctx) => ({
+      available: ctx.appMode !== 'debug',
+      reason: ctx.appMode === 'debug' ? 'Already in Debug Mode' : undefined,
+    }),
+    perform: (ctx) => {
+      ctx.setAppMode('debug');
+    },
+  }),
 
   // ─── Routing Actions ─────────────────────────────────────────────────────────
   makeAction({

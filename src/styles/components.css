@@ -4005,6 +4005,12 @@ h2 {
   flex-direction: column;
 }
 
+.ciclista-debug-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
 .ciclista-crossing-signals-summary {
   display: flex;
   flex-direction: column;

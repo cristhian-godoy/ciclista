@@ -6,7 +6,7 @@ import type { CameraMode } from '../navigation/types';
 /**
  * Supported workflow and view modes.
  */
-export type AppMode = 'routing' | 'places' | 'events' | 'edit' | 'studio' | 'landmarks';
+export type AppMode = 'routing' | 'places' | 'events' | 'edit' | 'debug' | 'studio' | 'landmarks';
 
 /**
  * Result returned by an action availability checker.

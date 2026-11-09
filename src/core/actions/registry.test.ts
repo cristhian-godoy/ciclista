@@ -90,6 +90,21 @@ describe('actions registry', () => {
     expect(avail?.reason).toContain('Calculate a route');
   });
 
+  it('executes mode.debug action and sets app mode', () => {
+    const ctx = createMockActionContext();
+    const debugAction = getActionById('mode.debug');
+    expect(debugAction).toBeDefined();
+    expect(debugAction?.isAvailable(ctx)).toBe(true);
+
+    debugAction?.perform(ctx);
+    expect(ctx.setAppMode).toHaveBeenCalledWith('debug');
+
+    ctx.appMode = 'debug';
+    const avail = debugAction?.checkAvailability(ctx);
+    expect(avail?.available).toBe(false);
+    expect(avail?.reason).toBe('Already in Debug Mode');
+  });
+
   it('allows building custom actions with makeAction', () => {
     const custom = makeAction({
       id: 'custom.test',

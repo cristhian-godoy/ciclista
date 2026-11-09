@@ -12,6 +12,10 @@ DataSaverPanel.tsx
 	Panel displaying network data transfer statistics, cache usage, offline state, and configurable data saving policies.
 DataSaverPanel.test.tsx
 	Unit tests for DataSaverPanel cache metrics, offline indicators, and Select policy updates.
+DebugPanel.test.tsx
+	Unit tests for debug panel cached chunk list, selection, escape clearing, refresh actions, and route edge diagnostics.
+DebugPanel.tsx
+	Sidebar panel inspecting cached network chunks, single-chunk refresh, and route edge diagnostics.
 EventsPanel.test.tsx
 	Unit tests for EventsPanel selection, effect gating, and event list interactions.
 EventsPanel.tsx
