@@ -3,9 +3,9 @@ BlockedEdgesLayer.test.tsx
 BlockedEdgesLayer.tsx
 	MapLibre layer rendering warning barricade dashed LineStrings for active road blockages.
 DebugChunksLayer.test.tsx
-	Unit tests verifying debug chunk boundary layer rendering, mode isolation, and aggregation.
+	Unit tests verifying debug chunk boundary layer rendering, chunk registry lifecycle state styling, mode isolation, and aggregation.
 DebugChunksLayer.tsx
-	MapLibre layer rendering cached chunk bounding polygons and node counter labels in debug mode.
+	MapLibre layer rendering chunk registry lifecycle states, bounding polygons, and node counter labels in debug mode.
 BrushCircleLayer.test.tsx
 	Unit tests for dynamic radius brush cursor circle overlay and MapLibre event synchronization.
 BrushCircleLayer.tsx

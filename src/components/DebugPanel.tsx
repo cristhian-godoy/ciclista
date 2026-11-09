@@ -1,9 +1,14 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { OSMNetworkQueue } from '../core/api/OSMNetworkQueue';
 import { coordToChunkId, getChunkBBox } from '../core/common/geo';
 import type { RouteResult } from '../core/router/types';
-import { getInMemoryChunkGraph, getInMemoryChunkIds } from '../core/storage/chunkCache';
+import {
+  getInMemoryChunkGraph,
+  getInMemoryChunkIds,
+  syncCachedChunksToRegistry,
+} from '../core/storage/chunkCache';
+import { type ChunkLifecycleState, chunkRegistry } from '../core/storage/chunkRegistry';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Badge, type BadgeVariant } from './common/Badge';
 import { EmptyState } from './common/EmptyState';
@@ -17,19 +22,54 @@ import {
 } from './map/MapContext';
 
 /**
+ * Display label for chunk lifecycle states in the debug UI.
+ */
+export type ChunkDisplayStatus =
+  'Loaded' | 'Cached' | 'Fetching' | 'Pending' | 'Uncached' | 'Error';
+
+/**
  * Maps chunk cache status to badge visual variant.
  *
  * @param status - State of network chunk in memory or queue.
  * @returns Compatible Badge component variant.
  */
-function getStatusBadgeVariant(status: 'Loaded' | 'Cached' | 'Pending'): BadgeVariant {
+function getStatusBadgeVariant(status: ChunkDisplayStatus): BadgeVariant {
   switch (status) {
     case 'Loaded':
       return 'pass';
     case 'Cached':
       return 'subtle';
+    case 'Fetching':
+      return 'active';
     case 'Pending':
       return 'idle';
+    case 'Uncached':
+      return 'default';
+    case 'Error':
+      return 'banned';
+  }
+}
+
+/**
+ * Converts a raw lifecycle state to the display badge status label.
+ *
+ * @param state - Core domain ChunkLifecycleState.
+ * @returns Formatted ChunkDisplayStatus label.
+ */
+function formatStatus(state: ChunkLifecycleState): ChunkDisplayStatus {
+  switch (state) {
+    case 'loaded':
+      return 'Loaded';
+    case 'cached':
+      return 'Cached';
+    case 'fetching':
+      return 'Fetching';
+    case 'pending':
+      return 'Pending';
+    case 'uncached':
+      return 'Uncached';
+    case 'error':
+      return 'Error';
   }
 }
 
@@ -72,6 +112,27 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
   const activeAlternativeLabel =
     mapCtx?.activeAlternativeLabel ?? routingCtx?.activeAlternativeLabel ?? 'standard';
   const map = mapCtx?.map ?? mapInstanceCtx?.map;
+
+  const registryChunks = useSyncExternalStore(
+    (cb) => chunkRegistry.subscribe(cb),
+    () => chunkRegistry.getSnapshot(),
+  );
+
+  useEffect(() => {
+    void syncCachedChunksToRegistry();
+    if (map && typeof map.getBounds === 'function') {
+      const b = map.getBounds();
+      if (
+        b &&
+        typeof b.getSouth === 'function' &&
+        typeof b.getWest === 'function' &&
+        typeof b.getNorth === 'function' &&
+        typeof b.getEast === 'function'
+      ) {
+        chunkRegistry.registerViewport([b.getSouth(), b.getWest(), b.getNorth(), b.getEast()]);
+      }
+    }
+  }, [map]);
 
   const [localSubMode, setLocalSubMode] = useState<DebugSubMode>('chunks');
   const activeSubMode = debugSubModeFromCtx ?? localSubMode;
@@ -150,15 +211,67 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
   };
 
   const chunkItems = useMemo(() => {
-    const pendingSet = new Set(OSMNetworkQueue.getPendingChunkIds());
-    const loadedSet = new Set(loadedChunkIds);
-    const inMemoryIds = getInMemoryChunkIds();
+    const chunkMap = new Map<
+      string,
+      {
+        status: ChunkDisplayStatus;
+        nodeCount?: number;
+        edgeCount?: number;
+      }
+    >();
 
-    const allChunkIds = Array.from(
-      new Set([...loadedChunkIds, ...inMemoryIds, ...OSMNetworkQueue.getPendingChunkIds()]),
-    ).sort();
+    for (const record of registryChunks) {
+      chunkMap.set(record.chunkId, {
+        status: formatStatus(record.state),
+        nodeCount: record.nodeCount,
+        edgeCount: record.edgeCount,
+      });
+    }
+
+    for (const id of getInMemoryChunkIds()) {
+      if (!id) continue;
+      const existing = chunkMap.get(id);
+      if (!existing) {
+        chunkMap.set(id, { status: 'Cached' });
+      } else if (existing.status === 'Uncached') {
+        existing.status = 'Cached';
+      }
+    }
+
+    for (const id of OSMNetworkQueue.getPendingChunkIds()) {
+      if (!id) continue;
+      const existing = chunkMap.get(id);
+      if (!existing) {
+        chunkMap.set(id, { status: 'Pending' });
+      } else if (existing.status === 'Uncached' || existing.status === 'Cached') {
+        existing.status = 'Pending';
+      }
+    }
+
+    for (const id of OSMNetworkQueue.getFetchingChunkIds()) {
+      if (!id) continue;
+      const existing = chunkMap.get(id);
+      if (!existing) {
+        chunkMap.set(id, { status: 'Fetching' });
+      } else if (existing.status !== 'Loaded') {
+        existing.status = 'Fetching';
+      }
+    }
+
+    for (const id of loadedChunkIds) {
+      if (!id) continue;
+      const existing = chunkMap.get(id);
+      if (!existing) {
+        chunkMap.set(id, { status: 'Loaded' });
+      } else {
+        existing.status = 'Loaded';
+      }
+    }
+
+    const allChunkIds = Array.from(chunkMap.keys()).sort();
 
     return allChunkIds.map((chunkId) => {
+      const info = chunkMap.get(chunkId)!;
       let nodeCount = 0;
       let edgeCount = 0;
 
@@ -168,6 +281,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
         for (const entry of inMemoryGraph.nodes.values()) {
           edgeCount += entry.edges.length;
         }
+      } else if (info.nodeCount && info.nodeCount > 0) {
+        nodeCount = info.nodeCount;
+        edgeCount = info.edgeCount ?? 0;
       } else if (graph) {
         for (const entry of graph.nodes.values()) {
           if (coordToChunkId(entry.node.lat, entry.node.lng) === chunkId) {
@@ -175,25 +291,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ routeResult }) => {
             edgeCount += entry.edges.length;
           }
         }
-      }
-
-      let status: 'Pending' | 'Loaded' | 'Cached';
-      if (pendingSet.has(chunkId)) {
-        status = 'Pending';
-      } else if (loadedSet.has(chunkId)) {
-        status = 'Loaded';
       } else {
-        status = 'Cached';
+        nodeCount = info.nodeCount ?? 0;
+        edgeCount = info.edgeCount ?? 0;
       }
 
       return {
         chunkId,
         nodeCount,
         edgeCount,
-        status,
+        status: info.status,
       };
     });
-  }, [loadedChunkIds, graph]);
+  }, [registryChunks, loadedChunkIds, graph]);
 
   return (
     <div className="ciclista-debug-panel">

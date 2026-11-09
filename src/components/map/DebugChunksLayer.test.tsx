@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OSMNetworkQueue } from '../../core/api/OSMNetworkQueue';
 import type { StreetGraph } from '../../core/graph/types';
 import * as chunkCacheModule from '../../core/storage/chunkCache';
+import { chunkRegistry } from '../../core/storage/chunkRegistry';
 import { DebugChunksLayer } from './DebugChunksLayer';
 import type { MapContextType } from './MapContext';
 import { MapContext } from './MapContext';
@@ -51,6 +52,8 @@ describe('DebugChunksLayer', () => {
     vi.spyOn(chunkCacheModule, 'getInMemoryChunkIds').mockReturnValue([]);
     vi.spyOn(chunkCacheModule, 'getInMemoryChunkGraph').mockReturnValue(undefined);
     vi.spyOn(OSMNetworkQueue, 'getPendingChunkIds').mockReturnValue([]);
+    vi.spyOn(OSMNetworkQueue, 'getFetchingChunkIds').mockReturnValue([]);
+    chunkRegistry.reset();
   });
 
   const renderWithContext = (contextOverrides: Partial<MapContextType> = {}) => {
@@ -182,14 +185,87 @@ describe('DebugChunksLayer', () => {
             properties: expect.objectContaining({
               chunkId: '4813,1157',
               selected: true,
+              state: 'loaded',
               nodeCount: 1,
-              label: '4813,1157\n1 nodes',
+              label: '4813,1157\nLOADED · 1 nodes',
             }),
             geometry: expect.objectContaining({
               type: 'Polygon',
             }),
           }),
         ]),
+      }),
+    );
+  });
+
+  it('renders features for chunks registered in chunkRegistry across various lifecycle states', () => {
+    chunkRegistry.setChunkState('1000,1000', 'cached', { nodeCount: 5 });
+    chunkRegistry.setChunkState('1000,1001', 'uncached', { nodeCount: 0 });
+    chunkRegistry.setChunkState('1000,1002', 'fetching', { nodeCount: 12 });
+    chunkRegistry.setChunkState('1000,1003', 'pending', { nodeCount: 3 });
+    chunkRegistry.setChunkState('1000,1004', 'loaded', { nodeCount: 20 });
+    chunkRegistry.setChunkState('1000,1005', 'error', { nodeCount: 0 });
+
+    renderWithContext({
+      appMode: 'debug',
+      debugSubMode: 'chunks',
+      loadedChunkIds: [],
+    });
+
+    const callArgs = mockSource.setData.mock.calls[0];
+    const sourceData = callArgs?.[0] as GeoJSON.FeatureCollection;
+    expect(sourceData.features).toHaveLength(6);
+
+    const featureMap = new Map(
+      sourceData.features.map((f) => [f.properties?.chunkId, f.properties]),
+    );
+
+    expect(featureMap.get('1000,1000')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1000',
+        state: 'cached',
+        nodeCount: 5,
+        label: '1000,1000\nCACHED · 5 nodes',
+      }),
+    );
+    expect(featureMap.get('1000,1001')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1001',
+        state: 'uncached',
+        nodeCount: 0,
+        label: '1000,1001\nUNCACHED · 0 nodes',
+      }),
+    );
+    expect(featureMap.get('1000,1002')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1002',
+        state: 'fetching',
+        nodeCount: 12,
+        label: '1000,1002\nFETCHING · 12 nodes',
+      }),
+    );
+    expect(featureMap.get('1000,1003')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1003',
+        state: 'pending',
+        nodeCount: 3,
+        label: '1000,1003\nPENDING · 3 nodes',
+      }),
+    );
+    expect(featureMap.get('1000,1004')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1004',
+        state: 'loaded',
+        nodeCount: 20,
+        label: '1000,1004\nLOADED · 20 nodes',
+      }),
+    );
+    expect(featureMap.get('1000,1005')).toEqual(
+      expect.objectContaining({
+        chunkId: '1000,1005',
+        state: 'error',
+        nodeCount: 0,
+        label: '1000,1005\nERROR · 0 nodes',
       }),
     );
   });

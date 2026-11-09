@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,18 +6,21 @@ import { OSMNetworkQueue } from '../core/api/OSMNetworkQueue';
 import type { StreetGraph } from '../core/graph/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import * as chunkCache from '../core/storage/chunkCache';
+import { chunkRegistry } from '../core/storage/chunkRegistry';
 import { DebugPanel } from './DebugPanel';
 import { MapContext, type MapContextType } from './map/MapContext';
 
 vi.mock('../core/api/OSMNetworkQueue', () => ({
   OSMNetworkQueue: {
     getPendingChunkIds: vi.fn(),
+    getFetchingChunkIds: vi.fn(),
   },
 }));
 
 vi.mock('../core/storage/chunkCache', () => ({
   getInMemoryChunkIds: vi.fn(),
   getInMemoryChunkGraph: vi.fn(),
+  syncCachedChunksToRegistry: vi.fn().mockResolvedValue([]),
 }));
 
 describe('DebugPanel', () => {
@@ -126,7 +129,9 @@ describe('DebugPanel', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    chunkRegistry.reset();
     vi.mocked(OSMNetworkQueue.getPendingChunkIds).mockReturnValue([]);
+    vi.mocked(OSMNetworkQueue.getFetchingChunkIds).mockReturnValue([]);
     vi.mocked(chunkCache.getInMemoryChunkIds).mockReturnValue([]);
     vi.mocked(chunkCache.getInMemoryChunkGraph).mockReturnValue(undefined);
   });
@@ -312,5 +317,88 @@ describe('DebugPanel', () => {
     await waitFor(() => {
       expect(screen.getByText('Copied!')).toBeInTheDocument();
     });
+  });
+
+  it('renders chunks registered in chunkRegistry with Fetching, Cached, and Uncached badges', () => {
+    chunkRegistry.setChunkState('4810,1150', 'fetching', { nodeCount: 10, edgeCount: 15 });
+    chunkRegistry.setChunkState('4810,1151', 'cached', { nodeCount: 20, edgeCount: 25 });
+    chunkRegistry.setChunkState('4810,1152', 'uncached', { nodeCount: 0, edgeCount: 0 });
+
+    const ctx = createMockMapContext({
+      loadedChunkIds: [],
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <DebugPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByText('3 chunks')).toBeInTheDocument();
+
+    expect(screen.getByText('Chunk 4810,1150')).toBeInTheDocument();
+    expect(screen.getByText('10 nodes · 15 edges')).toBeInTheDocument();
+    expect(screen.getByText('Fetching')).toBeInTheDocument();
+
+    expect(screen.getByText('Chunk 4810,1151')).toBeInTheDocument();
+    expect(screen.getByText('20 nodes · 25 edges')).toBeInTheDocument();
+    expect(screen.getByText('Cached')).toBeInTheDocument();
+
+    expect(screen.getByText('Chunk 4810,1152')).toBeInTheDocument();
+    expect(screen.getByText('0 nodes · 0 edges')).toBeInTheDocument();
+    expect(screen.getByText('Uncached')).toBeInTheDocument();
+  });
+
+  it('keeps chunks visible and updates badge when transitioning to fetching', () => {
+    chunkRegistry.setChunkState('4820,1160', 'uncached', { nodeCount: 0, edgeCount: 0 });
+
+    const ctx = createMockMapContext({
+      loadedChunkIds: [],
+    });
+
+    const { rerender } = render(
+      <MapContext.Provider value={ctx}>
+        <DebugPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByText('Chunk 4820,1160')).toBeInTheDocument();
+    expect(screen.getByText('Uncached')).toBeInTheDocument();
+
+    // Transition chunk to 'fetching'
+    act(() => {
+      chunkRegistry.setChunkState('4820,1160', 'fetching');
+    });
+
+    rerender(
+      <MapContext.Provider value={ctx}>
+        <DebugPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(screen.getByText('Chunk 4820,1160')).toBeInTheDocument();
+    expect(screen.getByText('Fetching')).toBeInTheDocument();
+    expect(screen.queryByText('Uncached')).not.toBeInTheDocument();
+  });
+
+  it('synchronizes cached chunks and registers viewport on mount', () => {
+    const mockGetBounds = vi.fn().mockReturnValue({
+      getSouth: () => 48.1,
+      getWest: () => 11.5,
+      getNorth: () => 48.2,
+      getEast: () => 11.6,
+    });
+    const ctx = createMockMapContext({
+      map: { easeTo: mockMapEaseTo, getBounds: mockGetBounds } as unknown as MapContextType['map'],
+    });
+
+    render(
+      <MapContext.Provider value={ctx}>
+        <DebugPanel />
+      </MapContext.Provider>,
+    );
+
+    expect(chunkCache.syncCachedChunksToRegistry).toHaveBeenCalled();
+    expect(mockGetBounds).toHaveBeenCalled();
   });
 });
