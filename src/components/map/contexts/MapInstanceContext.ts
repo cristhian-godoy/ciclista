@@ -16,6 +16,7 @@ export interface ContextMenuData {
   crossingId: string | null;
   nodeIds: string | null;
   placeId?: string | null;
+  chunkId?: string | null;
 }
 
 /**

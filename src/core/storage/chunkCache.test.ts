@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GraphNode, NodeEntry, StreetGraph } from '../graph/types';
 import {
   clearChunkCache,
+  evictParsedChunk,
+  getAllCachedChunkIds,
+  getInMemoryChunkGraph,
+  getInMemoryChunkIds,
   hasParsedChunkInMemory,
   loadParsedChunk,
   saveParsedChunk,
@@ -22,6 +26,7 @@ describe('chunkCache utility', () => {
       put: vi.fn(async (req: Request, res: Response) => {
         store.set(req.url, res);
       }),
+      keys: vi.fn(async () => Array.from(store.keys()).map((url) => new Request(url))),
       delete: vi.fn(async (req: Request) => {
         store.delete(req.url);
         return true;
@@ -103,5 +108,63 @@ describe('chunkCache utility', () => {
     expect(restored).not.toBeNull();
     expect(restored?.nodes.has('node-persisted')).toBe(true);
     expect(hasParsedChunkInMemory(chunkId)).toBe(true);
+  });
+
+  it('inspects in-memory chunk IDs and parsed graphs', async () => {
+    expect(getInMemoryChunkIds()).toEqual([]);
+    expect(getInMemoryChunkGraph('4813,1157')).toBeUndefined();
+
+    const g1 = createDummyGraph('node-1', 48.134, 11.574);
+    const g2 = createDummyGraph('node-2', 48.145, 11.585);
+
+    await saveParsedChunk('4813,1157', g1);
+    await saveParsedChunk('4814,1158', g2);
+
+    const ids = getInMemoryChunkIds();
+    expect(ids).toHaveLength(2);
+    expect(ids).toContain('4813,1157');
+    expect(ids).toContain('4814,1158');
+
+    expect(getInMemoryChunkGraph('4813,1157')).toBe(g1);
+    expect(getInMemoryChunkGraph('4814,1158')).toBe(g2);
+    expect(getInMemoryChunkGraph('9999,9999')).toBeUndefined();
+  });
+
+  it('combines in-memory and CacheStorage chunk IDs via getAllCachedChunkIds', async () => {
+    const g1 = createDummyGraph('node-mem', 48.134, 11.574);
+    await saveParsedChunk('4813,1157', g1);
+
+    // Simulate an additional chunk existing only in CacheStorage
+    store.set(
+      'https://ciclista-chunk-cache/chunk/4814,1158',
+      new Response(JSON.stringify([]), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    // And an unrelated key that does not match the prefix
+    store.set('https://ciclista-chunk-cache/other/test', new Response('{}'));
+
+    const allIds = await getAllCachedChunkIds();
+    expect(allIds).toHaveLength(2);
+    expect(allIds).toContain('4813,1157');
+    expect(allIds).toContain('4814,1158');
+  });
+
+  it('evicts parsed chunk from both memory and CacheStorage via evictParsedChunk', async () => {
+    const chunkId = '4813,1157';
+    const graph = createDummyGraph('node-to-evict', 48.134, 11.574);
+
+    await saveParsedChunk(chunkId, graph);
+    expect(hasParsedChunkInMemory(chunkId)).toBe(true);
+    expect(store.has(`https://ciclista-chunk-cache/chunk/${chunkId}`)).toBe(true);
+
+    await evictParsedChunk(chunkId);
+
+    expect(hasParsedChunkInMemory(chunkId)).toBe(false);
+    expect(getInMemoryChunkGraph(chunkId)).toBeUndefined();
+    expect(store.has(`https://ciclista-chunk-cache/chunk/${chunkId}`)).toBe(false);
+    expect(mockCache.delete).toHaveBeenCalledWith(
+      expect.objectContaining({ url: `https://ciclista-chunk-cache/chunk/${chunkId}` }),
+    );
   });
 });

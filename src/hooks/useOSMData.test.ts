@@ -3,8 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OSMCacheReader } from '../core/api/OSMCacheReader';
 import { OSMNetworkQueue } from '../core/api/OSMNetworkQueue';
+import { invalidateCacheForBBox } from '../core/storage/cache';
+import { evictParsedChunk } from '../core/storage/chunkCache';
 import * as dataUsageModule from '../core/storage/dataUsage';
 import { useOSMData } from './useOSMData';
+
+vi.mock('../core/storage/cache', () => ({
+  invalidateCacheForBBox: vi.fn(async () => {}),
+}));
+
+vi.mock('../core/storage/chunkCache', () => ({
+  evictParsedChunk: vi.fn(async () => {}),
+}));
 
 vi.mock('../core/api/OSMCacheReader', () => ({
   OSMCacheReader: {
@@ -227,5 +237,90 @@ describe('useOSMData Data Saver enforcement', () => {
     });
 
     expect(readChunksSpy).toHaveBeenCalled();
+  });
+
+  it('exposes loadedChunkIds and correctly updates when chunks arrive', () => {
+    let dataCallback:
+      | ((result: { graph: { nodes: Map<string, unknown> }; loadedChunkIds: string[] }) => void)
+      | undefined;
+    vi.spyOn(OSMNetworkQueue, 'addDataListener').mockImplementation((cb) => {
+      dataCallback = cb as unknown as typeof dataCallback;
+    });
+
+    const { result } = renderHook(() =>
+      useOSMData({
+        startCoord: null,
+        endCoord: null,
+        setSelectedNode: vi.fn(),
+      }),
+    );
+
+    expect(result.current.loadedChunkIds).toEqual([]);
+
+    act(() => {
+      dataCallback?.({
+        graph: { nodes: new Map() } as never,
+        loadedChunkIds: ['4813,1157', '4814,1158'],
+      });
+    });
+
+    expect(result.current.loadedChunkIds).toHaveLength(2);
+    expect(result.current.loadedChunkIds).toContain('4813,1157');
+    expect(result.current.loadedChunkIds).toContain('4814,1158');
+  });
+
+  it('evicts cache and re-enqueues chunk when refreshChunk is called', async () => {
+    let dataCallback:
+      | ((result: { graph: { nodes: Map<string, unknown> }; loadedChunkIds: string[] }) => void)
+      | undefined;
+    vi.spyOn(OSMNetworkQueue, 'addDataListener').mockImplementation((cb) => {
+      dataCallback = cb as unknown as typeof dataCallback;
+    });
+
+    const enqueueSpy = vi.spyOn(OSMNetworkQueue, 'enqueue');
+
+    const { result } = renderHook(() =>
+      useOSMData({
+        startCoord: null,
+        endCoord: null,
+        setSelectedNode: vi.fn(),
+      }),
+    );
+
+    const node1 = { id: 'n1', lat: 48.134, lng: 11.574, tags: {} };
+    const node2 = { id: 'n2', lat: 48.145, lng: 11.585, tags: {} };
+    const initialGraph = {
+      nodes: new Map([
+        ['n1', { node: node1, edges: [{ target: 'n2', distance: 10, tags: {} }] }],
+        ['n2', { node: node2, edges: [{ target: 'n1', distance: 10, tags: {} }] }],
+      ]),
+    };
+
+    act(() => {
+      dataCallback?.({
+        graph: initialGraph as never,
+        loadedChunkIds: ['4813,1157', '4814,1158'],
+      });
+    });
+
+    expect(result.current.loadedChunkIds).toContain('4813,1157');
+    expect(result.current.graph?.nodes.has('n1')).toBe(true);
+    expect(result.current.graph?.nodes.get('n2')?.edges).toHaveLength(1);
+
+    await act(async () => {
+      await result.current.refreshChunk('4813,1157');
+    });
+
+    expect(evictParsedChunk).toHaveBeenCalledWith('4813,1157');
+    expect(invalidateCacheForBBox).toHaveBeenCalledWith([48.13, 11.57, 48.14, 11.58]);
+    expect(result.current.loadedChunkIds).not.toContain('4813,1157');
+    expect(result.current.loadedChunkIds).toContain('4814,1158');
+
+    // Graph node in chunk 4813,1157 must be removed and edges targeting it pruned
+    expect(result.current.graph?.nodes.has('n1')).toBe(false);
+    expect(result.current.graph?.nodes.has('n2')).toBe(true);
+    expect(result.current.graph?.nodes.get('n2')?.edges).toEqual([]);
+
+    expect(enqueueSpy).toHaveBeenCalledWith(['4813,1157']);
   });
 });

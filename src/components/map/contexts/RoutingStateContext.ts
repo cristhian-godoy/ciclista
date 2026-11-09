@@ -8,6 +8,13 @@ import type { InspectorBranchEvaluation } from '../../../core/inspector/types';
 import type { StrategyRouteVariant } from '../../../core/router/types';
 
 /**
+ * Active inspection sub-mode when debug mode is enabled.
+ * - 'chunks': spatial chunk cache inspection, bounding box visualization, and cache eviction.
+ * - 'route': routing graph and path calculation diagnostic overlays.
+ */
+export type DebugSubMode = 'chunks' | 'route';
+
+/**
  * Domain context type defining street graph, routing variants, node overrides, and inspector states.
  */
 export interface RoutingStateContextType {
@@ -54,6 +61,14 @@ export interface RoutingStateContextType {
   selectedAlternativeTargetId: string | null;
   setSelectedAlternativeTargetId: (id: string | null) => void;
   inspectorBranches: InspectorBranchEvaluation[];
+
+  // Debug mode inspection states
+  loadedChunkIds?: string[];
+  onRefreshChunk?: (chunkId: string) => void | Promise<void>;
+  debugSubMode?: DebugSubMode;
+  setDebugSubMode?: (mode: DebugSubMode) => void;
+  selectedDebugChunkId?: string | null;
+  setSelectedDebugChunkId?: (chunkId: string | null) => void;
 }
 
 /**

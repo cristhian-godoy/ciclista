@@ -5,6 +5,7 @@ import { OSMNetworkQueue } from '../core/api/OSMNetworkQueue';
 import { MAP_CONFIG } from '../core/common/constants';
 import {
   calculateBoundingBox,
+  coordToChunkId,
   getChunkBBox,
   getChunksInBBox,
   isInsideLoadedArea,
@@ -12,8 +13,10 @@ import {
 import { logger } from '../core/common/logger';
 import type { Coordinate } from '../core/common/types';
 import { OSMGraphParser } from '../core/graph/parser';
-import type { GraphNode, StreetGraph } from '../core/graph/types';
+import type { GraphNode, NodeEntry, StreetGraph } from '../core/graph/types';
 import { mergeGraphs } from '../core/graph/utils';
+import { invalidateCacheForBBox } from '../core/storage/cache';
+import { evictParsedChunk } from '../core/storage/chunkCache';
 import {
   getConnectionType,
   isCellularDownloadAllowed,
@@ -267,10 +270,56 @@ export function useOSMData({
     handleFetchOSM(viewportBBox, true, true);
   };
 
+  /**
+   * Evicts a single chunk from caches, prunes its nodes/edges from the current graph,
+   * and enqueues the chunk ID for immediate re-fetching from the network.
+   *
+   * @param chunkId - Chunk identifier in 'latIdx,lngIdx' format.
+   */
+  const refreshChunk = async (chunkId: string): Promise<void> => {
+    const chunkBBox = getChunkBBox(chunkId);
+    await evictParsedChunk(chunkId);
+    await invalidateCacheForBBox(chunkBBox);
+
+    setLoadedChunkIds((prev) => {
+      const next = new Set(prev);
+      next.delete(chunkId);
+      return next;
+    });
+
+    setLoadedBBoxes((prev) =>
+      prev.filter((b) => !(b[0] === chunkBBox[0] && b[1] === chunkBBox[1])),
+    );
+
+    setGraph((prev) => {
+      if (!prev) return null;
+      const removedNodeIds = new Set<string>();
+      for (const [nodeId, entry] of prev.nodes.entries()) {
+        if (coordToChunkId(entry.node.lat, entry.node.lng) === chunkId) {
+          removedNodeIds.add(nodeId);
+        }
+      }
+      const nextNodes = new Map<string, NodeEntry>();
+      for (const [nodeId, entry] of prev.nodes.entries()) {
+        if (removedNodeIds.has(nodeId)) continue;
+        const nextEdges = entry.edges.filter((e) => !removedNodeIds.has(e.target));
+        nextNodes.set(nodeId, {
+          ...entry,
+          edges: nextEdges,
+        });
+      }
+      return { nodes: nextNodes };
+    });
+
+    OSMNetworkQueue.enqueue([chunkId]);
+  };
+
   return {
     graph,
     loadedBBoxes,
+    loadedChunkIds: Array.from(loadedChunkIds),
     isFetchingOSM,
     handleMapBoundsChange,
+    refreshChunk,
   };
 }

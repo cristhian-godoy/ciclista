@@ -28,6 +28,7 @@ import {
   type ContextMenuData,
   CrossingEditorContext,
   type CrossingEditorContextType,
+  type DebugSubMode,
   type EditSubMode,
   type LandmarkModalState,
   MapContext,
@@ -123,6 +124,13 @@ export interface MapProviderProps {
   editSubMode?: EditSubMode;
   onEditSubModeChange?: (mode: EditSubMode) => void;
   initialEditSubMode?: EditSubMode;
+  loadedChunkIds?: string[];
+  onRefreshChunk?: (chunkId: string) => void | Promise<void>;
+  debugSubMode?: DebugSubMode;
+  onDebugSubModeChange?: (mode: DebugSubMode) => void;
+  initialDebugSubMode?: DebugSubMode;
+  selectedDebugChunkId?: string | null;
+  onSelectedDebugChunkIdChange?: (chunkId: string | null) => void;
   children: React.ReactNode;
 }
 
@@ -208,6 +216,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   editSubMode: controlledEditSubMode,
   onEditSubModeChange,
   initialEditSubMode,
+  loadedChunkIds: controlledLoadedChunkIds,
+  onRefreshChunk,
+  debugSubMode: controlledDebugSubMode,
+  onDebugSubModeChange,
+  initialDebugSubMode,
+  selectedDebugChunkId: controlledSelectedDebugChunkId,
+  onSelectedDebugChunkIdChange,
   children,
 }) => {
   const activeRoute = routeVariants.find((r) => r.label === activeAlternativeLabel);
@@ -368,6 +383,21 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   const editSubMode = controlledEditSubMode ?? internalEditSubMode;
   const setEditSubMode = onEditSubModeChange ?? setInternalEditSubMode;
 
+  const [internalDebugSubMode, setInternalDebugSubMode] = useState<DebugSubMode>(
+    initialDebugSubMode ?? 'chunks',
+  );
+  const debugSubMode = controlledDebugSubMode ?? internalDebugSubMode;
+  const setDebugSubMode = onDebugSubModeChange ?? setInternalDebugSubMode;
+
+  const [internalSelectedDebugChunkId, setInternalSelectedDebugChunkId] = useState<string | null>(
+    null,
+  );
+  const selectedDebugChunkId =
+    controlledSelectedDebugChunkId !== undefined
+      ? controlledSelectedDebugChunkId
+      : internalSelectedDebugChunkId;
+  const setSelectedDebugChunkId = onSelectedDebugChunkIdChange ?? setInternalSelectedDebugChunkId;
+
   const prevAppModeRef = useRef<ToolbarMode>(appMode);
   useEffect(() => {
     if (prevAppModeRef.current === 'edit' && appMode !== 'edit') {
@@ -381,8 +411,12 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       setManagedNodeIds([]);
       setEditSubMode('paths');
     }
+    if (prevAppModeRef.current === 'debug' && appMode !== 'debug') {
+      setSelectedDebugChunkId(null);
+      setDebugSubMode('chunks');
+    }
     prevAppModeRef.current = appMode;
-  }, [appMode, setEditSubMode]);
+  }, [appMode, setEditSubMode, setSelectedDebugChunkId, setDebugSubMode]);
 
   const handleSaveCrossingTurn = useCallback(
     (override: CrossingTurnOverride) => {
@@ -559,10 +593,22 @@ export const MapProvider: React.FC<MapProviderProps> = ({
       selectedAlternativeTargetId,
       setSelectedAlternativeTargetId,
       inspectorBranches,
+      loadedChunkIds: controlledLoadedChunkIds,
+      onRefreshChunk,
+      debugSubMode,
+      setDebugSubMode,
+      selectedDebugChunkId,
+      setSelectedDebugChunkId,
     }),
     [
       graph,
       loadedBBoxes,
+      controlledLoadedChunkIds,
+      onRefreshChunk,
+      debugSubMode,
+      setDebugSubMode,
+      selectedDebugChunkId,
+      setSelectedDebugChunkId,
       startCoord,
       endCoord,
       propWaypoints,

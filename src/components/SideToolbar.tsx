@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {
+  Bug,
   FlaskConical,
   GitFork,
   Navigation,
@@ -14,7 +15,8 @@ import {
 /**
  * Supported view and workflow modes within the Ciclista toolbar.
  */
-export type ToolbarMode = 'routing' | 'places' | 'events' | 'edit' | 'studio' | 'landmarks';
+export type ToolbarMode =
+  'routing' | 'places' | 'events' | 'edit' | 'debug' | 'studio' | 'landmarks';
 
 /**
  * Properties for the SideToolbar component.
@@ -140,6 +142,18 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
         >
           <FlaskConical size={20} className="ciclista-toolbar-icon" />
         </a>
+
+        <button
+          type="button"
+          className={`ciclista-toolbar-btn ciclista-toolbar-btn--debug ${mode === 'debug' ? 'active ciclista-toolbar-btn--active' : ''}`}
+          onClick={() => onModeChange('debug')}
+          aria-label="Debug"
+          title="Debug"
+          aria-pressed={mode === 'debug'}
+          data-testid="toolbar-debug-btn"
+        >
+          <Bug size={20} className="ciclista-toolbar-icon" />
+        </button>
 
         {onOpenSettings && (
           <button

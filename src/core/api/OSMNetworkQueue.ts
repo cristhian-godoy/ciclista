@@ -50,6 +50,15 @@ export class OSMNetworkQueue {
   }
 
   /**
+   * Returns a copy of the chunk IDs currently queued for fetching.
+   *
+   * @returns Array of pending chunk identifiers.
+   */
+  public static getPendingChunkIds(): string[] {
+    return Array.from(this.pendingChunks);
+  }
+
+  /**
    * Registers a listener for fetching status changes.
    */
   public static addStatusListener(listener: QueueStatusListener) {

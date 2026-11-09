@@ -17,6 +17,13 @@ describe('SideToolbar Component', () => {
     const testRunnerLink = screen.getByRole('link', { name: 'Test Runner' });
     expect(testRunnerLink).toBeInTheDocument();
     expect(testRunnerLink).toHaveAttribute('href', '/test');
+
+    const debugBtn = screen.getByRole('button', { name: 'Debug' });
+    expect(debugBtn).toBeInTheDocument();
+    expect(debugBtn).toHaveAttribute('data-testid', 'toolbar-debug-btn');
+    expect(
+      testRunnerLink.compareDocumentPosition(debugBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('marks routing mode as active when mode is routing', () => {
@@ -132,6 +139,32 @@ describe('SideToolbar Component', () => {
 
     expect(handleModeChange).toHaveBeenCalledTimes(1);
     expect(handleModeChange).toHaveBeenCalledWith('edit');
+  });
+
+  it('marks debug mode as active when mode is debug', () => {
+    render(<SideToolbar mode="debug" onModeChange={vi.fn()} />);
+
+    const debugBtn = screen.getByRole('button', { name: 'Debug' });
+    const routingBtn = screen.getByRole('button', { name: 'Routing Mode' });
+
+    expect(debugBtn).toHaveClass('active');
+    expect(debugBtn).toHaveClass('ciclista-toolbar-btn--active');
+    expect(debugBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(routingBtn).not.toHaveClass('active');
+    expect(routingBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('invokes onModeChange with debug when Debug button is clicked', async () => {
+    const user = userEvent.setup();
+    const handleModeChange = vi.fn();
+
+    render(<SideToolbar mode="routing" onModeChange={handleModeChange} />);
+
+    const debugBtn = screen.getByRole('button', { name: 'Debug' });
+    await user.click(debugBtn);
+
+    expect(handleModeChange).toHaveBeenCalledTimes(1);
+    expect(handleModeChange).toHaveBeenCalledWith('debug');
   });
 
   it('triggers onOpenTestRunner callback when clicking test runner link if provided', async () => {

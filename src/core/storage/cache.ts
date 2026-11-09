@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../common/constants';
+import { doBBoxesIntersect } from '../common/geo';
 import { logger } from '../common/logger';
 import { addDataUsage, isDataSaverActive } from './dataUsage';
 
@@ -81,6 +82,22 @@ class SpatialCacheIndex {
     this.entries.delete(url);
   }
 
+  /**
+   * Returns URLs of all indexed entries whose bounding box intersects targetBBox.
+   *
+   * @param targetBBox - Target bounding box [minLat, minLng, maxLat, maxLng].
+   * @returns Array of matching request URLs.
+   */
+  public getIntersectingUrls(targetBBox: [number, number, number, number]): string[] {
+    const urls: string[] = [];
+    for (const entry of this.entries.values()) {
+      if (doBBoxesIntersect(entry.bbox, targetBBox)) {
+        urls.push(entry.url);
+      }
+    }
+    return urls;
+  }
+
   public getValid(ttl: number, dataSaver: boolean): ValidCacheEntry[] {
     const now = Date.now();
     const result: ValidCacheEntry[] = [];
@@ -113,6 +130,43 @@ export function resetSpatialCacheIndex(): void {
  */
 export async function initSpatialCacheIndex(): Promise<void> {
   await spatialCacheIndex.init();
+}
+
+/**
+ * Invalidates cached Overpass queries that intersect the specified bounding box.
+ * Evicts matching entries from both the in-memory spatial index and persistent CacheStorage.
+ *
+ * @param targetBBox - Bounding box to invalidate [minLat, minLng, maxLat, maxLng].
+ */
+export async function invalidateCacheForBBox(
+  targetBBox: [number, number, number, number],
+): Promise<void> {
+  if (!spatialCacheIndex.isInitialized()) {
+    await spatialCacheIndex.init();
+  }
+
+  const intersectingUrls = spatialCacheIndex.getIntersectingUrls(targetBBox);
+  if (intersectingUrls.length === 0) return;
+
+  let cacheInstance: Cache | null = null;
+  if (typeof caches !== 'undefined' && typeof caches.open === 'function') {
+    try {
+      cacheInstance = await caches.open(API_CONFIG.CACHE_NAME);
+    } catch (err) {
+      logger.warn('Failed to open CacheStorage during cache invalidation:', err);
+    }
+  }
+
+  for (const url of intersectingUrls) {
+    spatialCacheIndex.remove(url);
+    if (cacheInstance) {
+      try {
+        await cacheInstance.delete(new Request(url));
+      } catch (err) {
+        logger.warn(`Failed to delete cache entry ${url}:`, err);
+      }
+    }
+  }
 }
 
 /**

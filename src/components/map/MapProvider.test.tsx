@@ -262,4 +262,48 @@ describe('MapProvider Mode Transition Lifecycle & Crossing State Teardown', () =
     expect(result.current.routing.managedNodeIds).toEqual([]);
     expect(result.current.crossing.editSubMode).toBe('paths');
   });
+
+  it('automatically tears down debugSubMode and selectedDebugChunkId when leaving debug mode', () => {
+    let setModeExternally: (mode: ToolbarMode) => void = () => {};
+
+    const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+      const [currentMode, setCurrentMode] = useState<ToolbarMode>('debug');
+      setModeExternally = setCurrentMode;
+
+      return (
+        <MapProvider {...baseProps} appMode={currentMode}>
+          {children}
+        </MapProvider>
+      );
+    };
+
+    const { result } = renderHook(
+      () => ({
+        routing: useRoutingStateContext(),
+      }),
+      { wrapper: Wrapper },
+    );
+
+    // Initial debug state defaults
+    expect(result.current.routing.debugSubMode).toBe('chunks');
+    expect(result.current.routing.selectedDebugChunkId).toBeNull();
+
+    // Mutate debug inspection states
+    act(() => {
+      result.current.routing.setDebugSubMode?.('route');
+      result.current.routing.setSelectedDebugChunkId?.('4813,1157');
+    });
+
+    expect(result.current.routing.debugSubMode).toBe('route');
+    expect(result.current.routing.selectedDebugChunkId).toBe('4813,1157');
+
+    // Switch away from debug mode to routing mode
+    act(() => {
+      setModeExternally('routing');
+    });
+
+    // Verify complete teardown back to defaults
+    expect(result.current.routing.debugSubMode).toBe('chunks');
+    expect(result.current.routing.selectedDebugChunkId).toBeNull();
+  });
 });

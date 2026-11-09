@@ -117,6 +117,66 @@ export function hasParsedChunkInMemory(chunkId: string): boolean {
 }
 
 /**
+ * Returns an array of chunk identifiers currently cached in memory.
+ *
+ * @returns Array of chunk IDs in memory.
+ */
+export function getInMemoryChunkIds(): string[] {
+  return Array.from(inMemoryChunkCache.keys());
+}
+
+/**
+ * Returns the parsed StreetGraph for a given chunk ID if held in memory.
+ *
+ * @param chunkId - Chunk identifier in format 'latIdx,lngIdx'.
+ * @returns Parsed StreetGraph or undefined if not cached in memory.
+ */
+export function getInMemoryChunkGraph(chunkId: string): StreetGraph | undefined {
+  return inMemoryChunkCache.get(chunkId);
+}
+
+/**
+ * Retrieves all unique chunk IDs present in in-memory cache and persistent CacheStorage.
+ *
+ * @returns Deduplicated array of chunk identifiers.
+ */
+export async function getAllCachedChunkIds(): Promise<string[]> {
+  const ids = new Set<string>(inMemoryChunkCache.keys());
+  const cache = await getChunkCacheStorage();
+  if (cache && typeof cache.keys === 'function') {
+    try {
+      const keys = await cache.keys();
+      const prefix = 'https://ciclista-chunk-cache/chunk/';
+      for (const req of keys) {
+        if (req.url.startsWith(prefix)) {
+          ids.add(req.url.slice(prefix.length));
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to retrieve keys from chunk CacheStorage:', err);
+    }
+  }
+  return Array.from(ids);
+}
+
+/**
+ * Evicts a single parsed chunk from both in-memory cache and persistent CacheStorage.
+ *
+ * @param chunkId - Chunk identifier to evict.
+ */
+export async function evictParsedChunk(chunkId: string): Promise<void> {
+  inMemoryChunkCache.delete(chunkId);
+  const cache = await getChunkCacheStorage();
+  if (cache && typeof cache.delete === 'function') {
+    try {
+      await cache.delete(new Request(getChunkUrl(chunkId)));
+    } catch (err) {
+      logger.warn(`Failed to evict parsed chunk ${chunkId} from CacheStorage:`, err);
+    }
+  }
+}
+
+/**
  * Partitions a StreetGraph into per-chunk graphs and stores each into chunk cache.
  *
  * @param graph - Full or merged StreetGraph.

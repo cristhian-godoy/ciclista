@@ -95,4 +95,21 @@ describe('OSMNetworkQueue service', () => {
 
     expect(maxConcurrency).toBe(1);
   });
+
+  it('exposes pending chunk IDs via getPendingChunkIds', async () => {
+    vi.spyOn(overpassModule, 'fetchWithCacheAndFallback').mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return { elements: [] };
+    });
+
+    // Enqueue two distant chunks so they form two separate clusters
+    OSMNetworkQueue.enqueue(['4813,1157', '5200,1300']);
+
+    // The second cluster remains pending while the first is being processed
+    const pending = OSMNetworkQueue.getPendingChunkIds();
+    expect(pending).toContain('5200,1300');
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(OSMNetworkQueue.getPendingChunkIds()).toEqual([]);
+  });
 });
