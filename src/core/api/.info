@@ -7,9 +7,9 @@ OSMNetworkQueue.test.ts
 OSMNetworkQueue.ts
 	Service managing sequential Overpass network requests with bounding box merging, priority scheduling, and distance sorting.
 overpass.test.ts
-	Unit tests verifying Overpass API query fetches and cache hit/miss behavior.
+	Unit tests verifying Overpass API query fetching, mirror failover, exponential backoff, sticky selection, and runtime error rejection.
 overpass.ts
-	Mirror-fallback Overpass API query fetching with stale-while-revalidate client cache.
+	Overpass API query fetching with mirror failover, exponential backoff, sticky selection, and CacheStorage caching.
 style.test.ts
 	Unit tests checking map stylesheet layer filtering and POI removal logic.
 style.ts
