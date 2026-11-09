@@ -14,6 +14,7 @@ vi.mock('../core/storage/cache', () => ({
 
 vi.mock('../core/storage/chunkCache', () => ({
   evictParsedChunk: vi.fn(async () => {}),
+  syncCachedChunksToRegistry: vi.fn(async () => []),
 }));
 
 vi.mock('../core/api/OSMCacheReader', () => ({
@@ -321,6 +322,6 @@ describe('useOSMData Data Saver enforcement', () => {
     expect(result.current.graph?.nodes.has('n2')).toBe(true);
     expect(result.current.graph?.nodes.get('n2')?.edges).toEqual([]);
 
-    expect(enqueueSpy).toHaveBeenCalledWith(['4813,1157']);
+    expect(enqueueSpy).toHaveBeenCalledWith(['4813,1157'], true);
   });
 });

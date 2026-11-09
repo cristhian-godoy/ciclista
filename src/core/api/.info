@@ -3,9 +3,9 @@ OSMCacheReader.test.ts
 OSMCacheReader.ts
 	Service to check and load chunk data directly from browser CacheStorage, separating cache resolution from network fetching.
 OSMNetworkQueue.test.ts
-	Unit tests for bounding box queue merging, rate limiting, and chunk fetching.
+	Unit tests for bounding box queue merging, rate limiting, chunk priority, and chunk fetching.
 OSMNetworkQueue.ts
-	Service managing sequential Overpass network requests with bounding box merging and splitting.
+	Service managing sequential Overpass network requests with bounding box merging, priority scheduling, and distance sorting.
 overpass.test.ts
 	Unit tests verifying Overpass API query fetches and cache hit/miss behavior.
 overpass.ts

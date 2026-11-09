@@ -16,7 +16,8 @@ import { OSMGraphParser } from '../core/graph/parser';
 import type { GraphNode, NodeEntry, StreetGraph } from '../core/graph/types';
 import { mergeGraphs } from '../core/graph/utils';
 import { invalidateCacheForBBox } from '../core/storage/cache';
-import { evictParsedChunk } from '../core/storage/chunkCache';
+import { evictParsedChunk, syncCachedChunksToRegistry } from '../core/storage/chunkCache';
+import { chunkRegistry } from '../core/storage/chunkRegistry';
 import {
   getConnectionType,
   isCellularDownloadAllowed,
@@ -49,6 +50,10 @@ export function useOSMData({
   const boundsChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    void syncCachedChunksToRegistry();
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (boundsChangeTimeoutRef.current) {
         clearTimeout(boundsChangeTimeoutRef.current);
@@ -63,6 +68,7 @@ export function useOSMData({
     };
 
     const handleQueueData = (result: { graph: StreetGraph; loadedChunkIds: string[] }) => {
+      chunkRegistry.setChunkState(result.loadedChunkIds, 'loaded');
       setGraph((prev) => (prev ? mergeGraphs(prev, result.graph) : result.graph));
       setLoadedChunkIds((prev) => {
         const next = new Set(prev);
@@ -152,6 +158,9 @@ export function useOSMData({
     try {
       // 1. Immediately resolve cached chunks
       const cacheResult = await OSMCacheReader.readChunks(neededChunks);
+      if (cacheResult.loadedChunkIds.length > 0) {
+        chunkRegistry.setChunkState(cacheResult.loadedChunkIds, 'loaded');
+      }
       if (cacheResult.graph) {
         setGraph((prev) => (prev ? mergeGraphs(prev, cacheResult.graph!) : cacheResult.graph));
         setLoadedChunkIds((prev) => {
@@ -266,6 +275,8 @@ export function useOSMData({
     OSMNetworkQueue.setViewport(viewportBBox);
     if (zoom < 13) return;
 
+    chunkRegistry.registerViewport(viewportBBox);
+    void syncCachedChunksToRegistry();
     logger.log('Map moved. Checking for immediate cached load or debounced network fetch.');
     handleFetchOSM(viewportBBox, true, true);
   };
@@ -311,7 +322,7 @@ export function useOSMData({
       return { nodes: nextNodes };
     });
 
-    OSMNetworkQueue.enqueue([chunkId]);
+    OSMNetworkQueue.enqueue([chunkId], true);
   };
 
   return {

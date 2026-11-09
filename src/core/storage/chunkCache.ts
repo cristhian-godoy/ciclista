@@ -1,7 +1,9 @@
 import { API_CONFIG } from '../common/constants';
-import { coordToChunkId } from '../common/geo';
+import { coordToChunkId, getChunksInBBox } from '../common/geo';
 import { logger } from '../common/logger';
 import type { NodeEntry, StreetGraph } from '../graph/types';
+import { getValidCacheEntries } from './cache';
+import { chunkRegistry } from './chunkRegistry';
 import { isDataSaverActive } from './dataUsage';
 
 export const CHUNK_CACHE_NAME = 'ciclista-parsed-chunks-v1';
@@ -45,6 +47,7 @@ function getChunkUrl(chunkId: string): string {
  */
 export async function saveParsedChunk(chunkId: string, chunkGraph: StreetGraph): Promise<void> {
   inMemoryChunkCache.set(chunkId, chunkGraph);
+  chunkRegistry.updateChunkGraphStats(chunkId, chunkGraph, 'cached');
 
   const cache = await getChunkCacheStorage();
   if (!cache || typeof cache.put !== 'function') return;
@@ -73,6 +76,7 @@ export async function saveParsedChunk(chunkId: string, chunkGraph: StreetGraph):
 export async function loadParsedChunk(chunkId: string): Promise<StreetGraph | null> {
   const memCached = inMemoryChunkCache.get(chunkId);
   if (memCached) {
+    chunkRegistry.updateChunkGraphStats(chunkId, memCached, 'cached');
     return memCached;
   }
 
@@ -99,6 +103,7 @@ export async function loadParsedChunk(chunkId: string): Promise<StreetGraph | nu
     };
 
     inMemoryChunkCache.set(chunkId, graph);
+    chunkRegistry.updateChunkGraphStats(chunkId, graph, 'cached');
     return graph;
   } catch (err) {
     logger.warn(`Failed to load cached parsed chunk ${chunkId}:`, err);
@@ -166,6 +171,7 @@ export async function getAllCachedChunkIds(): Promise<string[]> {
  */
 export async function evictParsedChunk(chunkId: string): Promise<void> {
   inMemoryChunkCache.delete(chunkId);
+  chunkRegistry.setChunkState(chunkId, 'uncached', { nodeCount: 0, edgeCount: 0 });
   const cache = await getChunkCacheStorage();
   if (cache && typeof cache.delete === 'function') {
     try {
@@ -187,21 +193,42 @@ export async function saveParsedGraphByChunks(
   chunkIds?: string[],
 ): Promise<void> {
   const partitioned = new Map<string, Map<string, NodeEntry>>();
+  const allowedChunks = chunkIds && chunkIds.length > 0 ? new Set(chunkIds) : null;
 
-  if (chunkIds) {
-    for (const id of chunkIds) {
+  if (allowedChunks) {
+    for (const id of allowedChunks) {
       partitioned.set(id, new Map());
     }
   }
 
   for (const [nodeId, entry] of graph.nodes.entries()) {
     const cId = coordToChunkId(entry.node.lat, entry.node.lng);
+    if (allowedChunks && !allowedChunks.has(cId)) {
+      continue;
+    }
     let chunkNodes = partitioned.get(cId);
     if (!chunkNodes) {
       chunkNodes = new Map();
       partitioned.set(cId, chunkNodes);
     }
     chunkNodes.set(nodeId, entry);
+  }
+
+  for (const [, chunkNodes] of partitioned.entries()) {
+    const stubsToAdd = new Map<string, NodeEntry>();
+    for (const entry of chunkNodes.values()) {
+      for (const edge of entry.edges) {
+        if (!chunkNodes.has(edge.target) && !stubsToAdd.has(edge.target)) {
+          const targetEntry = graph.nodes.get(edge.target);
+          if (targetEntry) {
+            stubsToAdd.set(edge.target, { node: targetEntry.node, edges: [] });
+          }
+        }
+      }
+    }
+    for (const [stubId, stubEntry] of stubsToAdd.entries()) {
+      chunkNodes.set(stubId, stubEntry);
+    }
   }
 
   const savePromises: Promise<void>[] = [];
@@ -213,10 +240,39 @@ export async function saveParsedGraphByChunks(
 }
 
 /**
+ * Synchronizes all cached chunk identifiers from persistent CacheStorage
+ * and in-memory caches into the central chunkRegistry.
+ *
+ * @returns Array of unique cached chunk identifiers registered.
+ */
+export async function syncCachedChunksToRegistry(): Promise<string[]> {
+  const parsedIds = await getAllCachedChunkIds();
+  const rawEntries = await getValidCacheEntries();
+
+  const idSet = new Set<string>(parsedIds);
+  for (const entry of rawEntries) {
+    const chunkIds = getChunksInBBox(entry.bbox);
+    for (const id of chunkIds) {
+      idSet.add(id);
+    }
+  }
+
+  const allCachedIds = Array.from(idSet);
+  chunkRegistry.registerCachedChunks(allCachedIds);
+
+  for (const [chunkId, graph] of inMemoryChunkCache.entries()) {
+    chunkRegistry.updateChunkGraphStats(chunkId, graph, 'cached');
+  }
+
+  return allCachedIds;
+}
+
+/**
  * Clears the in-memory parsed chunk cache and deletes the CacheStorage store.
  */
 export async function clearChunkCache(): Promise<void> {
   inMemoryChunkCache.clear();
+  chunkRegistry.reset();
   if (typeof caches !== 'undefined' && typeof caches.delete === 'function') {
     try {
       await caches.delete(CHUNK_CACHE_NAME);

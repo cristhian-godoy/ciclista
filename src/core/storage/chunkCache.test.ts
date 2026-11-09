@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GraphNode, NodeEntry, StreetGraph } from '../graph/types';
+import * as cacheModule from './cache';
 import {
   clearChunkCache,
   evictParsedChunk,
@@ -11,7 +12,9 @@ import {
   loadParsedChunk,
   saveParsedChunk,
   saveParsedGraphByChunks,
+  syncCachedChunksToRegistry,
 } from './chunkCache';
+import { chunkRegistry } from './chunkRegistry';
 
 describe('chunkCache utility', () => {
   let store: Map<string, Response>;
@@ -166,5 +169,70 @@ describe('chunkCache utility', () => {
     expect(mockCache.delete).toHaveBeenCalledWith(
       expect.objectContaining({ url: `https://ciclista-chunk-cache/chunk/${chunkId}` }),
     );
+  });
+
+  it('does not save spillover neighbor chunk when chunkIds is provided, while preserving boundary stub nodes', async () => {
+    // node1 is in chunk 4813,1157
+    const node1: GraphNode = { id: 'n1', lat: 48.134, lng: 11.574, tags: {} };
+    // node2 is in chunk 4814,1158
+    const node2: GraphNode = { id: 'n2', lat: 48.145, lng: 11.585, tags: {} };
+
+    const fullGraph: StreetGraph = {
+      nodes: new Map([
+        ['n1', { node: node1, edges: [{ target: 'n2', distance: 15, tags: {} }] }],
+        ['n2', { node: node2, edges: [{ target: 'n1', distance: 15, tags: {} }] }],
+      ]),
+    };
+
+    // Save only chunk 4813,1157
+    await saveParsedGraphByChunks(fullGraph, ['4813,1157']);
+
+    // Chunk 4813,1157 should be saved
+    expect(hasParsedChunkInMemory('4813,1157')).toBe(true);
+    // Neighbor chunk 4814,1158 must NOT be saved as a separate chunk
+    expect(hasParsedChunkInMemory('4814,1158')).toBe(false);
+    expect(store.has('https://ciclista-chunk-cache/chunk/4814,1158')).toBe(false);
+
+    // However, chunk 4813,1157 must include n2 as a stub node with empty edges for coordinate lookup
+    const savedChunk = getInMemoryChunkGraph('4813,1157');
+    expect(savedChunk).toBeDefined();
+    expect(savedChunk?.nodes.has('n1')).toBe(true);
+    expect(savedChunk?.nodes.get('n1')?.edges).toEqual([{ target: 'n2', distance: 15, tags: {} }]);
+    expect(savedChunk?.nodes.has('n2')).toBe(true);
+    expect(savedChunk?.nodes.get('n2')?.edges).toEqual([]);
+
+    // ChunkRegistry nodeCount for 4813,1157 should only count n1, not n2
+    const registryRecord = chunkRegistry.getChunk('4813,1157');
+    expect(registryRecord?.nodeCount).toBe(1);
+    expect(registryRecord?.edgeCount).toBe(1);
+  });
+
+  it('synchronizes all cached chunk IDs to chunkRegistry', async () => {
+    vi.spyOn(cacheModule, 'getValidCacheEntries').mockResolvedValue([
+      {
+        bbox: [48.12, 11.56, 48.125, 11.565],
+        timestamp: Date.now(),
+        data: { elements: [] },
+      },
+    ]);
+
+    const g1 = createDummyGraph('node-sync', 48.134, 11.574);
+    await saveParsedChunk('4813,1157', g1);
+
+    store.set(
+      'https://ciclista-chunk-cache/chunk/4814,1158',
+      new Response(JSON.stringify([]), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const synced = await syncCachedChunksToRegistry();
+    expect(synced).toContain('4813,1157');
+    expect(synced).toContain('4814,1158');
+    expect(synced).toContain('4812,1156');
+
+    expect(chunkRegistry.getChunk('4813,1157')?.state).toBe('cached');
+    expect(chunkRegistry.getChunk('4814,1158')?.state).toBe('cached');
+    expect(chunkRegistry.getChunk('4812,1156')?.state).toBe('cached');
   });
 });

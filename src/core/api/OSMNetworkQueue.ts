@@ -4,6 +4,7 @@ import { logger } from '../common/logger';
 import { parseInWorker } from '../graph/parser.client';
 import type { StreetGraph } from '../graph/types';
 import { saveParsedGraphByChunks } from '../storage/chunkCache';
+import { chunkRegistry } from '../storage/chunkRegistry';
 import { fetchWithCacheAndFallback } from './overpass';
 
 /**
@@ -36,6 +37,8 @@ export type QueueErrorListener = (error: unknown) => void;
  */
 export class OSMNetworkQueue {
   private static pendingChunks = new Set<string>();
+  private static fetchingChunks = new Set<string>();
+  private static priorityChunks = new Set<string>();
   private static isFetching = false;
   private static currentViewport: [number, number, number, number] | null = null;
   private static statusListeners = new Set<QueueStatusListener>();
@@ -56,6 +59,29 @@ export class OSMNetworkQueue {
    */
   public static getPendingChunkIds(): string[] {
     return Array.from(this.pendingChunks);
+  }
+
+  /**
+   * Returns a copy of the chunk IDs currently being fetched from the network.
+   *
+   * @returns Array of chunk identifiers currently in flight.
+   */
+  public static getFetchingChunkIds(): string[] {
+    return Array.from(this.fetchingChunks);
+  }
+
+  /**
+   * Resets queue state for testing.
+   */
+  public static resetForTesting(): void {
+    this.pendingChunks.clear();
+    this.fetchingChunks.clear();
+    this.priorityChunks.clear();
+    this.isFetching = false;
+    this.currentViewport = null;
+    this.statusListeners.clear();
+    this.dataListeners.clear();
+    this.errorListeners.clear();
   }
 
   /**
@@ -103,21 +129,30 @@ export class OSMNetworkQueue {
 
   /**
    * Enqueues a list of missing chunk IDs for retrieval.
+   *
+   * @param chunkIds - List of chunk identifiers to retrieve.
+   * @param priority - Whether the chunks should be prioritized at the head of the queue.
    */
-  public static enqueue(chunkIds: string[]) {
+  public static enqueue(chunkIds: string[], priority = false) {
     let addedNew = false;
     for (const id of chunkIds) {
-      if (!this.pendingChunks.has(id)) {
+      if (priority) {
+        this.priorityChunks.add(id);
+      }
+      if (!this.pendingChunks.has(id) && !this.fetchingChunks.has(id)) {
         this.pendingChunks.add(id);
         addedNew = true;
+        chunkRegistry.setChunkState(id, 'pending');
       }
     }
 
-    if (!addedNew) {
+    if (!addedNew && !priority) {
       return;
     }
 
-    logger.log(`Enqueued ${chunkIds.length} chunks. Total pending: ${this.pendingChunks.size}`);
+    logger.log(
+      `Enqueued ${chunkIds.length} chunks (priority: ${priority}). Total pending: ${this.pendingChunks.size}`,
+    );
 
     if (!this.isFetching) {
       this.processQueue();
@@ -157,6 +192,7 @@ export class OSMNetworkQueue {
 
   /**
    * Prunes pending chunks that lie completely outside the current viewport.
+   * Chunks marked as priority are never pruned.
    */
   private static prunePendingChunks() {
     if (!this.currentViewport || this.pendingChunks.size === 0) {
@@ -167,6 +203,9 @@ export class OSMNetworkQueue {
     const toRemove: string[] = [];
 
     for (const chunkId of this.pendingChunks) {
+      if (this.priorityChunks.has(chunkId)) {
+        continue;
+      }
       const [cMinLat, cMinLng, cMaxLat, cMaxLng] = getChunkBBox(chunkId);
       // Check intersection
       const intersects =
@@ -182,8 +221,62 @@ export class OSMNetworkQueue {
     }
 
     if (toRemove.length > 0) {
+      chunkRegistry.setChunkState(toRemove, 'uncached');
       logger.log(`Pruned ${toRemove.length} chunks outside current viewport.`);
     }
+  }
+
+  /**
+   * Sorts pending chunk IDs by priority, then by viewport intersection,
+   * breaking ties with distance to viewport center.
+   */
+  private static sortPendingChunks(chunkIds: string[]): string[] {
+    if (chunkIds.length <= 1) {
+      return [...chunkIds];
+    }
+
+    const vp = this.currentViewport;
+    const vCenterLat = vp ? (vp[0] + vp[2]) / 2 : 0;
+    const vCenterLng = vp ? (vp[1] + vp[3]) / 2 : 0;
+
+    return [...chunkIds].sort((a, b) => {
+      // 1. Priority chunks first
+      const aPriority = this.priorityChunks.has(a);
+      const bPriority = this.priorityChunks.has(b);
+      if (aPriority && !bPriority) return -1;
+      if (!aPriority && bPriority) return 1;
+
+      // 2. Viewport-based sorting
+      if (vp) {
+        const [aMinLat, aMinLng, aMaxLat, aMaxLng] = getChunkBBox(a);
+        const [bMinLat, bMinLng, bMaxLat, bMaxLng] = getChunkBBox(b);
+
+        const aIntersects =
+          aMinLat <= vp[2] && aMaxLat >= vp[0] && aMinLng <= vp[3] && aMaxLng >= vp[1];
+        const bIntersects =
+          bMinLat <= vp[2] && bMaxLat >= vp[0] && bMinLng <= vp[3] && bMaxLng >= vp[1];
+
+        if (aIntersects && !bIntersects) return -1;
+        if (!aIntersects && bIntersects) return 1;
+
+        // Closest to viewport center first
+        const aCenterLat = (aMinLat + aMaxLat) / 2;
+        const aCenterLng = (aMinLng + aMaxLng) / 2;
+        const bCenterLat = (bMinLat + bMaxLat) / 2;
+        const bCenterLng = (bMinLng + bMaxLng) / 2;
+
+        const distA =
+          (aCenterLat - vCenterLat) * (aCenterLat - vCenterLat) +
+          (aCenterLng - vCenterLng) * (aCenterLng - vCenterLng);
+        const distB =
+          (bCenterLat - vCenterLat) * (bCenterLat - vCenterLat) +
+          (bCenterLng - vCenterLng) * (bCenterLng - vCenterLng);
+
+        return distA - distB;
+      }
+
+      return 0;
+    });
   }
 
   private static async processQueue() {
@@ -194,7 +287,8 @@ export class OSMNetworkQueue {
 
     this.notifyStatus(true);
 
-    const clusters = this.clusterContiguousChunks(Array.from(this.pendingChunks));
+    const sortedPending = this.sortPendingChunks(Array.from(this.pendingChunks));
+    const clusters = this.clusterContiguousChunks(sortedPending);
     const currentCluster = clusters[0];
     if (!currentCluster || currentCluster.length === 0) {
       this.pendingChunks.clear();
@@ -204,7 +298,9 @@ export class OSMNetworkQueue {
 
     for (const id of currentCluster) {
       this.pendingChunks.delete(id);
+      this.fetchingChunks.add(id);
     }
+    chunkRegistry.setChunkState(currentCluster, 'fetching');
 
     try {
       const rectangles = this.coalesceAdjacentRectangles(currentCluster);
@@ -238,6 +334,12 @@ out body;`;
       const parsed = await parseInWorker(data);
       await saveParsedGraphByChunks(parsed, currentCluster);
 
+      for (const id of currentCluster) {
+        this.fetchingChunks.delete(id);
+        this.priorityChunks.delete(id);
+      }
+      chunkRegistry.setChunkState(currentCluster, 'loaded');
+
       this.notifyData({
         graph: parsed,
         loadedChunkIds: currentCluster,
@@ -246,6 +348,11 @@ out body;`;
       await new Promise((resolve) => setTimeout(resolve, 0));
     } catch (err) {
       logger.error('Failed to process network queue:', err);
+      for (const id of currentCluster) {
+        this.fetchingChunks.delete(id);
+        this.priorityChunks.delete(id);
+      }
+      chunkRegistry.setChunkState(currentCluster, 'error');
       this.notifyError(err);
     } finally {
       this.prunePendingChunks();

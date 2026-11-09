@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { chunkRegistry } from '../storage/chunkRegistry';
 import { OSMNetworkQueue } from './OSMNetworkQueue';
 import * as overpassModule from './overpass';
 
@@ -10,6 +11,8 @@ vi.mock('./overpass', () => ({
 describe('OSMNetworkQueue service', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    OSMNetworkQueue.resetForTesting();
+    chunkRegistry.reset();
   });
 
   it('notifies status and processes queued chunks', async () => {
@@ -111,5 +114,94 @@ describe('OSMNetworkQueue service', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(OSMNetworkQueue.getPendingChunkIds()).toEqual([]);
+  });
+
+  it('tracks getFetchingChunkIds and chunkRegistry state during in-flight requests', async () => {
+    let fetchingIdsDuringCall: string[] = [];
+    let stateDuringCall: string | undefined;
+
+    vi.spyOn(overpassModule, 'fetchWithCacheAndFallback').mockImplementation(async () => {
+      fetchingIdsDuringCall = OSMNetworkQueue.getFetchingChunkIds();
+      stateDuringCall = chunkRegistry.getChunk('4813,1157')?.state;
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return { elements: [] };
+    });
+
+    OSMNetworkQueue.enqueue(['4813,1157']);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(fetchingIdsDuringCall).toEqual(['4813,1157']);
+    expect(stateDuringCall).toBe('fetching');
+    expect(OSMNetworkQueue.getFetchingChunkIds()).toEqual([]);
+    expect(chunkRegistry.getChunk('4813,1157')?.state).toBe('loaded');
+  });
+
+  it('prioritizes priority enqueued chunks ahead of regular chunks and preserves them from pruning', async () => {
+    const fetchedOrder: string[][] = [];
+
+    vi.spyOn(overpassModule, 'fetchWithCacheAndFallback').mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return { elements: [] };
+    });
+
+    const dataListener = (result: { loadedChunkIds: string[] }) => {
+      fetchedOrder.push(result.loadedChunkIds);
+    };
+    OSMNetworkQueue.addDataListener(dataListener);
+
+    // Viewport covers lat 48.13-48.14, lng 11.57-11.58
+    OSMNetworkQueue.setViewport([48.13, 11.57, 48.14, 11.58]);
+
+    // Start with an in-flight chunk so queue is busy
+    OSMNetworkQueue.enqueue(['4813,1157']);
+
+    // While 4813,1157 is in-flight, enqueue a normal chunk and a distant priority chunk
+    OSMNetworkQueue.enqueue(['4814,1158']);
+    OSMNetworkQueue.enqueue(['5200,1300'], true);
+
+    await new Promise((resolve) => setTimeout(resolve, 140));
+
+    // 4813,1157 was already in-flight first
+    expect(fetchedOrder[0]).toEqual(['4813,1157']);
+    // Priority chunk 5200,1300 should be fetched next, despite being distant and outside viewport
+    expect(fetchedOrder[1]).toEqual(['5200,1300']);
+    expect(fetchedOrder[2]).toEqual(['4814,1158']);
+
+    OSMNetworkQueue.removeDataListener(dataListener);
+  });
+
+  it('orders pending chunks based on Euclidean distance to viewport center', async () => {
+    const fetchedOrder: string[][] = [];
+
+    vi.spyOn(overpassModule, 'fetchWithCacheAndFallback').mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return { elements: [] };
+    });
+
+    const dataListener = (result: { loadedChunkIds: string[] }) => {
+      fetchedOrder.push(result.loadedChunkIds);
+    };
+    OSMNetworkQueue.addDataListener(dataListener);
+
+    // Viewport covers lat [48.10, 48.30], lng [11.57, 11.58], center is (48.20, 11.575)
+    OSMNetworkQueue.setViewport([48.1, 11.57, 48.3, 11.58]);
+
+    // In-flight chunk
+    OSMNetworkQueue.enqueue(['4810,1157']);
+
+    // While in-flight: 4819,1157 (center 48.195, dist 0.005) is closer to center than 4828,1157 (center 48.285, dist 0.085)
+    // Both are within the viewport so neither will be pruned
+    // Enqueue further one first, closer one second to verify reordering
+    OSMNetworkQueue.enqueue(['4828,1157']);
+    OSMNetworkQueue.enqueue(['4819,1157']);
+
+    await new Promise((resolve) => setTimeout(resolve, 140));
+
+    expect(fetchedOrder[0]).toEqual(['4810,1157']);
+    expect(fetchedOrder[1]).toEqual(['4819,1157']);
+    expect(fetchedOrder[2]).toEqual(['4828,1157']);
+
+    OSMNetworkQueue.removeDataListener(dataListener);
   });
 });
