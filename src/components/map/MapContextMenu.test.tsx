@@ -502,4 +502,56 @@ describe('MapContextMenu Component', () => {
     expect(onAddWaypointMock).toHaveBeenCalledWith({ lat: 48.14, lng: 11.58 });
     expect(setContextMenuMock).toHaveBeenCalled();
   });
+
+  it('renders Refresh Chunk action in debug mode and triggers onRefreshChunk', async () => {
+    const user = userEvent.setup();
+    const onRefreshChunkMock = vi.fn();
+
+    renderWithContext({
+      appMode: 'debug',
+      onRefreshChunk: onRefreshChunkMock,
+      contextMenu: {
+        visible: true,
+        x: 150,
+        y: 250,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+        chunkId: '4813,1157',
+      },
+    });
+
+    const refreshBtn = screen.getByRole('button', { name: /Refresh Chunk \(4813,1157\)/i });
+    expect(refreshBtn).toBeInTheDocument();
+
+    await user.click(refreshBtn);
+    expect(onRefreshChunkMock).toHaveBeenCalledWith('4813,1157');
+    expect(setContextMenuMock).toHaveBeenCalled();
+  });
+
+  it('computes chunkId fallback from lat/lng in debug mode if contextMenu.chunkId is not provided', async () => {
+    const user = userEvent.setup();
+    const onRefreshChunkMock = vi.fn();
+
+    renderWithContext({
+      appMode: 'debug',
+      onRefreshChunk: onRefreshChunkMock,
+      contextMenu: {
+        visible: true,
+        x: 150,
+        y: 250,
+        lat: 48.137,
+        lng: 11.575,
+        crossingId: null,
+        nodeIds: null,
+      },
+    });
+
+    const refreshBtn = screen.getByRole('button', { name: /Refresh Chunk \(4813,1157\)/i });
+    expect(refreshBtn).toBeInTheDocument();
+
+    await user.click(refreshBtn);
+    expect(onRefreshChunkMock).toHaveBeenCalledWith('4813,1157');
+  });
 });

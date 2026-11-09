@@ -1,7 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
+import { coordToChunkId } from '../../core/common/geo';
 import { useSettings } from '../../store/settingsStore';
-import { Edit2, MapPin, Star, Trash2, ZoomIn } from '../common/Icon';
+import { Edit2, MapPin, RefreshCw, Star, Trash2, ZoomIn } from '../common/Icon';
 import { useMapContext } from './MapContext';
 
 /**
@@ -50,6 +51,7 @@ export const MapContextMenu: React.FC = () => {
     onDeleteLandmark,
     places,
     landmarks,
+    onRefreshChunk,
   } = useMapContext();
   const settings = useSettings();
 
@@ -109,6 +111,25 @@ export const MapContextMenu: React.FC = () => {
   }, [contextMenu.visible, setContextMenu]);
 
   if (!map || !contextMenu.visible) return null;
+
+  if (appMode === 'debug') {
+    const targetChunkId = contextMenu.chunkId ?? coordToChunkId(contextMenu.lat, contextMenu.lng);
+    return (
+      <div ref={menuRef} className="map-context-menu" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="map-context-menu-item"
+          onClick={() => {
+            void onRefreshChunk?.(targetChunkId);
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+          }}
+        >
+          <RefreshCw size={14} className="context-icon-info" />
+          <span>Refresh Chunk ({targetChunkId})</span>
+        </button>
+      </div>
+    );
+  }
 
   const canRoute =
     !isPinsFrozen &&

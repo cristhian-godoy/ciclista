@@ -9,6 +9,7 @@ import { MapPin } from './common/Icon';
 import { Toast } from './common/Toast';
 import { BlockedEdgesLayer } from './map/BlockedEdgesLayer';
 import { BrushCircleLayer } from './map/BrushCircleLayer';
+import { DebugChunksLayer } from './map/DebugChunksLayer';
 import { InspectorLayer } from './map/InspectorLayer';
 import { CrossingEditorLayer } from './map/layers/CrossingEditorLayer';
 import { type PlaceModalState, useMapContext } from './map/MapContext';
@@ -137,6 +138,7 @@ const MapViewContent: React.FC<{
       {map && mapReady && (
         <>
           <StreetGraphLayer />
+          <DebugChunksLayer />
           <SelectedEdgesLayer />
           <BrushCircleLayer />
           <BlockedEdgesLayer />

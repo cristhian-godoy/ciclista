@@ -213,7 +213,14 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     },
   });
 
-  const { graph, loadedBBoxes, isFetchingOSM, handleMapBoundsChange } = osmData;
+  const {
+    graph,
+    loadedBBoxes,
+    loadedChunkIds,
+    isFetchingOSM,
+    handleMapBoundsChange,
+    refreshChunk,
+  } = osmData;
   const {
     startCoord,
     setStartCoord,
@@ -546,6 +553,8 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
       crossingTurns={crossingTurns}
       onSaveCrossingTurn={handleSaveCrossingTurn}
       onDeleteCrossingTurn={handleDeleteCrossingTurn}
+      loadedChunkIds={loadedChunkIds}
+      onRefreshChunk={refreshChunk}
     >
       <div className="app-container">
         <SideToolbar

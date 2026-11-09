@@ -2,7 +2,12 @@ import type * as maplibregl from 'maplibre-gl';
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import type { SelectionTool } from '../components/map/contexts/StudioStateContext';
-import type { ContextMenuData, EditSubMode, MapContextType } from '../components/map/MapContext';
+import type {
+  ContextMenuData,
+  DebugSubMode,
+  EditSubMode,
+  MapContextType,
+} from '../components/map/MapContext';
 import {
   CrossingEditorContext,
   MapContext,
@@ -11,6 +16,7 @@ import {
   RoutingStateContext,
   StudioStateContext,
 } from '../components/map/MapContext';
+import { coordToChunkId } from '../core/common/geo';
 import { findEdgesWithinRadius, findNearestEdge } from '../core/common/geometry';
 import type { Coordinate } from '../core/common/types';
 import type { GraphNode, StreetGraph } from '../core/graph/types';
@@ -82,6 +88,12 @@ export interface UseMapInteractionControllerOptions {
   onAddWaypoint?: (coord: Coordinate) => void;
   /** Callback to update intermediate waypoint */
   onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  /** Active debug sub-mode ('chunks' | 'route') */
+  debugSubMode?: DebugSubMode;
+  /** Selected debug chunk identifier */
+  selectedDebugChunkId?: string | null;
+  /** Setter for selected debug chunk identifier */
+  setSelectedDebugChunkId?: (chunkId: string | null) => void;
 }
 
 /**
@@ -167,6 +179,13 @@ export function useMapInteractionController(
   const onUpdateWaypoint = options.onUpdateWaypoint ?? ctx.onUpdateWaypoint;
   const editSubMode =
     options.editSubMode !== undefined ? options.editSubMode : (ctx.editSubMode ?? 'paths');
+  const debugSubMode =
+    options.debugSubMode !== undefined ? options.debugSubMode : (ctx.debugSubMode ?? 'chunks');
+  const selectedDebugChunkId =
+    options.selectedDebugChunkId !== undefined
+      ? options.selectedDebugChunkId
+      : (ctx.selectedDebugChunkId ?? null);
+  const setSelectedDebugChunkId = options.setSelectedDebugChunkId ?? ctx.setSelectedDebugChunkId;
 
   const mapRef = useRef(map);
   const startCoordRef = useRef(startCoord);
@@ -174,6 +193,9 @@ export function useMapInteractionController(
   const isNavigatingRef = useRef(isNavigating);
   const appModeRef = useRef(appMode);
   const editSubModeRef = useRef<EditSubMode>(editSubMode);
+  const debugSubModeRef = useRef<DebugSubMode>(debugSubMode);
+  const selectedDebugChunkIdRef = useRef<string | null>(selectedDebugChunkId);
+  const setSelectedDebugChunkIdRef = useRef(setSelectedDebugChunkId);
   const selectedEdgeIdsRef = useRef<string[] | undefined>(selectedEdgeIds);
   const setSelectedEdgeIdsRef = useRef<React.Dispatch<React.SetStateAction<string[]>> | undefined>(
     setSelectedEdgeIds,
@@ -210,6 +232,9 @@ export function useMapInteractionController(
     isNavigatingRef.current = isNavigating;
     appModeRef.current = appMode;
     editSubModeRef.current = editSubMode;
+    debugSubModeRef.current = debugSubMode;
+    selectedDebugChunkIdRef.current = selectedDebugChunkId;
+    setSelectedDebugChunkIdRef.current = setSelectedDebugChunkId;
     selectedEdgeIdsRef.current = selectedEdgeIds;
     setSelectedEdgeIdsRef.current = setSelectedEdgeIds;
     selectionToolRef.current = selectionTool;
@@ -241,6 +266,9 @@ export function useMapInteractionController(
     isNavigating,
     appMode,
     editSubMode,
+    debugSubMode,
+    selectedDebugChunkId,
+    setSelectedDebugChunkId,
     selectedEdgeIds,
     setSelectedEdgeIds,
     selectionTool,
@@ -322,6 +350,17 @@ export function useMapInteractionController(
         onUpdateWaypointRef.current?.(targetIndex, clickedCoord);
       } else {
         onAddWaypointRef.current?.(clickedCoord);
+      }
+      return;
+    }
+
+    if (appModeRef.current === 'debug') {
+      onNodeSelectRef.current?.(null);
+      if ((debugSubModeRef.current ?? 'chunks') === 'chunks') {
+        const clickedChunkId = coordToChunkId(e.lngLat.lat, e.lngLat.lng);
+        setSelectedDebugChunkIdRef.current?.(
+          selectedDebugChunkIdRef.current === clickedChunkId ? null : clickedChunkId,
+        );
       }
       return;
     }
@@ -609,6 +648,22 @@ export function useMapInteractionController(
   const handleContextMenu = useCallback((e: maplibregl.MapMouseEvent) => {
     const currentMap = mapRef.current;
     if (!currentMap) return;
+
+    if (appModeRef.current === 'debug') {
+      const chunkId = coordToChunkId(e.lngLat.lat, e.lngLat.lng);
+      setContextMenuRef.current?.({
+        visible: true,
+        x: e.point.x,
+        y: e.point.y,
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+        crossingId: null,
+        nodeIds: null,
+        placeId: null,
+        chunkId,
+      });
+      return;
+    }
 
     if (appModeRef.current === 'events' || (appModeRef.current as string) === 'studio') {
       const currentGraph = graphRef.current;

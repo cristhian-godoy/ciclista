@@ -344,4 +344,68 @@ describe('useMapInteractionController', () => {
     expect(setPlacingStopIndexMock).toHaveBeenCalledWith(null);
     expect(onUpdateWaypointMock).toHaveBeenCalledWith(1, { lat: 48.145, lng: 11.585 });
   });
+
+  it('selects clicked chunk ID on left-click in debug mode with chunks sub-mode, toggling selection', () => {
+    const setSelectedDebugChunkIdMock = vi.fn();
+
+    const { result, rerender } = renderHook(
+      (props: { selectedDebugChunkId: string | null }) =>
+        useMapInteractionController({
+          map: mockMap as maplibregl.Map,
+          appMode: 'debug',
+          debugSubMode: 'chunks',
+          selectedDebugChunkId: props.selectedDebugChunkId,
+          setSelectedDebugChunkId: setSelectedDebugChunkIdMock,
+          onNodeSelect: onNodeSelectMock,
+        }),
+      { initialProps: { selectedDebugChunkId: null as string | null } },
+    );
+
+    result.current.handleClick({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(onNodeSelectMock).toHaveBeenCalledWith(null);
+    expect(setSelectedDebugChunkIdMock).toHaveBeenCalledWith('4813,1157');
+
+    setSelectedDebugChunkIdMock.mockClear();
+    rerender({ selectedDebugChunkId: '4813,1157' });
+
+    result.current.handleClick({
+      point: { x: 50, y: 50 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(setSelectedDebugChunkIdMock).toHaveBeenCalledWith(null);
+  });
+
+  it('opens context menu with chunkId when right-clicking in debug mode', () => {
+    const { result } = renderHook(() =>
+      useMapInteractionController({
+        map: mockMap as maplibregl.Map,
+        appMode: 'debug',
+        setContextMenu: setContextMenuMock as unknown as React.Dispatch<
+          React.SetStateAction<ContextMenuData>
+        >,
+      }),
+    );
+
+    result.current.handleContextMenu({
+      point: { x: 120, y: 220 },
+      lngLat: { lat: 48.137, lng: 11.575 },
+    } as unknown as maplibregl.MapMouseEvent);
+
+    expect(setContextMenuMock).toHaveBeenCalledWith({
+      visible: true,
+      x: 120,
+      y: 220,
+      lng: 11.575,
+      lat: 48.137,
+      crossingId: null,
+      nodeIds: null,
+      placeId: null,
+      chunkId: '4813,1157',
+    });
+  });
 });
