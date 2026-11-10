@@ -3,7 +3,19 @@ import type { MapEvent } from '../events';
 /**
  * Available bicycle routing profiles representing different riding speeds and preferences.
  */
-export type BikeProfileId = 'slow' | 'normal' | 'ebike' | 'road' | 'custom';
+export type BikeProfileId = 'slow' | 'normal' | 'ebike' | 'road' | 'custom' | (string & {});
+
+/**
+ * Represents a user-managed bike profile entity specifying riding speed, weight, and turn penalties.
+ */
+export interface BikeProfile {
+  id: string;
+  name: string;
+  speedKmh: number;
+  weightKg?: number;
+  surfacePreferences?: BikeSurfacePreferences;
+  turnPenalties?: BikeTurnPenalties;
+}
 
 /**
  * Custom surface speed and penalty preferences for a bike configuration.
