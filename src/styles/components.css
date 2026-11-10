@@ -4400,3 +4400,110 @@ h2 {
   width: auto;
 }
 
+.ciclista-btn--xs {
+  padding: var(--ciclista-spacing-2xs) var(--ciclista-spacing-xs);
+  font-size: var(--ciclista-font-xs);
+  height: auto;
+  min-height: 22px;
+  width: auto;
+}
+
+/* ─── Profile Modal Components ────────────────────────────────────────────── */
+
+.ciclista-profile-bikes-section,
+.ciclista-profile-rules-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-settings-sidebar-group-title--spaced {
+  margin-top: var(--ciclista-spacing-sm);
+}
+
+.ciclista-profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ciclista-glass-border-base);
+  padding-bottom: var(--ciclista-spacing-xs);
+  margin-bottom: var(--ciclista-spacing-xs);
+}
+
+.ciclista-bike-tabs-list {
+  display: flex;
+  gap: var(--ciclista-spacing-xs);
+  overflow-x: auto;
+  padding-bottom: var(--ciclista-spacing-2xs);
+  margin-bottom: var(--ciclista-spacing-xs);
+}
+
+.ciclista-bike-tab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ciclista-spacing-sm);
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  background: var(--ciclista-color-surface-elevated);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  cursor: pointer;
+  min-width: 130px;
+  transition: all var(--ciclista-transition-fast);
+}
+
+.ciclista-bike-tab-item:hover {
+  background: var(--ciclista-glass-bg-hover);
+  border-color: var(--ciclista-glass-border-focus);
+}
+
+.ciclista-bike-tab-item.selected {
+  border-color: var(--ciclista-color-brand-main);
+  background: rgb(99 102 241 / 15%);
+}
+
+.ciclista-bike-tab-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-2xs);
+}
+
+.ciclista-bike-tab-name {
+  font-size: var(--ciclista-font-sm);
+  font-weight: 600;
+  color: var(--ciclista-color-text-primary);
+}
+
+.ciclista-bike-tab-speed {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+}
+
+.ciclista-bike-tab-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ciclista-bike-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-sm);
+  margin-top: var(--ciclista-spacing-2xs);
+}
+
+.ciclista-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-2xs);
+}
+
+.ciclista-bike-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--ciclista-spacing-md);
+  padding-top: var(--ciclista-spacing-sm);
+  border-top: 1px solid var(--ciclista-glass-border-base);
+}
+
+

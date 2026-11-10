@@ -1,4 +1,4 @@
-import type { RulesConfiguration } from './types';
+import type { BikeProfile, RulesConfiguration } from './types';
 import { InfrastructureType, RoadType } from './types';
 
 /**
@@ -128,3 +128,54 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     uTurnPenaltySeconds: 30,
   },
 };
+
+/**
+ * Default preset bike profiles for cycling route planning.
+ */
+export const DEFAULT_BIKES: BikeProfile[] = [
+  {
+    id: 'city',
+    name: 'City Bike',
+    speedKmh: 18,
+    weightKg: 15,
+    surfacePreferences: {
+      gravelSpeedMultiplier: 0.8,
+      cobblestoneSpeedMultiplier: 0.75,
+    },
+    turnPenalties: {
+      rightTurnPenaltySeconds: 1,
+      leftTurnPenaltySeconds: 4,
+      uTurnPenaltySeconds: 30,
+    },
+  },
+  {
+    id: 'road',
+    name: 'Road Bike',
+    speedKmh: 25,
+    weightKg: 9,
+    surfacePreferences: {
+      gravelSpeedMultiplier: 0.6,
+      cobblestoneSpeedMultiplier: 0.5,
+    },
+    turnPenalties: {
+      rightTurnPenaltySeconds: 1,
+      leftTurnPenaltySeconds: 4,
+      uTurnPenaltySeconds: 30,
+    },
+  },
+  {
+    id: 'gravel',
+    name: 'Gravel / Cargo',
+    speedKmh: 20,
+    weightKg: 20,
+    surfacePreferences: {
+      gravelSpeedMultiplier: 0.95,
+      cobblestoneSpeedMultiplier: 0.85,
+    },
+    turnPenalties: {
+      rightTurnPenaltySeconds: 1,
+      leftTurnPenaltySeconds: 4,
+      uTurnPenaltySeconds: 30,
+    },
+  },
+];

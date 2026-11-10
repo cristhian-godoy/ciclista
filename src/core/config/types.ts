@@ -25,6 +25,18 @@ export interface BikeTurnPenalties {
 }
 
 /**
+ * Bike profile configuration representing an individual bicycle setup with speeds and modifiers.
+ */
+export interface BikeProfile {
+  id: string;
+  name: string;
+  speedKmh: number;
+  weightKg?: number;
+  surfacePreferences?: BikeSurfacePreferences;
+  turnPenalties?: BikeTurnPenalties;
+}
+
+/**
  * Bike configuration mapping user-selected bike profile properties (e.g. max speed)
  * to physical parameters used by the router.
  */
