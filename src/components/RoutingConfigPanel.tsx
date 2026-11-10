@@ -12,6 +12,7 @@ import {
   Plus,
   RefreshCw,
   Settings,
+  Sliders,
   Trash2,
   Zap,
 } from './common/Icon';
@@ -37,6 +38,10 @@ export interface RoutingConfigPanelProps {
   isFetchingOSM: boolean;
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
+  /**
+   * Optional callback to open the dedicated Bike Profile and Road Rules management modal.
+   */
+  onOpenBikeRulesModal?: (tab?: 'bike' | 'rules') => void;
 }
 
 /**
@@ -213,6 +218,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   isFetchingOSM,
   bikeConfig,
   onBikeConfigChange,
+  onOpenBikeRulesModal,
 }) => {
   const [prevStartCoord, setPrevStartCoord] = useState<Coordinate | null>(startCoord);
   const [startInput, setStartInput] = useState(() => formatCoordinate(startCoord));
@@ -259,8 +265,6 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       handleEndBlur();
     }
   };
-
-  const isCustomOrRoad = bikeConfig.id === 'custom' || bikeConfig.id === 'road';
 
   return (
     <>
@@ -374,8 +378,23 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
       </section>
 
       {/* Bike Profile */}
-      <section className="ciclista-form-group">
-        <label className="ciclista-label">Bike Profile</label>
+      <section className="ciclista-form-group ciclista-bike-config-section">
+        <div className="ciclista-bike-header-row">
+          <label className="ciclista-label">Bike Profile</label>
+          {onOpenBikeRulesModal && (
+            <button
+              type="button"
+              className="ciclista-btn ciclista-btn--secondary ciclista-btn--sm ciclista-bike-tune-btn"
+              onClick={() => onOpenBikeRulesModal('bike')}
+              aria-label="Customize bike profile parameters and road rules"
+              title="Customize speed, turn penalties, and road rules"
+              data-testid="customize-bike-rules-btn"
+            >
+              <Sliders size={12} />
+              <span>Customize</span>
+            </button>
+          )}
+        </div>
         <SegmentedControl
           options={[
             {
@@ -410,176 +429,29 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
           ariaLabel="Bike Profile Selector"
         />
 
-        {/* Dynamic Road & Custom Bike Profile Settings & Turn Penalties */}
-        {isCustomOrRoad && (
-          <div className="ciclista-bike-custom-settings">
-            <div className="ciclista-form-group">
-              <label className="ciclista-label" htmlFor="custom-bike-speed">
-                Speed (km/h)
-              </label>
-              <input
-                id="custom-bike-speed"
-                className="ciclista-input"
-                type="number"
-                min={5}
-                max={60}
-                value={bikeConfig.customSpeedKmh ?? (bikeConfig.id === 'road' ? 30 : 18)}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  onBikeConfigChange({
-                    ...bikeConfig,
-                    customSpeedKmh: isNaN(val) ? undefined : val,
-                  });
-                }}
-              />
-            </div>
-
-            <div className="ciclista-form-group">
-              <label className="ciclista-label" htmlFor="custom-bike-weight">
-                Weight (kg)
-              </label>
-              <input
-                id="custom-bike-weight"
-                className="ciclista-input"
-                type="number"
-                min={5}
-                max={200}
-                value={bikeConfig.weightKg ?? 75}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  onBikeConfigChange({
-                    ...bikeConfig,
-                    weightKg: isNaN(val) ? undefined : val,
-                  });
-                }}
-              />
-            </div>
-
-            <div className="ciclista-form-group">
-              <label className="ciclista-label">Turn Penalties (seconds)</label>
-              <div className="ciclista-grid-2col">
-                <div>
-                  <label
-                    className="ciclista-label ciclista-label--sm"
-                    htmlFor="custom-right-turn-penalty"
-                  >
-                    Right Turn
-                  </label>
-                  <input
-                    id="custom-right-turn-penalty"
-                    className="ciclista-input"
-                    type="number"
-                    min={0}
-                    max={60}
-                    value={bikeConfig.turnPenalties?.rightTurnPenaltySeconds ?? 1}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      onBikeConfigChange({
-                        ...bikeConfig,
-                        turnPenalties: {
-                          ...bikeConfig.turnPenalties,
-                          rightTurnPenaltySeconds: isNaN(val) ? 0 : val,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-                <div>
-                  <label
-                    className="ciclista-label ciclista-label--sm"
-                    htmlFor="custom-left-turn-penalty"
-                  >
-                    Left Turn
-                  </label>
-                  <input
-                    id="custom-left-turn-penalty"
-                    className="ciclista-input"
-                    type="number"
-                    min={0}
-                    max={60}
-                    value={bikeConfig.turnPenalties?.leftTurnPenaltySeconds ?? 4}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      onBikeConfigChange({
-                        ...bikeConfig,
-                        turnPenalties: {
-                          ...bikeConfig.turnPenalties,
-                          leftTurnPenaltySeconds: isNaN(val) ? 0 : val,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="ciclista-form-group">
-              <label className="ciclista-label">Surface Multipliers</label>
-              <div className="ciclista-grid-2col">
-                <div>
-                  <label
-                    className="ciclista-label ciclista-label--sm"
-                    htmlFor="custom-gravel-multiplier"
-                  >
-                    Gravel
-                  </label>
-                  <input
-                    id="custom-gravel-multiplier"
-                    className="ciclista-input"
-                    type="number"
-                    step={0.05}
-                    min={0.1}
-                    max={1}
-                    value={
-                      bikeConfig.surfacePreferences?.gravelSpeedMultiplier ??
-                      (bikeConfig.id === 'road' ? 0.4 : 0.8)
-                    }
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      onBikeConfigChange({
-                        ...bikeConfig,
-                        surfacePreferences: {
-                          ...bikeConfig.surfacePreferences,
-                          gravelSpeedMultiplier: isNaN(val) ? 0.8 : val,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-                <div>
-                  <label
-                    className="ciclista-label ciclista-label--sm"
-                    htmlFor="custom-cobblestone-multiplier"
-                  >
-                    Cobblestone
-                  </label>
-                  <input
-                    id="custom-cobblestone-multiplier"
-                    className="ciclista-input"
-                    type="number"
-                    step={0.05}
-                    min={0.1}
-                    max={1}
-                    value={
-                      bikeConfig.surfacePreferences?.cobblestoneSpeedMultiplier ??
-                      (bikeConfig.id === 'road' ? 0.6 : 0.75)
-                    }
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      onBikeConfigChange({
-                        ...bikeConfig,
-                        surfacePreferences: {
-                          ...bikeConfig.surfacePreferences,
-                          cobblestoneSpeedMultiplier: isNaN(val) ? 0.75 : val,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="ciclista-bike-summary-row">
+          <span className="ciclista-bike-summary-pill" data-testid="bike-profile-summary-pill">
+            {bikeConfig.id === 'road'
+              ? `${bikeConfig.customSpeedKmh ?? 30} km/h • Road setup`
+              : bikeConfig.id === 'ebike'
+                ? `${bikeConfig.customSpeedKmh ?? 25} km/h • E-Bike assist`
+                : bikeConfig.id === 'slow'
+                  ? `${bikeConfig.customSpeedKmh ?? 15} km/h • Cargo setup`
+                  : bikeConfig.id === 'custom'
+                    ? `${bikeConfig.customSpeedKmh ?? 18} km/h • Custom tune`
+                    : `${bikeConfig.customSpeedKmh ?? 18} km/h • Standard`}
+          </span>
+          {onOpenBikeRulesModal && (
+            <button
+              type="button"
+              className="ciclista-link-btn"
+              onClick={() => onOpenBikeRulesModal('bike')}
+              data-testid="tune-parameters-link"
+            >
+              Tune parameters &amp; rules &rarr;
+            </button>
+          )}
+        </div>
       </section>
     </>
   );

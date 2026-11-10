@@ -4034,3 +4034,164 @@ h2 {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-primary);
 }
+
+/* ─── Bike Profile & Road Rules Modal & Triggers ──────────────────── */
+
+.ciclista-modal-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-modal-title-icon {
+  color: var(--ciclista-color-brand-main);
+  flex-shrink: 0;
+}
+
+.ciclista-bike-rules-modal {
+  max-width: 600px;
+  width: 100%;
+}
+
+.ciclista-bike-rules-tabs {
+  margin-bottom: var(--ciclista-spacing-xs);
+}
+
+.ciclista-bike-profile-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
+.ciclista-bike-profile-desc {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  margin-top: var(--ciclista-spacing-xs);
+  line-height: 1.4;
+}
+
+.ciclista-bike-tuning-card {
+  padding: var(--ciclista-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+}
+
+.ciclista-bike-reset-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.ciclista-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ciclista-spacing-sm);
+  border-top: 1px solid var(--ciclista-glass-border-base);
+  padding-top: var(--ciclista-spacing-md);
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-modal-footer-actions .ciclista-btn {
+  width: auto;
+}
+
+/* Sidebar Road Rules Compact Summary Card */
+.ciclista-rules-summary-card {
+  padding: var(--ciclista-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ciclista-rules-summary-title {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-summary-icon {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.ciclista-rules-summary-card .ciclista-field-helper {
+  margin: 0;
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+}
+
+/* RoutingConfigPanel Bike Profile Header & Summary */
+.ciclista-bike-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ciclista-spacing-2xs);
+}
+
+.ciclista-bike-header-row .ciclista-label {
+  margin-bottom: 0;
+}
+
+.ciclista-bike-tune-btn {
+  font-size: var(--ciclista-font-xs);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-xs);
+  width: auto;
+}
+
+.ciclista-bike-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--ciclista-spacing-xs);
+  font-size: var(--ciclista-font-xs);
+}
+
+.ciclista-bike-summary-pill {
+  color: var(--ciclista-color-text-secondary);
+  font-size: var(--ciclista-font-xs);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-sm);
+  border-radius: var(--ciclista-radius-xs);
+}
+
+.ciclista-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-brand-secondary);
+  font-size: var(--ciclista-font-xs);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-link-btn:hover {
+  color: var(--ciclista-color-brand-secondary-hover);
+}
+
+.ciclista-btn--sm {
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  font-size: var(--ciclista-font-xs);
+  width: auto;
+}
+

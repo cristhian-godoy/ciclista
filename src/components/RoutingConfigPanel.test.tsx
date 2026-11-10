@@ -162,9 +162,10 @@ describe('RoutingConfigPanel', () => {
     expect(handleBikeChange).toHaveBeenCalledWith({ id: 'custom' });
   });
 
-  it('exposes custom bike profile settings and turn penalties when custom profile is active', async () => {
+  it('renders compact active profile summary and triggers modal open when customize action is clicked', async () => {
     const user = userEvent.setup();
     const handleBikeChange = vi.fn();
+    const handleOpenModal = vi.fn();
 
     render(
       <RoutingConfigPanel
@@ -182,27 +183,21 @@ describe('RoutingConfigPanel', () => {
           surfacePreferences: { gravelSpeedMultiplier: 0.6, cobblestoneSpeedMultiplier: 0.7 },
         }}
         onBikeConfigChange={handleBikeChange}
+        onOpenBikeRulesModal={handleOpenModal}
       />,
     );
 
-    expect(screen.getByLabelText('Speed (km/h)')).toHaveValue(20);
-    expect(screen.getByLabelText('Weight (kg)')).toHaveValue(80);
-    expect(screen.getByLabelText('Right Turn')).toHaveValue(2);
-    expect(screen.getByLabelText('Left Turn')).toHaveValue(5);
-    expect(screen.getByLabelText('Gravel')).toHaveValue(0.6);
-    expect(screen.getByLabelText('Cobblestone')).toHaveValue(0.7);
+    expect(screen.getByTestId('bike-profile-summary-pill')).toHaveTextContent(
+      '20 km/h • Custom tune',
+    );
 
-    // Update custom speed
-    const speedInput = screen.getByLabelText('Speed (km/h)');
-    await user.clear(speedInput);
-    await user.type(speedInput, '25');
-    expect(handleBikeChange).toHaveBeenCalled();
+    const customizeBtn = screen.getByTestId('customize-bike-rules-btn');
+    await user.click(customizeBtn);
+    expect(handleOpenModal).toHaveBeenCalledWith('bike');
 
-    // Update right turn penalty
-    const rightTurnInput = screen.getByLabelText('Right Turn');
-    await user.clear(rightTurnInput);
-    await user.type(rightTurnInput, '3');
-    expect(handleBikeChange).toHaveBeenCalled();
+    const tuneLink = screen.getByTestId('tune-parameters-link');
+    await user.click(tuneLink);
+    expect(handleOpenModal).toHaveBeenCalledWith('bike');
   });
 
   it('supports multi-stop waypoints UI: add, edit, and remove stops', async () => {

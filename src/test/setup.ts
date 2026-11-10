@@ -2,6 +2,8 @@ import '@testing-library/jest-dom';
 
 import { vi } from 'vitest';
 
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '' }));
+
 // Stub mock for maplibre-gl
 vi.mock('maplibre-gl', () => {
   class LngLatBounds {

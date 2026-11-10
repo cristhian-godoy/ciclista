@@ -306,4 +306,43 @@ describe('Sidebar Integration', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
   });
+
+  it('opens BikeProfileRulesModal to Road Rules tab when clicking Configure in summary card', async () => {
+    const user = userEvent.setup();
+    render(<Sidebar {...defaultProps} />);
+
+    expect(
+      screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
+    ).not.toBeInTheDocument();
+
+    const configureBtn = screen.getByTestId('open-rules-modal-btn');
+    await user.click(configureBtn);
+
+    expect(screen.getByRole('dialog', { name: /Bike Setup and Road Rules/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Traffic Signs/i })).toBeInTheDocument();
+
+    // Escape closes modal
+    await user.keyboard('{Escape}');
+    expect(
+      screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens BikeProfileRulesModal to Bike Profile tab when clicking Customize in bike section', async () => {
+    const user = userEvent.setup();
+    render(<Sidebar {...defaultProps} />);
+
+    const customizeBtn = screen.getByTestId('customize-bike-rules-btn');
+    await user.click(customizeBtn);
+
+    expect(screen.getByRole('dialog', { name: /Bike Setup and Road Rules/i })).toBeInTheDocument();
+    expect(screen.getByText('Preset Profile')).toBeInTheDocument();
+    expect(screen.getByLabelText('Speed (km/h)')).toBeInTheDocument();
+
+    const doneBtn = screen.getByTestId('bike-rules-modal-done-btn');
+    await user.click(doneBtn);
+    expect(
+      screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
+    ).not.toBeInTheDocument();
+  });
 });
