@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
-import type { BikeConfig, BikeProfileId } from '../core/config';
+import type { BikeConfig, BikeProfile } from '../core/config';
+import { DEFAULT_BIKES } from '../core/config';
 import type { Landmark } from '../core/landmarks/types';
 import { getCategoryIcon } from '../utils/formatters';
 import { Badge } from './common/Badge';
@@ -9,18 +10,13 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  Bike,
   Crosshair,
   MapPin,
   Plus,
   RefreshCw,
-  Settings,
-  Sliders,
   Trash2,
   X,
-  Zap,
 } from './common/Icon';
-import { SegmentedControl } from './common/SegmentedControl';
 
 /**
  * Properties for the RoutingConfigPanel component.
@@ -52,7 +48,20 @@ export interface RoutingConfigPanelProps {
   bikeConfig: BikeConfig;
   onBikeConfigChange: (config: BikeConfig) => void;
   /**
+   * Available bike profiles for selection (defaults to DEFAULT_BIKES).
+   */
+  bikes?: BikeProfile[];
+  /**
+   * Currently active bike profile id (defaults to bikes[0]?.id ?? bikeConfig.id).
+   */
+  activeBikeId?: string;
+  /**
+   * Callback fired when a bike profile is selected.
+   */
+  onSelectBike?: (id: string) => void;
+  /**
    * Optional callback to open the dedicated Bike Profile and Road Rules management modal.
+   * @deprecated
    */
   onOpenBikeRulesModal?: (tab?: 'bike' | 'rules') => void;
 }
@@ -457,8 +466,17 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   isFetchingOSM,
   bikeConfig,
   onBikeConfigChange,
-  onOpenBikeRulesModal,
+  bikes = DEFAULT_BIKES,
+  activeBikeId,
+  onSelectBike,
 }) => {
+  const availableBikes = bikes;
+  const currentBikeId =
+    activeBikeId ??
+    availableBikes.find((b) => b.id === bikeConfig.id)?.id ??
+    availableBikes[0]?.id ??
+    bikeConfig.id;
+
   const [internalPlacingStart, setInternalPlacingStart] = useState(false);
   const [internalPlacingEnd, setInternalPlacingEnd] = useState(false);
 
@@ -589,6 +607,40 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                 )}
               </div>
             )}
+
+            <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-bike-row">
+              <label className="ciclista-label" htmlFor="route-bike-select">
+                Bike
+              </label>
+              <select
+                id="route-bike-select"
+                name="routeBike"
+                className="ciclista-input ciclista-select ciclista-route-bike-select"
+                value={currentBikeId}
+                aria-label="Bike"
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  onSelectBike?.(nextId);
+                  const chosen = availableBikes.find((b) => b.id === nextId);
+                  if (chosen) {
+                    onBikeConfigChange({
+                      ...bikeConfig,
+                      id: chosen.id,
+                      customSpeedKmh: chosen.speedKmh,
+                      weightKg: chosen.weightKg,
+                      surfacePreferences: chosen.surfacePreferences,
+                      turnPenalties: chosen.turnPenalties,
+                    });
+                  }
+                }}
+              >
+                {availableBikes.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         {isFetchingOSM && (
@@ -597,83 +649,6 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
             <span>Fetching street network from Overpass...</span>
           </div>
         )}
-      </section>
-
-      {/* Bike Profile */}
-      <section className="ciclista-form-group ciclista-bike-config-section">
-        <div className="ciclista-bike-header-row">
-          <label className="ciclista-label">Bike Profile</label>
-          {onOpenBikeRulesModal && (
-            <button
-              type="button"
-              className="ciclista-btn ciclista-btn--secondary ciclista-btn--sm ciclista-bike-tune-btn"
-              onClick={() => onOpenBikeRulesModal('bike')}
-              aria-label="Customize bike profile parameters and road rules"
-              title="Customize speed, turn penalties, and road rules"
-              data-testid="customize-bike-rules-btn"
-            >
-              <Sliders size={12} />
-              <span>Customize</span>
-            </button>
-          )}
-        </div>
-        <SegmentedControl
-          options={[
-            {
-              key: 'normal',
-              label: 'Standard',
-              icon: <Bike size={12} aria-label="Standard Icon" />,
-            },
-            {
-              key: 'road',
-              label: 'Road',
-              icon: <Zap size={12} aria-label="Road Icon" />,
-            },
-            {
-              key: 'ebike',
-              label: 'E-Bike',
-              icon: <Zap size={12} aria-label="E-Bike Icon" />,
-            },
-            {
-              key: 'slow',
-              label: 'Cargo',
-              icon: <Bike size={12} aria-label="Cargo Icon" />,
-            },
-            {
-              key: 'custom',
-              label: 'Custom',
-              icon: <Settings size={12} aria-label="Custom Icon" />,
-            },
-          ]}
-          value={bikeConfig.id}
-          onChange={(id) => onBikeConfigChange({ ...bikeConfig, id: id as BikeProfileId })}
-          showDescription={false}
-          ariaLabel="Bike Profile Selector"
-        />
-
-        <div className="ciclista-bike-summary-row">
-          <span className="ciclista-bike-summary-pill" data-testid="bike-profile-summary-pill">
-            {bikeConfig.id === 'road'
-              ? `${bikeConfig.customSpeedKmh ?? 30} km/h • Road setup`
-              : bikeConfig.id === 'ebike'
-                ? `${bikeConfig.customSpeedKmh ?? 25} km/h • E-Bike assist`
-                : bikeConfig.id === 'slow'
-                  ? `${bikeConfig.customSpeedKmh ?? 15} km/h • Cargo setup`
-                  : bikeConfig.id === 'custom'
-                    ? `${bikeConfig.customSpeedKmh ?? 18} km/h • Custom tune`
-                    : `${bikeConfig.customSpeedKmh ?? 18} km/h • Standard`}
-          </span>
-          {onOpenBikeRulesModal && (
-            <button
-              type="button"
-              className="ciclista-link-btn"
-              onClick={() => onOpenBikeRulesModal('bike')}
-              data-testid="tune-parameters-link"
-            >
-              Tune parameters &amp; rules &rarr;
-            </button>
-          )}
-        </div>
       </section>
     </>
   );

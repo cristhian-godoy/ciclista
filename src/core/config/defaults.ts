@@ -1,4 +1,4 @@
-import type { RulesConfiguration } from './types';
+import type { BikeProfile, RulesConfiguration } from './types';
 import { InfrastructureType, RoadType } from './types';
 
 /**
@@ -128,3 +128,19 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
     uTurnPenaltySeconds: 30,
   },
 };
+
+/**
+ * Default bike profiles available for selection.
+ */
+export const DEFAULT_BIKES: BikeProfile[] = [
+  {
+    id: 'normal',
+    name: 'Normal Bike',
+    speedKmh: 18,
+  },
+  {
+    id: 'ebike',
+    name: 'E-Bike',
+    speedKmh: 25,
+  },
+];

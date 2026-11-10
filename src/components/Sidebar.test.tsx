@@ -87,8 +87,13 @@ describe('Sidebar Integration', () => {
     // Check elements from RouteStatsPanel
     expect(screen.getByText('Route Alternatives')).toBeInTheDocument();
 
-    // Check elements from RulesConfigPanel
-    expect(screen.getByText('Road Rules')).toBeInTheDocument();
+    // Verify Bike selector exists inside Route Points
+    expect(screen.getByLabelText('Bike')).toBeInTheDocument();
+
+    // Verify standalone Road Rules and Bike Profile sections are removed
+    expect(screen.queryByText('Road Rules')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('open-rules-modal-btn')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('customize-bike-rules-btn')).not.toBeInTheDocument();
 
     // Check elements from RouteComparePanel
     expect(screen.getByText('Route Comparison')).toBeInTheDocument();
@@ -428,42 +433,48 @@ describe('Sidebar Integration', () => {
     expect(pickEnd).toHaveClass('ciclista-btn--active');
   });
 
-  it('opens BikeProfileRulesModal to Road Rules tab when clicking Configure in summary card', async () => {
-    const user = userEvent.setup();
+  it('verifies standalone Road Rules summary card and modal are completely removed', () => {
     render(<Sidebar {...defaultProps} />);
 
-    expect(
-      screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
-    ).not.toBeInTheDocument();
-
-    const configureBtn = screen.getByTestId('open-rules-modal-btn');
-    await user.click(configureBtn);
-
-    expect(screen.getByRole('dialog', { name: /Bike Setup and Road Rules/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Traffic Signs/i })).toBeInTheDocument();
-
-    // Escape closes modal
-    await user.keyboard('{Escape}');
+    expect(screen.queryByText('Road Rules')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('open-rules-modal-btn')).not.toBeInTheDocument();
     expect(
       screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
     ).not.toBeInTheDocument();
   });
 
-  it('opens BikeProfileRulesModal to Bike Profile tab when clicking Customize in bike section', async () => {
+  it('passes bikes, activeBikeId, and onSelectBike through to RoutingConfigPanel and handles changes', async () => {
     const user = userEvent.setup();
-    render(<Sidebar {...defaultProps} />);
+    const handleSelectBike = vi.fn();
+    const handleBikeConfigChange = vi.fn();
 
-    const customizeBtn = screen.getByTestId('customize-bike-rules-btn');
-    await user.click(customizeBtn);
+    const customBikes = [
+      { id: 'normal' as const, name: 'Normal Bike', speedKmh: 18 },
+      { id: 'ebike' as const, name: 'E-Bike', speedKmh: 25 },
+    ];
 
-    expect(screen.getByRole('dialog', { name: /Bike Setup and Road Rules/i })).toBeInTheDocument();
-    expect(screen.getByText('Preset Profile')).toBeInTheDocument();
-    expect(screen.getByLabelText('Speed (km/h)')).toBeInTheDocument();
+    render(
+      <Sidebar
+        {...defaultProps}
+        bikes={customBikes}
+        activeBikeId="normal"
+        onSelectBike={handleSelectBike}
+        onBikeConfigChange={handleBikeConfigChange}
+      />,
+    );
 
-    const doneBtn = screen.getByTestId('bike-rules-modal-done-btn');
-    await user.click(doneBtn);
-    expect(
-      screen.queryByRole('dialog', { name: /Bike Setup and Road Rules/i }),
-    ).not.toBeInTheDocument();
+    const bikeSelect = screen.getByLabelText('Bike');
+    expect(bikeSelect).toBeInTheDocument();
+    expect(bikeSelect).toHaveValue('normal');
+
+    await user.selectOptions(bikeSelect, 'ebike');
+
+    expect(handleSelectBike).toHaveBeenCalledWith('ebike');
+    expect(handleBikeConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'ebike',
+        customSpeedKmh: 25,
+      }),
+    );
   });
 });

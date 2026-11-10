@@ -25,6 +25,18 @@ export interface BikeTurnPenalties {
 }
 
 /**
+ * Bicycle profile definition for routing speed and physical characteristics.
+ */
+export interface BikeProfile {
+  id: BikeProfileId;
+  name: string;
+  speedKmh: number;
+  weightKg?: number;
+  surfacePreferences?: BikeSurfacePreferences;
+  turnPenalties?: BikeTurnPenalties;
+}
+
+/**
  * Bike configuration mapping user-selected bike profile properties (e.g. max speed)
  * to physical parameters used by the router.
  */

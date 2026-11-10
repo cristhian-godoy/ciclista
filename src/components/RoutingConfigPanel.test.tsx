@@ -346,10 +346,7 @@ describe('RoutingConfigPanel', () => {
     expect(screen.getByText(/Fetching street network from Overpass/i)).toBeInTheDocument();
   });
 
-  it('shows active ebike button and triggers change callback when clicked', async () => {
-    const user = userEvent.setup();
-    const handleBikeChange = vi.fn();
-
+  it('renders bike selector dropdown inside Route Points and does not render standalone bike profile section', () => {
     render(
       <RoutingConfigPanel
         startCoord={null}
@@ -359,21 +356,31 @@ describe('RoutingConfigPanel', () => {
         onSetEndCoord={vi.fn()}
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
-        onBikeConfigChange={handleBikeChange}
+        onBikeConfigChange={vi.fn()}
       />,
     );
 
-    const standardBtn = screen.getByRole('button', { name: /Standard/i });
-    expect(standardBtn).toHaveClass('active');
+    const bikeSelect = screen.getByLabelText('Bike');
+    expect(bikeSelect).toBeInTheDocument();
+    expect(bikeSelect).toHaveValue('normal');
 
-    const ebikeBtn = screen.getByRole('button', { name: /E-Bike/i });
-    await user.click(ebikeBtn);
-    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'ebike' });
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveTextContent('Normal Bike');
+    expect(options[0]).toHaveValue('normal');
+    expect(options[1]).toHaveTextContent('E-Bike');
+    expect(options[1]).toHaveValue('ebike');
+
+    // Standalone Bike Profile section and customize buttons must not exist
+    expect(screen.queryByTestId('customize-bike-rules-btn')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bike-profile-summary-pill')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Bike Profile Selector')).not.toBeInTheDocument();
   });
 
-  it('allows selecting Road profile and Custom profile', async () => {
+  it('triggers onSelectBike and onBikeConfigChange when selecting another bike', async () => {
     const user = userEvent.setup();
     const handleBikeChange = vi.fn();
+    const handleSelectBike = vi.fn();
 
     render(
       <RoutingConfigPanel
@@ -383,24 +390,33 @@ describe('RoutingConfigPanel', () => {
         onSetStartCoord={vi.fn()}
         onSetEndCoord={vi.fn()}
         isFetchingOSM={false}
-        bikeConfig={{ id: 'normal' }}
+        bikeConfig={{ id: 'normal', customSpeedKmh: 18 }}
         onBikeConfigChange={handleBikeChange}
+        onSelectBike={handleSelectBike}
       />,
     );
 
-    const roadBtn = screen.getByRole('button', { name: /Road/i });
-    await user.click(roadBtn);
-    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'road' });
+    const bikeSelect = screen.getByLabelText('Bike');
+    await user.selectOptions(bikeSelect, 'ebike');
 
-    const customBtn = screen.getByRole('button', { name: /Custom/i });
-    await user.click(customBtn);
-    expect(handleBikeChange).toHaveBeenCalledWith({ id: 'custom' });
+    expect(handleSelectBike).toHaveBeenCalledWith('ebike');
+    expect(handleBikeChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'ebike',
+        customSpeedKmh: 25,
+      }),
+    );
   });
 
-  it('renders compact active profile summary and triggers modal open when customize action is clicked', async () => {
+  it('supports custom bikes list and activeBikeId prop', async () => {
     const user = userEvent.setup();
     const handleBikeChange = vi.fn();
-    const handleOpenModal = vi.fn();
+    const handleSelectBike = vi.fn();
+
+    const customBikes = [
+      { id: 'road' as const, name: 'Road Bike', speedKmh: 30 },
+      { id: 'cargo' as const, name: 'Cargo Bike', speedKmh: 15 },
+    ];
 
     render(
       <RoutingConfigPanel
@@ -410,29 +426,30 @@ describe('RoutingConfigPanel', () => {
         onSetStartCoord={vi.fn()}
         onSetEndCoord={vi.fn()}
         isFetchingOSM={false}
-        bikeConfig={{
-          id: 'custom',
-          customSpeedKmh: 20,
-          weightKg: 80,
-          turnPenalties: { rightTurnPenaltySeconds: 2, leftTurnPenaltySeconds: 5 },
-          surfacePreferences: { gravelSpeedMultiplier: 0.6, cobblestoneSpeedMultiplier: 0.7 },
-        }}
+        bikeConfig={{ id: 'road' }}
+        bikes={customBikes}
+        activeBikeId="road"
         onBikeConfigChange={handleBikeChange}
-        onOpenBikeRulesModal={handleOpenModal}
+        onSelectBike={handleSelectBike}
       />,
     );
 
-    expect(screen.getByTestId('bike-profile-summary-pill')).toHaveTextContent(
-      '20 km/h • Custom tune',
+    const bikeSelect = screen.getByLabelText('Bike');
+    expect(bikeSelect).toHaveValue('road');
+
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveTextContent('Road Bike');
+    expect(options[1]).toHaveTextContent('Cargo Bike');
+
+    await user.selectOptions(bikeSelect, 'cargo');
+    expect(handleSelectBike).toHaveBeenCalledWith('cargo');
+    expect(handleBikeChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'cargo',
+        customSpeedKmh: 15,
+      }),
     );
-
-    const customizeBtn = screen.getByTestId('customize-bike-rules-btn');
-    await user.click(customizeBtn);
-    expect(handleOpenModal).toHaveBeenCalledWith('bike');
-
-    const tuneLink = screen.getByTestId('tune-parameters-link');
-    await user.click(tuneLink);
-    expect(handleOpenModal).toHaveBeenCalledWith('bike');
   });
 
   it('supports multi-stop waypoints UI: add, remove, and read-only inputs', async () => {

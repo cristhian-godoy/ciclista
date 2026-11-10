@@ -1,5 +1,5 @@
 defaults.ts
-	Default rules configuration values, road classes baseline speeds, and sign profiles.
+	Default rules configuration values, road classes baseline speeds, sign profiles, and default bike profiles.
 index.ts
 	Barrel exports for the configuration domain.
 settings.ts

@@ -4,10 +4,6 @@ AttributionPanel.test.tsx
 	Unit tests for AttributionPanel collapsed/expanded states.
 AttributionPanel.tsx
 	Accordion-style panel displaying third-party licensing and attributions.
-BikeProfileRulesModal.test.tsx
-	Unit tests for dedicated bike profile setup and road rules management modal dialog.
-BikeProfileRulesModal.tsx
-	Modal dialog for managing custom bike setups, surface factors, turn penalties, and road rule overrides.
 CrossingEditPanel.test.tsx
 	Unit tests for crossing edit panel edge classification legend, turn configuration, and penalty overrides.
 CrossingEditPanel.tsx
@@ -67,9 +63,9 @@ RouteStatsPanel.test.tsx
 RouteStatsPanel.tsx
 	View panel showcasing routing strategies and active route info cards.
 RoutingConfigPanel.test.tsx
-	Unit tests for non-editable route coordinates, pick-on-map triggers, clear buttons, swap button, and bike profile configurations.
+	Unit tests for route coordinates, pick-on-map triggers, clear buttons, swap button, waypoints, and bike selector.
 RoutingConfigPanel.tsx
-	Configuration panel for non-editable route coordinates, pick-on-map triggers, clear buttons, swap button, and bike profile selections.
+	Configuration panel for route coordinates, pick-on-map triggers, clear buttons, swap button, waypoints, and bike selector.
 RulesConfigPanel.test.tsx
 	Unit tests for road type and traffic sign penalty selectors.
 RulesConfigPanel.tsx
