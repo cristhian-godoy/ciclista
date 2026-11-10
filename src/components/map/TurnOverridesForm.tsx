@@ -76,6 +76,8 @@ export const TurnOverridesForm: React.FC<TurnOverridesFormProps> = ({
                 )
               </div>
               <select
+                id={`turn-override-${compositeKey}`}
+                name={`turn-override-${compositeKey}`}
                 aria-label={`Turn override from ${m.fromStreetName} to ${m.toStreetName}`}
                 value={activeVal}
                 onChange={(e) => onTurnChange(compositeKey, e.target.value)}

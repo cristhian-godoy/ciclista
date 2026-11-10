@@ -84,28 +84,47 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
 
   return (
     <div className={`rules-section ${className}`.trim()}>
-      <div
-        role="button"
-        tabIndex={0}
-        className={`rules-section-toggle ${headerClassName}`.trim()}
-        onClick={handleToggle}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleToggle();
-          }
-        }}
-        aria-expanded={isExpanded}
-      >
-        <span className="rules-section-btn-label">
-          {icon}
-          {title}
-        </span>
-        <div className="rules-section-header-actions" onClick={(e) => e.stopPropagation()}>
-          {headerActions}
-          {isExpanded ? <ChevronUp size={chevronSize} /> : <ChevronDown size={chevronSize} />}
+      {headerActions ? (
+        <div className={`rules-section-header ${headerClassName}`.trim()}>
+          <button
+            type="button"
+            className="rules-section-toggle"
+            onClick={handleToggle}
+            aria-expanded={isExpanded}
+          >
+            <span className="rules-section-btn-label">
+              {icon}
+              {title}
+            </span>
+          </button>
+          <div className="rules-section-header-actions">
+            {headerActions}
+            <button
+              type="button"
+              className="rules-section-chevron-btn"
+              onClick={handleToggle}
+              aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
+            >
+              {isExpanded ? <ChevronUp size={chevronSize} /> : <ChevronDown size={chevronSize} />}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <button
+          type="button"
+          className={`rules-section-toggle ${headerClassName}`.trim()}
+          onClick={handleToggle}
+          aria-expanded={isExpanded}
+        >
+          <span className="rules-section-btn-label">
+            {icon}
+            {title}
+          </span>
+          <span className="rules-section-header-actions">
+            {isExpanded ? <ChevronUp size={chevronSize} /> : <ChevronDown size={chevronSize} />}
+          </span>
+        </button>
+      )}
       {isExpanded && <div className={bodyClassName || undefined}>{children}</div>}
     </div>
   );

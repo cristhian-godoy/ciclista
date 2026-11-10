@@ -173,6 +173,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
       {/* Filter and Search Controls */}
       <div className="ciclista-card ciclista-places-controls-card">
         <SearchInput
+          id="ciclista-places-search-input"
+          name="searchPlaces"
           placeholder="Search places..."
           value={searchQuery}
           onChange={setSearchQuery}
@@ -189,6 +191,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
             </label>
             <select
               id="ciclista-places-filter-category"
+              name="categoryFilter"
+              aria-label="Filter by Category"
               className="ciclista-select"
               value={selectedCategoryFilter}
               onChange={(e) =>
@@ -210,6 +214,8 @@ export const PlacesPanel: React.FC<PlacesPanelProps> = ({
             </label>
             <select
               id="ciclista-places-sort-select"
+              name="sortBy"
+              aria-label="Sort By"
               className="ciclista-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'name' | 'createdAt' | 'category')}

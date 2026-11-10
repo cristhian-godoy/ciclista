@@ -60,6 +60,9 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           type="text"
           className={`ciclista-input ciclista-search-input ${inputClassName}`.trim()}
           placeholder={placeholder}
+          aria-label={
+            inputProps['aria-label'] || (typeof placeholder === 'string' ? placeholder : 'Search')
+          }
           value={value}
           onChange={(e) => onChange(e.target.value)}
           {...inputProps}

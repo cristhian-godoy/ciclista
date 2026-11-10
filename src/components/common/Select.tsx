@@ -93,6 +93,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
             className={`ciclista-select ${selectClassName}`.trim()}
+            aria-label={
+              selectProps['aria-label'] || (typeof label === 'string' ? label : undefined)
+            }
             {...selectProps}
           >
             {options.map((opt) => (

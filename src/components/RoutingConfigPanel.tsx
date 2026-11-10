@@ -137,6 +137,8 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
         </label>
         <input
           id={`route-stop-${index}-input`}
+          name={`routeStop${index + 1}`}
+          aria-label={`Stop ${index + 1}`}
           className="ciclista-input ciclista-route-location-input"
           type="text"
           value={val}
@@ -280,6 +282,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               </label>
               <input
                 id="route-start-input"
+                name="start"
+                aria-label="Start point coordinates"
                 className="ciclista-input ciclista-route-location-input"
                 type="text"
                 value={startInput}
@@ -312,6 +316,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               </label>
               <input
                 id="route-end-input"
+                name="destination"
+                aria-label="Destination point coordinates"
                 className="ciclista-input ciclista-route-location-input"
                 type="text"
                 value={endInput}
@@ -419,6 +425,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               </label>
               <input
                 id="custom-bike-speed"
+                name="customSpeed"
+                aria-label="Speed (km/h)"
                 className="ciclista-input"
                 type="number"
                 min={5}
@@ -440,6 +448,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               </label>
               <input
                 id="custom-bike-weight"
+                name="customWeight"
+                aria-label="Weight (kg)"
                 className="ciclista-input"
                 type="number"
                 min={5}
@@ -467,6 +477,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   </label>
                   <input
                     id="custom-right-turn-penalty"
+                    name="customRightTurnPenalty"
+                    aria-label="Right Turn Penalty (seconds)"
                     className="ciclista-input"
                     type="number"
                     min={0}
@@ -493,6 +505,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   </label>
                   <input
                     id="custom-left-turn-penalty"
+                    name="customLeftTurnPenalty"
+                    aria-label="Left Turn Penalty (seconds)"
                     className="ciclista-input"
                     type="number"
                     min={0}
@@ -525,6 +539,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   </label>
                   <input
                     id="custom-gravel-multiplier"
+                    name="customGravelMultiplier"
+                    aria-label="Gravel Surface Multiplier"
                     className="ciclista-input"
                     type="number"
                     step={0.05}
@@ -555,6 +571,8 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   </label>
                   <input
                     id="custom-cobblestone-multiplier"
+                    name="customCobblestoneMultiplier"
+                    aria-label="Cobblestone Surface Multiplier"
                     className="ciclista-input"
                     type="number"
                     step={0.05}

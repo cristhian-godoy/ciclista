@@ -413,8 +413,10 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 Start
               </label>
               <input
+                aria-label="Start point coordinates"
                 class="ciclista-input ciclista-route-location-input"
                 id="route-start-input"
+                name="start"
                 placeholder="Click map or enter lat, lng"
                 type="text"
                 value=""
@@ -430,8 +432,10 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 Destination
               </label>
               <input
+                aria-label="Destination point coordinates"
                 class="ciclista-input ciclista-route-location-input"
                 id="route-end-input"
+                name="destination"
                 placeholder="Click map or enter lat, lng"
                 type="text"
                 value=""
@@ -772,35 +776,9 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   Road Rules
                 </h2>
               </span>
-              <div
+              <span
                 class="rules-panel-header-actions"
               >
-                <button
-                  class="rules-reset-btn"
-                  title="Reset to defaults"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-rotate-ccw"
-                    fill="none"
-                    height="11"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="11"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
-                    />
-                    <path
-                      d="M3 3v5h5"
-                    />
-                  </svg>
-                  Reset
-                </button>
                 <svg
                   aria-hidden="true"
                   class="lucide lucide-chevron-down"
@@ -818,20 +796,50 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                     d="m6 9 6 6 6-6"
                   />
                 </svg>
-              </div>
+              </span>
             </div>
           </summary>
           <div
             class="rules-body-container"
           >
             <div
+              class="rules-panel-actions"
+            >
+              <button
+                class="rules-reset-btn"
+                title="Reset to defaults"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-rotate-ccw"
+                  fill="none"
+                  height="11"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="11"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+                  />
+                  <path
+                    d="M3 3v5h5"
+                  />
+                </svg>
+                Reset
+              </button>
+            </div>
+            <div
               class="rules-section"
             >
-              <div
+              <button
                 aria-expanded="false"
                 class="rules-section-toggle"
-                role="button"
-                tabindex="0"
+                type="button"
               >
                 <span
                   class="rules-section-btn-label"
@@ -864,7 +872,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Traffic Signs
                 </span>
-                <div
+                <span
                   class="rules-section-header-actions"
                 >
                   <svg
@@ -884,17 +892,16 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                       d="m6 9 6 6 6-6"
                     />
                   </svg>
-                </div>
-              </div>
+                </span>
+              </button>
             </div>
             <div
               class="rules-section"
             >
-              <div
+              <button
                 aria-expanded="false"
                 class="rules-section-toggle"
-                role="button"
-                tabindex="0"
+                type="button"
               >
                 <span
                   class="rules-section-btn-label"
@@ -928,7 +935,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Road Classes
                 </span>
-                <div
+                <span
                   class="rules-section-header-actions"
                 >
                   <svg
@@ -948,17 +955,16 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                       d="m6 9 6 6 6-6"
                     />
                   </svg>
-                </div>
-              </div>
+                </span>
+              </button>
             </div>
             <div
               class="rules-section"
             >
-              <div
+              <button
                 aria-expanded="false"
                 class="rules-section-toggle"
-                role="button"
-                tabindex="0"
+                type="button"
               >
                 <span
                   class="rules-section-btn-label"
@@ -987,7 +993,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Intersections
                 </span>
-                <div
+                <span
                   class="rules-section-header-actions"
                 >
                   <svg
@@ -1007,17 +1013,16 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                       d="m6 9 6 6 6-6"
                     />
                   </svg>
-                </div>
-              </div>
+                </span>
+              </button>
             </div>
             <div
               class="rules-section"
             >
-              <div
+              <button
                 aria-expanded="false"
                 class="rules-section-toggle"
-                role="button"
-                tabindex="0"
+                type="button"
               >
                 <span
                   class="rules-section-btn-label"
@@ -1044,7 +1049,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   </svg>
                   Turn Penalties
                 </span>
-                <div
+                <span
                   class="rules-section-header-actions"
                 >
                   <svg
@@ -1064,8 +1069,8 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                       d="m6 9 6 6 6-6"
                     />
                   </svg>
-                </div>
-              </div>
+                </span>
+              </button>
             </div>
           </div>
         </details>
@@ -1095,11 +1100,10 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
         <div
           class="rules-section attribution-accordion"
         >
-          <div
+          <button
             aria-expanded="false"
             class="rules-section-toggle attribution-panel-header"
-            role="button"
-            tabindex="0"
+            type="button"
           >
             <span
               class="rules-section-btn-label"
@@ -1131,7 +1135,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
               </svg>
               Attributions
             </span>
-            <div
+            <span
               class="rules-section-header-actions"
             >
               <svg
@@ -1151,8 +1155,8 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   d="m6 9 6 6 6-6"
                 />
               </svg>
-            </div>
-          </div>
+            </span>
+          </button>
         </div>
       </section>
     </div>

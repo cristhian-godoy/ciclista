@@ -145,6 +145,8 @@ export const PlaceForm: React.FC<PlaceFormProps> = ({
         </label>
         <input
           id="ciclista-place-name-input"
+          name="name"
+          aria-label="Name"
           type="text"
           className="ciclista-input"
           placeholder="e.g. Home, Office, Dr. Mueller"
@@ -160,6 +162,8 @@ export const PlaceForm: React.FC<PlaceFormProps> = ({
         </label>
         <input
           id="ciclista-place-description-input"
+          name="description"
+          aria-label="Notes / Description"
           type="text"
           className="ciclista-input"
           placeholder="Building entrance, bike parking info..."

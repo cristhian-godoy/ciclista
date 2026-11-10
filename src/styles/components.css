@@ -187,6 +187,24 @@ h2 {
   overflow: hidden;
 }
 
+.rules-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: rgb(255 255 255 / 4%);
+}
+
+.rules-section-chevron-btn {
+  background: none;
+  border: none;
+  color: var(--ciclista-color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ciclista-spacing-3xs);
+}
+
 .rules-section-toggle {
   display: flex;
   justify-content: space-between;
@@ -2187,6 +2205,12 @@ h2 {
   flex-direction: column;
   gap: var(--ciclista-spacing-12);
   margin-top: var(--ciclista-spacing-md);
+}
+
+.rules-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .rules-section-btn-label {
