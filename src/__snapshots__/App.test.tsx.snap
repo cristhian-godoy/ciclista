@@ -396,6 +396,39 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             </svg>
             Route Points
           </h2>
+          <button
+            aria-label="Swap start and destination"
+            class="ciclista-btn ciclista-btn--secondary ciclista-route-swap-btn"
+            title="Swap start and destination"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-arrow-up-down"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21 16-4 4-4-4"
+              />
+              <path
+                d="M17 20V4"
+              />
+              <path
+                d="m3 8 4-4 4 4"
+              />
+              <path
+                d="M7 4v16"
+              />
+            </svg>
+          </button>
         </div>
         <div
           class="ciclista-route-locations-body"
@@ -415,68 +448,70 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 >
                   Start
                 </label>
-                <input
-                  class="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
-                  id="route-start-input"
-                  placeholder="Click map to set location"
-                  readonly=""
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="ciclista-route-endpoint-actions"
-              >
-                <button
-                  aria-label="Pick start on map"
-                  class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
-                  title="Pick start on map"
-                  type="button"
+                <div
+                  class="ciclista-route-input-wrapper"
                 >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-crosshair"
-                    fill="none"
-                    height="14"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="14"
-                    xmlns="http://www.w3.org/2000/svg"
+                  <input
+                    aria-autocomplete="list"
+                    aria-expanded="false"
+                    autocomplete="off"
+                    class="ciclista-input ciclista-route-location-input  "
+                    id="route-start-input"
+                    placeholder="Search saved place or pick on map"
+                    type="text"
+                    value=""
+                  />
+                  <button
+                    aria-label="Pick start on map"
+                    class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
+                    title="Pick start on map"
+                    type="button"
                   >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                    />
-                    <line
-                      x1="22"
-                      x2="18"
-                      y1="12"
-                      y2="12"
-                    />
-                    <line
-                      x1="6"
-                      x2="2"
-                      y1="12"
-                      y2="12"
-                    />
-                    <line
-                      x1="12"
-                      x2="12"
-                      y1="2"
-                      y2="6"
-                    />
-                    <line
-                      x1="12"
-                      x2="12"
-                      y1="22"
-                      y2="18"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-crosshair"
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                      />
+                      <line
+                        x1="22"
+                        x2="18"
+                        y1="12"
+                        y2="12"
+                      />
+                      <line
+                        x1="6"
+                        x2="2"
+                        y1="12"
+                        y2="12"
+                      />
+                      <line
+                        x1="12"
+                        x2="12"
+                        y1="2"
+                        y2="6"
+                      />
+                      <line
+                        x1="12"
+                        x2="12"
+                        y1="22"
+                        y2="18"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <div
@@ -491,68 +526,70 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 >
                   Destination
                 </label>
-                <input
-                  class="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
-                  id="route-end-input"
-                  placeholder="Click map to set location"
-                  readonly=""
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="ciclista-route-endpoint-actions"
-              >
-                <button
-                  aria-label="Pick destination on map"
-                  class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
-                  title="Pick destination on map"
-                  type="button"
+                <div
+                  class="ciclista-route-input-wrapper"
                 >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-crosshair"
-                    fill="none"
-                    height="14"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="14"
-                    xmlns="http://www.w3.org/2000/svg"
+                  <input
+                    aria-autocomplete="list"
+                    aria-expanded="false"
+                    autocomplete="off"
+                    class="ciclista-input ciclista-route-location-input  "
+                    id="route-end-input"
+                    placeholder="Search saved place or pick on map"
+                    type="text"
+                    value=""
+                  />
+                  <button
+                    aria-label="Pick destination on map"
+                    class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
+                    title="Pick destination on map"
+                    type="button"
                   >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                    />
-                    <line
-                      x1="22"
-                      x2="18"
-                      y1="12"
-                      y2="12"
-                    />
-                    <line
-                      x1="6"
-                      x2="2"
-                      y1="12"
-                      y2="12"
-                    />
-                    <line
-                      x1="12"
-                      x2="12"
-                      y1="2"
-                      y2="6"
-                    />
-                    <line
-                      x1="12"
-                      x2="12"
-                      y1="22"
-                      y2="18"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-crosshair"
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                      />
+                      <line
+                        x1="22"
+                        x2="18"
+                        y1="12"
+                        y2="12"
+                      />
+                      <line
+                        x1="6"
+                        x2="2"
+                        y1="12"
+                        y2="12"
+                      />
+                      <line
+                        x1="12"
+                        x2="12"
+                        y1="2"
+                        y2="6"
+                      />
+                      <line
+                        x1="12"
+                        x2="12"
+                        y1="22"
+                        y2="18"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <div
@@ -596,49 +633,72 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
               </p>
             </div>
           </div>
+        </div>
+      </section>
+      <section
+        class="ciclista-form-group ciclista-bike-config-section"
+      >
+        <div
+          class="ciclista-bike-header-row"
+        >
+          <label
+            class="ciclista-label"
+          >
+            Bike Profile
+          </label>
           <button
-            aria-label="Swap start and destination"
-            class="ciclista-btn ciclista-btn--secondary ciclista-route-swap-btn"
-            title="Swap start and destination"
+            aria-label="Customize bike profile parameters and road rules"
+            class="ciclista-btn ciclista-btn--secondary ciclista-btn--sm ciclista-bike-tune-btn"
+            data-testid="customize-bike-rules-btn"
+            title="Customize speed, turn penalties, and road rules"
             type="button"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-arrow-up-down"
+              class="lucide lucide-sliders"
               fill="none"
-              height="16"
+              height="12"
               stroke="currentColor"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
               viewBox="0 0 24 24"
-              width="16"
+              width="12"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="m21 16-4 4-4-4"
+                d="M10 8h4"
               />
               <path
-                d="M17 20V4"
+                d="M12 21v-9"
               />
               <path
-                d="m3 8 4-4 4 4"
+                d="M12 8V3"
               />
               <path
-                d="M7 4v16"
+                d="M17 16h4"
+              />
+              <path
+                d="M19 12V3"
+              />
+              <path
+                d="M19 21v-5"
+              />
+              <path
+                d="M3 14h4"
+              />
+              <path
+                d="M5 10V3"
+              />
+              <path
+                d="M5 21v-7"
               />
             </svg>
+            <span>
+              Customize
+            </span>
           </button>
         </div>
-      </section>
-      <section
-        class="ciclista-form-group"
-      >
-        <label
-          class="ciclista-label"
-        >
-          Bike Profile
-        </label>
         <div
           aria-label="Bike Profile Selector"
           class="speed-selector-container"
@@ -834,6 +894,23 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             </button>
           </div>
         </div>
+        <div
+          class="ciclista-bike-summary-row"
+        >
+          <span
+            class="ciclista-bike-summary-pill"
+            data-testid="bike-profile-summary-pill"
+          >
+            18 km/h • Standard
+          </span>
+          <button
+            class="ciclista-link-btn"
+            data-testid="tune-parameters-link"
+            type="button"
+          >
+            Tune parameters & rules →
+          </button>
+        </div>
       </section>
       <section
         class="ciclista-form-group"
@@ -848,345 +925,56 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
         />
       </section>
       <section
-        class="ciclista-card rules-panel"
+        class="ciclista-card ciclista-rules-summary-card"
       >
-        <details
-          class="rules-details"
+        <div
+          class="ciclista-rules-summary-header"
         >
-          <summary
-            class="rules-summary rules-summary-content"
-          >
-            <div
-              class="rules-panel-header rules-panel-header-box"
-            >
-              <span
-                class="rules-panel-title-group"
-              >
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-settings rules-panel-title-icon"
-                  fill="none"
-                  height="15"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="15"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                  />
-                </svg>
-                <h2
-                  class="ciclista-title"
-                >
-                  Road Rules
-                </h2>
-              </span>
-              <div
-                class="rules-panel-header-actions"
-              >
-                <button
-                  class="rules-reset-btn"
-                  title="Reset to defaults"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-rotate-ccw"
-                    fill="none"
-                    height="11"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="11"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
-                    />
-                    <path
-                      d="M3 3v5h5"
-                    />
-                  </svg>
-                  Reset
-                </button>
-                <svg
-                  aria-hidden="true"
-                  class="lucide lucide-chevron-down"
-                  fill="none"
-                  height="14"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="14"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </div>
-            </div>
-          </summary>
           <div
-            class="rules-body-container"
+            class="ciclista-rules-summary-title"
           >
-            <div
-              class="rules-section"
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-settings ciclista-rules-summary-icon"
+              fill="none"
+              height="15"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="15"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <div
-                aria-expanded="false"
-                class="rules-section-toggle"
-                role="button"
-                tabindex="0"
-              >
-                <span
-                  class="rules-section-btn-label"
-                >
-                  <svg
-                    aria-label="Traffic Signs Icon"
-                    class="lucide lucide-traffic-cone"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M16.05 10.966a5 2.5 0 0 1-8.1 0"
-                    />
-                    <path
-                      d="m16.923 14.049 4.48 2.04a1 1 0 0 1 .001 1.831l-8.574 3.9a2 2 0 0 1-1.66 0l-8.574-3.91a1 1 0 0 1 0-1.83l4.484-2.04"
-                    />
-                    <path
-                      d="M16.949 14.14a5 2.5 0 1 1-9.9 0L10.063 3.5a2 2 0 0 1 3.874 0z"
-                    />
-                    <path
-                      d="M9.194 6.57a5 2.5 0 0 0 5.61 0"
-                    />
-                  </svg>
-                  Traffic Signs
-                </span>
-                <div
-                  class="rules-section-header-actions"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-chevron-down"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="m6 9 6 6 6-6"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div
-              class="rules-section"
+              <path
+                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+            </svg>
+            <h2
+              class="ciclista-title"
             >
-              <div
-                aria-expanded="false"
-                class="rules-section-toggle"
-                role="button"
-                tabindex="0"
-              >
-                <span
-                  class="rules-section-btn-label"
-                >
-                  <svg
-                    aria-label="Road Classes Icon"
-                    class="lucide lucide-route"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="6"
-                      cy="19"
-                      r="3"
-                    />
-                    <path
-                      d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"
-                    />
-                    <circle
-                      cx="18"
-                      cy="5"
-                      r="3"
-                    />
-                  </svg>
-                  Road Classes
-                </span>
-                <div
-                  class="rules-section-header-actions"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-chevron-down"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="m6 9 6 6 6-6"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div
-              class="rules-section"
-            >
-              <div
-                aria-expanded="false"
-                class="rules-section-toggle"
-                role="button"
-                tabindex="0"
-              >
-                <span
-                  class="rules-section-btn-label"
-                >
-                  <svg
-                    aria-label="Intersections Icon"
-                    class="lucide lucide-clock"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                    />
-                    <path
-                      d="M12 6v6l4 2"
-                    />
-                  </svg>
-                  Intersections
-                </span>
-                <div
-                  class="rules-section-header-actions"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-chevron-down"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="m6 9 6 6 6-6"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div
-              class="rules-section"
-            >
-              <div
-                aria-expanded="false"
-                class="rules-section-toggle"
-                role="button"
-                tabindex="0"
-              >
-                <span
-                  class="rules-section-btn-label"
-                >
-                  <svg
-                    aria-label="Turns Icon"
-                    class="lucide lucide-corner-up-right"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="m15 14 5-5-5-5"
-                    />
-                    <path
-                      d="M4 20v-7a4 4 0 0 1 4-4h12"
-                    />
-                  </svg>
-                  Turn Penalties
-                </span>
-                <div
-                  class="rules-section-header-actions"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-chevron-down"
-                    fill="none"
-                    height="13"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="13"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="m6 9 6 6 6-6"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+              Road Rules
+            </h2>
           </div>
-        </details>
+          <button
+            aria-label="Configure road rules"
+            class="ciclista-btn ciclista-btn--secondary ciclista-btn--sm"
+            data-testid="open-rules-modal-btn"
+            type="button"
+          >
+            Configure
+          </button>
+        </div>
+        <p
+          class="ciclista-field-helper"
+        >
+          Traffic signs, road classifications, intersection delays, and turn penalties.
+        </p>
       </section>
       <section
         class="ciclista-card compare-panel-placeholder"

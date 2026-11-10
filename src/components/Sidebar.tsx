@@ -12,6 +12,7 @@ import type { CreateLandmarkInput, Landmark, UpdateLandmarkInput } from '../core
 import type { CameraMode, NavigationProgress } from '../core/navigation/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
 import { AttributionPanel } from './AttributionPanel';
+import { BikeProfileRulesModal } from './BikeProfileRulesModal';
 import {
   Bug,
   ChevronDown,
@@ -20,6 +21,7 @@ import {
   ChevronUp,
   GitFork,
   Route,
+  Settings,
   ShieldAlert,
   Star,
 } from './common/Icon';
@@ -38,7 +40,6 @@ import { PlacesPanel } from './PlacesPanel';
 import { RouteComparePanel } from './RouteComparePanel';
 import { RouteStatsPanel } from './RouteStatsPanel';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
-import { RulesConfigPanel } from './RulesConfigPanel';
 import type { ToolbarMode } from './SideToolbar';
 
 /**
@@ -207,6 +208,10 @@ export interface SidebarProps {
    * Callback fired to clear the destination point coordinate.
    */
   onClearEndCoord?: () => void;
+  /**
+   * Optional callback fired when opening the bike profiles and road rules modal.
+   */
+  onOpenBikeRulesModal?: (tab?: 'bike' | 'rules') => void;
 }
 
 /**
@@ -270,10 +275,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClearEndCoord,
   isPlacingPlace: isPlacingPlaceProp,
   onPlacingPlaceChange: onPlacingPlaceChangeProp,
+  onOpenBikeRulesModal: onOpenBikeRulesModalProp,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [internalPlacingStart, setInternalPlacingStart] = useState(false);
   const [internalPlacingEnd, setInternalPlacingEnd] = useState(false);
+  const [isBikeRulesModalOpen, setIsBikeRulesModalOpen] = useState(false);
+  const [bikeRulesModalTab, setBikeRulesModalTab] = useState<'bike' | 'rules'>('bike');
 
   const currentIsPlacingStart = isPlacingStartProp ?? internalPlacingStart;
   const currentIsPlacingEnd = isPlacingEndProp ?? internalPlacingEnd;
@@ -292,6 +300,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     } else {
       setInternalPlacingEnd((prev) => !prev);
     }
+  };
+
+  const handleOpenBikeRulesModal = (tab: 'bike' | 'rules' = 'bike') => {
+    setBikeRulesModalTab(tab);
+    setIsBikeRulesModalOpen(true);
+    onOpenBikeRulesModalProp?.(tab);
   };
 
   const mapInstance = useContext(MapInstanceContext);
@@ -553,6 +567,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 isFetchingOSM={isFetchingOSM}
                 bikeConfig={bikeConfig}
                 onBikeConfigChange={onBikeConfigChange}
+                onOpenBikeRulesModal={handleOpenBikeRulesModal}
               />
 
               {/* Section 2: Route Alternatives Selector & Stats */}
@@ -594,8 +609,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
               )}
 
-              {/* Section 3: Road Rules Configuration */}
-              <RulesConfigPanel config={rulesConfig} onChange={onRulesChange} />
+              {/* Section 3: Road Rules Configuration Summary */}
+              <section className="ciclista-card ciclista-rules-summary-card">
+                <div className="ciclista-rules-summary-header">
+                  <div className="ciclista-rules-summary-title">
+                    <Settings size={15} className="ciclista-rules-summary-icon" />
+                    <h2 className="ciclista-title">Road Rules</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="ciclista-btn ciclista-btn--secondary ciclista-btn--sm"
+                    onClick={() => handleOpenBikeRulesModal('rules')}
+                    aria-label="Configure road rules"
+                    data-testid="open-rules-modal-btn"
+                  >
+                    Configure
+                  </button>
+                </div>
+                <p className="ciclista-field-helper">
+                  Traffic signs, road classifications, intersection delays, and turn penalties.
+                </p>
+              </section>
 
               {/* Section 4: Route Comparison Panel */}
               <RouteComparePanel
@@ -638,6 +672,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isCollapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </span>
       </button>
+
+      {isBikeRulesModalOpen && (
+        <BikeProfileRulesModal
+          isOpen={isBikeRulesModalOpen}
+          onClose={() => setIsBikeRulesModalOpen(false)}
+          initialTab={bikeRulesModalTab}
+          bikeConfig={bikeConfig}
+          onBikeConfigChange={onBikeConfigChange}
+          rulesConfig={rulesConfig}
+          onRulesChange={onRulesChange}
+        />
+      )}
     </>
   );
 };

@@ -454,7 +454,8 @@ h2 {
 
 .ciclista-waypoint-row {
   display: flex;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-end;
   gap: var(--ciclista-spacing-xs);
   margin-top: var(--ciclista-spacing-xs);
 }
@@ -465,6 +466,7 @@ h2 {
   justify-content: center;
   width: 22px;
   height: 22px;
+  margin-bottom: var(--ciclista-spacing-6);
   border-radius: var(--ciclista-radius-round);
   background: var(--ciclista-color-brand-main);
   color: var(--ciclista-color-text-primary);
@@ -476,6 +478,10 @@ h2 {
 
 .ciclista-waypoint-field {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-2xs);
 }
 
 .ciclista-waypoint-actions {
@@ -929,6 +935,7 @@ h2 {
 
 .ciclista-route-endpoint-row {
   display: flex;
+  flex-direction: row;
   align-items: flex-end;
   gap: var(--ciclista-spacing-xs);
 }
@@ -936,6 +943,9 @@ h2 {
 .ciclista-route-endpoint-field {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-2xs);
   position: relative;
 }
 
@@ -947,9 +957,10 @@ h2 {
 }
 
 .ciclista-route-location-action-btn {
-  padding: var(--ciclista-spacing-xs);
-  width: 28px;
-  height: 28px;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -959,12 +970,13 @@ h2 {
   position: relative;
   display: flex;
   align-items: center;
+  gap: var(--ciclista-spacing-xs);
   width: 100%;
 }
 
 .ciclista-route-input-icon {
   position: absolute;
-  left: 8px;
+  left: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -974,7 +986,32 @@ h2 {
 }
 
 .ciclista-route-location-input.ciclista-has-category-icon {
-  padding-left: 28px;
+  padding-left: 30px;
+}
+
+.ciclista-route-location-input.ciclista-has-clear-btn {
+  padding-right: 28px;
+}
+
+.ciclista-route-inline-clear-btn {
+  position: absolute;
+  right: 44px;
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-text-muted);
+  cursor: pointer;
+  padding: var(--ciclista-spacing-2xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ciclista-radius-xs);
+  transition: var(--ciclista-transition-fast);
+  z-index: 2;
+}
+
+.ciclista-route-inline-clear-btn:hover {
+  color: var(--ciclista-color-text-primary);
+  background: var(--ciclista-glass-bg-hover);
 }
 
 .ciclista-autocomplete-dropdown-container {
@@ -1073,8 +1110,8 @@ h2 {
 
 .ciclista-route-swap-btn {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -4178,3 +4215,164 @@ h2 {
   font-size: var(--ciclista-font-xs);
   color: var(--ciclista-color-text-primary);
 }
+
+/* ─── Bike Profile & Road Rules Modal & Triggers ──────────────────── */
+
+.ciclista-modal-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-modal-title-icon {
+  color: var(--ciclista-color-brand-main);
+  flex-shrink: 0;
+}
+
+.ciclista-bike-rules-modal {
+  max-width: 600px;
+  width: 100%;
+}
+
+.ciclista-bike-rules-tabs {
+  margin-bottom: var(--ciclista-spacing-xs);
+}
+
+.ciclista-bike-profile-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+}
+
+.ciclista-bike-profile-desc {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-sm);
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  margin-top: var(--ciclista-spacing-xs);
+  line-height: 1.4;
+}
+
+.ciclista-bike-tuning-card {
+  padding: var(--ciclista-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-md);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+}
+
+.ciclista-bike-reset-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.ciclista-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ciclista-spacing-sm);
+  border-top: 1px solid var(--ciclista-glass-border-base);
+  padding-top: var(--ciclista-spacing-md);
+  margin-top: var(--ciclista-spacing-xs);
+}
+
+.ciclista-modal-footer-actions .ciclista-btn {
+  width: auto;
+}
+
+/* Sidebar Road Rules Compact Summary Card */
+.ciclista-rules-summary-card {
+  padding: var(--ciclista-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ciclista-rules-summary-title {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-rules-summary-icon {
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.ciclista-rules-summary-card .ciclista-field-helper {
+  margin: 0;
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+}
+
+/* RoutingConfigPanel Bike Profile Header & Summary */
+.ciclista-bike-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ciclista-spacing-2xs);
+}
+
+.ciclista-bike-header-row .ciclista-label {
+  margin-bottom: 0;
+}
+
+.ciclista-bike-tune-btn {
+  font-size: var(--ciclista-font-xs);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-xs);
+  width: auto;
+}
+
+.ciclista-bike-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--ciclista-spacing-xs);
+  font-size: var(--ciclista-font-xs);
+}
+
+.ciclista-bike-summary-pill {
+  color: var(--ciclista-color-text-secondary);
+  font-size: var(--ciclista-font-xs);
+  background: var(--ciclista-glass-bg-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  padding: var(--ciclista-spacing-3xs) var(--ciclista-spacing-sm);
+  border-radius: var(--ciclista-radius-xs);
+}
+
+.ciclista-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--ciclista-color-brand-secondary);
+  font-size: var(--ciclista-font-xs);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-link-btn:hover {
+  color: var(--ciclista-color-brand-secondary-hover);
+}
+
+.ciclista-btn--sm {
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  font-size: var(--ciclista-font-xs);
+  width: auto;
+}
+

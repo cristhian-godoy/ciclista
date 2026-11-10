@@ -4,6 +4,10 @@ AttributionPanel.test.tsx
 	Unit tests for AttributionPanel collapsed/expanded states.
 AttributionPanel.tsx
 	Accordion-style panel displaying third-party licensing and attributions.
+BikeProfileRulesModal.test.tsx
+	Unit tests for dedicated bike profile setup and road rules management modal dialog.
+BikeProfileRulesModal.tsx
+	Modal dialog for managing custom bike setups, surface factors, turn penalties, and road rule overrides.
 CrossingEditPanel.test.tsx
 	Unit tests for crossing edit panel edge classification legend, turn configuration, and penalty overrides.
 CrossingEditPanel.tsx
