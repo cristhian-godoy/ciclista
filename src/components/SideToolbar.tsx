@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {
+  Bike,
   Bug,
   FlaskConical,
   GitFork,
@@ -39,6 +40,10 @@ export interface SideToolbarProps {
    */
   onOpenSettings?: () => void;
   /**
+   * Optional callback triggered when the profile button is clicked.
+   */
+  onOpenProfile?: () => void;
+  /**
    * Optional callback triggered when the Search All button is clicked.
    */
   onOpenSearchAll?: () => void;
@@ -53,6 +58,7 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
   onModeChange,
   onOpenTestRunner,
   onOpenSettings,
+  onOpenProfile,
   onOpenSearchAll,
 }) => {
   const handleTestRunnerClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -119,7 +125,7 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
         </button>
       </nav>
 
-      <div className="ciclista-toolbar-footer">
+      <div className="ciclista-toolbar-footer side-toolbar-group">
         {onOpenSearchAll && (
           <button
             type="button"
@@ -153,6 +159,18 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
           data-testid="toolbar-debug-btn"
         >
           <Bug size={20} className="ciclista-toolbar-icon" />
+        </button>
+
+        <button
+          type="button"
+          className="side-toolbar-btn"
+          onClick={onOpenProfile}
+          aria-label="Profile"
+          title="Profile"
+          data-testid="toolbar-profile"
+        >
+          <Bike size={20} />
+          <span className="side-toolbar-label">Profile</span>
         </button>
 
         {onOpenSettings && (
