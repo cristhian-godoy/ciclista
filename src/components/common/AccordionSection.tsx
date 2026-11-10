@@ -101,8 +101,8 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
           {icon}
           {title}
         </span>
-        <div className="rules-section-header-actions" onClick={(e) => e.stopPropagation()}>
-          {headerActions}
+        <div className="rules-section-header-actions">
+          {headerActions && <div onClick={(e) => e.stopPropagation()}>{headerActions}</div>}
           {isExpanded ? <ChevronUp size={chevronSize} /> : <ChevronDown size={chevronSize} />}
         </div>
       </div>
