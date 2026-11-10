@@ -183,6 +183,30 @@ export interface SidebarProps {
    * Callback fired to initiate intermediate stop placement on map.
    */
   onStartPlacingStop?: (index?: number) => void;
+  /**
+   * Whether start point placement mode on map is active.
+   */
+  isPlacingStart?: boolean;
+  /**
+   * Whether destination point placement mode on map is active.
+   */
+  isPlacingEnd?: boolean;
+  /**
+   * Callback fired to initiate start point placement on map.
+   */
+  onPickStartOnMap?: () => void;
+  /**
+   * Callback fired to initiate destination point placement on map.
+   */
+  onPickEndOnMap?: () => void;
+  /**
+   * Callback fired to clear the start point coordinate.
+   */
+  onClearStartCoord?: () => void;
+  /**
+   * Callback fired to clear the destination point coordinate.
+   */
+  onClearEndCoord?: () => void;
 }
 
 /**
@@ -238,10 +262,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeletePlace,
   onSetStartCoord,
   onSetEndCoord,
+  isPlacingStart: isPlacingStartProp,
+  isPlacingEnd: isPlacingEndProp,
+  onPickStartOnMap,
+  onPickEndOnMap,
+  onClearStartCoord,
+  onClearEndCoord,
   isPlacingPlace: isPlacingPlaceProp,
   onPlacingPlaceChange: onPlacingPlaceChangeProp,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [internalPlacingStart, setInternalPlacingStart] = useState(false);
+  const [internalPlacingEnd, setInternalPlacingEnd] = useState(false);
+
+  const currentIsPlacingStart = isPlacingStartProp ?? internalPlacingStart;
+  const currentIsPlacingEnd = isPlacingEndProp ?? internalPlacingEnd;
+
+  const handlePickStart = () => {
+    if (onPickStartOnMap) {
+      onPickStartOnMap();
+    } else {
+      setInternalPlacingStart((prev) => !prev);
+    }
+  };
+
+  const handlePickEnd = () => {
+    if (onPickEndOnMap) {
+      onPickEndOnMap();
+    } else {
+      setInternalPlacingEnd((prev) => !prev);
+    }
+  };
 
   const mapInstance = useContext(MapInstanceContext);
   const routing = useContext(RoutingStateContext);
@@ -315,6 +366,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onSetEndCoord(coord);
     } else {
       routing?.onEndDrag?.(coord);
+    }
+  };
+
+  const handleClearStartCoord = () => {
+    if (onClearStartCoord) {
+      onClearStartCoord();
+    } else if (onSetStartCoord) {
+      (onSetStartCoord as (coord: Coordinate | null) => void)(null);
+    } else {
+      routing?.onStartDrag?.(null);
+    }
+  };
+
+  const handleClearEndCoord = () => {
+    if (onClearEndCoord) {
+      onClearEndCoord();
+    } else if (onSetEndCoord) {
+      (onSetEndCoord as (coord: Coordinate | null) => void)(null);
+    } else {
+      routing?.onEndDrag?.(null);
     }
   };
 
@@ -462,9 +533,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 startCoord={currentStartCoord}
                 endCoord={currentEndCoord}
                 waypoints={waypoints}
+                places={currentLandmarks}
                 onSwapCoords={handleSwapCoords}
                 onSetStartCoord={handleSetStartCoord}
                 onSetEndCoord={handleSetEndCoord}
+                onClearStartCoord={handleClearStartCoord}
+                onClearEndCoord={handleClearEndCoord}
+                isPlacingStart={currentIsPlacingStart}
+                isPlacingEnd={currentIsPlacingEnd}
+                onPickStartOnMap={handlePickStart}
+                onPickEndOnMap={handlePickEnd}
                 onAddWaypoint={onAddWaypoint}
                 onRemoveWaypoint={onRemoveWaypoint}
                 onUpdateWaypoint={onUpdateWaypoint}

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, BikeProfileId } from '../core/config';
+import type { Landmark } from '../core/landmarks/types';
+import { getCategoryIcon } from '../utils/formatters';
+import { Badge } from './common/Badge';
 import {
   ArrowDown,
   ArrowUp,
@@ -22,119 +25,307 @@ import { SegmentedControl } from './common/SegmentedControl';
  * Properties for the RoutingConfigPanel component.
  */
 export interface RoutingConfigPanelProps {
-  /**
-   * Starting geographic coordinate for routing calculations.
-   */
   startCoord: Coordinate | null;
-  /**
-   * Destination geographic coordinate for routing calculations.
-   */
   endCoord: Coordinate | null;
-  /**
-   * Intermediate waypoints positioned between start and destination.
-   */
   waypoints?: Coordinate[];
-  /**
-   * Callback fired when swapping start and destination coordinates.
-   */
+  places?: Landmark[];
   onSwapCoords?: () => void;
-  /**
-   * Callback fired to update the start coordinate.
-   */
   onSetStartCoord?: (coord: Coordinate) => void;
-  /**
-   * Callback fired to update the destination coordinate.
-   */
   onSetEndCoord?: (coord: Coordinate) => void;
-  /**
-   * Callback fired when clearing the start coordinate.
-   */
   onClearStartCoord?: () => void;
-  /**
-   * Callback fired when clearing the destination coordinate.
-   */
   onClearEndCoord?: () => void;
-  /**
-   * Callback fired to initiate map placement for the start coordinate.
-   */
   onPickStartOnMap?: () => void;
-  /**
-   * Callback fired to initiate map placement for the destination coordinate.
-   */
   onPickEndOnMap?: () => void;
-  /**
-   * Whether map placement mode is currently active for start location.
-   */
+  onStartPlacingStart?: () => void;
+  onStartPlacingEnd?: () => void;
   isPlacingStart?: boolean;
-  /**
-   * Whether map placement mode is currently active for destination location.
-   */
   isPlacingEnd?: boolean;
-  /**
-   * Callback fired to append a new intermediate waypoint.
-   */
   onAddWaypoint?: () => void;
-  /**
-   * Callback fired to remove an intermediate waypoint by index.
-   */
   onRemoveWaypoint?: (index: number) => void;
-  /**
-   * Callback fired to update an intermediate waypoint coordinate.
-   */
   onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
-  /**
-   * Callback fired to reorder intermediate waypoints.
-   */
   onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
-  /**
-   * Whether intermediate stop placement mode is active.
-   */
   isPlacingStop?: boolean;
-  /**
-   * Index of intermediate stop being repositioned on the map.
-   */
   placingStopIndex?: number | null;
-  /**
-   * Callback fired to initiate intermediate stop placement on map.
-   */
   onStartPlacingStop?: (index?: number) => void;
-  /**
-   * Whether street network data is actively being fetched from Overpass.
-   */
   isFetchingOSM: boolean;
-  /**
-   * Active bicycle profile configuration.
-   */
   bikeConfig: BikeConfig;
-  /**
-   * Callback fired when bicycle profile settings change.
-   */
   onBikeConfigChange: (config: BikeConfig) => void;
-}
-
-/**
- * Checks whether a coordinate is defined with valid non-zero latitude and longitude values.
- */
-function isCoordinateSet(coord: Coordinate | null | undefined): boolean {
-  return Boolean(
-    coord &&
-    typeof coord.lat === 'number' &&
-    typeof coord.lng === 'number' &&
-    !isNaN(coord.lat) &&
-    !isNaN(coord.lng) &&
-    !(coord.lat === 0 && coord.lng === 0),
-  );
 }
 
 /**
  * Formats a coordinate into a comma-separated latitude and longitude string.
  */
-function formatCoordinate(coord: Coordinate | null | undefined): string {
-  if (!isCoordinateSet(coord) || !coord) {
+function formatCoordinate(coord: Coordinate | null): string {
+  if (
+    !coord ||
+    typeof coord.lat !== 'number' ||
+    typeof coord.lng !== 'number' ||
+    isNaN(coord.lat) ||
+    isNaN(coord.lng)
+  ) {
     return '';
   }
   return `${coord.lat.toFixed(5)}, ${coord.lng.toFixed(5)}`;
 }
+
+interface RouteLocationInputProps {
+  id: string;
+  label: string;
+  coord: Coordinate | null;
+  places?: Landmark[];
+  onSelectPlace: (coord: Coordinate) => void;
+  onClear?: () => void;
+  onPickOnMap?: () => void;
+  isPlacing?: boolean;
+}
+
+const RouteLocationInput: React.FC<RouteLocationInputProps> = ({
+  id,
+  label,
+  coord,
+  places = [],
+  onSelectPlace,
+  onClear,
+  onPickOnMap,
+  isPlacing = false,
+}) => {
+  const matchedPlace = useMemo(() => {
+    if (!coord || !places || places.length === 0) return null;
+    return (
+      places.find(
+        (p) => Math.abs(p.lat - coord.lat) < 1e-5 && Math.abs(p.lng - coord.lng) < 1e-5,
+      ) ?? null
+    );
+  }, [coord, places]);
+
+  const [selectedPlace, setSelectedPlace] = useState<Landmark | null>(() => matchedPlace);
+  const [searchTerm, setSearchTerm] = useState(() =>
+    matchedPlace ? matchedPlace.name : formatCoordinate(coord),
+  );
+  const [isSearching, setIsSearching] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [prevCoord, setPrevCoord] = useState<Coordinate | null>(coord);
+
+  // Synchronize when external coordinate changes
+  if (coord?.lat !== prevCoord?.lat || coord?.lng !== prevCoord?.lng) {
+    setPrevCoord(coord);
+    const m =
+      places.find(
+        (p) => coord && Math.abs(p.lat - coord.lat) < 1e-5 && Math.abs(p.lng - coord.lng) < 1e-5,
+      ) ?? null;
+    setSelectedPlace(m);
+    setSearchTerm(m ? m.name : formatCoordinate(coord));
+    setIsSearching(false);
+  }
+
+  const currentPlace = selectedPlace ?? matchedPlace;
+
+  const filteredPlaces = useMemo(() => {
+    if (!places || places.length === 0) return [];
+    const q = searchTerm.trim().toLowerCase();
+    if (!isSearching || q === '') {
+      return places;
+    }
+    return places.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.description?.toLowerCase().includes(q) ?? false),
+    );
+  }, [places, searchTerm, isSearching]);
+
+  const handleSelect = (place: Landmark) => {
+    setSelectedPlace(place);
+    setSearchTerm(place.name);
+    setIsSearching(false);
+    setIsOpen(false);
+    setActiveIndex(-1);
+    onSelectPlace({ lat: place.lat, lng: place.lng });
+  };
+
+  const handleClear = () => {
+    setSelectedPlace(null);
+    setSearchTerm('');
+    setIsSearching(false);
+    setIsOpen(false);
+    setActiveIndex(-1);
+    onClear?.();
+  };
+
+  const handleFocus = () => {
+    setIsOpen(true);
+    setActiveIndex(-1);
+  };
+
+  const handleBlur = () => {
+    setIsOpen(false);
+    setIsSearching(false);
+    setActiveIndex(-1);
+    setSearchTerm(currentPlace ? currentPlace.name : formatCoordinate(coord));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        setIsOpen(true);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (filteredPlaces.length === 0) return;
+      setActiveIndex((prev) => (prev < filteredPlaces.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (filteredPlaces.length === 0) return;
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : filteredPlaces.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0 && activeIndex < filteredPlaces.length) {
+        handleSelect(filteredPlaces[activeIndex]);
+      } else if (filteredPlaces.length === 1) {
+        handleSelect(filteredPlaces[0]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+      setIsSearching(false);
+      setActiveIndex(-1);
+      setSearchTerm(currentPlace ? currentPlace.name : formatCoordinate(coord));
+    }
+  };
+
+  const hasValue = Boolean(coord || searchTerm.trim().length > 0);
+
+  return (
+    <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row">
+      <div className="ciclista-route-endpoint-field">
+        <label className="ciclista-label" htmlFor={id}>
+          {label}
+        </label>
+        <div className="ciclista-route-input-wrapper">
+          {currentPlace && (
+            <span className="ciclista-route-input-icon" aria-hidden="true">
+              {getCategoryIcon(currentPlace.category, 14)}
+            </span>
+          )}
+          <input
+            id={id}
+            className={`ciclista-input ciclista-route-location-input ${
+              currentPlace ? 'ciclista-has-category-icon' : ''
+            }`}
+            type="text"
+            value={searchTerm}
+            placeholder="Search saved place or pick on map"
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setIsSearching(true);
+              setIsOpen(true);
+              setActiveIndex(-1);
+            }}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            aria-autocomplete="list"
+            aria-expanded={isOpen}
+            autoComplete="off"
+          />
+
+          {isOpen && (
+            <div
+              className="ciclista-autocomplete-dropdown-container"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              {filteredPlaces.length > 0 ? (
+                <ul
+                  id={`${id}-autocomplete-list`}
+                  role="listbox"
+                  className="ciclista-autocomplete-dropdown"
+                  aria-label={`Matching saved places for ${label}`}
+                >
+                  {filteredPlaces.map((place, index) => {
+                    const isHighlighted = index === activeIndex;
+                    return (
+                      <li
+                        key={place.id}
+                        id={`${id}-option-${index}`}
+                        role="option"
+                        aria-selected={isHighlighted}
+                        className={`ciclista-autocomplete-item ${
+                          isHighlighted ? 'ciclista-autocomplete-item--active' : ''
+                        }`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelect(place);
+                        }}
+                        onClick={() => handleSelect(place)}
+                      >
+                        <span className="ciclista-autocomplete-item-icon" aria-hidden="true">
+                          {getCategoryIcon(place.category, 16)}
+                        </span>
+                        <div className="ciclista-autocomplete-item-content">
+                          <div className="ciclista-autocomplete-item-header">
+                            <span className="ciclista-autocomplete-item-title">{place.name}</span>
+                            <Badge
+                              size="sm"
+                              variant="subtle"
+                              className="ciclista-autocomplete-item-badge"
+                            >
+                              {place.category}
+                            </Badge>
+                          </div>
+                          {place.description && (
+                            <div className="ciclista-autocomplete-item-desc">
+                              {place.description}
+                            </div>
+                          )}
+                          <div className="ciclista-autocomplete-item-coords">
+                            {formatCoordinate({ lat: place.lat, lng: place.lng })}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="ciclista-autocomplete-dropdown ciclista-autocomplete-empty">
+                  {places.length === 0 ? 'No saved places' : 'No saved places found'}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="ciclista-route-endpoint-actions">
+        {hasValue && (
+          <button
+            type="button"
+            className="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ciclista-route-clear-btn"
+            onClick={handleClear}
+            aria-label={`Clear ${label.toLowerCase()}`}
+            title={`Clear ${label.toLowerCase()}`}
+          >
+            <X size={14} />
+          </button>
+        )}
+        <button
+          type="button"
+          className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
+            isPlacing ? 'ciclista-btn--active' : ''
+          }`}
+          onClick={onPickOnMap}
+          aria-label={`Pick ${label.toLowerCase()} on map`}
+          title={`Pick ${label.toLowerCase()} on map`}
+        >
+          <Crosshair size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface WaypointItemProps {
   index: number;
@@ -158,7 +349,14 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
   onMoveUp,
   onMoveDown,
 }) => {
-  const displayValue = formatCoordinate(coord);
+  const isCoordValid =
+    coord &&
+    typeof coord.lat === 'number' &&
+    typeof coord.lng === 'number' &&
+    !isNaN(coord.lat) &&
+    !isNaN(coord.lng);
+  const isZero = isCoordValid && coord.lat === 0 && coord.lng === 0;
+  const val = isZero || !isCoordValid ? '' : formatCoordinate(coord);
 
   return (
     <div className="ciclista-form-group ciclista-route-location-form-group ciclista-waypoint-row">
@@ -171,12 +369,11 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
         </label>
         <input
           id={`route-stop-${index}-input`}
-          className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
+          className="ciclista-input ciclista-route-location-input"
           type="text"
-          value={displayValue}
+          value={val}
           placeholder="Click map to set location"
           readOnly
-          onClick={onPickOnMap}
         />
       </div>
       <div className="ciclista-waypoint-actions">
@@ -233,6 +430,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   startCoord,
   endCoord,
   waypoints = [],
+  places = [],
   onSwapCoords,
   onSetStartCoord,
   onSetEndCoord,
@@ -240,8 +438,10 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   onClearEndCoord,
   onPickStartOnMap,
   onPickEndOnMap,
-  isPlacingStart = false,
-  isPlacingEnd = false,
+  onStartPlacingStart,
+  onStartPlacingEnd,
+  isPlacingStart: isPlacingStartProp,
+  isPlacingEnd: isPlacingEndProp,
   onAddWaypoint,
   onRemoveWaypoint,
   onUpdateWaypoint,
@@ -253,22 +453,42 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   bikeConfig,
   onBikeConfigChange,
 }) => {
-  const startValue = formatCoordinate(startCoord);
-  const endValue = formatCoordinate(endCoord);
+  const [internalPlacingStart, setInternalPlacingStart] = useState(false);
+  const [internalPlacingEnd, setInternalPlacingEnd] = useState(false);
+
+  const isPlacingStart =
+    isPlacingStartProp !== undefined ? isPlacingStartProp : internalPlacingStart;
+  const isPlacingEnd = isPlacingEndProp !== undefined ? isPlacingEndProp : internalPlacingEnd;
+
+  const handlePickStart = () => {
+    if (isPlacingStartProp === undefined) {
+      setInternalPlacingStart((prev) => !prev);
+    }
+    const fn = onPickStartOnMap ?? onStartPlacingStart;
+    fn?.();
+  };
+
+  const handlePickEnd = () => {
+    if (isPlacingEndProp === undefined) {
+      setInternalPlacingEnd((prev) => !prev);
+    }
+    const fn = onPickEndOnMap ?? onStartPlacingEnd;
+    fn?.();
+  };
 
   const handleClearStart = () => {
     if (onClearStartCoord) {
       onClearStartCoord();
-    } else {
-      (onSetStartCoord as unknown as ((coord: Coordinate | null) => void) | undefined)?.(null);
+    } else if (onSetStartCoord) {
+      (onSetStartCoord as (c: Coordinate | null) => void)(null);
     }
   };
 
   const handleClearEnd = () => {
     if (onClearEndCoord) {
       onClearEndCoord();
-    } else {
-      (onSetEndCoord as unknown as ((coord: Coordinate | null) => void) | undefined)?.(null);
+    } else if (onSetEndCoord) {
+      (onSetEndCoord as (c: Coordinate | null) => void)(null);
     }
   };
 
@@ -286,46 +506,16 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
         </div>
         <div className="ciclista-route-locations-body">
           <div className="ciclista-route-locations-fields">
-            <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row">
-              <div className="ciclista-route-endpoint-field">
-                <label className="ciclista-label" htmlFor="route-start-input">
-                  Start
-                </label>
-                <input
-                  id="route-start-input"
-                  className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
-                  type="text"
-                  value={startValue}
-                  placeholder="Click map to set location"
-                  readOnly
-                  onClick={onPickStartOnMap}
-                />
-              </div>
-              <div className="ciclista-route-endpoint-actions">
-                <button
-                  type="button"
-                  className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
-                    isPlacingStart ? 'ciclista-btn--active' : ''
-                  }`}
-                  onClick={onPickStartOnMap}
-                  aria-label="Pick start on map"
-                  title="Pick start on map"
-                >
-                  <Crosshair size={14} />
-                </button>
-                {isCoordinateSet(startCoord) && (
-                  <button
-                    type="button"
-                    className="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ciclista-route-location-clear-btn"
-                    onClick={handleClearStart}
-                    aria-label="Clear start location"
-                    title="Clear start location"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
+            <RouteLocationInput
+              id="route-start-input"
+              label="Start"
+              coord={startCoord}
+              places={places}
+              onSelectPlace={(c) => onSetStartCoord?.(c)}
+              onClear={handleClearStart}
+              onPickOnMap={handlePickStart}
+              isPlacing={isPlacingStart}
+            />
 
             {/* Intermediate Multi-Stop Waypoints */}
             {waypoints.map((wp, idx) => (
@@ -343,46 +533,16 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               />
             ))}
 
-            <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row">
-              <div className="ciclista-route-endpoint-field">
-                <label className="ciclista-label" htmlFor="route-end-input">
-                  Destination
-                </label>
-                <input
-                  id="route-end-input"
-                  className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
-                  type="text"
-                  value={endValue}
-                  placeholder="Click map to set location"
-                  readOnly
-                  onClick={onPickEndOnMap}
-                />
-              </div>
-              <div className="ciclista-route-endpoint-actions">
-                <button
-                  type="button"
-                  className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
-                    isPlacingEnd ? 'ciclista-btn--active' : ''
-                  }`}
-                  onClick={onPickEndOnMap}
-                  aria-label="Pick destination on map"
-                  title="Pick destination on map"
-                >
-                  <Crosshair size={14} />
-                </button>
-                {isCoordinateSet(endCoord) && (
-                  <button
-                    type="button"
-                    className="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ciclista-route-location-clear-btn"
-                    onClick={handleClearEnd}
-                    aria-label="Clear destination location"
-                    title="Clear destination location"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
+            <RouteLocationInput
+              id="route-end-input"
+              label="Destination"
+              coord={endCoord}
+              places={places}
+              onSelectPlace={(c) => onSetEndCoord?.(c)}
+              onClear={handleClearEnd}
+              onPickOnMap={handlePickEnd}
+              isPlacing={isPlacingEnd}
+            />
 
             {onAddWaypoint && (
               <div className="ciclista-add-stop-container">
@@ -396,12 +556,10 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                       onAddWaypoint?.();
                     }
                   }}
-                  disabled={
-                    !isCoordinateSet(startCoord) || !isCoordinateSet(endCoord) || isPlacingStop
-                  }
+                  disabled={!startCoord || !endCoord || isPlacingStop}
                   aria-label="Add Stop"
                   title={
-                    !isCoordinateSet(startCoord) || !isCoordinateSet(endCoord)
+                    !startCoord || !endCoord
                       ? 'Set start and destination before adding intermediate stops'
                       : isPlacingStop
                         ? 'Click on the map to place Stop'
@@ -411,7 +569,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   <Plus size={14} />
                   <span>Add Stop</span>
                 </button>
-                {(!isCoordinateSet(startCoord) || !isCoordinateSet(endCoord)) && (
+                {(!startCoord || !endCoord) && (
                   <p className="ciclista-field-helper">
                     Set start and destination before adding intermediate stops
                   </p>
