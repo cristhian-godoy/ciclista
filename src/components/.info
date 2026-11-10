@@ -36,6 +36,10 @@ PlaceModal.test.tsx
 	Unit tests for category-first searchable place creation and editing modal dialog.
 PlaceModal.tsx
 	Modal dialog housing the category-first searchable place creation and editing form.
+ProfileModal.test.tsx
+	Unit tests for two-pane ProfileModal bikes CRUD, speed/surface/penalty inputs, and road rules configuration.
+ProfileModal.tsx
+	Two-pane modal dialog for bike profile management and road rules configuration.
 Modal.test.tsx
 	Unit tests for reusable Modal component accessibility and interactions.
 Modal.tsx
