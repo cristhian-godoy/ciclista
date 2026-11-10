@@ -24,6 +24,13 @@ describe('SideToolbar Component', () => {
     expect(
       testRunnerLink.compareDocumentPosition(debugBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+
+    const profileBtn = screen.getByRole('button', { name: 'Profile' });
+    expect(profileBtn).toBeInTheDocument();
+    expect(profileBtn).toHaveAttribute('data-testid', 'toolbar-profile');
+    expect(
+      debugBtn.compareDocumentPosition(profileBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('marks routing mode as active when mode is routing', () => {
@@ -179,5 +186,20 @@ describe('SideToolbar Component', () => {
     await user.click(testRunnerLink);
 
     expect(handleOpenTestRunner).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers onOpenProfile callback when clicking profile button', async () => {
+    const user = userEvent.setup();
+    const handleOpenProfile = vi.fn();
+
+    render(<SideToolbar mode="routing" onModeChange={vi.fn()} onOpenProfile={handleOpenProfile} />);
+
+    const profileBtn = screen.getByRole('button', { name: 'Profile' });
+    expect(profileBtn).toBeInTheDocument();
+    expect(profileBtn).toHaveAttribute('data-testid', 'toolbar-profile');
+    expect(profileBtn).toHaveClass('side-toolbar-btn');
+
+    await user.click(profileBtn);
+    expect(handleOpenProfile).toHaveBeenCalledTimes(1);
   });
 });

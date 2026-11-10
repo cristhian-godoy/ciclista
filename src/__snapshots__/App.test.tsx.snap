@@ -175,7 +175,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       </button>
     </nav>
     <div
-      class="ciclista-toolbar-footer"
+      class="ciclista-toolbar-footer side-toolbar-group"
     >
       <button
         aria-label="Search All"
@@ -292,6 +292,51 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             d="M9 7.13V6a3 3 0 1 1 6 0v1.13"
           />
         </svg>
+      </button>
+      <button
+        aria-label="Profile"
+        class="side-toolbar-btn"
+        data-testid="toolbar-profile"
+        title="Profile"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-bike"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="18.5"
+            cy="17.5"
+            r="3.5"
+          />
+          <circle
+            cx="5.5"
+            cy="17.5"
+            r="3.5"
+          />
+          <circle
+            cx="15"
+            cy="5"
+            r="1"
+          />
+          <path
+            d="M12 17.5V14l-3-3 4-3 2 3h2"
+          />
+        </svg>
+        <span
+          class="side-toolbar-label"
+        >
+          Profile
+        </span>
       </button>
       <button
         aria-label="Settings"
@@ -634,284 +679,34 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                 Set start and destination before adding intermediate stops
               </p>
             </div>
+            <div
+              class="ciclista-form-group ciclista-route-location-form-group ciclista-route-bike-row"
+            >
+              <label
+                class="ciclista-label"
+                for="route-bike-select"
+              >
+                Bike
+              </label>
+              <select
+                aria-label="Bike"
+                class="ciclista-input ciclista-select ciclista-route-bike-select"
+                id="route-bike-select"
+                name="routeBike"
+              >
+                <option
+                  value="normal"
+                >
+                  Normal Bike
+                </option>
+                <option
+                  value="ebike"
+                >
+                  E-Bike
+                </option>
+              </select>
+            </div>
           </div>
-        </div>
-      </section>
-      <section
-        class="ciclista-form-group ciclista-bike-config-section"
-      >
-        <div
-          class="ciclista-bike-header-row"
-        >
-          <label
-            class="ciclista-label"
-          >
-            Bike Profile
-          </label>
-          <button
-            aria-label="Customize bike profile parameters and road rules"
-            class="ciclista-btn ciclista-btn--secondary ciclista-btn--sm ciclista-bike-tune-btn"
-            data-testid="customize-bike-rules-btn"
-            title="Customize speed, turn penalties, and road rules"
-            type="button"
-          >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-sliders"
-              fill="none"
-              height="12"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="12"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10 8h4"
-              />
-              <path
-                d="M12 21v-9"
-              />
-              <path
-                d="M12 8V3"
-              />
-              <path
-                d="M17 16h4"
-              />
-              <path
-                d="M19 12V3"
-              />
-              <path
-                d="M19 21v-5"
-              />
-              <path
-                d="M3 14h4"
-              />
-              <path
-                d="M5 10V3"
-              />
-              <path
-                d="M5 21v-7"
-              />
-            </svg>
-            <span>
-              Customize
-            </span>
-          </button>
-        </div>
-        <div
-          aria-label="Bike Profile Selector"
-          class="speed-selector-container"
-          role="group"
-        >
-          <div
-            class="speed-selector-buttons"
-          >
-            <button
-              aria-pressed="true"
-              class="speed-selector-btn  active"
-              type="button"
-            >
-              <span
-                class="speed-selector-btn-icon"
-              >
-                <svg
-                  aria-label="Standard Icon"
-                  class="lucide lucide-bike"
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle
-                    cx="18.5"
-                    cy="17.5"
-                    r="3.5"
-                  />
-                  <circle
-                    cx="5.5"
-                    cy="17.5"
-                    r="3.5"
-                  />
-                  <circle
-                    cx="15"
-                    cy="5"
-                    r="1"
-                  />
-                  <path
-                    d="M12 17.5V14l-3-3 4-3 2 3h2"
-                  />
-                </svg>
-              </span>
-              <span>
-                Standard
-              </span>
-            </button>
-            <button
-              aria-pressed="false"
-              class="speed-selector-btn"
-              type="button"
-            >
-              <span
-                class="speed-selector-btn-icon"
-              >
-                <svg
-                  aria-label="Road Icon"
-                  class="lucide lucide-zap"
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
-                  />
-                </svg>
-              </span>
-              <span>
-                Road
-              </span>
-            </button>
-            <button
-              aria-pressed="false"
-              class="speed-selector-btn"
-              type="button"
-            >
-              <span
-                class="speed-selector-btn-icon"
-              >
-                <svg
-                  aria-label="E-Bike Icon"
-                  class="lucide lucide-zap"
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"
-                  />
-                </svg>
-              </span>
-              <span>
-                E-Bike
-              </span>
-            </button>
-            <button
-              aria-pressed="false"
-              class="speed-selector-btn"
-              type="button"
-            >
-              <span
-                class="speed-selector-btn-icon"
-              >
-                <svg
-                  aria-label="Cargo Icon"
-                  class="lucide lucide-bike"
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle
-                    cx="18.5"
-                    cy="17.5"
-                    r="3.5"
-                  />
-                  <circle
-                    cx="5.5"
-                    cy="17.5"
-                    r="3.5"
-                  />
-                  <circle
-                    cx="15"
-                    cy="5"
-                    r="1"
-                  />
-                  <path
-                    d="M12 17.5V14l-3-3 4-3 2 3h2"
-                  />
-                </svg>
-              </span>
-              <span>
-                Cargo
-              </span>
-            </button>
-            <button
-              aria-pressed="false"
-              class="speed-selector-btn"
-              type="button"
-            >
-              <span
-                class="speed-selector-btn-icon"
-              >
-                <svg
-                  aria-label="Custom Icon"
-                  class="lucide lucide-settings"
-                  fill="none"
-                  height="12"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="12"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                  />
-                </svg>
-              </span>
-              <span>
-                Custom
-              </span>
-            </button>
-          </div>
-        </div>
-        <div
-          class="ciclista-bike-summary-row"
-        >
-          <span
-            class="ciclista-bike-summary-pill"
-            data-testid="bike-profile-summary-pill"
-          >
-            18 km/h • Standard
-          </span>
-          <button
-            class="ciclista-link-btn"
-            data-testid="tune-parameters-link"
-            type="button"
-          >
-            Tune parameters & rules →
-          </button>
         </div>
       </section>
       <section
@@ -925,58 +720,6 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
         <div
           class="stats-alt-list"
         />
-      </section>
-      <section
-        class="ciclista-card ciclista-rules-summary-card"
-      >
-        <div
-          class="ciclista-rules-summary-header"
-        >
-          <div
-            class="ciclista-rules-summary-title"
-          >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-settings ciclista-rules-summary-icon"
-              fill="none"
-              height="15"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="15"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
-              />
-              <circle
-                cx="12"
-                cy="12"
-                r="3"
-              />
-            </svg>
-            <h2
-              class="ciclista-title"
-            >
-              Road Rules
-            </h2>
-          </div>
-          <button
-            aria-label="Configure road rules"
-            class="ciclista-btn ciclista-btn--secondary ciclista-btn--sm"
-            data-testid="open-rules-modal-btn"
-            type="button"
-          >
-            Configure
-          </button>
-        </div>
-        <p
-          class="ciclista-field-helper"
-        >
-          Traffic signs, road classifications, intersection delays, and turn penalties.
-        </p>
       </section>
       <section
         class="ciclista-card compare-panel-placeholder"

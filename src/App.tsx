@@ -16,7 +16,7 @@ import {
 import type { Coordinate } from './core/common/types';
 import type { AppSettings } from './core/config/settings';
 import type { SettingCategory } from './core/config/settingsMetadata';
-import type { LocalOverrides } from './core/config/types';
+import type { BikeProfile, LocalOverrides } from './core/config/types';
 import type { MapEvent } from './core/events';
 import type { StreetGraph } from './core/graph/types';
 import type { Landmark } from './core/landmarks/types';
@@ -56,6 +56,7 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
 
   // Modal visibility states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [settingsCategory, setSettingsCategory] = useState<SettingCategory | undefined>();
   const [settingsHighlightKey, setSettingsHighlightKey] = useState<keyof AppSettings | undefined>();
   const [isSearchAllOpen, setIsSearchAllOpen] = useState(false);
@@ -184,6 +185,11 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
   } = useInspectorMode();
 
   // Load custom storage overrides state and rules config using the custom hook
+  const overrides = useOverrides() as ReturnType<typeof useOverrides> & {
+    bikes?: BikeProfile[];
+    activeBikeId?: string;
+    setActiveBikeId?: (id: string) => void;
+  };
   const {
     nodeDelays,
     nodeNotes,
@@ -199,7 +205,7 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
     handleClearNodeOverride,
     handleSaveCrossingTurn,
     handleDeleteCrossingTurn,
-  } = useOverrides();
+  } = overrides;
 
   // Instantiate hooks to manage routing state and OSM fetching
   const routing = useRoutingState();
@@ -568,10 +574,14 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
               window.dispatchEvent(new PopStateEvent('popstate'));
             }
           }}
+          onOpenProfile={() => setIsProfileOpen(true)}
           onOpenSettings={() => handleOpenSettings()}
           onOpenSearchAll={() => handleOpenSearchAll('all')}
         />
         <Sidebar
+          bikes={overrides.bikes}
+          activeBikeId={overrides.activeBikeId}
+          onSelectBike={overrides.setActiveBikeId}
           routeResult={routeResult}
           isFetchingOSM={isFetchingOSM}
           waypoints={waypoints}
@@ -595,6 +605,7 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
         <GlobalControlsPanel theme={theme} onThemeChange={handleThemeChange} />
+        {isProfileOpen && null}
         {isSettingsOpen && (
           <SettingsModal
             isOpen={isSettingsOpen}

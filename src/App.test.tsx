@@ -73,6 +73,13 @@ describe('Main App Route Snapshot Baseline', () => {
     expect(screen.getByRole('dialog', { name: 'Search Everywhere' })).toBeInTheDocument();
   });
 
+  it('triggers profile action when clicking profile toolbar button', () => {
+    render(<App />);
+    const profileBtn = screen.getByTestId('toolbar-profile');
+    expect(profileBtn).toBeInTheDocument();
+    fireEvent.click(profileBtn);
+  });
+
   it('opens Settings modal on Ctrl+, shortcut', () => {
     render(<App />);
     fireEvent.keyDown(window, { key: ',', ctrlKey: true });
