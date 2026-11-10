@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_RULES_CONFIG } from '../core/config';
+import type { Landmark } from '../core/landmarks/types';
 import type { RouteResult, StrategyRouteVariant } from '../core/router/types';
+import { StudioStateContext, type StudioStateContextType } from './map/MapContext';
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar Integration', () => {
@@ -305,5 +307,124 @@ describe('Sidebar Integration', () => {
       screen.getByText('Inspect cached network chunks or route edge costs.'),
     ).toBeInTheDocument();
     expect(screen.queryByText('Route Alternatives')).not.toBeInTheDocument();
+  });
+
+  it('wires places prop to RoutingConfigPanel and displays places in Start input dropdown', async () => {
+    const user = userEvent.setup();
+    const handleSetStartCoord = vi.fn();
+    const mockPlaces: Landmark[] = [
+      {
+        id: 'place-home',
+        name: 'Home Sanctuary',
+        category: 'home',
+        lat: 48.13715,
+        lng: 11.5754,
+        description: 'Main residence',
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+      {
+        id: 'place-work',
+        name: 'Tech Campus',
+        category: 'work',
+        lat: 48.15,
+        lng: 11.59,
+        description: 'Office building',
+        createdAt: 1001,
+        updatedAt: 1001,
+      },
+    ];
+
+    render(<Sidebar {...defaultProps} places={mockPlaces} onSetStartCoord={handleSetStartCoord} />);
+
+    const startInput = screen.getByLabelText('Start');
+    await user.click(startInput);
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
+    expect(screen.getByText('Tech Campus')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Home Sanctuary'));
+    expect(handleSetStartCoord).toHaveBeenCalledWith({ lat: 48.13715, lng: 11.5754 });
+  });
+
+  it('wires places from StudioStateContext when places prop is omitted', async () => {
+    const user = userEvent.setup();
+    const mockPlaces: Landmark[] = [
+      {
+        id: 'place-home',
+        name: 'Home Sanctuary',
+        category: 'home',
+        lat: 48.13715,
+        lng: 11.5754,
+        description: 'Main residence',
+        createdAt: 1000,
+        updatedAt: 1000,
+      },
+      {
+        id: 'place-work',
+        name: 'Tech Campus',
+        category: 'work',
+        lat: 48.15,
+        lng: 11.59,
+        description: 'Office building',
+        createdAt: 1001,
+        updatedAt: 1001,
+      },
+    ];
+
+    const mockStudioCtx = {
+      places: mockPlaces,
+      setPlaces: vi.fn(),
+      selectedEdgeIds: [],
+      setSelectedEdgeIds: vi.fn(),
+      selectionTool: 'click' as const,
+      setSelectionTool: vi.fn(),
+      brushRadiusMeters: 50,
+      setBrushRadiusMeters: vi.fn(),
+      events: [],
+      setEvents: vi.fn(),
+      isPlacingPlace: false,
+      setIsPlacingPlace: vi.fn(),
+      placeModalState: { isOpen: false, landmark: null, initialCoordinates: null },
+      setPlaceModalState: vi.fn(),
+      activeZoneEventId: null,
+      setActiveZoneEventId: vi.fn(),
+      isDrawingZone: false,
+      setIsDrawingZone: vi.fn(),
+      isSelectingEventsEdges: false,
+      setIsSelectingEventsEdges: vi.fn(),
+      editingPlace: null,
+      setEditingPlace: vi.fn(),
+      onClearSelection: vi.fn(),
+    } as unknown as StudioStateContextType;
+
+    render(
+      <StudioStateContext.Provider value={mockStudioCtx}>
+        <Sidebar {...defaultProps} />
+      </StudioStateContext.Provider>,
+    );
+
+    const endInput = screen.getByLabelText('Destination');
+    await user.click(endInput);
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByText('Home Sanctuary')).toBeInTheDocument();
+    expect(screen.getByText('Tech Campus')).toBeInTheDocument();
+  });
+
+  it('toggles active placement state when Pick on map buttons are clicked in Sidebar', async () => {
+    const user = userEvent.setup();
+    render(<Sidebar {...defaultProps} />);
+
+    const pickStart = screen.getByRole('button', { name: /pick start on map/i });
+    expect(pickStart).not.toHaveClass('ciclista-btn--active');
+    await user.click(pickStart);
+    expect(pickStart).toHaveClass('ciclista-btn--active');
+
+    const pickEnd = screen.getByRole('button', { name: /pick destination on map/i });
+    expect(pickEnd).not.toHaveClass('ciclista-btn--active');
+    await user.click(pickEnd);
+    expect(pickEnd).toHaveClass('ciclista-btn--active');
   });
 });

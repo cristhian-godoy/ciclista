@@ -927,6 +927,150 @@ h2 {
   font-size: var(--ciclista-font-80);
 }
 
+.ciclista-route-endpoint-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-route-endpoint-field {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.ciclista-route-endpoint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-2xs);
+  flex-shrink: 0;
+}
+
+.ciclista-route-location-action-btn {
+  padding: var(--ciclista-spacing-xs);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ciclista-route-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.ciclista-route-input-icon {
+  position: absolute;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ciclista-color-brand-secondary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ciclista-route-location-input.ciclista-has-category-icon {
+  padding-left: 28px;
+}
+
+.ciclista-autocomplete-dropdown-container {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.ciclista-autocomplete-dropdown {
+  background: var(--ciclista-color-surface-base);
+  border: 1px solid var(--ciclista-glass-border-base);
+  border-radius: var(--ciclista-radius-md);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--ciclista-spacing-2xs);
+  box-shadow: var(--ciclista-shadow-lg);
+  list-style: none;
+  margin: 0;
+  backdrop-filter: blur(var(--ciclista-blur-radius));
+}
+
+.ciclista-autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-sm);
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
+  border-radius: var(--ciclista-radius-sm);
+  cursor: pointer;
+  transition: var(--ciclista-transition-fast);
+}
+
+.ciclista-autocomplete-item:hover,
+.ciclista-autocomplete-item--active {
+  background: var(--ciclista-color-surface-elevated);
+}
+
+.ciclista-autocomplete-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ciclista-color-brand-secondary);
+}
+
+.ciclista-autocomplete-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ciclista-spacing-3xs);
+}
+
+.ciclista-autocomplete-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-autocomplete-item-title {
+  font-weight: 600;
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ciclista-autocomplete-item-badge {
+  font-size: var(--ciclista-font-xs);
+  text-transform: capitalize;
+}
+
+.ciclista-autocomplete-item-desc {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ciclista-autocomplete-item-coords {
+  font-size: var(--ciclista-font-xs);
+  color: var(--ciclista-color-text-muted);
+  font-family: var(--ciclista-font-mono, monospace);
+}
+
+.ciclista-autocomplete-empty {
+  padding: var(--ciclista-spacing-sm);
+  font-size: var(--ciclista-font-sm);
+  color: var(--ciclista-color-text-muted);
+  text-align: center;
+}
+
 .ciclista-route-swap-btn {
   flex-shrink: 0;
   width: 36px;
