@@ -4,7 +4,7 @@ import type { Coordinate } from '../common/types';
 import type { LocalOverrides } from '../config';
 import type { StreetGraph } from '../graph/types';
 import * as wasmModule from '../wasm';
-import type { WorkerRoutingRequest, WorkerRoutingResponse } from './types';
+import type { StrategyRouteVariant, WorkerRoutingRequest, WorkerRoutingResponse } from './types';
 
 describe('router.worker unit tests', () => {
   const originalPostMessage = globalThis.postMessage;
@@ -112,6 +112,62 @@ describe('router.worker unit tests', () => {
     const response = postMessageMock.mock.calls[0]?.[0] as WorkerRoutingResponse;
     expect(response).toBeDefined();
     expect(response.requestId).toBe('req-wasm-1');
+    expect(response.routeVariants).toEqual(mockVariants);
+  });
+
+  it('serializes Set fields in overrides before delegating to WASM engine', async () => {
+    const mockVariants: StrategyRouteVariant[] = [
+      {
+        label: 'standard',
+        result: {
+          pathNodeIds: ['1', '2'],
+          coordinates: [startCoord, endCoord],
+          totalDistanceMeters: 100,
+          totalDurationSeconds: 20,
+          streets: ['Street A'],
+          trafficSignalsCount: 0,
+          yieldCount: 0,
+          signalCount: 0,
+          crossingCount: 0,
+          roadTypeTotals: {},
+          surfaceTotals: { paved: 100, gravel: 0, cobblestone: 0 },
+        },
+      },
+    ];
+
+    vi.spyOn(wasmModule, 'ensureWasmInitialized').mockResolvedValue(true);
+    const findRouteSpy = vi
+      .spyOn(wasmModule.WasmStreetGraph.prototype, 'find_route_variants')
+      .mockReturnValue(mockVariants);
+
+    await import('./router.worker');
+
+    const overridesWithSet: LocalOverrides = {
+      ...defaultOverrides,
+      blockedEdges: new Set(['1->2']),
+    };
+
+    const request: WorkerRoutingRequest = {
+      requestId: 'req-wasm-set',
+      graph: mockGraph,
+      startCoord,
+      endCoord,
+      overrides: overridesWithSet,
+      algorithm: 'astar',
+    };
+
+    await (self.onmessage as (e: MessageEvent<WorkerRoutingRequest>) => Promise<void>)(
+      new MessageEvent('message', { data: request }),
+    );
+
+    expect(findRouteSpy).toHaveBeenCalledTimes(1);
+    const passedOverrides = findRouteSpy.mock.calls[0]?.[2] as { blockedEdges?: unknown };
+    expect(Array.isArray(passedOverrides?.blockedEdges)).toBe(true);
+    expect(passedOverrides?.blockedEdges).toEqual(['1->2']);
+
+    expect(postMessageMock).toHaveBeenCalledTimes(1);
+    const response = postMessageMock.mock.calls[0]?.[0] as WorkerRoutingResponse;
+    expect(response.requestId).toBe('req-wasm-set');
     expect(response.routeVariants).toEqual(mockVariants);
   });
 

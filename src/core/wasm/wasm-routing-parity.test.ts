@@ -9,7 +9,12 @@ import { OSMGraphParser } from '../graph/parser';
 import { AStarRouter } from '../router/astar';
 import { avoidBusyRoadsCost, avoidStoppingCost, standardCost } from '../router/strategies';
 import type { StrategyRouteVariant } from '../router/types';
-import { ensureWasmInitialized, WasmEngine, WasmStreetGraph } from './index';
+import {
+  ensureWasmInitialized,
+  serializeOverridesForWasm,
+  WasmEngine,
+  WasmStreetGraph,
+} from './index';
 
 describe('WASM & TypeScript Routing Parity Integration', () => {
   beforeAll(async () => {
@@ -167,6 +172,94 @@ describe('WASM & TypeScript Routing Parity Integration', () => {
         expect(a.result.totalDurationSeconds).toBeCloseTo(d.result.totalDurationSeconds, 4);
         expect(a.result.totalDistanceMeters).toBeCloseTo(d.result.totalDistanceMeters, 4);
       }
+    });
+
+    describe('Overrides serialization with Sets in WebAssembly', () => {
+      it('executes WASM route variants without error when blockedEdges is a JavaScript Set', () => {
+        const wasmGraph = WasmEngine.load_mock_graph();
+        const overridesWithSet: LocalOverrides = {
+          nodeDelays: new Map(),
+          nodeNotes: new Map(),
+          nodeTurns: new Map(),
+          blockedEdges: new Set(['1->2', '2->1']),
+        };
+
+        expect(() => {
+          const variants = WasmEngine.find_route_variants(
+            wasmGraph,
+            startCoord,
+            endCoord,
+            overridesWithSet,
+            'astar',
+          ) as StrategyRouteVariant[];
+          expect(Array.isArray(variants)).toBe(true);
+          expect(variants.length).toBeGreaterThan(0);
+        }).not.toThrow();
+      });
+
+      it('executes via WasmStreetGraph.find_route_variants using serializeOverridesForWasm', () => {
+        const wasmGraph = WasmEngine.load_mock_graph();
+        const overridesWithSet: LocalOverrides = {
+          nodeDelays: new Map(),
+          nodeNotes: new Map(),
+          nodeTurns: new Map(),
+          blockedEdges: new Set(['1->2', '2->1']),
+        };
+
+        const serialized = serializeOverridesForWasm(overridesWithSet);
+        const variants = wasmGraph.find_route_variants(
+          startCoord,
+          endCoord,
+          serialized,
+          'astar',
+        ) as StrategyRouteVariant[];
+
+        expect(Array.isArray(variants)).toBe(true);
+        expect(variants.length).toBeGreaterThan(0);
+      });
+
+      it('maintains parity between TypeScript and WASM routers when blockedEdges Set is active', () => {
+        const wasmGraph = WasmEngine.load_mock_graph();
+        const tsParser = new OSMGraphParser();
+        const tsGraph = tsParser.parse({ elements: [] });
+        const tsRouter = new AStarRouter();
+
+        const overridesWithSet: LocalOverrides = {
+          nodeDelays: new Map(),
+          nodeNotes: new Map(),
+          nodeTurns: new Map(),
+          blockedEdges: new Set(['1->2', '2->1']),
+        };
+
+        const wasmVariants = WasmEngine.find_route_variants(
+          wasmGraph,
+          startCoord,
+          endCoord,
+          overridesWithSet,
+          'astar',
+        ) as StrategyRouteVariant[];
+
+        const strat = { label: 'standard', costFn: standardCost };
+        const wasmVariant = wasmVariants.find((v) => v.label === strat.label);
+        expect(wasmVariant).toBeDefined();
+
+        const tsResult = tsRouter.findRoute(
+          tsGraph,
+          startCoord,
+          endCoord,
+          strat.costFn,
+          overridesWithSet,
+        );
+        expect(tsResult).not.toBeNull();
+        if (!wasmVariant || !tsResult) return;
+
+        expect(wasmVariant.result.pathNodeIds).toEqual(tsResult.pathNodeIds);
+        expect(wasmVariant.result.totalDistanceMeters).toBeCloseTo(tsResult.totalDistanceMeters, 1);
+        expect(wasmVariant.result.totalDurationSeconds).toBeCloseTo(
+          tsResult.totalDurationSeconds,
+          1,
+        );
+      });
     });
   });
 });

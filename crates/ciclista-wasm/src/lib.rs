@@ -107,6 +107,53 @@ enum NodeCollection {
     List(Vec<(String, NodeEntry)>),
 }
 
+fn normalize_overrides_js(overrides: JsValue) -> JsValue {
+    if !overrides.is_object() || overrides.is_null() || overrides.is_undefined() {
+        return overrides;
+    }
+
+    let obj_ref: &js_sys::Object = match overrides.dyn_ref::<js_sys::Object>() {
+        Some(o) => o,
+        None => return overrides,
+    };
+
+    let keys = js_sys::Object::keys(obj_ref);
+    let mut has_set = false;
+    for key in keys.iter() {
+        if let Ok(val) = js_sys::Reflect::get(&overrides, &key) {
+            if val.is_instance_of::<js_sys::Set>() {
+                has_set = true;
+                break;
+            }
+        }
+    }
+
+    if !has_set {
+        return overrides;
+    }
+
+    let cloned = js_sys::Object::assign(&js_sys::Object::new(), obj_ref);
+    for key in keys.iter() {
+        if let Ok(val) = js_sys::Reflect::get(&overrides, &key) {
+            if val.is_instance_of::<js_sys::Set>() {
+                let arr = js_sys::Array::from(&val);
+                let _ = js_sys::Reflect::set(&cloned, &key, &arr);
+            }
+        }
+    }
+    cloned.into()
+}
+
+pub(crate) fn parse_local_overrides(overrides: JsValue) -> Result<LocalOverrides, JsValue> {
+    if overrides.is_null() || overrides.is_undefined() {
+        return Ok(LocalOverrides::default());
+    }
+
+    let normalized = normalize_overrides_js(overrides);
+    serde_wasm_bindgen::from_value(normalized)
+        .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))
+}
+
 #[wasm_bindgen]
 pub struct WasmEngine;
 
@@ -161,12 +208,7 @@ impl WasmEngine {
         let end: Coordinate = serde_wasm_bindgen::from_value(end_coord)
             .map_err(|e| JsValue::from_str(&format!("Invalid end_coord: {}", e)))?;
 
-        let local_overrides: LocalOverrides = if overrides.is_null() || overrides.is_undefined() {
-            LocalOverrides::default()
-        } else {
-            serde_wasm_bindgen::from_value(overrides)
-                .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
-        };
+        let local_overrides = parse_local_overrides(overrides)?;
 
         let variants: Vec<StrategyRouteVariant> = match algorithm.as_deref() {
             Some("dijkstra") => {
@@ -193,12 +235,7 @@ impl WasmEngine {
         let end: Coordinate = serde_wasm_bindgen::from_value(end_coord)
             .map_err(|e| JsValue::from_str(&format!("Invalid end_coord: {}", e)))?;
 
-        let local_overrides: LocalOverrides = if overrides.is_null() || overrides.is_undefined() {
-            LocalOverrides::default()
-        } else {
-            serde_wasm_bindgen::from_value(overrides)
-                .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
-        };
+        let local_overrides = parse_local_overrides(overrides)?;
 
         let variants: Vec<StrategyRouteVariant> =
             find_route_variants_astar(&graph.inner, start, end, &local_overrides);
@@ -221,12 +258,7 @@ impl WasmEngine {
         let end: Coordinate = serde_wasm_bindgen::from_value(end_coord)
             .map_err(|e| JsValue::from_str(&format!("Invalid end_coord: {}", e)))?;
 
-        let local_overrides: LocalOverrides = if overrides.is_null() || overrides.is_undefined() {
-            LocalOverrides::default()
-        } else {
-            serde_wasm_bindgen::from_value(overrides)
-                .map_err(|e| JsValue::from_str(&format!("Invalid overrides: {}", e)))?
-        };
+        let local_overrides = parse_local_overrides(overrides)?;
 
         let variants: Vec<StrategyRouteVariant> =
             find_route_variants_dijkstra(&graph.inner, start, end, &local_overrides);
@@ -345,5 +377,23 @@ mod tests {
             );
             assert!((a.result.total_distance_meters - d.result.total_distance_meters).abs() < 1e-4);
         }
+    }
+
+    #[test]
+    fn test_local_overrides_blocked_edges_serialization() {
+        use std::collections::HashSet;
+
+        let mut overrides = LocalOverrides::default();
+        let mut blocked = HashSet::new();
+        blocked.insert("1->2".to_string());
+        overrides.blocked_edges = Some(blocked);
+
+        let json = serde_json::to_string(&overrides).expect("serialization succeeds");
+        assert!(json.contains("blockedEdges"));
+
+        let restored: LocalOverrides =
+            serde_json::from_str(&json).expect("deserialization succeeds");
+        assert_eq!(restored.blocked_edges.as_ref().unwrap().len(), 1);
+        assert!(restored.blocked_edges.unwrap().contains("1->2"));
     }
 }

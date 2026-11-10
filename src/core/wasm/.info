@@ -1,5 +1,9 @@
 index.ts
 	TypeScript wrapper and initialization manager for the WebAssembly routing engine.
+overrides.ts
+	Serialization and normalization helpers converting JavaScript Set fields into serializable arrays for WebAssembly calls.
+overrides.test.ts
+	Unit tests verifying serialization and Set-to-array transformations for WebAssembly overrides.
 wasm-routing-parity.test.ts
 	Integration tests verifying routing parity and graph representation between TypeScript and WebAssembly engines.
 pkg

@@ -61,5 +61,6 @@ export function isWasmInitialized(): boolean {
   return initialized;
 }
 
+export { serializeOverridesForWasm, type WasmLocalOverrides } from './overrides';
 export { WasmEngine, WasmStreetGraph };
 export type { InitInput };

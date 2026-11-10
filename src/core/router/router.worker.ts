@@ -1,6 +1,6 @@
 import { logger } from '../common/logger';
 import type { LocalOverrides } from '../config';
-import { ensureWasmInitialized, WasmStreetGraph } from '../wasm';
+import { ensureWasmInitialized, serializeOverridesForWasm, WasmStreetGraph } from '../wasm';
 import { AStarRouter } from './astar';
 import { findMultiStopRoute } from './multi-stop';
 import { DijkstraRouter } from './router';
@@ -84,10 +84,11 @@ self.onmessage = async (e: MessageEvent<WorkerRoutingRequest>) => {
 
     if (!hasWaypoints && wasmReady && retainedWasmGraph && retainedWasmGraph.node_count > 0) {
       try {
+        const wasmOverrides = serializeOverridesForWasm(overrides);
         const variants = retainedWasmGraph.find_route_variants(
           startCoord,
           endCoord,
-          overrides,
+          wasmOverrides,
           algorithm,
         ) as StrategyRouteVariant[];
 
