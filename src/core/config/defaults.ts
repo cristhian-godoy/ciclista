@@ -130,17 +130,35 @@ export const DEFAULT_RULES_CONFIG: RulesConfiguration = {
 };
 
 /**
- * Default bike profiles available for selection.
+ * Default user-managed bike profiles available out-of-the-box.
  */
 export const DEFAULT_BIKES: BikeProfile[] = [
   {
     id: 'normal',
     name: 'Normal Bike',
     speedKmh: 18,
+    surfacePreferences: {
+      gravelSpeedMultiplier: 0.8,
+      cobblestoneSpeedMultiplier: 0.75,
+    },
+    turnPenalties: {
+      rightTurnPenaltySeconds: 1,
+      leftTurnPenaltySeconds: 4,
+      uTurnPenaltySeconds: 30,
+    },
   },
   {
     id: 'ebike',
     name: 'E-Bike',
     speedKmh: 25,
+    surfacePreferences: {
+      gravelSpeedMultiplier: 0.8,
+      cobblestoneSpeedMultiplier: 0.75,
+    },
+    turnPenalties: {
+      rightTurnPenaltySeconds: 1,
+      leftTurnPenaltySeconds: 4,
+      uTurnPenaltySeconds: 30,
+    },
   },
 ];

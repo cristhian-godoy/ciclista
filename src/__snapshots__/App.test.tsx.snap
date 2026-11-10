@@ -175,7 +175,7 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       </button>
     </nav>
     <div
-      class="ciclista-toolbar-footer side-toolbar-group"
+      class="ciclista-toolbar-footer"
     >
       <button
         aria-label="Search All"
@@ -295,14 +295,14 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
       </button>
       <button
         aria-label="Profile"
-        class="side-toolbar-btn"
+        class="ciclista-toolbar-btn ciclista-toolbar-btn--profile"
         data-testid="toolbar-profile"
         title="Profile"
         type="button"
       >
         <svg
           aria-hidden="true"
-          class="lucide lucide-bike"
+          class="lucide lucide-bike ciclista-toolbar-icon"
           fill="none"
           height="20"
           stroke="currentColor"
@@ -332,11 +332,6 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             d="M12 17.5V14l-3-3 4-3 2 3h2"
           />
         </svg>
-        <span
-          class="side-toolbar-label"
-        >
-          Profile
-        </span>
       </button>
       <button
         aria-label="Settings"
@@ -494,19 +489,23 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   Start
                 </label>
                 <div
-                  class="ciclista-route-input-wrapper"
+                  class="ciclista-route-input-row"
                 >
-                  <input
-                    aria-autocomplete="list"
-                    aria-expanded="false"
-                    autocomplete="off"
-                    class="ciclista-input ciclista-route-location-input  "
-                    id="route-start-input"
-                    name="route-start-input"
-                    placeholder="Search saved place or pick on map"
-                    type="text"
-                    value=""
-                  />
+                  <div
+                    class="ciclista-route-input-wrapper"
+                  >
+                    <input
+                      aria-autocomplete="list"
+                      aria-expanded="false"
+                      autocomplete="off"
+                      class="ciclista-input ciclista-route-location-input  "
+                      id="route-start-input"
+                      name="route-start-input"
+                      placeholder="Search saved place or pick on map"
+                      type="text"
+                      value=""
+                    />
+                  </div>
                   <button
                     aria-label="Pick start on map"
                     class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
@@ -573,19 +572,23 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
                   Destination
                 </label>
                 <div
-                  class="ciclista-route-input-wrapper"
+                  class="ciclista-route-input-row"
                 >
-                  <input
-                    aria-autocomplete="list"
-                    aria-expanded="false"
-                    autocomplete="off"
-                    class="ciclista-input ciclista-route-location-input  "
-                    id="route-end-input"
-                    name="route-end-input"
-                    placeholder="Search saved place or pick on map"
-                    type="text"
-                    value=""
-                  />
+                  <div
+                    class="ciclista-route-input-wrapper"
+                  >
+                    <input
+                      aria-autocomplete="list"
+                      aria-expanded="false"
+                      autocomplete="off"
+                      class="ciclista-input ciclista-route-location-input  "
+                      id="route-end-input"
+                      name="route-end-input"
+                      placeholder="Search saved place or pick on map"
+                      type="text"
+                      value=""
+                    />
+                  </div>
                   <button
                     aria-label="Pick destination on map"
                     class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "

@@ -3,6 +3,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } fr
 import { GlobalControlsPanel } from './components/GlobalControlsPanel';
 import { MapProvider } from './components/map/MapContext';
 import { MapView } from './components/MapView';
+import { ProfileModal } from './components/ProfileModal';
 import { SearchEverywhereModal, type SearchTab } from './components/SearchEverywhereModal';
 import { SettingsModal } from './components/SettingsModal';
 import { Sidebar } from './components/Sidebar';
@@ -605,7 +606,20 @@ function DashboardApp({ onNavigate }: DashboardAppProps) {
         />
         <MapView onMapBoundsChange={handleMapBoundsChange} />
         <GlobalControlsPanel theme={theme} onThemeChange={handleThemeChange} />
-        {isProfileOpen && null}
+        {isProfileOpen && (
+          <ProfileModal
+            isOpen={isProfileOpen}
+            onClose={() => setIsProfileOpen(false)}
+            bikes={overrides.bikes}
+            activeBikeId={overrides.activeBikeId}
+            onSelectBike={overrides.setActiveBikeId}
+            onAddBike={overrides.addBike}
+            onUpdateBike={overrides.updateBike}
+            onDeleteBike={overrides.deleteBike}
+            rulesConfig={rulesConfig}
+            onRulesChange={setRulesConfig}
+          />
+        )}
         {isSettingsOpen && (
           <SettingsModal
             isOpen={isSettingsOpen}

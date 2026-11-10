@@ -125,7 +125,7 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
         </button>
       </nav>
 
-      <div className="ciclista-toolbar-footer side-toolbar-group">
+      <div className="ciclista-toolbar-footer">
         {onOpenSearchAll && (
           <button
             type="button"
@@ -163,14 +163,13 @@ export const SideToolbar: React.FC<SideToolbarProps> = ({
 
         <button
           type="button"
-          className="side-toolbar-btn"
+          className="ciclista-toolbar-btn ciclista-toolbar-btn--profile"
           onClick={onOpenProfile}
           aria-label="Profile"
           title="Profile"
           data-testid="toolbar-profile"
         >
-          <Bike size={20} />
-          <span className="side-toolbar-label">Profile</span>
+          <Bike size={20} className="ciclista-toolbar-icon" />
         </button>
 
         {onOpenSettings && (

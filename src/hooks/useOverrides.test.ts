@@ -2,8 +2,9 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  type BikeConfig,
+  type BikeProfile,
   type CrossingTurnOverride,
+  DEFAULT_BIKES,
   DEFAULT_RULES_CONFIG,
   type RulesConfiguration,
   type SemanticTurnType,
@@ -29,7 +30,22 @@ describe('useOverrides hook', () => {
     expect(hookResult!.current.nodeNotes.size).toBe(0);
     expect(hookResult!.current.nodeTurns.size).toBe(0);
     expect(hookResult!.current.crossingTurns).toEqual([]);
-    expect(hookResult!.current.bikeConfig).toEqual({ id: 'normal' });
+    expect(hookResult!.current.bikes).toEqual(DEFAULT_BIKES);
+    expect(hookResult!.current.activeBikeId).toBe('normal');
+    expect(hookResult!.current.bikeConfig).toEqual({
+      id: 'normal',
+      customSpeedKmh: 18,
+      surfacePreferences: {
+        gravelSpeedMultiplier: 0.8,
+        cobblestoneSpeedMultiplier: 0.75,
+      },
+      turnPenalties: {
+        rightTurnPenaltySeconds: 1,
+        leftTurnPenaltySeconds: 4,
+        uTurnPenaltySeconds: 30,
+      },
+      weightKg: undefined,
+    });
     expect(hookResult!.current.rulesConfig.signs).toEqual(DEFAULT_RULES_CONFIG.signs);
     expect(hookResult!.current.rulesConfig.roads).toEqual(DEFAULT_RULES_CONFIG.roads);
     expect(hookResult!.current.rulesConfig.turns).toEqual(DEFAULT_RULES_CONFIG.turns);
@@ -53,15 +69,19 @@ describe('useOverrides hook', () => {
         uTurnPenaltySeconds: 50,
       },
     };
-    const customBike: BikeConfig = {
-      id: 'road',
-      customSpeedKmh: 30,
-    };
+    const customBikes: BikeProfile[] = [
+      {
+        id: 'road',
+        name: 'Road Bike',
+        speedKmh: 30,
+      },
+    ];
 
     vi.spyOn(LocalStorageProvider.prototype, 'loadRulesConfig').mockReturnValue(
       customRules as RulesConfiguration,
     );
-    vi.spyOn(LocalStorageProvider.prototype, 'loadBikeConfig').mockReturnValue(customBike);
+    localStorage.setItem('ciclista_bikes_v1', JSON.stringify(customBikes));
+    localStorage.setItem('ciclista_active_bike_id_v1', 'road');
 
     let hookResult: ReturnType<typeof renderHook<ReturnType<typeof useOverrides>, void>>['result'];
     await act(async () => {
@@ -69,7 +89,13 @@ describe('useOverrides hook', () => {
       hookResult = rendered.result;
     });
 
-    expect(hookResult!.current.bikeConfig).toEqual(customBike);
+    expect(hookResult!.current.bikeConfig).toEqual({
+      id: 'road',
+      customSpeedKmh: 30,
+      weightKg: undefined,
+      surfacePreferences: undefined,
+      turnPenalties: undefined,
+    });
     expect(hookResult!.current.rulesConfig.turns.rightTurnPenaltySeconds).toBe(12);
     // Signs should be deep merged with defaults
     expect(hookResult!.current.rulesConfig.signs.segregated_path.flatPenaltySeconds).toBe(5);
@@ -204,5 +230,177 @@ describe('useOverrides hook', () => {
         turns: expect.objectContaining({ rightTurnPenaltySeconds: 99 }),
       }),
     );
+  });
+
+  describe('BikeProfile user management and persistence', () => {
+    it('manages active bike selection and auto-syncs bikeConfig and localStorage', async () => {
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      expect(hookResult!.current.activeBikeId).toBe('normal');
+      expect(hookResult!.current.bikeConfig.customSpeedKmh).toBe(18);
+
+      await act(async () => {
+        hookResult!.current.setActiveBikeId('ebike');
+      });
+
+      expect(hookResult!.current.activeBikeId).toBe('ebike');
+      expect(hookResult!.current.bikeConfig).toEqual({
+        id: 'ebike',
+        customSpeedKmh: 25,
+        surfacePreferences: {
+          gravelSpeedMultiplier: 0.8,
+          cobblestoneSpeedMultiplier: 0.75,
+        },
+        turnPenalties: {
+          rightTurnPenaltySeconds: 1,
+          leftTurnPenaltySeconds: 4,
+          uTurnPenaltySeconds: 30,
+        },
+        weightKg: undefined,
+      });
+      expect(localStorage.getItem('ciclista_active_bike_id_v1')).toBe('ebike');
+    });
+
+    it('adds new bike profile and persists to localStorage', async () => {
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      const newBike: BikeProfile = {
+        id: 'gravel-custom',
+        name: 'Gravel Custom',
+        speedKmh: 22,
+        weightKg: 11,
+        surfacePreferences: {
+          gravelSpeedMultiplier: 0.95,
+        },
+      };
+
+      await act(async () => {
+        hookResult!.current.addBike(newBike);
+      });
+
+      expect(hookResult!.current.bikes).toHaveLength(3);
+      expect(hookResult!.current.bikes[2]).toEqual(newBike);
+
+      const stored = JSON.parse(localStorage.getItem('ciclista_bikes_v1') || '[]');
+      expect(stored).toHaveLength(3);
+      expect(stored[2]).toEqual(newBike);
+    });
+
+    it('updates existing bike profile and reflects in active bikeConfig if active', async () => {
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      await act(async () => {
+        hookResult!.current.updateBike({
+          id: 'normal',
+          name: 'Tuned Normal',
+          speedKmh: 21,
+          weightKg: 13,
+        });
+      });
+
+      expect(hookResult!.current.bikes.find((b) => b.id === 'normal')).toMatchObject({
+        id: 'normal',
+        name: 'Tuned Normal',
+        speedKmh: 21,
+        weightKg: 13,
+      });
+      expect(hookResult!.current.bikeConfig.customSpeedKmh).toBe(21);
+      expect(hookResult!.current.bikeConfig.weightKg).toBe(13);
+
+      // Also verify partial update by id
+      await act(async () => {
+        hookResult!.current.updateBike('ebike', { speedKmh: 32 });
+      });
+
+      expect(hookResult!.current.bikes.find((b) => b.id === 'ebike')?.speedKmh).toBe(32);
+    });
+
+    it('deletes a bike, falls back activeBikeId if deleted, and enforces minimum 1 bike guard', async () => {
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      expect(hookResult!.current.bikes).toHaveLength(2);
+      expect(hookResult!.current.activeBikeId).toBe('normal');
+
+      // Delete active bike ('normal') -> should switch activeBikeId to first remaining ('ebike')
+      await act(async () => {
+        hookResult!.current.deleteBike('normal');
+      });
+
+      expect(hookResult!.current.bikes).toHaveLength(1);
+      expect(hookResult!.current.bikes[0]?.id).toBe('ebike');
+      expect(hookResult!.current.activeBikeId).toBe('ebike');
+      expect(hookResult!.current.bikeConfig.customSpeedKmh).toBe(25);
+
+      // Attempt deleting the last remaining bike -> must be a no-op
+      await act(async () => {
+        hookResult!.current.deleteBike('ebike');
+      });
+
+      expect(hookResult!.current.bikes).toHaveLength(1);
+      expect(hookResult!.current.bikes[0]?.id).toBe('ebike');
+      expect(hookResult!.current.activeBikeId).toBe('ebike');
+
+      // Attempt deleting nonexistent id -> no-op
+      await act(async () => {
+        hookResult!.current.deleteBike('unknown-bike');
+      });
+
+      expect(hookResult!.current.bikes).toHaveLength(1);
+    });
+
+    it('falls back to DEFAULT_BIKES when localStorage is missing or empty array', async () => {
+      localStorage.setItem('ciclista_bikes_v1', JSON.stringify([]));
+      localStorage.setItem('ciclista_active_bike_id_v1', 'non-existent-bike');
+
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      expect(hookResult!.current.bikes).toEqual(DEFAULT_BIKES);
+      expect(hookResult!.current.activeBikeId).toBe('normal');
+    });
+
+    it('handles corrupted localStorage JSON gracefully', async () => {
+      localStorage.setItem('ciclista_bikes_v1', '{corrupt json');
+
+      let hookResult: ReturnType<
+        typeof renderHook<ReturnType<typeof useOverrides>, void>
+      >['result'];
+      await act(async () => {
+        const rendered = renderHook(() => useOverrides());
+        hookResult = rendered.result;
+      });
+
+      expect(hookResult!.current.bikes).toEqual(DEFAULT_BIKES);
+      expect(hookResult!.current.activeBikeId).toBe('normal');
+    });
   });
 });

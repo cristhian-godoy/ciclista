@@ -288,7 +288,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     onClick={handleAddBike}
                     data-testid="profile-add-bike-btn"
                   >
-                    <Plus size={14} />+ Add Bike
+                    <Plus size={14} />
+                    Add Bike
                   </button>
                 </div>
 
@@ -507,7 +508,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     <div className="ciclista-bike-form-actions">
                       <button
                         type="button"
-                        className="ciclista-btn ciclista-btn--danger"
+                        className="ciclista-btn ciclista-btn--danger ciclista-btn--sm"
                         disabled={bikes.length <= 1}
                         onClick={() => {
                           const nextBike = bikes.find((b) => b.id !== currentSelectedBike.id);
@@ -596,7 +597,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         <div className="ciclista-settings-footer">
           <button
             type="button"
-            className="ciclista-btn ciclista-btn--primary"
+            className="ciclista-btn ciclista-btn--primary ciclista-btn--sm"
             onClick={onClose}
             data-testid="profile-done-btn"
           >

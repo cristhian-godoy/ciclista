@@ -197,7 +197,7 @@ describe('SideToolbar Component', () => {
     const profileBtn = screen.getByRole('button', { name: 'Profile' });
     expect(profileBtn).toBeInTheDocument();
     expect(profileBtn).toHaveAttribute('data-testid', 'toolbar-profile');
-    expect(profileBtn).toHaveClass('side-toolbar-btn');
+    expect(profileBtn).toHaveClass('ciclista-toolbar-btn');
 
     await user.click(profileBtn);
     expect(handleOpenProfile).toHaveBeenCalledTimes(1);

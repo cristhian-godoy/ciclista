@@ -461,7 +461,8 @@ h2 {
 }
 
 .ciclista-add-stop-btn {
-  margin-top: var(--ciclista-spacing-xs);
+  margin-top: 0;
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-sm);
   width: 100%;
   display: inline-flex;
   align-items: center;
@@ -984,12 +985,25 @@ h2 {
   justify-content: center;
 }
 
-.ciclista-route-input-wrapper {
-  position: relative;
+.ciclista-route-input-row {
   display: flex;
   align-items: center;
   gap: var(--ciclista-spacing-xs);
   width: 100%;
+}
+
+.ciclista-route-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.ciclista-route-bike-select {
+  margin-top: 0;
+  background: rgb(255 255 255 / 5%);
+  padding: var(--ciclista-spacing-sm) var(--ciclista-spacing-md);
 }
 
 .ciclista-route-input-icon {
@@ -1013,7 +1027,7 @@ h2 {
 
 .ciclista-route-inline-clear-btn {
   position: absolute;
-  right: 44px;
+  right: 8px;
   background: transparent;
   border: none;
   color: var(--ciclista-color-text-muted);
@@ -3889,6 +3903,11 @@ h2 {
   display: flex;
   justify-content: flex-end;
   gap: var(--ciclista-spacing-sm);
+}
+
+.ciclista-settings-footer .ciclista-btn {
+  width: auto;
+  padding: var(--ciclista-spacing-xs) var(--ciclista-spacing-md);
 }
 
 .ciclista-settings-empty {

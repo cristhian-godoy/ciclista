@@ -220,45 +220,111 @@ const RouteLocationInput: React.FC<RouteLocationInputProps> = ({
         <label className="ciclista-label" htmlFor={id}>
           {label}
         </label>
-        <div className="ciclista-route-input-wrapper">
-          {currentPlace && (
-            <span className="ciclista-route-input-icon" aria-hidden="true">
-              {getCategoryIcon(currentPlace.category, 14)}
-            </span>
-          )}
-          <input
-            id={id}
-            name={id}
-            className={`ciclista-input ciclista-route-location-input ${
-              currentPlace ? 'ciclista-has-category-icon' : ''
-            } ${hasValue ? 'ciclista-has-clear-btn' : ''}`}
-            type="text"
-            value={searchTerm}
-            placeholder="Search saved place or pick on map"
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setIsSearching(true);
-              setIsOpen(true);
-              setActiveIndex(-1);
-            }}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            aria-autocomplete="list"
-            aria-expanded={isOpen}
-            autoComplete="off"
-          />
-          {hasValue && (
-            <button
-              type="button"
-              className="ciclista-route-inline-clear-btn"
-              onClick={handleClear}
-              aria-label={`Clear ${label.toLowerCase()}`}
-              title={`Clear ${label.toLowerCase()}`}
-            >
-              <X size={13} />
-            </button>
-          )}
+        <div className="ciclista-route-input-row">
+          <div className="ciclista-route-input-wrapper">
+            {currentPlace && (
+              <span className="ciclista-route-input-icon" aria-hidden="true">
+                {getCategoryIcon(currentPlace.category, 14)}
+              </span>
+            )}
+            <input
+              id={id}
+              name={id}
+              className={`ciclista-input ciclista-route-location-input ${
+                currentPlace ? 'ciclista-has-category-icon' : ''
+              } ${hasValue ? 'ciclista-has-clear-btn' : ''}`}
+              type="text"
+              value={searchTerm}
+              placeholder="Search saved place or pick on map"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setIsSearching(true);
+                setIsOpen(true);
+                setActiveIndex(-1);
+              }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              aria-autocomplete="list"
+              aria-expanded={isOpen}
+              autoComplete="off"
+            />
+            {hasValue && (
+              <button
+                type="button"
+                className="ciclista-route-inline-clear-btn"
+                onClick={handleClear}
+                aria-label={`Clear ${label.toLowerCase()}`}
+                title={`Clear ${label.toLowerCase()}`}
+              >
+                <X size={13} />
+              </button>
+            )}
+
+            {isOpen && (
+              <div
+                className="ciclista-autocomplete-dropdown-container"
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {filteredPlaces.length > 0 ? (
+                  <ul
+                    id={`${id}-autocomplete-list`}
+                    role="listbox"
+                    className="ciclista-autocomplete-dropdown"
+                    aria-label={`Matching saved places for ${label}`}
+                  >
+                    {filteredPlaces.map((place, index) => {
+                      const isHighlighted = index === activeIndex;
+                      return (
+                        <li
+                          key={place.id}
+                          id={`${id}-option-${index}`}
+                          role="option"
+                          aria-selected={isHighlighted}
+                          className={`ciclista-autocomplete-item ${
+                            isHighlighted ? 'ciclista-autocomplete-item--active' : ''
+                          }`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelect(place);
+                          }}
+                          onClick={() => handleSelect(place)}
+                        >
+                          <span className="ciclista-autocomplete-item-icon" aria-hidden="true">
+                            {getCategoryIcon(place.category, 16)}
+                          </span>
+                          <div className="ciclista-autocomplete-item-content">
+                            <div className="ciclista-autocomplete-item-header">
+                              <span className="ciclista-autocomplete-item-title">{place.name}</span>
+                              <Badge
+                                size="sm"
+                                variant="subtle"
+                                className="ciclista-autocomplete-item-badge"
+                              >
+                                {place.category}
+                              </Badge>
+                            </div>
+                            {place.description && (
+                              <div className="ciclista-autocomplete-item-desc">
+                                {place.description}
+                              </div>
+                            )}
+                            <div className="ciclista-autocomplete-item-coords">
+                              {formatCoordinate({ lat: place.lat, lng: place.lng })}
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className="ciclista-autocomplete-dropdown ciclista-autocomplete-empty">
+                    {places.length === 0 ? 'No saved places' : 'No saved places found'}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <button
             type="button"
             className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
@@ -270,70 +336,6 @@ const RouteLocationInput: React.FC<RouteLocationInputProps> = ({
           >
             <Crosshair size={14} />
           </button>
-
-          {isOpen && (
-            <div
-              className="ciclista-autocomplete-dropdown-container"
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              {filteredPlaces.length > 0 ? (
-                <ul
-                  id={`${id}-autocomplete-list`}
-                  role="listbox"
-                  className="ciclista-autocomplete-dropdown"
-                  aria-label={`Matching saved places for ${label}`}
-                >
-                  {filteredPlaces.map((place, index) => {
-                    const isHighlighted = index === activeIndex;
-                    return (
-                      <li
-                        key={place.id}
-                        id={`${id}-option-${index}`}
-                        role="option"
-                        aria-selected={isHighlighted}
-                        className={`ciclista-autocomplete-item ${
-                          isHighlighted ? 'ciclista-autocomplete-item--active' : ''
-                        }`}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleSelect(place);
-                        }}
-                        onClick={() => handleSelect(place)}
-                      >
-                        <span className="ciclista-autocomplete-item-icon" aria-hidden="true">
-                          {getCategoryIcon(place.category, 16)}
-                        </span>
-                        <div className="ciclista-autocomplete-item-content">
-                          <div className="ciclista-autocomplete-item-header">
-                            <span className="ciclista-autocomplete-item-title">{place.name}</span>
-                            <Badge
-                              size="sm"
-                              variant="subtle"
-                              className="ciclista-autocomplete-item-badge"
-                            >
-                              {place.category}
-                            </Badge>
-                          </div>
-                          {place.description && (
-                            <div className="ciclista-autocomplete-item-desc">
-                              {place.description}
-                            </div>
-                          )}
-                          <div className="ciclista-autocomplete-item-coords">
-                            {formatCoordinate({ lat: place.lat, lng: place.lng })}
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className="ciclista-autocomplete-dropdown ciclista-autocomplete-empty">
-                  {places.length === 0 ? 'No saved places' : 'No saved places found'}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
