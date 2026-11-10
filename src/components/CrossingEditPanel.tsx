@@ -232,13 +232,16 @@ const TurnConfigForm: React.FC<TurnConfigFormProps> = ({
       {/* Time Delta Penalty Slider */}
       <div className="ciclista-crossing-slider-group">
         <div className="ciclista-crossing-slider-header">
-          <span className="ciclista-crossing-slider-label">
+          <label htmlFor="crossing-time-delta-slider" className="ciclista-crossing-slider-label">
             <Clock size={14} /> Time Delta Penalty
-          </span>
+          </label>
           <span>{timeDelta > 0 ? `+${timeDelta}` : timeDelta}s</span>
         </div>
         <div className="ciclista-crossing-slider-input-row">
           <input
+            id="crossing-time-delta-slider"
+            name="timeDeltaSlider"
+            aria-label="Time Delta Penalty slider"
             type="range"
             className="ciclista-crossing-slider"
             min={-30}
@@ -249,6 +252,9 @@ const TurnConfigForm: React.FC<TurnConfigFormProps> = ({
             onChange={(e) => setTimeDelta(Number(e.target.value))}
           />
           <input
+            id="crossing-time-delta-input"
+            name="timeDeltaInput"
+            aria-label="Time Delta Penalty seconds"
             type="number"
             className="ciclista-crossing-number-input"
             min={-30}
@@ -262,18 +268,30 @@ const TurnConfigForm: React.FC<TurnConfigFormProps> = ({
 
       {/* Hard Ban Toggle */}
       <div className="ciclista-crossing-ban-toggle-row">
-        <span className="ciclista-crossing-ban-label">
+        <label htmlFor="crossing-hard-ban" className="ciclista-crossing-ban-label">
           <Ban size={16} /> Hard Ban Turn
-        </span>
-        <input type="checkbox" checked={isBanned} onChange={(e) => setIsBanned(e.target.checked)} />
+        </label>
+        <input
+          id="crossing-hard-ban"
+          name="hardBan"
+          aria-label="Hard Ban Turn"
+          type="checkbox"
+          checked={isBanned}
+          onChange={(e) => setIsBanned(e.target.checked)}
+        />
       </div>
 
       {/* Description / Notes */}
       <div className="ciclista-crossing-slider-group">
         <div className="ciclista-crossing-slider-header">
-          <span className="ciclista-crossing-slider-label">Description / Notes</span>
+          <label htmlFor="crossing-description-input" className="ciclista-crossing-slider-label">
+            Description / Notes
+          </label>
         </div>
         <input
+          id="crossing-description-input"
+          name="crossingDescription"
+          aria-label="Description / Notes"
           type="text"
           className="ciclista-input"
           placeholder="e.g. Traffic light cycle or protected phase"

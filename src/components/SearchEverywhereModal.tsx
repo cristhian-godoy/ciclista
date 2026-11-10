@@ -382,6 +382,9 @@ export const SearchEverywhereModal: React.FC<SearchEverywhereModalProps> = ({
             <Search size={18} className="ciclista-search-input-icon" />
             <input
               ref={inputRef}
+              id="search-everywhere-input"
+              name="searchEverywhere"
+              aria-label="Search actions, settings, and places"
               type="text"
               className="ciclista-search-everywhere-input"
               value={query}

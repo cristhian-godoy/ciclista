@@ -68,8 +68,7 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
     onChange({ ...config, turns: updated });
   };
 
-  const handleReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleReset = () => {
     onChange(DEFAULT_RULES_CONFIG);
   };
 
@@ -86,17 +85,24 @@ export const RulesConfigPanel: React.FC<RulesConfigPanelProps> = ({
               <Settings size={15} className="rules-panel-title-icon" />
               <h2 className="ciclista-title">Road Rules</h2>
             </span>
-            <div className="rules-panel-header-actions">
-              <button onClick={handleReset} title="Reset to defaults" className="rules-reset-btn">
-                <RotateCcw size={11} />
-                Reset
-              </button>
+            <span className="rules-panel-header-actions">
               {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </div>
+            </span>
           </div>
         </summary>
 
         <div className="rules-body-container">
+          <div className="rules-panel-actions">
+            <button
+              type="button"
+              onClick={handleReset}
+              title="Reset to defaults"
+              className="rules-reset-btn"
+            >
+              <RotateCcw size={11} />
+              Reset
+            </button>
+          </div>
           {/* German Traffic Signs sub-section */}
           <AccordionSection
             title="Traffic Signs"

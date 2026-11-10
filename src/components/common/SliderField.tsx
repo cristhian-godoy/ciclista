@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 /**
  * Properties for the unified SliderField form group component.
@@ -56,6 +56,14 @@ export interface SliderFieldProps {
    * Custom format function for the label or string template. If provided, overrides default `{label}: <strong>...</strong>`.
    */
   formatValueText?: (label: React.ReactNode, value: number, unit: string) => React.ReactNode;
+  /**
+   * Optional unique DOM element id. If omitted, an auto-generated id is used.
+   */
+  id?: string;
+  /**
+   * Optional form control name attribute.
+   */
+  name?: string;
 }
 
 /**
@@ -78,10 +86,15 @@ export const SliderField: React.FC<SliderFieldProps> = ({
   sliderClassName = '',
   ariaLabel,
   formatValueText,
+  id: customId,
+  name,
 }) => {
+  const generatedId = useId();
+  const inputId = customId || generatedId;
+
   return (
     <div className={`ciclista-form-group--small ${className}`.trim()}>
-      <label>
+      <label htmlFor={inputId}>
         {formatValueText ? (
           formatValueText(label, value, unit)
         ) : (
@@ -96,6 +109,8 @@ export const SliderField: React.FC<SliderFieldProps> = ({
         )}
       </label>
       <input
+        id={inputId}
+        name={name}
         type="range"
         min={min}
         max={max}

@@ -163,6 +163,8 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
           </label>
           <input
             id="ciclista-event-name-input"
+            name="eventName"
+            aria-label="Event Name"
             type="text"
             className="ciclista-input"
             placeholder="e.g. Marathon, Street Fair, Roadworks"
@@ -177,6 +179,8 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
           </label>
           <input
             id="ciclista-event-description-input"
+            name="eventDescription"
+            aria-label="Description (Optional)"
             type="text"
             className="ciclista-input"
             placeholder="Additional notes"
@@ -191,6 +195,8 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
           </label>
           <select
             id="ciclista-event-effect-select"
+            name="eventEffect"
+            aria-label="Effect Configuration"
             className="ciclista-select"
             disabled={selectedEdgeCount === 0}
             defaultValue="road_blockage"
@@ -242,8 +248,13 @@ export const EventsPanel: React.FC<EventsPanelProps> = ({
                   </span>
                 </div>
                 <div className="ciclista-event-item-actions">
-                  <label className="ciclista-event-toggle-label">
+                  <label
+                    htmlFor={`ciclista-event-active-${event.id}`}
+                    className="ciclista-event-toggle-label"
+                  >
                     <input
+                      id={`ciclista-event-active-${event.id}`}
+                      name={`eventActive-${event.id}`}
                       type="checkbox"
                       checked={event.active}
                       onChange={() => onToggleEvent(event.id)}

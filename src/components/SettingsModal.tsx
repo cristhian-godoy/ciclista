@@ -283,6 +283,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Search size={16} className="ciclista-settings-search-icon" />
               <input
                 ref={searchInputRef}
+                id="ciclista-settings-search-input"
+                name="settingsSearch"
+                aria-label="Filter settings by keyword"
                 type="text"
                 className="ciclista-input ciclista-settings-search-input"
                 placeholder="Filter settings by keyword..."
@@ -437,6 +440,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                       <input
                         ref={fileInputRef}
+                        id="import-settings-file"
+                        name="importSettingsFile"
+                        aria-label="Import JSON Configuration file"
                         type="file"
                         accept=".json,application/json"
                         hidden
@@ -546,6 +552,8 @@ function SettingFormRow<K extends keyof AppSettings>({
         <div className="ciclista-settings-checkbox-wrapper">
           <input
             id={`setting-${meta.key}`}
+            name={meta.key}
+            aria-label={meta.label}
             type="checkbox"
             className="ciclista-checkbox"
             checked={isChecked}
@@ -584,6 +592,8 @@ function SettingFormRow<K extends keyof AppSettings>({
         </div>
         <select
           id={`setting-${meta.key}`}
+          name={meta.key}
+          aria-label={meta.label}
           className="ciclista-select ciclista-settings-select"
           value={String(value)}
           onChange={(e) => onUpdate(meta.key as keyof AppSettings, e.target.value as never)}

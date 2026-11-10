@@ -219,6 +219,7 @@ const RouteLocationInput: React.FC<RouteLocationInputProps> = ({
           )}
           <input
             id={id}
+            name={id}
             className={`ciclista-input ciclista-route-location-input ${
               currentPlace ? 'ciclista-has-category-icon' : ''
             } ${hasValue ? 'ciclista-has-clear-btn' : ''}`}
@@ -372,6 +373,7 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
         </label>
         <input
           id={`route-stop-${index}-input`}
+          name={`routeStop${index + 1}`}
           className="ciclista-input ciclista-route-location-input"
           type="text"
           value={val}

@@ -318,8 +318,16 @@ export const NodePopup: React.FC = () => {
       </div>
 
       <div className="ciclista-form-group popup-form-group">
-        <label className="ciclista-label popup-label-small">Custom Notes</label>
+        <label
+          htmlFor={`node-notes-${selectedNode.id}`}
+          className="ciclista-label popup-label-small"
+        >
+          Custom Notes
+        </label>
         <input
+          id={`node-notes-${selectedNode.id}`}
+          name="nodeNotes"
+          aria-label="Custom Notes"
           className="ciclista-input popup-input-small"
           type="text"
           placeholder="e.g. Constant bus priority request"
