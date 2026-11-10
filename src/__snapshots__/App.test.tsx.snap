@@ -404,38 +404,156 @@ exports[`Main App Route Snapshot Baseline > renders main dashboard layout struct
             class="ciclista-route-locations-fields"
           >
             <div
-              class="ciclista-form-group ciclista-route-location-form-group"
+              class="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row"
             >
-              <label
-                class="ciclista-label"
-                for="route-start-input"
+              <div
+                class="ciclista-route-endpoint-field"
               >
-                Start
-              </label>
-              <input
-                class="ciclista-input ciclista-route-location-input"
-                id="route-start-input"
-                placeholder="Click map or enter lat, lng"
-                type="text"
-                value=""
-              />
+                <label
+                  class="ciclista-label"
+                  for="route-start-input"
+                >
+                  Start
+                </label>
+                <input
+                  class="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
+                  id="route-start-input"
+                  placeholder="Click map to set location"
+                  readonly=""
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="ciclista-route-endpoint-actions"
+              >
+                <button
+                  aria-label="Pick start on map"
+                  class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
+                  title="Pick start on map"
+                  type="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-crosshair"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <line
+                      x1="22"
+                      x2="18"
+                      y1="12"
+                      y2="12"
+                    />
+                    <line
+                      x1="6"
+                      x2="2"
+                      y1="12"
+                      y2="12"
+                    />
+                    <line
+                      x1="12"
+                      x2="12"
+                      y1="2"
+                      y2="6"
+                    />
+                    <line
+                      x1="12"
+                      x2="12"
+                      y1="22"
+                      y2="18"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div
-              class="ciclista-form-group ciclista-route-location-form-group"
+              class="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row"
             >
-              <label
-                class="ciclista-label"
-                for="route-end-input"
+              <div
+                class="ciclista-route-endpoint-field"
               >
-                Destination
-              </label>
-              <input
-                class="ciclista-input ciclista-route-location-input"
-                id="route-end-input"
-                placeholder="Click map or enter lat, lng"
-                type="text"
-                value=""
-              />
+                <label
+                  class="ciclista-label"
+                  for="route-end-input"
+                >
+                  Destination
+                </label>
+                <input
+                  class="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
+                  id="route-end-input"
+                  placeholder="Click map to set location"
+                  readonly=""
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="ciclista-route-endpoint-actions"
+              >
+                <button
+                  aria-label="Pick destination on map"
+                  class="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn "
+                  title="Pick destination on map"
+                  type="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-crosshair"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <line
+                      x1="22"
+                      x2="18"
+                      y1="12"
+                      y2="12"
+                    />
+                    <line
+                      x1="6"
+                      x2="2"
+                      y1="12"
+                      y2="12"
+                    />
+                    <line
+                      x1="12"
+                      x2="12"
+                      y1="2"
+                      y2="6"
+                    />
+                    <line
+                      x1="12"
+                      x2="12"
+                      y1="22"
+                      y2="18"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div
               class="ciclista-add-stop-container"

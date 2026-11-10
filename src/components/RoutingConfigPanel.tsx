@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import type { Coordinate } from '../core/common/types';
 import type { BikeConfig, BikeProfileId } from '../core/config';
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Settings,
   Trash2,
+  X,
   Zap,
 } from './common/Icon';
 import { SegmentedControl } from './common/SegmentedControl';
@@ -21,59 +22,115 @@ import { SegmentedControl } from './common/SegmentedControl';
  * Properties for the RoutingConfigPanel component.
  */
 export interface RoutingConfigPanelProps {
+  /**
+   * Starting geographic coordinate for routing calculations.
+   */
   startCoord: Coordinate | null;
+  /**
+   * Destination geographic coordinate for routing calculations.
+   */
   endCoord: Coordinate | null;
+  /**
+   * Intermediate waypoints positioned between start and destination.
+   */
   waypoints?: Coordinate[];
+  /**
+   * Callback fired when swapping start and destination coordinates.
+   */
   onSwapCoords?: () => void;
+  /**
+   * Callback fired to update the start coordinate.
+   */
   onSetStartCoord?: (coord: Coordinate) => void;
+  /**
+   * Callback fired to update the destination coordinate.
+   */
   onSetEndCoord?: (coord: Coordinate) => void;
+  /**
+   * Callback fired when clearing the start coordinate.
+   */
+  onClearStartCoord?: () => void;
+  /**
+   * Callback fired when clearing the destination coordinate.
+   */
+  onClearEndCoord?: () => void;
+  /**
+   * Callback fired to initiate map placement for the start coordinate.
+   */
+  onPickStartOnMap?: () => void;
+  /**
+   * Callback fired to initiate map placement for the destination coordinate.
+   */
+  onPickEndOnMap?: () => void;
+  /**
+   * Whether map placement mode is currently active for start location.
+   */
+  isPlacingStart?: boolean;
+  /**
+   * Whether map placement mode is currently active for destination location.
+   */
+  isPlacingEnd?: boolean;
+  /**
+   * Callback fired to append a new intermediate waypoint.
+   */
   onAddWaypoint?: () => void;
+  /**
+   * Callback fired to remove an intermediate waypoint by index.
+   */
   onRemoveWaypoint?: (index: number) => void;
+  /**
+   * Callback fired to update an intermediate waypoint coordinate.
+   */
   onUpdateWaypoint?: (index: number, coord: Coordinate) => void;
+  /**
+   * Callback fired to reorder intermediate waypoints.
+   */
   onReorderWaypoints?: (fromIndex: number, toIndex: number) => void;
+  /**
+   * Whether intermediate stop placement mode is active.
+   */
   isPlacingStop?: boolean;
+  /**
+   * Index of intermediate stop being repositioned on the map.
+   */
   placingStopIndex?: number | null;
+  /**
+   * Callback fired to initiate intermediate stop placement on map.
+   */
   onStartPlacingStop?: (index?: number) => void;
+  /**
+   * Whether street network data is actively being fetched from Overpass.
+   */
   isFetchingOSM: boolean;
+  /**
+   * Active bicycle profile configuration.
+   */
   bikeConfig: BikeConfig;
+  /**
+   * Callback fired when bicycle profile settings change.
+   */
   onBikeConfigChange: (config: BikeConfig) => void;
 }
 
 /**
- * Parses a coordinate string input into a Coordinate object if valid.
+ * Checks whether a coordinate is defined with valid non-zero latitude and longitude values.
  */
-function parseCoordinateInput(value: string): Coordinate | null {
-  const parts = value.split(/[,;\s]+/).filter(Boolean);
-  const p0 = parts[0];
-  const p1 = parts[1];
-  if (p0 && p1) {
-    const lat = parseFloat(p0);
-    const lng = parseFloat(p1);
-    if (
-      !Number.isNaN(lat) &&
-      !Number.isNaN(lng) &&
-      lat >= -90 &&
-      lat <= 90 &&
-      lng >= -180 &&
-      lng <= 180
-    ) {
-      return { lat, lng };
-    }
-  }
-  return null;
+function isCoordinateSet(coord: Coordinate | null | undefined): boolean {
+  return Boolean(
+    coord &&
+    typeof coord.lat === 'number' &&
+    typeof coord.lng === 'number' &&
+    !isNaN(coord.lat) &&
+    !isNaN(coord.lng) &&
+    !(coord.lat === 0 && coord.lng === 0),
+  );
 }
 
 /**
  * Formats a coordinate into a comma-separated latitude and longitude string.
  */
-function formatCoordinate(coord: Coordinate | null): string {
-  if (
-    !coord ||
-    typeof coord.lat !== 'number' ||
-    typeof coord.lng !== 'number' ||
-    isNaN(coord.lat) ||
-    isNaN(coord.lng)
-  ) {
+function formatCoordinate(coord: Coordinate | null | undefined): string {
+  if (!isCoordinateSet(coord) || !coord) {
     return '';
   }
   return `${coord.lat.toFixed(5)}, ${coord.lng.toFixed(5)}`;
@@ -96,35 +153,12 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
   totalWaypoints,
   coord,
   isPlacingThisStop,
-  onUpdate,
   onRemove,
   onPickOnMap,
   onMoveUp,
   onMoveDown,
 }) => {
-  const isCoordValid =
-    coord &&
-    typeof coord.lat === 'number' &&
-    typeof coord.lng === 'number' &&
-    !isNaN(coord.lat) &&
-    !isNaN(coord.lng);
-  const isZero = isCoordValid && coord.lat === 0 && coord.lng === 0;
-  const [val, setVal] = useState(() => (isZero || !isCoordValid ? '' : formatCoordinate(coord)));
-
-  const handleBlur = () => {
-    const parsed = parseCoordinateInput(val);
-    if (parsed && onUpdate) {
-      onUpdate(parsed);
-    } else {
-      setVal(isZero || !isCoordValid ? '' : formatCoordinate(coord));
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleBlur();
-    }
-  };
+  const displayValue = formatCoordinate(coord);
 
   return (
     <div className="ciclista-form-group ciclista-route-location-form-group ciclista-waypoint-row">
@@ -137,13 +171,12 @@ const WaypointItem: React.FC<WaypointItemProps> = ({
         </label>
         <input
           id={`route-stop-${index}-input`}
-          className="ciclista-input ciclista-route-location-input"
+          className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
           type="text"
-          value={val}
-          placeholder="Click map or enter lat, lng"
-          onChange={(e) => setVal(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
+          value={displayValue}
+          placeholder="Click map to set location"
+          readOnly
+          onClick={onPickOnMap}
         />
       </div>
       <div className="ciclista-waypoint-actions">
@@ -203,6 +236,12 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   onSwapCoords,
   onSetStartCoord,
   onSetEndCoord,
+  onClearStartCoord,
+  onClearEndCoord,
+  onPickStartOnMap,
+  onPickEndOnMap,
+  isPlacingStart = false,
+  isPlacingEnd = false,
   onAddWaypoint,
   onRemoveWaypoint,
   onUpdateWaypoint,
@@ -214,49 +253,22 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
   bikeConfig,
   onBikeConfigChange,
 }) => {
-  const [prevStartCoord, setPrevStartCoord] = useState<Coordinate | null>(startCoord);
-  const [startInput, setStartInput] = useState(() => formatCoordinate(startCoord));
+  const startValue = formatCoordinate(startCoord);
+  const endValue = formatCoordinate(endCoord);
 
-  const [prevEndCoord, setPrevEndCoord] = useState<Coordinate | null>(endCoord);
-  const [endInput, setEndInput] = useState(() => formatCoordinate(endCoord));
-
-  if (startCoord?.lat !== prevStartCoord?.lat || startCoord?.lng !== prevStartCoord?.lng) {
-    setPrevStartCoord(startCoord);
-    setStartInput(formatCoordinate(startCoord));
-  }
-
-  if (endCoord?.lat !== prevEndCoord?.lat || endCoord?.lng !== prevEndCoord?.lng) {
-    setPrevEndCoord(endCoord);
-    setEndInput(formatCoordinate(endCoord));
-  }
-
-  const handleStartBlur = () => {
-    const parsed = parseCoordinateInput(startInput);
-    if (parsed && onSetStartCoord) {
-      onSetStartCoord(parsed);
+  const handleClearStart = () => {
+    if (onClearStartCoord) {
+      onClearStartCoord();
     } else {
-      setStartInput(formatCoordinate(startCoord));
+      (onSetStartCoord as unknown as ((coord: Coordinate | null) => void) | undefined)?.(null);
     }
   };
 
-  const handleStartKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleStartBlur();
-    }
-  };
-
-  const handleEndBlur = () => {
-    const parsed = parseCoordinateInput(endInput);
-    if (parsed && onSetEndCoord) {
-      onSetEndCoord(parsed);
+  const handleClearEnd = () => {
+    if (onClearEndCoord) {
+      onClearEndCoord();
     } else {
-      setEndInput(formatCoordinate(endCoord));
-    }
-  };
-
-  const handleEndKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleEndBlur();
+      (onSetEndCoord as unknown as ((coord: Coordinate | null) => void) | undefined)?.(null);
     }
   };
 
@@ -274,20 +286,45 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
         </div>
         <div className="ciclista-route-locations-body">
           <div className="ciclista-route-locations-fields">
-            <div className="ciclista-form-group ciclista-route-location-form-group">
-              <label className="ciclista-label" htmlFor="route-start-input">
-                Start
-              </label>
-              <input
-                id="route-start-input"
-                className="ciclista-input ciclista-route-location-input"
-                type="text"
-                value={startInput}
-                placeholder="Click map or enter lat, lng"
-                onChange={(e) => setStartInput(e.target.value)}
-                onBlur={handleStartBlur}
-                onKeyDown={handleStartKeyDown}
-              />
+            <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row">
+              <div className="ciclista-route-endpoint-field">
+                <label className="ciclista-label" htmlFor="route-start-input">
+                  Start
+                </label>
+                <input
+                  id="route-start-input"
+                  className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
+                  type="text"
+                  value={startValue}
+                  placeholder="Click map to set location"
+                  readOnly
+                  onClick={onPickStartOnMap}
+                />
+              </div>
+              <div className="ciclista-route-endpoint-actions">
+                <button
+                  type="button"
+                  className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
+                    isPlacingStart ? 'ciclista-btn--active' : ''
+                  }`}
+                  onClick={onPickStartOnMap}
+                  aria-label="Pick start on map"
+                  title="Pick start on map"
+                >
+                  <Crosshair size={14} />
+                </button>
+                {isCoordinateSet(startCoord) && (
+                  <button
+                    type="button"
+                    className="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ciclista-route-location-clear-btn"
+                    onClick={handleClearStart}
+                    aria-label="Clear start location"
+                    title="Clear start location"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Intermediate Multi-Stop Waypoints */}
@@ -306,20 +343,45 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
               />
             ))}
 
-            <div className="ciclista-form-group ciclista-route-location-form-group">
-              <label className="ciclista-label" htmlFor="route-end-input">
-                Destination
-              </label>
-              <input
-                id="route-end-input"
-                className="ciclista-input ciclista-route-location-input"
-                type="text"
-                value={endInput}
-                placeholder="Click map or enter lat, lng"
-                onChange={(e) => setEndInput(e.target.value)}
-                onBlur={handleEndBlur}
-                onKeyDown={handleEndKeyDown}
-              />
+            <div className="ciclista-form-group ciclista-route-location-form-group ciclista-route-endpoint-row">
+              <div className="ciclista-route-endpoint-field">
+                <label className="ciclista-label" htmlFor="route-end-input">
+                  Destination
+                </label>
+                <input
+                  id="route-end-input"
+                  className="ciclista-input ciclista-route-location-input ciclista-route-readonly-input"
+                  type="text"
+                  value={endValue}
+                  placeholder="Click map to set location"
+                  readOnly
+                  onClick={onPickEndOnMap}
+                />
+              </div>
+              <div className="ciclista-route-endpoint-actions">
+                <button
+                  type="button"
+                  className={`ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ${
+                    isPlacingEnd ? 'ciclista-btn--active' : ''
+                  }`}
+                  onClick={onPickEndOnMap}
+                  aria-label="Pick destination on map"
+                  title="Pick destination on map"
+                >
+                  <Crosshair size={14} />
+                </button>
+                {isCoordinateSet(endCoord) && (
+                  <button
+                    type="button"
+                    className="ciclista-btn ciclista-btn--secondary ciclista-route-location-action-btn ciclista-route-location-clear-btn"
+                    onClick={handleClearEnd}
+                    aria-label="Clear destination location"
+                    title="Clear destination location"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {onAddWaypoint && (
@@ -334,10 +396,12 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                       onAddWaypoint?.();
                     }
                   }}
-                  disabled={!startCoord || !endCoord || isPlacingStop}
+                  disabled={
+                    !isCoordinateSet(startCoord) || !isCoordinateSet(endCoord) || isPlacingStop
+                  }
                   aria-label="Add Stop"
                   title={
-                    !startCoord || !endCoord
+                    !isCoordinateSet(startCoord) || !isCoordinateSet(endCoord)
                       ? 'Set start and destination before adding intermediate stops'
                       : isPlacingStop
                         ? 'Click on the map to place Stop'
@@ -347,7 +411,7 @@ export const RoutingConfigPanel: React.FC<RoutingConfigPanelProps> = ({
                   <Plus size={14} />
                   <span>Add Stop</span>
                 </button>
-                {(!startCoord || !endCoord) && (
+                {(!isCoordinateSet(startCoord) || !isCoordinateSet(endCoord)) && (
                   <p className="ciclista-field-helper">
                     Set start and destination before adding intermediate stops
                   </p>

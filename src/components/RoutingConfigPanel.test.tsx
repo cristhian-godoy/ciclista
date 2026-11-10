@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { RoutingConfigPanel } from './RoutingConfigPanel';
 
 describe('RoutingConfigPanel', () => {
-  it('renders start and destination inputs with swap button', () => {
+  it('renders start and destination inputs with swap button and formatted coordinates', () => {
     render(
       <RoutingConfigPanel
         startCoord={{ lat: 48.13715, lng: 11.5754 }}
@@ -19,12 +19,19 @@ describe('RoutingConfigPanel', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Start')).toBeInTheDocument();
-    expect(screen.getByLabelText('Destination')).toBeInTheDocument();
+    const startInput = screen.getByLabelText('Start');
+    const endInput = screen.getByLabelText('Destination');
+
+    expect(startInput).toBeInTheDocument();
+    expect(endInput).toBeInTheDocument();
+    expect(startInput).toHaveAttribute('readonly');
+    expect(endInput).toHaveAttribute('readonly');
+    expect(startInput).toHaveAttribute('placeholder', 'Click map to set location');
+    expect(endInput).toHaveAttribute('placeholder', 'Click map to set location');
     expect(screen.getByRole('button', { name: /Swap start and destination/i })).toBeInTheDocument();
 
-    expect(screen.getByLabelText('Start')).toHaveValue('48.13715, 11.57540');
-    expect(screen.getByLabelText('Destination')).toHaveValue('48.13500, 11.58200');
+    expect(startInput).toHaveValue('48.13715, 11.57540');
+    expect(endInput).toHaveValue('48.13500, 11.58200');
   });
 
   it('triggers onSwapCoords when swap button is clicked', async () => {
@@ -49,17 +56,21 @@ describe('RoutingConfigPanel', () => {
     expect(handleSwapCoords).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onSetStartCoord when user edits start location and commits', async () => {
+  it('disallows raw coordinate typing into start, destination, and waypoint inputs', async () => {
     const user = userEvent.setup();
     const handleSetStartCoord = vi.fn();
+    const handleSetEndCoord = vi.fn();
+    const handleUpdateWaypoint = vi.fn();
 
     render(
       <RoutingConfigPanel
         startCoord={null}
         endCoord={null}
+        waypoints={[{ lat: 48.14, lng: 11.58 }]}
         onSwapCoords={vi.fn()}
         onSetStartCoord={handleSetStartCoord}
-        onSetEndCoord={vi.fn()}
+        onSetEndCoord={handleSetEndCoord}
+        onUpdateWaypoint={handleUpdateWaypoint}
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={vi.fn()}
@@ -67,20 +78,162 @@ describe('RoutingConfigPanel', () => {
     );
 
     const startInput = screen.getByLabelText('Start');
-    await user.type(startInput, '48.140, 11.580{Enter}');
-    expect(handleSetStartCoord).toHaveBeenCalledWith({ lat: 48.14, lng: 11.58 });
+    const endInput = screen.getByLabelText('Destination');
+    const stopInput = screen.getByLabelText('Stop 1');
+
+    expect(startInput).toHaveAttribute('readonly');
+    expect(endInput).toHaveAttribute('readonly');
+    expect(stopInput).toHaveAttribute('readonly');
+
+    await user.type(startInput, '48.140, 11.580');
+    expect(startInput).toHaveValue('');
+    expect(handleSetStartCoord).not.toHaveBeenCalled();
+
+    await user.type(endInput, '48.145, 11.590');
+    expect(endInput).toHaveValue('');
+    expect(handleSetEndCoord).not.toHaveBeenCalled();
+
+    await user.type(stopInput, '99.999, 99.999');
+    expect(stopInput).toHaveValue('48.14000, 11.58000');
+    expect(handleUpdateWaypoint).not.toHaveBeenCalled();
   });
 
-  it('calls onSetEndCoord when user edits destination location and blurs', async () => {
+  it('triggers pick-on-map callbacks when dedicated crosshair buttons or inputs are clicked', async () => {
     const user = userEvent.setup();
-    const handleSetEndCoord = vi.fn();
+    const handlePickStartOnMap = vi.fn();
+    const handlePickEndOnMap = vi.fn();
+    const handleStartPlacingStop = vi.fn();
 
+    render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.13, lng: 11.57 }}
+        endCoord={{ lat: 48.15, lng: 11.59 }}
+        waypoints={[{ lat: 48.14, lng: 11.58 }]}
+        onPickStartOnMap={handlePickStartOnMap}
+        onPickEndOnMap={handlePickEndOnMap}
+        onStartPlacingStop={handleStartPlacingStop}
+        isPlacingStart={false}
+        isPlacingEnd={false}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    // Pick start button click
+    const pickStartBtn = screen.getByRole('button', { name: /Pick start on map/i });
+    await user.click(pickStartBtn);
+    expect(handlePickStartOnMap).toHaveBeenCalledTimes(1);
+
+    // Start input click
+    const startInput = screen.getByLabelText('Start');
+    await user.click(startInput);
+    expect(handlePickStartOnMap).toHaveBeenCalledTimes(2);
+
+    // Pick destination button click
+    const pickEndBtn = screen.getByRole('button', { name: /Pick destination on map/i });
+    await user.click(pickEndBtn);
+    expect(handlePickEndOnMap).toHaveBeenCalledTimes(1);
+
+    // Destination input click
+    const endInput = screen.getByLabelText('Destination');
+    await user.click(endInput);
+    expect(handlePickEndOnMap).toHaveBeenCalledTimes(2);
+
+    // Stop 1 pick button click
+    const pickStopBtn = screen.getByRole('button', { name: /Pick stop 1 on map/i });
+    await user.click(pickStopBtn);
+    expect(handleStartPlacingStop).toHaveBeenCalledWith(0);
+
+    // Stop 1 input click
+    const stopInput = screen.getByLabelText('Stop 1');
+    await user.click(stopInput);
+    expect(handleStartPlacingStop).toHaveBeenCalledWith(0);
+  });
+
+  it('applies active button styling when placement modes are active', () => {
     render(
       <RoutingConfigPanel
         startCoord={null}
         endCoord={null}
-        onSwapCoords={vi.fn()}
-        onSetStartCoord={vi.fn()}
+        waypoints={[{ lat: 48.14, lng: 11.58 }]}
+        isPlacingStart={true}
+        isPlacingEnd={true}
+        isPlacingStop={true}
+        placingStopIndex={0}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /Pick start on map/i })).toHaveClass(
+      'ciclista-btn--active',
+    );
+    expect(screen.getByRole('button', { name: /Pick destination on map/i })).toHaveClass(
+      'ciclista-btn--active',
+    );
+    expect(screen.getByRole('button', { name: /Pick stop 1 on map/i })).toHaveClass(
+      'ciclista-btn--active',
+    );
+  });
+
+  it('renders clear buttons only when coordinates are set and resets endpoints when clicked', async () => {
+    const user = userEvent.setup();
+    const handleClearStartCoord = vi.fn();
+    const handleClearEndCoord = vi.fn();
+
+    const { rerender } = render(
+      <RoutingConfigPanel
+        startCoord={null}
+        endCoord={null}
+        onClearStartCoord={handleClearStartCoord}
+        onClearEndCoord={handleClearEndCoord}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    // No clear buttons when endpoints are null
+    expect(screen.queryByRole('button', { name: /Clear start/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clear destination/i })).not.toBeInTheDocument();
+
+    // Rerender with coordinates set
+    rerender(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.137, lng: 11.575 }}
+        endCoord={{ lat: 48.145, lng: 11.585 }}
+        onClearStartCoord={handleClearStartCoord}
+        onClearEndCoord={handleClearEndCoord}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    const clearStartBtn = screen.getByRole('button', { name: /Clear start/i });
+    const clearEndBtn = screen.getByRole('button', { name: /Clear destination/i });
+    expect(clearStartBtn).toBeInTheDocument();
+    expect(clearEndBtn).toBeInTheDocument();
+
+    await user.click(clearStartBtn);
+    expect(handleClearStartCoord).toHaveBeenCalledTimes(1);
+
+    await user.click(clearEndBtn);
+    expect(handleClearEndCoord).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to resetting endpoints via onSetStartCoord and onSetEndCoord when clear handlers omitted', async () => {
+    const user = userEvent.setup();
+    const handleSetStartCoord = vi.fn();
+    const handleSetEndCoord = vi.fn();
+
+    render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.137, lng: 11.575 }}
+        endCoord={{ lat: 48.145, lng: 11.585 }}
+        onSetStartCoord={handleSetStartCoord}
         onSetEndCoord={handleSetEndCoord}
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
@@ -88,10 +241,42 @@ describe('RoutingConfigPanel', () => {
       />,
     );
 
-    const endInput = screen.getByLabelText('Destination');
-    await user.type(endInput, '48.145, 11.590');
-    await user.tab();
-    expect(handleSetEndCoord).toHaveBeenCalledWith({ lat: 48.145, lng: 11.59 });
+    await user.click(screen.getByRole('button', { name: /Clear start/i }));
+    expect(handleSetStartCoord).toHaveBeenCalledWith(null);
+
+    await user.click(screen.getByRole('button', { name: /Clear destination/i }));
+    expect(handleSetEndCoord).toHaveBeenCalledWith(null);
+  });
+
+  it('formats coordinates properly and treats dummy origin as empty', () => {
+    const { rerender } = render(
+      <RoutingConfigPanel
+        startCoord={{ lat: 48.137152, lng: 11.575401 }}
+        endCoord={{ lat: -33.86882, lng: 151.2093 }}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Start')).toHaveValue('48.13715, 11.57540');
+    expect(screen.getByLabelText('Destination')).toHaveValue('-33.86882, 151.20930');
+
+    // Dummy (0, 0) coordinate is treated as empty
+    rerender(
+      <RoutingConfigPanel
+        startCoord={{ lat: 0, lng: 0 }}
+        endCoord={{ lat: 0, lng: 0 }}
+        isFetchingOSM={false}
+        bikeConfig={{ id: 'normal' }}
+        onBikeConfigChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Start')).toHaveValue('');
+    expect(screen.getByLabelText('Destination')).toHaveValue('');
+    expect(screen.queryByRole('button', { name: /Clear start/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clear destination/i })).not.toBeInTheDocument();
   });
 
   it('shows fetching status overlay when isFetchingOSM is true', () => {
@@ -205,10 +390,9 @@ describe('RoutingConfigPanel', () => {
     expect(handleBikeChange).toHaveBeenCalled();
   });
 
-  it('supports multi-stop waypoints UI: add, edit, and remove stops', async () => {
+  it('supports multi-stop waypoints UI: add and remove stops', async () => {
     const user = userEvent.setup();
     const handleAddWaypoint = vi.fn();
-    const handleUpdateWaypoint = vi.fn();
     const handleRemoveWaypoint = vi.fn();
 
     render(
@@ -217,18 +401,18 @@ describe('RoutingConfigPanel', () => {
         endCoord={{ lat: 48.15, lng: 11.59 }}
         waypoints={[{ lat: 48.14, lng: 11.58 }]}
         onSwapCoords={vi.fn()}
-        onSetStartCoord={vi.fn()}
-        onSetEndCoord={vi.fn()}
         onAddWaypoint={handleAddWaypoint}
         onRemoveWaypoint={handleRemoveWaypoint}
-        onUpdateWaypoint={handleUpdateWaypoint}
         isFetchingOSM={false}
         bikeConfig={{ id: 'normal' }}
         onBikeConfigChange={vi.fn()}
       />,
     );
 
-    expect(screen.getByLabelText('Stop 1')).toHaveValue('48.14000, 11.58000');
+    const stopInput = screen.getByLabelText('Stop 1');
+    expect(stopInput).toHaveValue('48.14000, 11.58000');
+    expect(stopInput).toHaveAttribute('readonly');
+    expect(stopInput).toHaveAttribute('placeholder', 'Click map to set location');
 
     // Add stop button (parameterless call, no event passed)
     const addStopBtn = screen.getByRole('button', { name: /Add Stop/i });
@@ -239,12 +423,6 @@ describe('RoutingConfigPanel', () => {
     const removeStopBtn = screen.getByRole('button', { name: /Remove stop 1/i });
     await user.click(removeStopBtn);
     expect(handleRemoveWaypoint).toHaveBeenCalledWith(0);
-
-    // Edit stop coordinate
-    const stopInput = screen.getByLabelText('Stop 1');
-    await user.clear(stopInput);
-    await user.type(stopInput, '48.142, 11.582{Enter}');
-    expect(handleUpdateWaypoint).toHaveBeenCalledWith(0, { lat: 48.142, lng: 11.582 });
   });
 
   it('disables Add Stop button with guidance helper when start or destination are missing', () => {

@@ -927,6 +927,46 @@ h2 {
   font-size: var(--ciclista-font-80);
 }
 
+.ciclista-route-endpoint-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ciclista-spacing-xs);
+}
+
+.ciclista-route-endpoint-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.ciclista-route-endpoint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ciclista-spacing-2xs);
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+
+.ciclista-route-location-action-btn {
+  padding: var(--ciclista-spacing-xs);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ciclista-route-location-clear-btn {
+  color: var(--ciclista-color-text-secondary);
+}
+
+.ciclista-route-location-clear-btn:hover {
+  color: var(--ciclista-color-brand-danger);
+}
+
+.ciclista-route-readonly-input[readonly] {
+  cursor: pointer;
+}
+
 .ciclista-route-swap-btn {
   flex-shrink: 0;
   width: 36px;
